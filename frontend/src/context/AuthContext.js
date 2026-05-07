@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUser = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/auth/profile')
+      const response = await axios.get('https://signal-moi-api.onrender.com/api/auth/profile')
       setUser(response.data)
     } catch (error) {
       console.error('Erreur chargement profil:', error)
@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', { email, password })
+      const response = await axios.post('https://signal-moi-api.onrender.com/api/auth/login', { email, password })
       
       console.log('Login response:', response.data)
       
@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', userData)
+      const response = await axios.post('https://signal-moi-api.onrender.com/api/auth/register', userData)
       const { token, user: userDataResponse } = response.data
       
       localStorage.setItem('token', token)
