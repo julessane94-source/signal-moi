@@ -4,8 +4,9 @@ import axios from 'axios'
 import { toast } from 'react-toastify'
 
 const AuthContext = createContext()
-
 export const useAuth = () => useContext(AuthContext)
+
+const API_URL = 'https://signal-moi-api.onrender.com'
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
@@ -24,10 +25,9 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUser = async () => {
     try {
-      const response = await axios.get('https://signal-moi-api.onrender.com/api/auth/profile')
+      const response = await axios.get(`${API_URL}/api/auth/profile`)
       setUser(response.data)
     } catch (error) {
-      console.error('Erreur chargement profil:', error)
       localStorage.removeItem('token')
       delete axios.defaults.headers.common['Authorization']
     } finally {
@@ -37,33 +37,16 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post('https://signal-moi-api.onrender.com/api/auth/login', { email, password })
-      
-      console.log('Login response:', response.data)
-      
-      const { token, refreshToken, user: userData } = response.data
-      
+      const response = await axios.post(`${API_URL}/api/auth/login`, { email, password })
+      const { token, user: userData } = response.data
       localStorage.setItem('token', token)
-      localStorage.setItem('refreshToken', refreshToken)
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-      
       setUser(userData)
       toast.success(`Bienvenue ${userData.prenom} !`)
-      
-      // Redirection selon le role
-      const roleRoutes = {
-        admin: '/admin/dashboard',
-        police: '/police/dashboard',
-        collaborateur: '/collaborator/dashboard',
-        citoyen: '/citizen/dashboard'
-      }
-      
-      const redirectPath = roleRoutes[userData.role] || '/'
-      router.push(redirectPath)
-      
+      const routes = { admin: '/admin/dashboard', police: '/police/dashboard', collaborateur: '/collaborator/dashboard', citoyen: '/citizen/dashboard' }
+      router.push(routes[userData.role] || '/')
       return true
     } catch (error) {
-      console.error('Login error:', error.response?.data)
       toast.error(error.response?.data?.error || 'Erreur de connexion')
       return false
     }
@@ -71,32 +54,27 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const response = await axios.post('https://signal-moi-api.onrender.com/api/auth/register', userData)
+      const response = await axios.post(`${API_URL}/api/auth/register`, userData)
       const { token, user: userDataResponse } = response.data
-      
       localStorage.setItem('token', token)
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-      
       setUser(userDataResponse)
       toast.success('Inscription reussie !')
       router.push('/citizen/dashboard')
       return true
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Erreur d\'inscription')
+      toast.error(error.response?.data?.error || 'Erreur inscription')
       return false
     }
   }
 
   const logout = async () => {
     localStorage.removeItem('token')
-    localStorage.removeItem('refreshToken')
     delete axios.defaults.headers.common['Authorization']
     setUser(null)
     toast.info('Deconnexion reussie')
     router.push('/')
   }
 
-  const value = { user, loading, login, register, logout, fetchUser }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{ user, loading, login, register, logout, fetchUser }}>{children}</AuthContext.Provider>
 }
