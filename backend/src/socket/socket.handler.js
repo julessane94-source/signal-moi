@@ -1,0 +1,139 @@
+﻿const jwt = require('jsonwebtoken');
+const { User, Message, Signalement } = require('../models');
+const logger = require('../utils/logger');
+
+const setupSocket = (io) => {
+  // Middleware d'authentification pour les sockets
+  io.use(async (socket, next) => {
+    try {
+      const token = socket.handshake.auth.token;
+      
+      if (!token) {
+        return next(new Error('Authentication error'));
+      }
+      
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findByPk(decoded.id);
+      
+      if (!user) {
+        return next(new Error('User not found'));
+      }
+      
+      socket.user = user;
+      next();
+    } catch (err) {
+      next(new Error('Authentication error'));
+    }
+  });
+  
+  io.on('connection', (socket) => {
+    logger.info(`Socket connecté: ${socket.user.email} (${socket.user.role})`);
+    
+    // Rejoindre la room personnelle
+    socket.join(`user_${socket.user.id}`);
+    
+    // Rejoindre les rooms par rôle
+    if (socket.user.role === 'police') {
+      socket.join('police_room');
+    } else if (socket.user.role === 'collaborateur') {
+      socket.join('collaborateur_room');
+    } else if (socket.user.role === 'admin') {
+      socket.join('admin_room');
+    }
+    
+    // Nouveau signalement
+    socket.on('new_signalement', async (data) => {
+      try {
+        // Émettre aux autorités
+        io.to('police_room').emit('signalement_received', {
+          id: data.id,
+          title: data.titre,
+          type: data.type,
+          timestamp: new Date()
+        });
+        
+        // Notifier l'admin
+        io.to('admin_room').emit('new_signalement_notification', data);
+      } catch (error) {
+        logger.error('Erreur new_signalement:', error);
+      }
+    });
+    
+    // Envoyer un message
+    socket.on('send_message', async (data) => {
+      try {
+        const message = await Message.create({
+          expediteurId: socket.user.id,
+          destinataireId: data.destinataireId,
+          signalementId: data.signalementId || null,
+          contenu: data.contenu
+        });
+        
+        const messageData = {
+          id: message.id,
+          expediteurId: message.expediteurId,
+          expediteurNom: `${socket.user.prenom} ${socket.user.nom}`,
+          destinataireId: message.destinataireId,
+          contenu: message.contenu,
+          createdAt: message.createdAt
+        };
+        
+        // Émettre au destinataire
+        io.to(`user_${data.destinataireId}`).emit('new_message', messageData);
+        
+        // Confirmation à l'expéditeur
+        socket.emit('message_sent', messageData);
+      } catch (error) {
+        logger.error('Erreur send_message:', error);
+        socket.emit('message_error', { error: 'Erreur lors de l\'envoi' });
+      }
+    });
+    
+    // Marquer un message comme lu
+    socket.on('mark_message_read', async (messageId) => {
+      try {
+        await Message.update(
+          { estLu: true, dateLecture: new Date() },
+          { where: { id: messageId, destinataireId: socket.user.id } }
+        );
+        
+        io.to(`user_${socket.user.id}`).emit('message_read', { messageId });
+      } catch (error) {
+        logger.error('Erreur mark_message_read:', error);
+      }
+    });
+    
+    // Mise à jour de statut de signalement
+    socket.on('update_signalement_status', async (data) => {
+      try {
+        const signalement = await Signalement.findByPk(data.signalementId);
+        
+        if (signalement) {
+          // Notifier l'auteur du signalement
+          io.to(`user_${signalement.userId}`).emit('status_updated', {
+            signalementId: data.signalementId,
+            nouveauStatut: data.nouveauStatut,
+            commentaire: data.commentaire
+          });
+        }
+      } catch (error) {
+        logger.error('Erreur update_signalement_status:', error);
+      }
+    });
+    
+    // Typing indicator
+    socket.on('typing', (data) => {
+      socket.to(`user_${data.destinataireId}`).emit('user_typing', {
+        expediteurId: socket.user.id,
+        expediteurNom: `${socket.user.prenom} ${socket.user.nom}`
+      });
+    });
+    
+    // Déconnexion
+    socket.on('disconnect', () => {
+      logger.info(`Socket déconnecté: ${socket.user.email}`);
+    });
+  });
+};
+
+module.exports = { setupSocket };

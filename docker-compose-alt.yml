@@ -1,0 +1,77 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: signal-moi-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: signal_moi_db
+      MYSQL_USER: signal_user
+      MYSQL_PASSWORD: signal_pass
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database:/docker-entrypoint-initdb.d
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - signal-moi-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: signal-moi-phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+    networks:
+      - signal-moi-network
+
+  backend:
+    build: ./backend
+    container_name: signal-moi-backend
+    restart: always
+    environment:
+      NODE_ENV: development
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: signal_moi_db
+      DB_USER: root
+      DB_PASSWORD: 123456
+      PORT: 5000
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mysql
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - signal-moi-network
+
+  frontend:
+    build: ./frontend
+    container_name: signal-moi-frontend
+    restart: always
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:5000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - signal-moi-network
+
+networks:
+  signal-moi-network:
+    driver: bridge
+
+volumes:
+  mysql_data:

@@ -1,0 +1,154 @@
+﻿import Head from 'next/head'
+import Navbar from '../components/common/Navbar'
+import Footer from '../components/common/Footer'
+import { motion } from 'framer-motion'
+
+export default function About() {
+  const team = [
+    { name: 'Jean Dupont', role: 'Fondateur & CEO', image: '👨‍💼', description: 'Expert en securite citoyenne' },
+    { name: 'Marie Camara', role: 'Directrice Technique', image: '👩‍💻', description: 'Architecte logiciel' },
+    { name: 'Pierre Martin', role: 'Coordinateur', image: '👨‍📋', description: 'Liaison avec les autorites' },
+  ]
+
+  const stats = [
+    { value: '500+', label: 'Signalements traites' },
+    { value: '1000+', label: 'Citoyens engages' },
+    { value: '50+', label: 'Campagnes organisees' },
+    { value: '24/7', label: 'Support disponible' },
+  ]
+
+  return (
+    <>
+      <Head>
+        <title>A propos - Signal-Moi</title>
+        <meta name="description" content="Decouvrez notre mission et notre equipe" />
+      </Head>
+
+      <Navbar />
+
+      <main className="min-h-screen bg-gray-50 pt-16">
+        {/* Hero Section */}
+        <section className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-20">
+          <div className="max-w-4xl mx-auto text-center px-4">
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-4xl md:text-5xl font-bold mb-4"
+            >
+              Notre mission
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-xl text-indigo-100"
+            >
+              Rendre chaque quartier plus sur grace a la participation citoyenne
+            </motion.p>
+          </div>
+        </section>
+
+        {/* Statistiques */}
+        <section className="py-16 bg-white">
+          <div className="max-w-6xl mx-auto px-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              {stats.map((stat, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="text-center"
+                >
+                  <div className="text-3xl md:text-4xl font-bold text-indigo-600">{stat.value}</div>
+                  <div className="text-gray-600 mt-2">{stat.label}</div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Notre histoire */}
+        <section className="py-16 bg-gray-50">
+          <div className="max-w-4xl mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">Notre histoire</h2>
+            <div className="space-y-6 text-gray-600 text-lg">
+              <p>
+                Signal-Moi est ne d'un constat simple : les citoyens manquent souvent de canaux efficaces 
+                pour signaler les incidents dans leur quartier. Creee en 2023, notre plateforme connecte 
+                directement les citoyens avec les autorites competentes.
+              </p>
+              <p>
+                Aujourd'hui, plus de 1000 citoyens utilisent Signal-Moi pour ameliorer leur cadre de vie. 
+                Notre objectif est de creer un reseau national de veille citoyenne pour une reponse plus 
+                rapide et plus efficace aux problemes de securite et d'infrastructure.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Nos valeurs */}
+        <section className="py-16 bg-white">
+          <div className="max-w-4xl mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">Nos valeurs</h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="text-center p-6">
+                <div className="text-5xl mb-4">🔒</div>
+                <h3 className="text-xl font-semibold mb-2">Confidentialite</h3>
+                <p className="text-gray-600">Vos donnees sont protegees. Signalez anonymement si vous le souhaitez.</p>
+              </div>
+              <div className="text-center p-6">
+                <div className="text-5xl mb-4">⚡</div>
+                <h3 className="text-xl font-semibold mb-2">Rapidite</h3>
+                <p className="text-gray-600">Notifications en temps reel pour une intervention rapide.</p>
+              </div>
+              <div className="text-center p-6">
+                <div className="text-5xl mb-4">🤝</div>
+                <h3 className="text-xl font-semibold mb-2">Transparence</h3>
+                <p className="text-gray-600">Suivez l'evolution de vos signalements a chaque etape.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Equipe */}
+        <section className="py-16 bg-gray-50">
+          <div className="max-w-6xl mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">Notre equipe</h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              {team.map((member, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="bg-white rounded-xl shadow-md p-6 text-center"
+                >
+                  <div className="text-6xl mb-4">{member.image}</div>
+                  <h3 className="text-xl font-semibold text-gray-900">{member.name}</h3>
+                  <p className="text-indigo-600 mb-2">{member.role}</p>
+                  <p className="text-gray-600 text-sm">{member.description}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Partenaires */}
+        <section className="py-16 bg-white">
+          <div className="max-w-6xl mx-auto px-4 text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-8">Nos partenaires</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center">
+              <div className="text-gray-400 text-xl">🏛️ Ministere</div>
+              <div className="text-gray-400 text-xl">🚔 Police Nationale</div>
+              <div className="text-gray-400 text-xl">🏥 Hopitaux</div>
+              <div className="text-gray-400 text-xl">🏫 ONG Locales</div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <Footer />
+    </>
+  )
+}
