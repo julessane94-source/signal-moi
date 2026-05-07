@@ -15,7 +15,7 @@ export default function SignalementsPublic() {
 
   const fetchSignalements = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/signalements/public')
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/signalements/public`)
       const data = await response.json()
       setSignalements(Array.isArray(data) ? data : [])
       setLoading(false)
