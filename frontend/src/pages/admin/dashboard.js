@@ -2,6 +2,7 @@
 import { useAuth } from '../../context/AuthContext'
 import Navbar from '../../components/common/Navbar'
 import { toast } from 'react-toastify'
+import { API_BASE } from '../../config/api'
 
 export default function AdminDashboard() {
   const { user, loading } = useAuth()
@@ -29,7 +30,8 @@ export default function AdminDashboard() {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('token')
-      const res = await fetch('http://localhost:5000/api/auth/users', {
+      const base = API_BASE
+      const res = await fetch(`${base}/api/auth/users`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()
@@ -43,9 +45,10 @@ export default function AdminDashboard() {
     e.preventDefault()
     try {
       const token = localStorage.getItem('token')
+      const base = API_BASE
       const url = editingUser 
-        ? `http://localhost:5000/api/admin/users/${editingUser.id}`
-        : 'http://localhost:5000/api/admin/users'
+        ? `${base}/api/admin/users/${editingUser.id}`
+        : `${base}/api/admin/users`
       const method = editingUser ? 'PUT' : 'POST'
       
       await fetch(url, {
@@ -68,7 +71,8 @@ export default function AdminDashboard() {
     if (!confirm('Supprimer cet utilisateur ?')) return
     try {
       const token = localStorage.getItem('token')
-      await fetch(`http://localhost:5000/api/admin/users/${userId}`, {
+      const base = API_BASE
+      await fetch(`${base}/api/admin/users/${userId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       })
@@ -82,7 +86,8 @@ export default function AdminDashboard() {
   const resetPassword = async (userId) => {
     try {
       const token = localStorage.getItem('token')
-      await fetch(`http://localhost:5000/api/admin/users/${userId}/reset-password`, {
+      const base = API_BASE
+      await fetch(`${base}/api/admin/users/${userId}/reset-password`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       })
@@ -95,7 +100,8 @@ export default function AdminDashboard() {
   const changeRole = async (userId, newRole) => {
     try {
       const token = localStorage.getItem('token')
-      await fetch(`http://localhost:5000/api/admin/users/${userId}/role`, {
+      const base = API_BASE
+      await fetch(`${base}/api/admin/users/${userId}/role`, {
         method: 'PATCH',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ role: newRole })

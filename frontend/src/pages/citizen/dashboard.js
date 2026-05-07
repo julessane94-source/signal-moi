@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
+import { API_BASE } from '../../config/api'
 import Navbar from '../../components/common/Navbar'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -21,10 +22,11 @@ export default function CitizenDashboard() {
       const token = localStorage.getItem('token')
       const headers = { 'Authorization': `Bearer ${token}` }
       
+      const base = API_BASE
       const [signalRes, campRes, plaidRes] = await Promise.all([
-        fetch('http://localhost:5000/api/signalements', { headers }),
-        fetch('http://localhost:5000/api/campagnes', { headers }),
-        fetch('http://localhost:5000/api/plaidoyers', { headers })
+        fetch(`${base}/api/signalements`, { headers }),
+        fetch(`${base}/api/campagnes`, { headers }),
+        fetch(`${base}/api/plaidoyers`, { headers })
       ])
       
       const signalData = await signalRes.json()

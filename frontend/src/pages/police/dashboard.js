@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext'
 import Navbar from '../../components/common/Navbar'
 import { useSocket } from '../../context/SocketContext'
 import { toast } from 'react-toastify'
+import { API_BASE } from '../../config/api'
 
 export default function PoliceDashboard() {
   const { user } = useAuth()
@@ -38,7 +39,7 @@ export default function PoliceDashboard() {
   const fetchSignalements = async () => {
     try {
       const token = localStorage.getItem('token')
-      const res = await fetch('http://localhost:5000/api/signalements', {
+      const res = await fetch(`${API_BASE}/api/signalements`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()
@@ -53,7 +54,7 @@ export default function PoliceDashboard() {
   const updateStatus = async (id, statut) => {
     try {
       const token = localStorage.getItem('token')
-      await fetch(`http://localhost:5000/api/signalements/${id}/statut`, {
+      await fetch(`${API_BASE}/api/signalements/${id}/statut`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -72,7 +73,7 @@ export default function PoliceDashboard() {
   const transferer = async (id, uniteId) => {
     try {
       const token = localStorage.getItem('token')
-      await fetch(`http://localhost:5000/api/signalements/${id}/transfert`, {
+      await fetch(`${API_BASE}/api/signalements/${id}/transfert`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

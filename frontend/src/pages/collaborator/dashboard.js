@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
+import { API_BASE } from '../../config/api'
 import Navbar from '../../components/common/Navbar'
 import { toast } from 'react-toastify'
 
@@ -19,9 +20,10 @@ export default function CollaboratorDashboard() {
       const token = localStorage.getItem('token')
       const headers = { 'Authorization': `Bearer ${token}` }
       
+      const base = API_BASE
       const [signalRes, campRes] = await Promise.all([
-        fetch('http://localhost:5000/api/signalements', { headers }),
-        fetch('http://localhost:5000/api/campagnes', { headers })
+        fetch(`${base}/api/signalements`, { headers }),
+        fetch(`${base}/api/campagnes`, { headers })
       ])
       
       setSignalements(await signalRes.json())

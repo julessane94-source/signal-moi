@@ -1,4 +1,5 @@
 ﻿import { useState } from 'react'
+import { API_BASE } from '../../config/api'
 import { useRouter } from 'next/router'
 import { useAuth } from '../../context/AuthContext'
 import Navbar from '../../components/common/Navbar'
@@ -50,7 +51,7 @@ export default function NewSignalement() {
         formDataToSend.append('fichiers', file)
       })
 
-      const response = await fetch('http://localhost:5000/api/signalements', {
+      const response = await fetch(`${API_BASE}/api/signalements`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

@@ -1,12 +1,14 @@
 ﻿import { createContext, useContext, useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import axios from 'axios'
+import { API_BASE } from '../config/api'
 import { toast } from 'react-toastify'
 
 const AuthContext = createContext()
 export const useAuth = () => useContext(AuthContext)
 
-const API_URL = 'https://signal-moi-api.onrender.com'
+// use central API base
+const API_URL = API_BASE
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
