@@ -1,4 +1,3 @@
-// Central API base URL for frontend
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-
+﻿// Central API base URL for frontend
+export const API_BASE = 'https://signal-moi-api.onrender.com'
 export default API_BASE

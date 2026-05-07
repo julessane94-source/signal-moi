@@ -1,169 +1,119 @@
 ﻿const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
-const { authMiddleware, roleMiddleware } = require('../middlewares/auth');
-const fs = require('fs')
-const path = require('path')
-const configPath = path.join(__dirname, '..', 'config', 'siteConfig.json')
+
+// Données en mémoire (temporaire)
+let users = [
+  { id: 1, prenom: "Admin", nom: "System", email: "admin@signal-moi.com", role: "admin", isActive: true },
+  { id: 2, prenom: "Jean", nom: "Dupont", email: "citoyen@test.com", role: "citoyen", isActive: true }
+];
+
+let signalements = [];
 
 // GET /api/admin/users
 router.get('/users', async (req, res) => {
   try {
-    const users = await db.query('SELECT id, prenom, nom, email, telephone, ville, quartier, role, is_active FROM users');
+    // Essayer la base de données
+    const result = await db.query('SELECT id, prenom, nom, email, role, is_active FROM users');
+    res.json(result);
+  } catch (error) {
+    // Fallback sur les données en mémoire
     res.json(users);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json([]);
   }
 });
 
-// GET /api/admin/users/test (route temporaire pour test d'encodage)
-router.get('/users/test', (req, res) => {
-  res.json([
-    {
-      id: 'test-1',
-      prenom: 'Gérard',
-      nom: 'Dufréne',
-      email: 'gerard.dufrene@example.test',
-      telephone: '0123456789',
-      ville: 'Saint-Étienne',
-      quartier: 'Centre',
-      role: 'citoyen',
-      is_active: 1
+// PUT /api/admin/users/:id
+router.put('/users/:id', async (req, res) => {
+  try {
+    await db.query('UPDATE users SET ? WHERE id = ?', [req.body, req.params.id]);
+    res.json({ message: 'Utilisateur modifie' });
+  } catch (error) {
+    const index = users.findIndex(u => u.id == req.params.id);
+    if (index !== -1) {
+      users[index] = { ...users[index], ...req.body };
+      res.json({ message: 'Utilisateur modifie' });
+    } else {
+      res.status(404).json({ error: 'Utilisateur non trouve' });
     }
-  ]);
-});
-
-// POST /api/admin/users - CREER
-router.post('/users', async (req, res) => {
-  const { prenom, nom, email, telephone, password, ville, quartier, role } = req.body;
-  
-  try {
-    const existing = await db.query('SELECT * FROM users WHERE email = ?', [email]);
-    if (existing.length > 0) {
-      return res.status(400).json({ error: 'Email deja utilise' });
-    }
-    
-    const id = require('crypto').randomUUID();
-    await db.query(
-      `INSERT INTO users (id, prenom, nom, email, telephone, password, ville, quartier, role, is_active) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-      [id, prenom, nom, email, telephone, password, ville, quartier, role || 'citoyen']
-    );
-    
-    res.status(201).json({ message: 'Utilisateur cree' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Erreur' });
-  }
-});
-
-// PATCH /api/admin/users/:id/role
-router.patch('/users/:id/role', async (req, res) => {
-  const { id } = req.params;
-  const { role } = req.body;
-  
-  try {
-    await db.query('UPDATE users SET role = ? WHERE id = ?', [role, id]);
-    res.json({ message: 'Role modifie' });
-  } catch (error) {
-    res.status(500).json({ error: 'Erreur' });
-  }
-});
-
-// PATCH /api/admin/users/:id/toggle-status
-router.patch('/users/:id/toggle-status', async (req, res) => {
-  const { id } = req.params;
-  const { isActive } = req.body;
-  
-  try {
-    await db.query('UPDATE users SET is_active = ? WHERE id = ?', [isActive, id]);
-    res.json({ message: 'Statut modifie' });
-  } catch (error) {
-    res.status(500).json({ error: 'Erreur' });
-  }
-});
-
-// POST /api/admin/users/:id/reset-password
-router.post('/users/:id/reset-password', async (req, res) => {
-  const { id } = req.params;
-  const newPassword = 'Default123!';
-  
-  try {
-    await db.query('UPDATE users SET password = ? WHERE id = ?', [newPassword, id]);
-    res.json({ message: 'Mot de passe reinitialise' });
-  } catch (error) {
-    res.status(500).json({ error: 'Erreur' });
   }
 });
 
 // DELETE /api/admin/users/:id
 router.delete('/users/:id', async (req, res) => {
-  const { id } = req.params;
-  
   try {
-    await db.query('DELETE FROM users WHERE id = ?', [id]);
+    await db.query('DELETE FROM users WHERE id = ?', [req.params.id]);
     res.json({ message: 'Utilisateur supprime' });
   } catch (error) {
-    res.status(500).json({ error: 'Erreur' });
+    const index = users.findIndex(u => u.id == req.params.id);
+    if (index !== -1) {
+      users.splice(index, 1);
+      res.json({ message: 'Utilisateur supprime' });
+    } else {
+      res.status(404).json({ error: 'Utilisateur non trouve' });
+    }
+  }
+});
+
+// POST /api/admin/users/:id/reset-password
+router.post('/users/:id/reset-password', async (req, res) => {
+  try {
+    await db.query('UPDATE users SET password = "Default123!" WHERE id = ?', [req.params.id]);
+    res.json({ message: 'Mot de passe reinitialise' });
+  } catch (error) {
+    res.json({ message: 'Mot de passe reinitialise (mode demo)' });
+  }
+});
+
+// PATCH /api/admin/users/:id/role
+router.patch('/users/:id/role', async (req, res) => {
+  try {
+    await db.query('UPDATE users SET role = ? WHERE id = ?', [req.body.role, req.params.id]);
+    res.json({ message: 'Role modifie' });
+  } catch (error) {
+    const index = users.findIndex(u => u.id == req.params.id);
+    if (index !== -1) {
+      users[index].role = req.body.role;
+      res.json({ message: 'Role modifie' });
+    } else {
+      res.status(404).json({ error: 'Utilisateur non trouve' });
+    }
+  }
+});
+
+// GET /api/admin/signalements
+router.get('/signalements', async (req, res) => {
+  try {
+    const result = await db.query('SELECT * FROM signalements');
+    res.json(result);
+  } catch (error) {
+    res.json(signalements);
   }
 });
 
 // GET /api/admin/stats
 router.get('/stats', async (req, res) => {
   try {
-    const [users] = await db.query('SELECT COUNT(*) as total FROM users');
-    const [signalements] = await db.query('SELECT COUNT(*) as total FROM signalements');
-    const [campagnes] = await db.query('SELECT COUNT(*) as total FROM campagnes');
-    const [active] = await db.query('SELECT COUNT(*) as total FROM users WHERE is_active = 1');
-    
-    res.json({
-      totalUsers: users.total,
-      totalSignalements: signalements.total,
-      totalCampagnes: campagnes.total,
-      activeUsers: active.total
-    });
+    const totalUsers = (await db.query('SELECT COUNT(*) as count FROM users'))[0].count;
+    const totalSignalements = (await db.query('SELECT COUNT(*) as count FROM signalements'))[0].count;
+    const activeUsers = (await db.query('SELECT COUNT(*) as count FROM users WHERE is_active = 1'))[0].count;
+    res.json({ totalUsers, totalSignalements, totalCampagnes: 0, activeUsers });
   } catch (error) {
-    res.status(500).json({ totalUsers: 0, totalSignalements: 0, totalCampagnes: 0 });
+    res.json({ totalUsers: users.length, totalSignalements: signalements.length, totalCampagnes: 0, activeUsers: users.filter(u => u.isActive).length });
   }
 });
 
-// GET /api/admin/config
-router.get('/config', authMiddleware, roleMiddleware('admin'), (req, res) => {
+// POST /api/admin/users (créer)
+router.post('/users', async (req, res) => {
+  const { prenom, nom, email, telephone, password, ville, quartier, role } = req.body;
   try {
-    if (fs.existsSync(configPath)) {
-      const raw = fs.readFileSync(configPath, 'utf8')
-      const cfg = JSON.parse(raw)
-      return res.json(cfg)
-    }
-    // defaults
-    return res.json({ title: 'Signal-Moi', contactEmail: 'contact@signal-moi.com', phone: '+237 600 000 000', address: 'Yaounde, Cameroun', mapEnabled: false })
+    await db.query('INSERT INTO users (prenom, nom, email, telephone, password, ville, quartier, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', 
+      [prenom, nom, email, telephone, password, ville, quartier, role || 'citoyen']);
+    res.status(201).json({ message: 'Utilisateur cree' });
   } catch (error) {
-    console.error(error)
-    res.status(500).json({})
+    const newUser = { id: users.length + 1, prenom, nom, email, role: role || 'citoyen', isActive: true };
+    users.push(newUser);
+    res.status(201).json(newUser);
   }
-})
-
-// PATCH /api/admin/config
-router.patch('/config', authMiddleware, roleMiddleware('admin'), (req, res) => {
-  try {
-    const payload = req.body || {}
-    const cfg = {
-      title: payload.title || 'Signal-Moi',
-      contactEmail: payload.contactEmail || 'contact@signal-moi.com',
-      phone: payload.phone || '+237 600 000 000',
-      address: payload.address || 'Yaounde, Cameroun',
-      mapEnabled: payload.mapEnabled === true
-    }
-    // ensure config dir exists
-    const cfgDir = path.dirname(configPath)
-    if (!fs.existsSync(cfgDir)) fs.mkdirSync(cfgDir, { recursive: true })
-    fs.writeFileSync(configPath, JSON.stringify(cfg, null, 2), 'utf8')
-    res.json({ message: 'Config sauvegardee', config: cfg })
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ error: 'Erreur' })
-  }
-})
+});
 
 module.exports = router;
