@@ -14,13 +14,21 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     if (user && token) {
-      const newSocket = io(process.env.NEXT_PUBLIC_API_URL, {
-        auth: { token },
-        transports: ['websocket']
-      })
+      const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+      const opts = { auth: { token }, transports: ['websocket'] }
+      console.info('Socket: attempting connect', { socketUrl, opts: { transports: opts.transports } })
+      const newSocket = io(socketUrl, opts)
 
       newSocket.on('connect', () => {
-        console.log('Socket connecté')
+        console.log('Socket connecté -> id=', newSocket.id)
+      })
+
+      newSocket.on('connect_error', (err) => {
+        console.error('Socket connect_error:', err && err.message)
+      })
+
+      newSocket.on('reconnect_attempt', (attempt) => {
+        console.info('Socket reconnect attempt', attempt)
       })
 
       newSocket.on('new_message', (message) => {
