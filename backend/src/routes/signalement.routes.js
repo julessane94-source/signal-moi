@@ -28,6 +28,25 @@ router.get('/', (req, res) => {
   res.json(signalements);
 });
 
+// Liste publique depuis la base de données (si disponible)
+router.get('/public', async (req, res) => {
+  try {
+    const { Signalement, User, Fichier } = require('../models')
+    const dbSignalements = await Signalement.findAll({
+      include: [
+        { model: User, as: 'user', attributes: ['id', 'prenom', 'nom'] },
+        { model: Fichier, as: 'fichiers' }
+      ],
+      order: [['createdAt', 'DESC']]
+    })
+    if (!dbSignalements || dbSignalements.length === 0) return res.status(200).json([])
+    return res.json(dbSignalements)
+  } catch (err) {
+    console.error('DB signalements error:', err.message)
+    return res.status(500).json({ error: 'Erreur serveur' })
+  }
+})
+
 // Récupérer un signalement par id
 router.get('/:id', (req, res) => {
   const { id } = req.params;
