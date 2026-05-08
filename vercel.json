@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://<YOUR_RENDER_BACKEND_URL>/:path*"
+    }
+  ]
+}
+
+# Note: replace <YOUR_RENDER_BACKEND_URL> with the public URL of the Render service.
+# Alternatively set `NEXT_PUBLIC_API_URL` in Vercel project env variables and have
+# the frontend call that directly (recommended).

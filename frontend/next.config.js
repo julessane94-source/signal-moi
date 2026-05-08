@@ -7,7 +7,7 @@ const nextConfig = {
     defaultLocale: 'fr',
   },
   images: {
-    domains: ['localhost'],
+    domains: ['localhost', 'signal-moi.vercel.app'],
   },
 }
 

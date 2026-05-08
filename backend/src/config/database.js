@@ -1,7 +1,7 @@
 ﻿const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-// Utiliser DATABASE_URL si disponible, sinon les variables individuelles
+// Utiliser DATABASE_URL si disponible (Render / Supabase), sinon variables individuelles
 let sequelize;
 
 if (process.env.DATABASE_URL) {
@@ -17,15 +17,18 @@ if (process.env.DATABASE_URL) {
     logging: false
   });
 } else {
-  // Pour développement local
+  // Pour développement local — permettre de configurer le dialect via DB_DIALECT
+  const dialect = process.env.DB_DIALECT || 'postgres';
+  const defaultPort = dialect === 'mysql' || dialect === 'mariadb' ? 3306 : 5432;
+
   sequelize = new Sequelize(
     process.env.DB_NAME || 'signal_moi_db',
     process.env.DB_USER || 'root',
     process.env.DB_PASSWORD || '',
     {
       host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT) || 5432,
-      dialect: 'postgres',
+      port: parseInt(process.env.DB_PORT) || defaultPort,
+      dialect: dialect,
       logging: false
     }
   );

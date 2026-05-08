@@ -6,9 +6,12 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
+    "migrate": "node ../scripts/sync_models_to_db.js \"$DATABASE_URL\"",
+    "render:migrate": "node ../scripts/sync_models_to_db.js $DATABASE_URL",
     "test": "jest"
   },
   "dependencies": {
+    "aws-sdk": "^2.1410.0",
     "bcryptjs": "^2.4.3",
     "compression": "^1.7.4",
     "connect-redis": "^9.0.0",
@@ -27,6 +30,7 @@
     "mariadb": "^3.5.2",
     "moment": "^2.29.4",
     "multer": "^1.4.5-lts.1",
+    "multer-s3": "^2.10.0",
     "mysql2": "^3.22.3",
     "nodemailer": "^6.9.7",
     "pdfkit": "^0.14.0",
@@ -34,6 +38,7 @@
     "sequelize": "^6.35.1",
     "sharp": "^0.33.1",
     "socket.io": "^4.6.1",
+    "socket.io-client": "^4.8.3",
     "uuid": "^9.0.1",
     "winston": "^3.11.0",
     "xss": "^1.0.15"

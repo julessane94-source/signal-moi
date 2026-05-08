@@ -1,0 +1,53 @@
+# Render configuration: web service for backend and managed Postgres database
+# Replace placeholders in the Render dashboard when creating the services.
+
+services:
+  - type: web
+    name: signal-moi-backend
+    env: docker
+    region: oregon
+    plan: starter
+    dockerfilePath: backend/Dockerfile
+    # Render will build using the Dockerfile; set the start command if needed
+    startCommand: "npm start"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "5000"
+      - key: JWT_SECRET
+        # set securely in the Render dashboard
+        value: "REPLACE_ME"
+      - key: FRONTEND_URL
+        value: "https://your-frontend.vercel.app"
+      - key: SMTP_HOST
+        value: ""
+      - key: SMTP_PORT
+        value: ""
+      - key: SMTP_USER
+        value: ""
+      - key: SMTP_PASS
+        value: ""
+
+databases:
+  - name: signal-moi-db
+    engine: postgres
+    plan: starter
+    region: oregon
+
+# Job: run migrations once (can be triggered manually or scheduled). Render will
+# run commands from the repo root so the script path is `scripts/sync_models_to_db.js`.
+jobs:
+  - type: run
+    name: run-migrations
+    env: docker
+    region: oregon
+    plan: starter
+    runCommand: "node scripts/sync_models_to_db.js $DATABASE_URL"
+
+# Notes:
+# - After creating the Postgres database on Render you can either use the
+#   automatically injected DATABASE_URL or set it manually as an env var.
+# - For file uploads, Render's filesystem is ephemeral; configure an external
+#   object storage (S3, Backblaze, DigitalOcean Spaces) and set related env vars
+#   (e.g. S3_BUCKET, S3_KEY, S3_SECRET, S3_REGION) in the service settings.
