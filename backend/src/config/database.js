@@ -1,11 +1,15 @@
-﻿const { Pool } = require('pg');
+﻿const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+    dialect: 'postgres',
+    dialectOptions: {
+        ssl: {
+            require: true,
+            rejectUnauthorized: false
+        }
+    },
+    logging: false
 });
 
-module.exports = {
-    query: (text, params) => pool.query(text, params),
-};
+module.exports = sequelize;
