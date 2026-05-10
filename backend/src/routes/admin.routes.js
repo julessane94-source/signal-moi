@@ -1,113 +1,55 @@
-﻿const express = require('express');
+// backend/src/routes/admin.routes.js
+const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
-const Signalement = require('../models/Signalement');
-const SiteConfig = require('../models/SiteConfig');
+const db = require('../config/database');
 
+// --- Routes de test (à conserver pour le débogage) ---
+router.get('/test-db', async (req, res) => {
+  try {
+    const result = await db.query('SELECT NOW() as now');
+    res.json({ success: true, time: result.rows[0].now });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Gestion des utilisateurs ---
+// GET /api/admin/users - Récupère la liste de tous les utilisateurs
 router.get('/users', async (req, res) => {
-    try {
-        const users = await User.findAll();
-        res.json(users);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Erreur serveur' });
-    }
+  try {
+    const result = await db.query('SELECT id, prenom, nom, email, telephone, ville, quartier, role, is_active FROM users ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('[ADMIN GET /users] Erreur:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
+  }
 });
 
+// POST /api/admin/users - Crée un nouvel utilisateur
 router.post('/users', async (req, res) => {
-    try {
-        const newUser = await User.create(req.body);
-        res.status(201).json(newUser);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Erreur création' });
-    }
-});
+  console.log('[ADMIN POST /users] Body reçu:', req.body);
+  const { prenom, nom, email, telephone, password, ville, quartier, role } = req.body;
 
-router.put('/users/:id', async (req, res) => {
-    try {
-        const updated = await User.update(req.params.id, req.body);
-        res.json(updated);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Erreur mise à jour' });
-    }
-});
+  // Validation basique des champs obligatoires
+  if (!prenom || !nom || !email || !telephone || !password || !ville || !quartier) {
+    return res.status(400).json({ error: 'Tous les champs sont requis' });
+  }
 
-router.delete('/users/:id', async (req, res) => {
-    try {
-        await User.delete(req.params.id);
-        res.json({ message: 'Utilisateur supprimé' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Erreur suppression' });
-    }
-});
-
-router.patch('/users/:id/role', async (req, res) => {
-    try {
-        const updated = await User.updateRole(req.params.id, req.body.role);
-        res.json(updated);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Erreur modification rôle' });
-    }
-});
-
-router.post('/users/:id/reset-password', async (req, res) => {
-    try {
-        await User.resetPassword(req.params.id);
-        res.json({ message: 'Mot de passe réinitialisé à Default123!' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Erreur réinitialisation' });
-    }
-});
-
-router.get('/signalements', async (req, res) => {
-    try {
-        const signalements = await Signalement.findAll();
-        res.json(signalements);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json([]);
-    }
-});
-
-router.get('/stats', async (req, res) => {
-    try {
-        const users = await User.findAll();
-        const signalements = await Signalement.findAll();
-        res.json({
-            totalUsers: users.length,
-            totalSignalements: signalements.length,
-            activeUsers: users.filter(u => u.is_active).length
-        });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ totalUsers: 0, totalSignalements: 0, activeUsers: 0 });
-    }
-});
-
-router.get('/config', async (req, res) => {
-    try {
-        const config = await SiteConfig.getAll();
-        res.json(config);
-    } catch (err) {
-        res.status(500).json({});
-    }
-});
-
-router.post('/config', async (req, res) => {
-    try {
-        for (const [cle, valeur] of Object.entries(req.body)) {
-            await SiteConfig.set(cle, valeur);
-        }
-        res.json({ message: 'Configuration sauvegardée' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Erreur sauvegarde' });
-    }
+  try {
+    const insertQuery = `
+      INSERT INTO users (prenom, nom, email, telephone, password, ville, quartier, role)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING id, prenom, nom, email, role
+    `;
+    const values = [prenom, nom, email, telephone, password, ville, quartier, role || 'citoyen'];
+    const result = await db.query(insertQuery, values);
+    console.log('[ADMIN POST /users] Utilisateur créé:', result.rows[0]);
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('[ADMIN POST /users] Erreur SQL:', err);
+    res.status(500).json({ error: 'Erreur lors de la création', details: err.message });
+  }
 });
 
 module.exports = router;
