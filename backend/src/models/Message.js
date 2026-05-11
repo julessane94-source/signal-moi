@@ -11,28 +11,19 @@ const Message = db.define('Message', {
     type: DataTypes.UUID,
     allowNull: false,
     field: 'expediteur_id',
-    references: {
-      model: 'users',
-      key: 'id'
-    }
+    // references removed for sync-order tolerance
   },
   destinataireId: {
     type: DataTypes.UUID,
     allowNull: false,
     field: 'destinataire_id',
-    references: {
-      model: 'users',
-      key: 'id'
-    }
+    // references removed for sync-order tolerance
   },
   signalementId: {
     type: DataTypes.UUID,
     allowNull: true,
     field: 'signalement_id',
-    references: {
-      model: 'signalements',
-      key: 'id'
-    }
+    // references removed for sync-order tolerance
   },
   contenu: {
     type: DataTypes.TEXT,

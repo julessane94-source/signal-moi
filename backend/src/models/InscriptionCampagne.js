@@ -11,23 +11,20 @@ const InscriptionCampagne = db.define('InscriptionCampagne', {
     type: DataTypes.UUID,
     allowNull: false,
     field: 'user_id',
-    references: {
-      model: 'users',
-      key: 'id'
-    }
+    // references removed for sync-order tolerance
   },
   campagneId: {
     type: DataTypes.UUID,
     allowNull: false,
     field: 'campagne_id',
-    references: {
-      model: 'campagnes',
-      key: 'id'
-    }
+    // references removed for sync-order tolerance
   },
   statut: {
-    type: DataTypes.ENUM('inscrit', 'present', 'absent', 'annule'),
-    defaultValue: 'inscrit'
+    type: DataTypes.STRING(20),
+    defaultValue: 'inscrit',
+    validate: {
+      isIn: [['inscrit', 'present', 'absent', 'annule']]
+    }
   },
   dateInscription: {
     type: DataTypes.DATE,

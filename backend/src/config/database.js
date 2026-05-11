@@ -1,21 +1,37 @@
-﻿const { Pool } = require('pg');
+﻿const { Sequelize, QueryTypes } = require('sequelize');
 require('dotenv').config();
 
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+    dialect: 'postgres',
+    dialectOptions: {
+        ssl: {
+            require: true,
+            rejectUnauthorized: false
+        }
+    },
+    logging: false
 });
 
-// Fonction query qui retourne un objet avec .rows (comme attendu par vos routes)
+// Préserver la méthode query originale de Sequelize pour éviter récursion
+const originalQuery = sequelize.query.bind(sequelize);
+
+// Wrapper de compatibilité: db.query(...) retourne { rows }
 const query = async (sql, params = []) => {
-    const client = await pool.connect();
     try {
-        const result = await client.query(sql, params);
-        return { rows: result.rows };
-    } finally {
-        client.release();
+        const results = await originalQuery(sql, {
+            bind: params,
+            type: QueryTypes.SELECT
+        });
+        return { rows: results };
+    } catch (error) {
+        console.error('[DB] Erreur SQL:', error.message);
+        throw error;
     }
 };
 
-// Expose aussi le pool pour d'éventuels usages
-module.exports = { query, pool };
+// Attacher la fonction de compatibilité à l'instance sequelize sous un nom non intrusif
+sequelize.queryRaw = query;
+// Fournir un alias `query` utilisé par le code qui attend { rows } tout en gardant `originalQuery` accessible
+sequelize.query = query;
+
+module.exports = sequelize;

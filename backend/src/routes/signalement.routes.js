@@ -27,4 +27,27 @@ router.post('/', async (req, res) => {
     }
 });
 
+    // GET public: liste publique des signalements
+    router.get('/public', async (req, res) => {
+        try {
+            const result = await db.query('SELECT * FROM signalements ORDER BY date_signalement DESC');
+            res.json(result.rows);
+        } catch (err) {
+            console.error('Erreur GET /public signalements:', err);
+            res.status(500).json({ error: 'Erreur serveur' });
+        }
+    });
+
+    // GET pour un utilisateur: ses propres signalements
+    router.get('/user/:userId', async (req, res) => {
+        const { userId } = req.params;
+        try {
+            const result = await db.query('SELECT * FROM signalements WHERE user_id = $1 ORDER BY date_signalement DESC', [userId]);
+            res.json(result.rows);
+        } catch (err) {
+            console.error('Erreur GET /user/:userId signalements:', err);
+            res.status(500).json({ error: 'Erreur serveur' });
+        }
+    });
+
 module.exports = router;

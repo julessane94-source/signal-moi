@@ -25,10 +25,7 @@ const Fichier = db.define('Fichier', {
     type: DataTypes.UUID,
     allowNull: false,
     field: 'signalement_id',
-    references: {
-      model: 'signalements',
-      key: 'id'
-    }
+    // references removed for sync-order tolerance
   },
   nomFichier: {
     type: DataTypes.STRING(255),
@@ -40,8 +37,11 @@ const Fichier = db.define('Fichier', {
     allowNull: false
   },
   type: {
-    type: DataTypes.ENUM('image', 'video', 'audio', 'document'),
-    allowNull: false
+    type: DataTypes.STRING(20),
+    allowNull: false,
+    validate: {
+      isIn: [['image', 'video', 'audio', 'document']]
+    }
   },
   taille: {
     type: DataTypes.INTEGER,
@@ -68,10 +68,7 @@ const Fichier = db.define('Fichier', {
     type: DataTypes.UUID,
     allowNull: true,
     field: 'uploaded_by',
-    references: {
-      model: 'users',
-      key: 'id'
-    }
+    // references removed for sync-order tolerance
   }
 }, {
   tableName: 'fichiers',

@@ -37,18 +37,19 @@ router.post('/users', async (req, res) => {
   }
 
   try {
+    const hashed = await require('bcrypt').hash(password, 10);
     const insertQuery = `
       INSERT INTO users (prenom, nom, email, telephone, password, ville, quartier, role)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING id, prenom, nom, email, role
     `;
-    const values = [prenom, nom, email, telephone, password, ville, quartier, role || 'citoyen'];
+    const values = [prenom, nom, email, telephone, hashed, ville, quartier, role || 'citoyen'];
     const result = await db.query(insertQuery, values);
-    console.log('[ADMIN POST /users] Utilisateur crÃ©Ã©:', result.rows[0]);
+    console.log('[ADMIN POST /users] Utilisateur créé:', result.rows[0]);
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error('[ADMIN POST /users] Erreur SQL:', err);
-    res.status(500).json({ error: 'Erreur lors de la crÃ©ation', details: err.message });
+    res.status(500).json({ error: 'Erreur lors de la création', details: err.message });
   }
 });
 
