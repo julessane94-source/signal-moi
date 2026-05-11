@@ -1,9 +1,9 @@
-// backend/src/routes/admin.routes.js
+﻿// backend/src/routes/admin.routes.js
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 
-// --- Routes de test (à conserver pour le débogage) ---
+// --- Routes de test (Ã  conserver pour le dÃ©bogage) ---
 router.get('/test-db', async (req, res) => {
   try {
     const result = await db.query('SELECT NOW() as now');
@@ -15,7 +15,7 @@ router.get('/test-db', async (req, res) => {
 });
 
 // --- Gestion des utilisateurs ---
-// GET /api/admin/users - Récupère la liste de tous les utilisateurs
+// GET /api/admin/users - RÃ©cupÃ¨re la liste de tous les utilisateurs
 router.get('/users', async (req, res) => {
   try {
     const result = await db.query('SELECT id, prenom, nom, email, telephone, ville, quartier, role, is_active FROM users ORDER BY created_at DESC');
@@ -26,9 +26,9 @@ router.get('/users', async (req, res) => {
   }
 });
 
-// POST /api/admin/users - Crée un nouvel utilisateur
+// POST /api/admin/users - CrÃ©e un nouvel utilisateur
 router.post('/users', async (req, res) => {
-  console.log('[ADMIN POST /users] Body reçu:', req.body);
+  console.log('[ADMIN POST /users] Body reÃ§u:', req.body);
   const { prenom, nom, email, telephone, password, ville, quartier, role } = req.body;
 
   // Validation basique des champs obligatoires
@@ -44,12 +44,24 @@ router.post('/users', async (req, res) => {
     `;
     const values = [prenom, nom, email, telephone, password, ville, quartier, role || 'citoyen'];
     const result = await db.query(insertQuery, values);
-    console.log('[ADMIN POST /users] Utilisateur créé:', result.rows[0]);
+    console.log('[ADMIN POST /users] Utilisateur crÃ©Ã©:', result.rows[0]);
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error('[ADMIN POST /users] Erreur SQL:', err);
-    res.status(500).json({ error: 'Erreur lors de la création', details: err.message });
+    res.status(500).json({ error: 'Erreur lors de la crÃ©ation', details: err.message });
+  }
+});
+
+// Ajoutez cette route après les autres routes GET (par exemple après `/users`)
+router.get('/signalements', async (req, res) => {
+  try {
+    const result = await db.query('SELECT * FROM signalements ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
   }
 });
 
 module.exports = router;
+

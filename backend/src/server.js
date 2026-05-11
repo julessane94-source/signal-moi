@@ -5,6 +5,7 @@ const cors = require('cors');
 const authRoutes = require('./routes/auth.routes');
 const adminRoutes = require('./routes/admin.routes');
 const campagneRoutes = require('./routes/campagne.routes');
+const plaidoyerRoutes = require('./routes/plaidoyer.routes');
 const signalementRoutes = require('./routes/signalement.routes');
 
 const app = express();
@@ -16,6 +17,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/campagnes', campagneRoutes);
 app.use('/api/signalements', signalementRoutes);
+app.use('/api/plaidoyers', plaidoyerRoutes);
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', message: 'Backend fonctionne' });
