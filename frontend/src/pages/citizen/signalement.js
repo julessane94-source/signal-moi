@@ -1,4 +1,4 @@
-ï»¿import { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/common/Navbar';
@@ -70,11 +70,11 @@ export default function NewSignalement() {
         router.push('/citizen/dashboard');
       } else {
         const error = await response.json();
-        alert(error.error || 'Erreur lors de la crÃ©ation');
+        alert(error.error || 'Erreur lors de la création');
       }
     } catch (error) {
       console.error(error);
-      alert('Erreur rÃ©seau');
+      alert('Erreur réseau');
     } finally {
       setLoading(false);
     }
@@ -97,7 +97,7 @@ export default function NewSignalement() {
                 <select name="type" required value={formData.type} onChange={handleChange} className="w-full border rounded px-3 py-2">
                   <option value="violence">Violence</option>
                   <option value="vol">Vol</option>
-                  <option value="probleme_eclairage">ProblÃ¨me Ã©clairage</option>
+                  <option value="probleme_eclairage">Problème éclairage</option>
                   <option value="nid_de_poule">Nid-de-poule</option>
                   <option value="autre">Autre</option>
                 </select>
@@ -108,10 +108,10 @@ export default function NewSignalement() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Lieu *</label>
-                <input type="text" name="localisation" required value={formData.localisation} onChange={handleChange} className="w-full border rounded px-3 py-2" placeholder="Ex: Carrefour Mvan, YaoundÃ©" />
+                <input type="text" name="localisation" required value={formData.localisation} onChange={handleChange} className="w-full border rounded px-3 py-2" placeholder="Ex: Carrefour Mvan, Yaoundé" />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Preuves (photos, vidÃ©os, audio)</label>
+                <label className="block text-sm font-medium mb-1">Preuves (photos, vidéos, audio)</label>
                 <input type="file" multiple accept="image/*,video/*,audio/*" onChange={handleFileChange} className="w-full" />
                 {files.length > 0 && (
                   <div className="mt-2 space-y-1">
