@@ -1,25 +1,21 @@
-﻿const { Sequelize } = require('sequelize');
+﻿const { Pool } = require('pg');
 require('dotenv').config();
 
-const sequelize = new Sequelize(process.env.DATABASE_URL, {
-    dialect: 'postgres',
-    dialectOptions: {
-        ssl: { require: true, rejectUnauthorized: false }
-    },
-    logging: false
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
 });
 
+// Fonction query qui retourne un objet avec .rows (comme attendu par vos routes)
 const query = async (sql, params = []) => {
+    const client = await pool.connect();
     try {
-        const [results] = await sequelize.query(sql, {
-            bind: params,
-            type: Sequelize.QueryTypes.SELECT
-        });
-        return results;
-    } catch (error) {
-        console.error('[DB] Erreur SQL:', error.message);
-        throw error;
+        const result = await client.query(sql, params);
+        return { rows: result.rows };
+    } finally {
+        client.release();
     }
 };
 
-module.exports = { query, sequelize };
+// Expose aussi le pool pour d'éventuels usages
+module.exports = { query, pool };
