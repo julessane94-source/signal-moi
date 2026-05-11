@@ -1,4 +1,4 @@
-ï»¿const express = require('express');
+const express = require('express');
 const bcrypt = require('bcrypt');
 const router = express.Router();
 const db = require('../config/database');
@@ -12,7 +12,7 @@ router.post('/register', async (req, res) => {
     try {
         const existing = await db.query('SELECT id FROM users WHERE email = $1', [email]);
         if (existing.rows.length > 0) {
-            return res.status(400).json({ error: 'Cet email est dÃ©jÃ  utilisÃ©' });
+            return res.status(400).json({ error: 'Cet email est déjà utilisé' });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -24,7 +24,7 @@ router.post('/register', async (req, res) => {
         );
         const newUser = result.rows[0];
         const token = Buffer.from(JSON.stringify({ id: newUser.id, email: newUser.email, role: newUser.role })).toString('base64');
-        res.status(201).json({ message: 'Inscription rÃ©ussie', token, user: newUser });
+        res.status(201).json({ message: 'Inscription réussie', token, user: newUser });
     } catch (err) {
         console.error('Erreur inscription:', err);
         res.status(500).json({ error: 'Erreur serveur', details: err.message });
@@ -45,7 +45,7 @@ router.post('/login', async (req, res) => {
         }
         const token = Buffer.from(JSON.stringify({ id: user.id, email: user.email, role: user.role })).toString('base64');
         const { password: _, ...userData } = user;
-        res.json({ message: 'Connexion rÃ©ussie', token, user: userData });
+        res.json({ message: 'Connexion réussie', token, user: userData });
     } catch (err) {
         console.error('Erreur connexion:', err);
         res.status(500).json({ error: 'Erreur serveur', details: err.message });
@@ -53,4 +53,3 @@ router.post('/login', async (req, res) => {
 });
 
 module.exports = router;
-
