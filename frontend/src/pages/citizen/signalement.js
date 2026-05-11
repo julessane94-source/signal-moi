@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+ï»¿import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/common/Navbar';
@@ -8,7 +8,6 @@ export default function NewSignalement() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState([]);
-  const [position, setPosition] = useState(null);
   const [formData, setFormData] = useState({
     titre: '',
     description: '',
@@ -39,22 +38,19 @@ export default function NewSignalement() {
 
     try {
       const token = localStorage.getItem('token');
-      if (!user) {
+      if (!user || !user.id) {
         alert('Veuillez vous reconnecter');
         router.push('/login');
         return;
       }
 
-      // Construction du payload JSON
       const payload = {
         user_id: user.id,
         titre: formData.titre,
         description: formData.description,
         type: formData.type,
         localisation: formData.localisation,
-        latitude: position?.lat || null,
-        longitude: position?.lng || null,
-        fichiers: [] // Pour l'instant, on ignore les fichiers, sinon utiliser FormData
+        fichiers: []
       };
 
       const response = await fetch('https://signal-moi-api.onrender.com/api/signalements', {
@@ -70,11 +66,11 @@ export default function NewSignalement() {
         router.push('/citizen/dashboard');
       } else {
         const error = await response.json();
-        alert(error.error || 'Erreur lors de la création');
+        alert(error.error || 'Erreur lors de la crÃ©ation');
       }
     } catch (error) {
       console.error(error);
-      alert('Erreur réseau');
+      alert('Erreur rÃ©seau');
     } finally {
       setLoading(false);
     }
@@ -90,14 +86,14 @@ export default function NewSignalement() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Titre *</label>
-                <input type="text" name="titre" required value={formData.titre} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+                <input type="text" name="titre" required value={formData.titre} onChange={handleChange} className="w-full border rounded px-3 py-2" placeholder="ex: Nid-de-poule dangereux" />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Type d'incident *</label>
                 <select name="type" required value={formData.type} onChange={handleChange} className="w-full border rounded px-3 py-2">
                   <option value="violence">Violence</option>
                   <option value="vol">Vol</option>
-                  <option value="probleme_eclairage">Problème éclairage</option>
+                  <option value="probleme_eclairage">ProblÃ¨me Ã©clairage</option>
                   <option value="nid_de_poule">Nid-de-poule</option>
                   <option value="autre">Autre</option>
                 </select>
@@ -108,10 +104,10 @@ export default function NewSignalement() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Lieu *</label>
-                <input type="text" name="localisation" required value={formData.localisation} onChange={handleChange} className="w-full border rounded px-3 py-2" placeholder="Ex: Carrefour Mvan, Yaoundé" />
+                <input type="text" name="localisation" required value={formData.localisation} onChange={handleChange} className="w-full border rounded px-3 py-2" placeholder="Ex: Carrefour Mvan, YaoundÃ©" />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Preuves (photos, vidéos, audio)</label>
+                <label className="block text-sm font-medium mb-1">Preuves (photos, vidÃ©os, audio)</label>
                 <input type="file" multiple accept="image/*,video/*,audio/*" onChange={handleFileChange} className="w-full" />
                 {files.length > 0 && (
                   <div className="mt-2 space-y-1">
