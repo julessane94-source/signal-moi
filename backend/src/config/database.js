@@ -9,12 +9,10 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
     logging: false
 });
 
-// Méthode query qui supporte les paramètres $1, $2, etc.
 const query = async (sql, params = []) => {
     try {
-        // sequelize.query attend un tableau de valeurs pour les replacements au format $1, $2...
         const [results] = await sequelize.query(sql, {
-            bind: params,          // important : utilise "bind" pour PostgreSQL
+            bind: params,
             type: Sequelize.QueryTypes.SELECT
         });
         return results;
