@@ -190,18 +190,23 @@ router.get('/site-config', authMiddleware, async (req, res) => {
 
 router.post('/site-config', authMiddleware, async (req, res) => {
   try {
-    const { siteName, contactEmail, contactPhone, address } = req.body;
+    const { siteName, contactEmail, contactPhone, address, contactPage, aboutPage, homePage } = req.body;
     if (!siteName || !contactEmail || !contactPhone || !address) {
-      return res.status(400).json({ error: 'Tous les champs de configuration sont requis' });
+      return res.status(400).json({ error: 'Les champs de base (siteName, contactEmail, contactPhone, address) sont requis' });
     }
 
-    await Promise.all([
+    const tasks = [
       SiteConfig.set('siteName', siteName),
       SiteConfig.set('contactEmail', contactEmail),
       SiteConfig.set('contactPhone', contactPhone),
       SiteConfig.set('address', address)
-    ]);
+    ];
 
+    if (contactPage !== undefined) tasks.push(SiteConfig.set('contact_page', JSON.stringify(contactPage)));
+    if (aboutPage !== undefined) tasks.push(SiteConfig.set('about_page', JSON.stringify(aboutPage)));
+    if (homePage !== undefined) tasks.push(SiteConfig.set('home_page', JSON.stringify(homePage)));
+
+    await Promise.all(tasks);
     res.json({ success: true });
   } catch (err) {
     console.error('[ADMIN POST /site-config] Erreur:', err);

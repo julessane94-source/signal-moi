@@ -14,7 +14,21 @@ const SiteConfig = {
     },
     getAll: async () => {
         const res = await db.query('SELECT cle, valeur FROM site_config');
-        return Object.fromEntries(res.rows.map(r => [r.cle, r.valeur]));
+        const obj = {};
+        for (const r of res.rows) {
+            let val = r.valeur;
+            // essayer de parser JSON si applicable
+            if (typeof val === 'string') {
+                try {
+                    const parsed = JSON.parse(val);
+                    val = parsed;
+                } catch (e) {
+                    // pas JSON — garder la chaîne
+                }
+            }
+            obj[r.cle] = val;
+        }
+        return obj;
     }
 };
 

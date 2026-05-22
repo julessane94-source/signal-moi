@@ -18,7 +18,28 @@ export default function AdminDashboard() {
     contactEmail: 'contact@signal-moi.com',
     contactPhone: '+237 600 000 000',
     address: 'Yaounde, Cameroun'
+    ,
+    contactPage: {
+      title: 'Contactez-nous',
+      content: 'Pour toute question, contactez-nous.',
+      images: [],
+      videos: []
+    },
+    aboutPage: {
+      title: 'A propos',
+      content: 'Signal-Moi est une plateforme...',
+      images: [],
+      videos: []
+    },
+    homePage: {
+      title: 'Accueil',
+      heroText: 'Votre voix compte',
+      content: 'Bienvenue sur Signal-Moi',
+      images: [],
+      videos: []
+    }
   })
+  
   const [signalements, setSignalements] = useState([])
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -61,12 +82,16 @@ export default function AdminDashboard() {
       })
       if (res.ok) {
         const data = await res.json()
-        setSiteConfig({
-          siteName: data.siteName || 'Signal-Moi',
-          contactEmail: data.contactEmail || 'contact@signal-moi.com',
-          contactPhone: data.contactPhone || '+237 600 000 000',
-          address: data.address || 'Yaounde, Cameroun'
-        })
+        setSiteConfig(prev => ({
+          ...prev,
+          siteName: data.siteName || prev.siteName,
+          contactEmail: data.contactEmail || prev.contactEmail,
+          contactPhone: data.contactPhone || prev.contactPhone,
+          address: data.address || prev.address,
+          contactPage: data.contact_page || data.contactPage || prev.contactPage,
+          aboutPage: data.about_page || data.aboutPage || prev.aboutPage,
+          homePage: data.home_page || data.homePage || prev.homePage
+        }))
       }
     } catch (error) {
       console.error('Erreur fetchSiteConfig:', error)
@@ -172,10 +197,20 @@ export default function AdminDashboard() {
     try {
       const token = localStorage.getItem('token')
       const base = API_BASE
+      const payload = {
+        siteName: siteConfig.siteName,
+        contactEmail: siteConfig.contactEmail,
+        contactPhone: siteConfig.contactPhone,
+        address: siteConfig.address,
+        contactPage: siteConfig.contactPage,
+        aboutPage: siteConfig.aboutPage,
+        homePage: siteConfig.homePage
+      }
+
       const res = await fetch(`${base}/api/admin/site-config`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(siteConfig)
+        body: JSON.stringify(payload)
       })
       if (!res.ok) {
         const error = await res.json()
@@ -298,6 +333,28 @@ export default function AdminDashboard() {
                 <div><label className="block text-sm font-medium mb-1">Email de contact</label><input type="email" className="w-full border rounded-lg px-3 py-2" value={siteConfig.contactEmail} onChange={e => setSiteConfig({...siteConfig, contactEmail: e.target.value})} /></div>
                 <div><label className="block text-sm font-medium mb-1">Telephone</label><input type="tel" className="w-full border rounded-lg px-3 py-2" value={siteConfig.contactPhone} onChange={e => setSiteConfig({...siteConfig, contactPhone: e.target.value})} /></div>
                 <div><label className="block text-sm font-medium mb-1">Adresse</label><textarea className="w-full border rounded-lg px-3 py-2" rows="2" value={siteConfig.address} onChange={e => setSiteConfig({...siteConfig, address: e.target.value})} /></div>
+                <div className="pt-4">
+                  <h3 className="font-semibold mb-2">Page Contact</h3>
+                  <div><label className="block text-sm font-medium mb-1">Titre</label><input type="text" className="w-full border rounded-lg px-3 py-2" value={siteConfig.contactPage?.title || ''} onChange={e => setSiteConfig({...siteConfig, contactPage: {...siteConfig.contactPage, title: e.target.value}})} /></div>
+                  <div className="mt-2"><label className="block text-sm font-medium mb-1">Contenu</label><textarea className="w-full border rounded-lg px-3 py-2" rows="4" value={siteConfig.contactPage?.content || ''} onChange={e => setSiteConfig({...siteConfig, contactPage: {...siteConfig.contactPage, content: e.target.value}})} /></div>
+                  <div className="mt-2"><label className="block text-sm font-medium mb-1">Images (URLs, séparées par des virgules)</label><input type="text" className="w-full border rounded-lg px-3 py-2" value={(siteConfig.contactPage?.images || []).join(',')} onChange={e => setSiteConfig({...siteConfig, contactPage: {...siteConfig.contactPage, images: e.target.value.split(',').map(s => s.trim()).filter(Boolean)}})} /></div>
+                  <div className="mt-2"><label className="block text-sm font-medium mb-1">Vidéos (URLs, séparées par des virgules)</label><input type="text" className="w-full border rounded-lg px-3 py-2" value={(siteConfig.contactPage?.videos || []).join(',')} onChange={e => setSiteConfig({...siteConfig, contactPage: {...siteConfig.contactPage, videos: e.target.value.split(',').map(s => s.trim()).filter(Boolean)}})} /></div>
+                </div>
+                <div className="pt-4">
+                  <h3 className="font-semibold mb-2">Page A propos</h3>
+                  <div><label className="block text-sm font-medium mb-1">Titre</label><input type="text" className="w-full border rounded-lg px-3 py-2" value={siteConfig.aboutPage?.title || ''} onChange={e => setSiteConfig({...siteConfig, aboutPage: {...siteConfig.aboutPage, title: e.target.value}})} /></div>
+                  <div className="mt-2"><label className="block text-sm font-medium mb-1">Contenu</label><textarea className="w-full border rounded-lg px-3 py-2" rows="6" value={siteConfig.aboutPage?.content || ''} onChange={e => setSiteConfig({...siteConfig, aboutPage: {...siteConfig.aboutPage, content: e.target.value}})} /></div>
+                  <div className="mt-2"><label className="block text-sm font-medium mb-1">Images (URLs, séparées par des virgules)</label><input type="text" className="w-full border rounded-lg px-3 py-2" value={(siteConfig.aboutPage?.images || []).join(',')} onChange={e => setSiteConfig({...siteConfig, aboutPage: {...siteConfig.aboutPage, images: e.target.value.split(',').map(s => s.trim()).filter(Boolean)}})} /></div>
+                  <div className="mt-2"><label className="block text-sm font-medium mb-1">Vidéos (URLs, séparées par des virgules)</label><input type="text" className="w-full border rounded-lg px-3 py-2" value={(siteConfig.aboutPage?.videos || []).join(',')} onChange={e => setSiteConfig({...siteConfig, aboutPage: {...siteConfig.aboutPage, videos: e.target.value.split(',').map(s => s.trim()).filter(Boolean)}})} /></div>
+                </div>
+                <div className="pt-4">
+                  <h3 className="font-semibold mb-2">Page Accueil</h3>
+                  <div><label className="block text-sm font-medium mb-1">Titre</label><input type="text" className="w-full border rounded-lg px-3 py-2" value={siteConfig.homePage?.title || ''} onChange={e => setSiteConfig({...siteConfig, homePage: {...siteConfig.homePage, title: e.target.value}})} /></div>
+                  <div className="mt-2"><label className="block text-sm font-medium mb-1">Hero text</label><input type="text" className="w-full border rounded-lg px-3 py-2" value={siteConfig.homePage?.heroText || ''} onChange={e => setSiteConfig({...siteConfig, homePage: {...siteConfig.homePage, heroText: e.target.value}})} /></div>
+                  <div className="mt-2"><label className="block text-sm font-medium mb-1">Contenu</label><textarea className="w-full border rounded-lg px-3 py-2" rows="4" value={siteConfig.homePage?.content || ''} onChange={e => setSiteConfig({...siteConfig, homePage: {...siteConfig.homePage, content: e.target.value}})} /></div>
+                  <div className="mt-2"><label className="block text-sm font-medium mb-1">Images (URLs, séparées par des virgules)</label><input type="text" className="w-full border rounded-lg px-3 py-2" value={(siteConfig.homePage?.images || []).join(',')} onChange={e => setSiteConfig({...siteConfig, homePage: {...siteConfig.homePage, images: e.target.value.split(',').map(s => s.trim()).filter(Boolean)}})} /></div>
+                  <div className="mt-2"><label className="block text-sm font-medium mb-1">Vidéos (URLs, séparées par des virgules)</label><input type="text" className="w-full border rounded-lg px-3 py-2" value={(siteConfig.homePage?.videos || []).join(',')} onChange={e => setSiteConfig({...siteConfig, homePage: {...siteConfig.homePage, videos: e.target.value.split(',').map(s => s.trim()).filter(Boolean)}})} /></div>
+                </div>
                 <button onClick={saveConfig} className="bg-indigo-600 text-white px-4 py-2 rounded-lg">Sauvegarder</button>
               </div>
             </div>
