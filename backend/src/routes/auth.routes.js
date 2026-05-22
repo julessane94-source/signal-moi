@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
 const db = require('../config/database');
+const bcrypt = require('bcrypt');
 const { authMiddleware } = require('../middlewares/auth');
 
 router.post('/register', async (req, res) => {
@@ -65,6 +66,42 @@ router.post('/login', async (req, res) => {
 
 module.exports = router;
 
+// POST /api/auth/google - login / register via Google id_token
+router.post('/google', async (req, res) => {
+    try {
+        const { idToken } = req.body;
+        if (!idToken) return res.status(400).json({ error: 'idToken requis' });
+
+        // Validate token with Google
+        const resp = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`);
+        if (!resp.ok) return res.status(400).json({ error: 'Token Google invalide' });
+        const info = await resp.json();
+
+        const email = info.email;
+        if (!email) return res.status(400).json({ error: 'Email non fourni par Google' });
+
+        // Find existing user
+        const existing = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+        let user = existing.rows[0];
+        if (!user) {
+            // create user
+            const prenom = info.given_name || email.split('@')[0];
+            const nom = info.family_name || '';
+            const randomPwd = Math.random().toString(36).slice(-12) + '!A1';
+            const hashed = await bcrypt.hash(randomPwd, 10);
+            const insert = await db.query(`INSERT INTO users (prenom, nom, email, password, role, is_active) VALUES ($1, $2, $3, $4, 'citoyen', true) RETURNING *`, [prenom, nom, email, hashed]);
+            user = insert.rows[0];
+        }
+
+        // create JWT
+        const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET || 'dev-secret-key', { expiresIn: '7d' });
+        const { password: _, ...userData } = user;
+        res.json({ message: 'Connexion via Google réussie', token, user: userData });
+    } catch (err) {
+        console.error('Erreur /auth/google:', err);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
 // GET /api/auth/profile - retourne l'utilisateur authentifié
 router.get('/profile', authMiddleware, async (req, res) => {
     try {
