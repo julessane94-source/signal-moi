@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
 const db = require('../config/database');
+const { authMiddleware } = require('../middlewares/auth');
 
 router.post('/register', async (req, res) => {
     const { prenom, nom, email, telephone, password, ville, quartier } = req.body;
@@ -63,6 +64,22 @@ router.post('/login', async (req, res) => {
 });
 
 module.exports = router;
+
+// GET /api/auth/profile - retourne l'utilisateur authentifié
+router.get('/profile', authMiddleware, async (req, res) => {
+    try {
+        // `authMiddleware` place l'instance Sequelize `User` sur `req.user` ou un objet similaire
+        const user = req.user;
+        if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' });
+        // Si `user` est une instance Sequelize, appeler toJSON pour exclure champs sensibles
+        const payload = typeof user.toJSON === 'function' ? user.toJSON() : user;
+        delete payload.password;
+        res.json(payload);
+    } catch (err) {
+        console.error('Erreur /profile:', err);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
 
 
 
