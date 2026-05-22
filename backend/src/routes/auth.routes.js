@@ -78,7 +78,10 @@ router.post('/google', async (req, res) => {
         const info = await resp.json();
 
         const email = info.email;
+        // Vérifier que Google a validé l'email
+        const emailVerified = info.email_verified === 'true' || info.email_verified === true;
         if (!email) return res.status(400).json({ error: 'Email non fourni par Google' });
+        if (!emailVerified) return res.status(400).json({ error: 'Email Google non vérifié' });
 
         // Find existing user
         const existing = await db.query('SELECT * FROM users WHERE email = $1', [email]);
