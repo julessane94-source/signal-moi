@@ -19,6 +19,7 @@ export default function AdminDashboard() {
     contactPhone: '+237 600 000 000',
     address: 'Yaounde, Cameroun'
   })
+  const [signalements, setSignalements] = useState([])
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalSignalements: 0,
@@ -82,6 +83,7 @@ export default function AdminDashboard() {
       ])
       const signalementsData = signalementsRes.ok ? await signalementsRes.json() : []
       const campagnesData = campagnesRes.ok ? await campagnesRes.json() : []
+      setSignalements(Array.isArray(signalementsData) ? signalementsData : [])
       setStats(prev => ({
         ...prev,
         totalSignalements: Array.isArray(signalementsData) ? signalementsData.length : 0,
@@ -221,6 +223,7 @@ export default function AdminDashboard() {
           <div className="border-b border-gray-200 mb-6">
             <nav className="flex space-x-8">
               <button onClick={() => setActiveTab('users')} className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'users' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'}`}>👥 Utilisateurs</button>
+              <button onClick={() => setActiveTab('signalements')} className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'signalements' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'}`}>📋 Signalements</button>
               <button onClick={() => setActiveTab('config')} className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'config' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'}`}>⚙️ Configuration</button>
               <button onClick={() => setActiveTab('stats')} className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'stats' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'}`}>📊 Supervision</button>
               <button onClick={() => setActiveTab('profile')} className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'profile' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'}`}>👤 Mon profil</button>
@@ -245,6 +248,44 @@ export default function AdminDashboard() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* Onglet Signalements - liste détaillée */}
+          {activeTab === 'signalements' && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold mb-4">Signalements</h2>
+              {signalements.length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-xl">
+                  <div className="text-6xl mb-4">📭</div>
+                  <p className="text-gray-500">Aucun signalement disponible</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {signalements.map(s => (
+                    <div key={s.id} className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <span className="text-xs text-gray-400">{new Date(s.createdAt).toLocaleString()}</span>
+                            <span className="text-sm text-gray-600">Par: {s.userId}</span>
+                          </div>
+                          <h3 className="font-semibold text-lg">{s.titre}</h3>
+                          <p className="text-gray-600 mt-1">{s.description}</p>
+                          <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
+                            <span>📍 {s.localisation}</span>
+                            <span>📎 {s.fichiers?.length || Object.keys(s.fichiers || {}).length || 0} pièce(s) jointe(s)</span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm text-gray-500">Statut: {s.statut}</div>
+                          <button className="mt-3 text-indigo-600">Voir détail</button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

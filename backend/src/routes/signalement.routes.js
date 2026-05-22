@@ -61,45 +61,105 @@ router.post('/', authMiddleware, async (req, res) => {
 });
 
     // GET public: liste publique des signalements
-    router.get('/public', async (req, res) => {
-        try {
-            const result = await db.query('SELECT * FROM signalements ORDER BY date_signalement DESC');
-            res.json(result.rows);
-        } catch (err) {
-            console.error('Erreur GET /public signalements:', err);
-            res.status(500).json({ error: 'Erreur serveur' });
-        }
-    });
-
-    // GET générique: signalements selon le rôle / utilisateur
-    router.get('/', optionalAuthMiddleware, async (req, res) => {
-        try {
-            if (req.user && req.user.role === 'citoyen') {
-                const result = await db.query('SELECT * FROM signalements WHERE user_id = $1 ORDER BY date_signalement DESC', [req.user.id]);
-                return res.json(result.rows);
+        router.get('/public', async (req, res) => {
+            try {
+                const result = await db.query(`SELECT id, user_id, titre, description, type, statut, localisation, latitude, longitude, fichiers, created_at, updated_at
+                                               FROM signalements ORDER BY created_at DESC LIMIT 200`);
+                const rows = result.rows.map(r => ({
+                    id: r.id,
+                    userId: r.user_id,
+                    titre: r.titre,
+                    description: r.description,
+                    type: r.type,
+                    statut: r.statut,
+                    localisation: r.localisation,
+                    latitude: r.latitude !== null ? parseFloat(r.latitude) : null,
+                    longitude: r.longitude !== null ? parseFloat(r.longitude) : null,
+                    fichiers: r.fichiers || {},
+                    createdAt: r.created_at,
+                    updatedAt: r.updated_at
+                }));
+                res.json(rows);
+            } catch (err) {
+                console.error('Erreur GET /public signalements:', err);
+                res.status(500).json({ error: 'Erreur serveur' });
             }
-            const result = await db.query('SELECT * FROM signalements ORDER BY date_signalement DESC');
-            res.json(result.rows);
-        } catch (err) {
-            console.error('Erreur GET / signalements:', err);
-            res.status(500).json({ error: 'Erreur serveur' });
-        }
-    });
+        });
 
-    // GET pour un utilisateur: ses propres signalements (protégé)
-    router.get('/user/:userId', authMiddleware, async (req, res) => {
-        const { userId } = req.params;
-        // ✅ FIX: Empêcher un utilisateur de voir les signalements d'un autre
-        if (userId !== req.user.id && req.user.role !== 'admin') {
-            return res.status(403).json({ error: 'Accès refusé' });
-        }
-        try {
-            const result = await db.query('SELECT * FROM signalements WHERE user_id = $1 ORDER BY date_signalement DESC', [userId]);
-            res.json(result.rows);
-        } catch (err) {
-            console.error('Erreur GET /user/:userId signalements:', err);
-            res.status(500).json({ error: 'Erreur serveur' });
-        }
-    });
+        // GET générique: signalements selon le rôle / utilisateur
+        router.get('/', optionalAuthMiddleware, async (req, res) => {
+            try {
+                if (req.user && req.user.role === 'citoyen') {
+                    const result = await db.query(`SELECT id, user_id, titre, description, type, statut, localisation, latitude, longitude, fichiers, created_at, updated_at
+                                                   FROM signalements WHERE user_id = $1 ORDER BY created_at DESC LIMIT 200`, [req.user.id]);
+                    const rows = result.rows.map(r => ({
+                        id: r.id,
+                        userId: r.user_id,
+                        titre: r.titre,
+                        description: r.description,
+                        type: r.type,
+                        statut: r.statut,
+                        localisation: r.localisation,
+                        latitude: r.latitude !== null ? parseFloat(r.latitude) : null,
+                        longitude: r.longitude !== null ? parseFloat(r.longitude) : null,
+                        fichiers: r.fichiers || {},
+                        createdAt: r.created_at,
+                        updatedAt: r.updated_at
+                    }));
+                    return res.json(rows);
+                }
+                const result = await db.query(`SELECT id, user_id, titre, description, type, statut, localisation, latitude, longitude, fichiers, created_at, updated_at
+                                               FROM signalements ORDER BY created_at DESC LIMIT 500`);
+                const rows = result.rows.map(r => ({
+                    id: r.id,
+                    userId: r.user_id,
+                    titre: r.titre,
+                    description: r.description,
+                    type: r.type,
+                    statut: r.statut,
+                    localisation: r.localisation,
+                    latitude: r.latitude !== null ? parseFloat(r.latitude) : null,
+                    longitude: r.longitude !== null ? parseFloat(r.longitude) : null,
+                    fichiers: r.fichiers || {},
+                    createdAt: r.created_at,
+                    updatedAt: r.updated_at
+                }));
+                res.json(rows);
+            } catch (err) {
+                console.error('Erreur GET / signalements:', err);
+                res.status(500).json({ error: 'Erreur serveur' });
+            }
+        });
+
+        // GET pour un utilisateur: ses propres signalements (protégé)
+        router.get('/user/:userId', authMiddleware, async (req, res) => {
+            const { userId } = req.params;
+            // ✅ FIX: Empêcher un utilisateur de voir les signalements d'un autre
+            if (userId !== req.user.id && req.user.role !== 'admin') {
+                return res.status(403).json({ error: 'Accès refusé' });
+            }
+            try {
+                const result = await db.query(`SELECT id, user_id, titre, description, type, statut, localisation, latitude, longitude, fichiers, created_at, updated_at
+                                               FROM signalements WHERE user_id = $1 ORDER BY created_at DESC`, [userId]);
+                const rows = result.rows.map(r => ({
+                    id: r.id,
+                    userId: r.user_id,
+                    titre: r.titre,
+                    description: r.description,
+                    type: r.type,
+                    statut: r.statut,
+                    localisation: r.localisation,
+                    latitude: r.latitude !== null ? parseFloat(r.latitude) : null,
+                    longitude: r.longitude !== null ? parseFloat(r.longitude) : null,
+                    fichiers: r.fichiers || {},
+                    createdAt: r.created_at,
+                    updatedAt: r.updated_at
+                }));
+                res.json(rows);
+            } catch (err) {
+                console.error('Erreur GET /user/:userId signalements:', err);
+                res.status(500).json({ error: 'Erreur serveur' });
+            }
+        });
 
 module.exports = router;

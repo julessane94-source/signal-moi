@@ -80,8 +80,23 @@ router.post('/users', authMiddleware, async (req, res) => {
 // Ajoutez cette route après les autres routes GET (par exemple après `/users`)
 router.get('/signalements', authMiddleware, async (req, res) => {
   try {
-    const result = await db.query('SELECT * FROM signalements ORDER BY created_at DESC');
-    res.json(result.rows);
+    const result = await db.query(`SELECT id, user_id, titre, description, type, statut, localisation, latitude, longitude, fichiers, created_at, updated_at
+                                   FROM signalements ORDER BY created_at DESC LIMIT 100`);
+    const rows = result.rows.map(r => ({
+      id: r.id,
+      userId: r.user_id,
+      titre: r.titre,
+      description: r.description,
+      type: r.type,
+      statut: r.statut,
+      localisation: r.localisation,
+      latitude: r.latitude !== null ? parseFloat(r.latitude) : null,
+      longitude: r.longitude !== null ? parseFloat(r.longitude) : null,
+      fichiers: r.fichiers || {},
+      createdAt: r.created_at,
+      updatedAt: r.updated_at
+    }));
+    res.json(rows);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
