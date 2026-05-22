@@ -303,18 +303,26 @@ export default function AdminDashboard() {
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <span className="text-xs text-gray-400">{new Date(s.createdAt).toLocaleString()}</span>
-                            <span className="text-sm text-gray-600">Par: {s.userId}</span>
+                            <span className="text-sm text-gray-600">Par: {s.author?.prenom} {s.author?.nom}</span>
                           </div>
                           <h3 className="font-semibold text-lg">{s.titre}</h3>
                           <p className="text-gray-600 mt-1">{s.description}</p>
                           <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
                             <span>📍 {s.localisation}</span>
-                            <span>📎 {s.fichiers?.length || Object.keys(s.fichiers || {}).length || 0} pièce(s) jointe(s)</span>
+                            <span>📎 {Array.isArray(s.fichiers) ? s.fichiers.length : Object.keys(s.fichiers || {}).length} pièce(s) jointe(s)</span>
+                            {s.author?.telephone && (
+                              <a href={`https://wa.me/${s.author.telephone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="ml-2 text-green-600">WhatsApp</a>
+                            )}
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="text-sm text-gray-500">Statut: {s.statut}</div>
-                          <button className="mt-3 text-indigo-600">Voir détail</button>
+                          <div className="mt-3 flex items-center gap-2">
+                            <button className="text-indigo-600">Voir détail</button>
+                            {Array.isArray(s.fichiers) && s.fichiers[0] && (
+                              <img src={s.fichiers[0]} alt="aperçu" className="w-16 h-12 object-cover rounded-md ml-3" />
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>

@@ -155,11 +155,12 @@ router.patch('/users/:id/role', authMiddleware, async (req, res) => {
 // Ajoutez cette route après les autres routes GET (par exemple après `/users`)
 router.get('/signalements', authMiddleware, async (req, res) => {
   try {
-    const result = await db.query(`SELECT id, user_id, titre, description, type, statut, localisation, latitude, longitude, fichiers, created_at, updated_at
-                                   FROM signalements ORDER BY created_at DESC LIMIT 100`);
+    const result = await db.query(`SELECT s.*, u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone, u.email AS user_email
+                                   FROM signalements s
+                                   LEFT JOIN users u ON u.id = s.user_id
+                                   ORDER BY s.created_at DESC LIMIT 200`);
     const rows = result.rows.map(r => ({
       id: r.id,
-      userId: r.user_id,
       titre: r.titre,
       description: r.description,
       type: r.type,
@@ -169,7 +170,14 @@ router.get('/signalements', authMiddleware, async (req, res) => {
       longitude: r.longitude !== null ? parseFloat(r.longitude) : null,
       fichiers: r.fichiers || {},
       createdAt: r.created_at,
-      updatedAt: r.updated_at
+      updatedAt: r.updated_at,
+      author: {
+        id: r.user_id,
+        prenom: r.user_prenom,
+        nom: r.user_nom,
+        telephone: r.user_telephone,
+        email: r.user_email
+      }
     }));
     res.json(rows);
   } catch (err) {

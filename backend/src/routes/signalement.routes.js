@@ -108,11 +108,42 @@ router.post('/', authMiddleware, async (req, res) => {
                     }));
                     return res.json(rows);
                 }
-                const result = await db.query(`SELECT id, user_id, titre, description, type, statut, localisation, latitude, longitude, fichiers, created_at, updated_at
-                                               FROM signalements ORDER BY created_at DESC LIMIT 500`);
+                // Si c'est la police, ne retourner que les types pertinents (violence, vol)
+                if (req.user && req.user.role === 'police') {
+                    const allowed = ['violence', 'vol', 'theft'];
+                    const result = await db.query(`SELECT s.*, u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone
+                                                   FROM signalements s
+                                                   LEFT JOIN users u ON u.id = s.user_id
+                                                   WHERE LOWER(s.type) = ANY($1::text[])
+                                                   ORDER BY s.created_at DESC LIMIT 500`, [allowed]);
+                    const rows = result.rows.map(r => ({
+                        id: r.id,
+                        titre: r.titre,
+                        description: r.description,
+                        type: r.type,
+                        statut: r.statut,
+                        localisation: r.localisation,
+                        latitude: r.latitude !== null ? parseFloat(r.latitude) : null,
+                        longitude: r.longitude !== null ? parseFloat(r.longitude) : null,
+                        fichiers: r.fichiers || {},
+                        createdAt: r.created_at,
+                        updatedAt: r.updated_at,
+                        author: {
+                            id: r.user_id,
+                            prenom: r.user_prenom,
+                            nom: r.user_nom,
+                            telephone: r.user_telephone
+                        }
+                    }));
+                    return res.json(rows);
+                }
+
+                const result = await db.query(`SELECT s.*, u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone
+                                               FROM signalements s
+                                               LEFT JOIN users u ON u.id = s.user_id
+                                               ORDER BY s.created_at DESC LIMIT 500`);
                 const rows = result.rows.map(r => ({
                     id: r.id,
-                    userId: r.user_id,
                     titre: r.titre,
                     description: r.description,
                     type: r.type,
@@ -122,7 +153,13 @@ router.post('/', authMiddleware, async (req, res) => {
                     longitude: r.longitude !== null ? parseFloat(r.longitude) : null,
                     fichiers: r.fichiers || {},
                     createdAt: r.created_at,
-                    updatedAt: r.updated_at
+                    updatedAt: r.updated_at,
+                    author: {
+                        id: r.user_id,
+                        prenom: r.user_prenom,
+                        nom: r.user_nom,
+                        telephone: r.user_telephone
+                    }
                 }));
                 res.json(rows);
             } catch (err) {
