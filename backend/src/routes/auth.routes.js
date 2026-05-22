@@ -1,5 +1,6 @@
 ﻿const express = require('express');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const router = express.Router();
 const db = require('../config/database');
 
@@ -23,7 +24,11 @@ router.post('/register', async (req, res) => {
             [prenom, nom, email, telephone, hashedPassword, ville, quartier]
         );
         const newUser = result.rows[0];
-        const token = Buffer.from(JSON.stringify({ id: newUser.id, email: newUser.email, role: newUser.role })).toString('base64');
+        const token = jwt.sign(
+            { id: newUser.id, email: newUser.email, role: newUser.role },
+            process.env.JWT_SECRET || 'dev-secret-key',
+            { expiresIn: '7d' }
+        );
         res.status(201).json({ message: 'Inscription réussie', token, user: newUser });
     } catch (err) {
         console.error('Erreur inscription:', err);
@@ -39,11 +44,16 @@ router.post('/login', async (req, res) => {
         if (!user) {
             return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
         }
-        const validPassword = (password === user.password);
+        // ✅ FIX: Use bcrypt.compare to verify hashed password
+        const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
             return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
         }
-        const token = Buffer.from(JSON.stringify({ id: user.id, email: user.email, role: user.role })).toString('base64');
+        const token = jwt.sign(
+            { id: user.id, email: user.email, role: user.role },
+            process.env.JWT_SECRET || 'dev-secret-key',
+            { expiresIn: '7d' }
+        );
         const { password: _, ...userData } = user;
         res.json({ message: 'Connexion réussie', token, user: userData });
     } catch (err) {
@@ -53,5 +63,6 @@ router.post('/login', async (req, res) => {
 });
 
 module.exports = router;
+
 
 

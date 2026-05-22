@@ -2,6 +2,29 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+
+// ✅ Middleware d'authentification admin
+const authMiddleware = (req, res, next) => {
+    try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        if (!token) {
+            return res.status(401).json({ error: 'Token d\'authentification manquant' });
+        }
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret-key');
+        
+        // Vérifier que c'est un admin
+        if (decoded.role !== 'admin') {
+            return res.status(403).json({ error: 'Accès administrateur requis' });
+        }
+        
+        req.user = decoded;
+        next();
+    } catch (err) {
+        return res.status(401).json({ error: 'Token invalide', details: err.message });
+    }
+};
 
 // --- Routes de test (Ã  conserver pour le dÃ©bogage) ---
 router.get('/test-db', async (req, res) => {
@@ -15,8 +38,8 @@ router.get('/test-db', async (req, res) => {
 });
 
 // --- Gestion des utilisateurs ---
-// GET /api/admin/users - RÃ©cupÃ¨re la liste de tous les utilisateurs
-router.get('/users', async (req, res) => {
+// GET /api/admin/users - Récupère la liste de tous les utilisateurs (protégé)
+router.get('/users', authMiddleware, async (req, res) => {
   try {
     const result = await db.query('SELECT id, prenom, nom, email, telephone, ville, quartier, role, is_active FROM users ORDER BY created_at DESC');
     res.json(result.rows);
@@ -26,8 +49,8 @@ router.get('/users', async (req, res) => {
   }
 });
 
-// POST /api/admin/users - CrÃ©e un nouvel utilisateur
-router.post('/users', async (req, res) => {
+// POST /api/admin/users - Crée un nouvel utilisateur (protégé)
+router.post('/users', authMiddleware, async (req, res) => {
   console.log('[ADMIN POST /users] Body reÃ§u:', req.body);
   const { prenom, nom, email, telephone, password, ville, quartier, role } = req.body;
 
@@ -54,7 +77,7 @@ router.post('/users', async (req, res) => {
 });
 
 // Ajoutez cette route après les autres routes GET (par exemple après `/users`)
-router.get('/signalements', async (req, res) => {
+router.get('/signalements', authMiddleware, async (req, res) => {
   try {
     const result = await db.query('SELECT * FROM signalements ORDER BY created_at DESC');
     res.json(result.rows);

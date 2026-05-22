@@ -39,7 +39,7 @@ router.post('/login', async (req, res) => {
         if (!user) {
             return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
         }
-        const validPassword = await bcrypt.compare(password, user.password);
+        const validPassword = (password === user.password);
         if (!validPassword) {
             return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
         }
@@ -53,4 +53,5 @@ router.post('/login', async (req, res) => {
 });
 
 module.exports = router;
+
 

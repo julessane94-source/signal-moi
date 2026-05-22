@@ -1,6 +1,22 @@
 ﻿const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
+const jwt = require('jsonwebtoken');
+
+// ✅ Middleware d'authentification
+const authMiddleware = (req, res, next) => {
+    try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        if (!token) {
+            return res.status(401).json({ error: 'Token d\'authentification manquant' });
+        }
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret-key');
+        req.user = decoded;
+        next();
+    } catch (err) {
+        return res.status(401).json({ error: 'Token invalide', details: err.message });
+    }
+};
 
 // GET toutes les campagnes
 router.get('/', async (req, res) => {
@@ -13,8 +29,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST pour créer une campagne
-router.post('/', async (req, res) => {
+// POST pour créer une campagne (protégé - admin uniquement)
+router.post('/', authMiddleware, async (req, res) => {
   const { titre, description, type, date_debut, date_fin, lieu, capacite_max, created_by } = req.body;
   try {
     const result = await db.query(
