@@ -14,8 +14,10 @@ export default function CitizenDashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    if (!loading && user) {
+      fetchData()
+    }
+  }, [user, loading])
 
   const fetchData = async () => {
     try {

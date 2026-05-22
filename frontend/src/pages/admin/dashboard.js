@@ -19,25 +19,76 @@ export default function AdminDashboard() {
     contactPhone: '+237 600 000 000',
     address: 'Yaounde, Cameroun'
   })
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalSignalements: 0,
+    totalCampagnes: 0,
+    activeUsers: 0
+  })
 
   useEffect(() => {
     if (!loading && (!user || user.role !== 'admin')) {
       window.location.href = '/'
     }
-    fetchUsers()
+    if (!loading && user?.role === 'admin') {
+      fetchUsers()
+      fetchSiteConfig()
+      fetchStats()
+    }
   }, [user, loading])
 
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('token')
       const base = API_BASE
-      const res = await fetch(`${base}/api/auth/users`, {
+      const res = await fetch(`${base}/api/admin/users`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()
       setUsers(Array.isArray(data) ? data : [])
     } catch (error) {
-      console.error('Erreur:', error)
+      console.error('Erreur fetchUsers:', error)
+    }
+  }
+
+  const fetchSiteConfig = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const base = API_BASE
+      const res = await fetch(`${base}/api/admin/site-config`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setSiteConfig({
+          siteName: data.siteName || 'Signal-Moi',
+          contactEmail: data.contactEmail || 'contact@signal-moi.com',
+          contactPhone: data.contactPhone || '+237 600 000 000',
+          address: data.address || 'Yaounde, Cameroun'
+        })
+      }
+    } catch (error) {
+      console.error('Erreur fetchSiteConfig:', error)
+    }
+  }
+
+  const fetchStats = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const base = API_BASE
+      const [signalementsRes, campagnesRes] = await Promise.all([
+        fetch(`${base}/api/admin/signalements`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch(`${base}/api/campagnes`, { headers: { 'Authorization': `Bearer ${token}` } })
+      ])
+      const signalementsData = signalementsRes.ok ? await signalementsRes.json() : []
+      const campagnesData = campagnesRes.ok ? await campagnesRes.json() : []
+      setStats(prev => ({
+        ...prev,
+        totalSignalements: Array.isArray(signalementsData) ? signalementsData.length : 0,
+        totalCampagnes: Array.isArray(campagnesData) ? campagnesData.length : 0
+      }))
+    } catch (error) {
+      console.error('Erreur fetchStats:', error)
     }
   }
 
@@ -50,20 +101,22 @@ export default function AdminDashboard() {
         ? `${base}/api/admin/users/${editingUser.id}`
         : `${base}/api/admin/users`
       const method = editingUser ? 'PUT' : 'POST'
-      
-      await fetch(url, {
+      const response = await fetch(url, {
         method,
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       })
-      
-      toast.success(editingUser ? 'Utilisateur modifie' : 'Utilisateur cree')
+      if (!response.ok) {
+        const errorBody = await response.json()
+        throw new Error(errorBody.error || 'Erreur lors de la création')
+      }
+      toast.success(editingUser ? 'Utilisateur modifié' : 'Utilisateur créé')
       setShowModal(false)
       setEditingUser(null)
       setFormData({ prenom: '', nom: '', email: '', telephone: '', password: '', ville: '', quartier: '', role: 'citoyen' })
       fetchUsers()
     } catch (error) {
-      toast.error('Erreur')
+      toast.error(error.message || 'Erreur')
     }
   }
 
@@ -114,13 +167,28 @@ export default function AdminDashboard() {
   }
 
   const saveConfig = async () => {
-    toast.success('Configuration sauvegardee')
+    try {
+      const token = localStorage.getItem('token')
+      const base = API_BASE
+      const res = await fetch(`${base}/api/admin/site-config`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(siteConfig)
+      })
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || 'Erreur lors de la sauvegarde')
+      }
+      toast.success('Configuration sauvegardée')
+    } catch (error) {
+      toast.error(error.message || 'Erreur')
+    }
   }
 
-  const stats = {
+  const statsData = {
     totalUsers: users.length,
-    totalSignalements: 0,
-    totalCampagnes: 0,
+    totalSignalements: stats.totalSignalements,
+    totalCampagnes: stats.totalCampagnes,
     activeUsers: users.filter(u => u.isActive !== false).length
   }
 
@@ -197,10 +265,10 @@ export default function AdminDashboard() {
           {/* Onglet Supervision */}
           {activeTab === 'stats' && (
             <div className="grid md:grid-cols-4 gap-6">
-              <div className="bg-white rounded-xl shadow-md p-6 text-center"><div className="text-3xl font-bold text-indigo-600">{stats.totalUsers}</div><div className="text-gray-600">Utilisateurs</div></div>
-              <div className="bg-white rounded-xl shadow-md p-6 text-center"><div className="text-3xl font-bold text-indigo-600">{stats.totalSignalements}</div><div className="text-gray-600">Signalements</div></div>
-              <div className="bg-white rounded-xl shadow-md p-6 text-center"><div className="text-3xl font-bold text-indigo-600">{stats.totalCampagnes}</div><div className="text-gray-600">Campagnes</div></div>
-              <div className="bg-white rounded-xl shadow-md p-6 text-center"><div className="text-3xl font-bold text-green-600">{stats.activeUsers}</div><div className="text-gray-600">Actifs</div></div>
+              <div className="bg-white rounded-xl shadow-md p-6 text-center"><div className="text-3xl font-bold text-indigo-600">{statsData.totalUsers}</div><div className="text-gray-600">Utilisateurs</div></div>
+              <div className="bg-white rounded-xl shadow-md p-6 text-center"><div className="text-3xl font-bold text-indigo-600">{statsData.totalSignalements}</div><div className="text-gray-600">Signalements</div></div>
+              <div className="bg-white rounded-xl shadow-md p-6 text-center"><div className="text-3xl font-bold text-indigo-600">{statsData.totalCampagnes}</div><div className="text-gray-600">Campagnes</div></div>
+              <div className="bg-white rounded-xl shadow-md p-6 text-center"><div className="text-3xl font-bold text-green-600">{statsData.activeUsers}</div><div className="text-gray-600">Actifs</div></div>
             </div>
           )}
 

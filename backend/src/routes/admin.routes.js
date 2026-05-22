@@ -4,6 +4,7 @@ const router = express.Router();
 const db = require('../config/database');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const SiteConfig = require('../models/SiteConfig');
 
 // ✅ Middleware d'authentification admin
 const authMiddleware = (req, res, next) => {
@@ -84,6 +85,37 @@ router.get('/signalements', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/site-config', authMiddleware, async (req, res) => {
+  try {
+    const config = await SiteConfig.getAll();
+    res.json(config);
+  } catch (err) {
+    console.error('[ADMIN GET /site-config] Erreur:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
+  }
+});
+
+router.post('/site-config', authMiddleware, async (req, res) => {
+  try {
+    const { siteName, contactEmail, contactPhone, address } = req.body;
+    if (!siteName || !contactEmail || !contactPhone || !address) {
+      return res.status(400).json({ error: 'Tous les champs de configuration sont requis' });
+    }
+
+    await Promise.all([
+      SiteConfig.set('siteName', siteName),
+      SiteConfig.set('contactEmail', contactEmail),
+      SiteConfig.set('contactPhone', contactPhone),
+      SiteConfig.set('address', address)
+    ]);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[ADMIN POST /site-config] Erreur:', err);
+    res.status(500).json({ error: 'Erreur lors de la sauvegarde', details: err.message });
   }
 });
 

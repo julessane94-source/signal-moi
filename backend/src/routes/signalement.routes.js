@@ -18,6 +18,21 @@ const authMiddleware = (req, res, next) => {
     }
 };
 
+// Middleware d'authentification optionnelle
+const optionalAuthMiddleware = (req, res, next) => {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+        return next();
+    }
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret-key');
+        req.user = decoded;
+    } catch (err) {
+        // Ignorer le token invalide ; continuer sans utilisateur
+    }
+    next();
+};
+
 router.post('/', authMiddleware, async (req, res) => {
     console.log('Body reçu pour signalement :', req.body);
     console.log('Utilisateur connecté:', req.user);
@@ -56,11 +71,26 @@ router.post('/', authMiddleware, async (req, res) => {
         }
     });
 
+    // GET générique: signalements selon le rôle / utilisateur
+    router.get('/', optionalAuthMiddleware, async (req, res) => {
+        try {
+            if (req.user && req.user.role === 'citoyen') {
+                const result = await db.query('SELECT * FROM signalements WHERE user_id = $1 ORDER BY date_signalement DESC', [req.user.id]);
+                return res.json(result.rows);
+            }
+            const result = await db.query('SELECT * FROM signalements ORDER BY date_signalement DESC');
+            res.json(result.rows);
+        } catch (err) {
+            console.error('Erreur GET / signalements:', err);
+            res.status(500).json({ error: 'Erreur serveur' });
+        }
+    });
+
     // GET pour un utilisateur: ses propres signalements (protégé)
     router.get('/user/:userId', authMiddleware, async (req, res) => {
         const { userId } = req.params;
         // ✅ FIX: Empêcher un utilisateur de voir les signalements d'un autre
-        if (parseInt(userId) !== req.user.id && req.user.role !== 'admin') {
+        if (userId !== req.user.id && req.user.role !== 'admin') {
             return res.status(403).json({ error: 'Accès refusé' });
         }
         try {
