@@ -210,10 +210,12 @@ router.get('/site-config', authMiddleware, async (req, res) => {
 // GET /api/admin/campagnes - Récupère toutes les campagnes
 router.get('/campagnes', authMiddleware, async (req, res) => {
   try {
-    // Récupérer les campagnes avec un LEFT JOIN simple
+    // Récupérer les campagnes avec colonnes explicites (éviter SELECT *)
     const result = await db.query(`
-      SELECT c.*, 
-             u.prenom, u.nom, u.email
+      SELECT 
+        c.id, c.titre, c.description, c.type, c.date_debut, c.date_fin, 
+        c.lieu, c.capacite_max, c.est_actif, c.image_url, c.created_at, c.updated_at,
+        u.id AS creator_id, u.prenom, u.nom, u.email
       FROM signal_moi.campagnes c
       LEFT JOIN signal_moi.users u ON u.id = c.created_by
       ORDER BY c.date_debut DESC
@@ -234,13 +236,14 @@ router.get('/campagnes', authMiddleware, async (req, res) => {
       created_at: c.created_at,
       updated_at: c.updated_at,
       creator: {
-        id: c.created_by,
+        id: c.creator_id,
         prenom: c.prenom,
         nom: c.nom,
         email: c.email
       }
     }));
     
+    console.log(`[ADMIN GET /campagnes] Retournant ${campagnes.length} campagnes`);
     res.json(campagnes);
   } catch (err) {
     console.error('[ADMIN GET /campagnes] Erreur:', err);
