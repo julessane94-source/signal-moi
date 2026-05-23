@@ -20,6 +20,7 @@ const campagneRoutes = require('./routes/campagne.routes');
 const plaidoyerRoutes = require('./routes/plaidoyer.routes');
 const signalementRoutes = require('./routes/signalement.routes');
 const citizenRoutes = require('./routes/citizen.routes');
+const initRoutes = require('./routes/init.routes');
 
 const app = express();
 
@@ -46,13 +47,14 @@ app.use((req, res, next) => {
     next();
 });
 
-// Routes protégées
+// Routes protégées et publiques
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/campagnes', campagneRoutes);
 app.use('/api/signalements', signalementRoutes);
 app.use('/api/plaidoyers', plaidoyerRoutes);
 app.use('/api/citizen', citizenRoutes);
+app.use('/api/init', initRoutes);
 
 // Health check endpoint (PUBLIC)
 app.get('/api/health', (req, res) => {

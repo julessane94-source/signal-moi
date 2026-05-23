@@ -21,6 +21,9 @@ services:
       - key: JWT_REFRESH_SECRET
         # set securely in the Render dashboard
         value: "REPLACE_ME_REFRESH"
+      - key: ADMIN_SECRET_KEY
+        # Clé secrète pour initialiser les utilisateurs de seed
+        value: "signal-moi-admin-secret-key"
       - key: FRONTEND_URL
         value: "https://your-frontend.vercel.app"
       - key: SMTP_HOST
