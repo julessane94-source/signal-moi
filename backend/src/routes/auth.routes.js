@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
@@ -10,22 +10,24 @@ router.post('/register', async (req, res) => {
   try {
     const { firstName, lastName, email, password, phone, city } = req.body;
 
-    const [existing] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
+    const result = await db.query('SELECT id FROM users WHERE email = $1', [email]);
+    const existing = result.rows || [];
     if (existing.length > 0) {
       return res.status(400).json({ success: false, message: 'Cet email est déjà utilisé' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const [result] = await db.query(
-      'INSERT INTO users (first_name, last_name, email, password, phone, city, role) VALUES (?, ?, ?, ?, ?, ?, "citizen")',
-      [firstName, lastName, email, hashedPassword, phone, city]
+    const insertResult = await db.query(
+      'INSERT INTO users (first_name, last_name, email, password, phone, city, role) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
+      [firstName, lastName, email, hashedPassword, phone, city, 'citizen']
     );
 
-    const token = jwt.sign({ id: result.insertId }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const newUserId = insertResult.rows[0].id;
+    const token = jwt.sign({ id: newUserId }, process.env.JWT_SECRET, { expiresIn: '7d' });
     res.status(201).json({
       success: true,
       token,
-      user: { id: result.insertId, firstName, lastName, email, role: 'citizen' }
+      user: { id: newUserId, firstName, lastName, email, role: 'citizen' }
     });
   } catch (error) {
     console.error(error);
@@ -38,7 +40,8 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+    const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+    const users = result.rows || [];
     if (users.length === 0) {
       return res.status(401).json({ success: false, message: 'Email ou mot de passe incorrect' });
     }

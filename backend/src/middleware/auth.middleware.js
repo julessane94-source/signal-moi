@@ -1,4 +1,4 @@
-﻿const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 const db = require('../config/database');
 
 const protect = async (req, res, next) => {
@@ -17,9 +17,12 @@ const protect = async (req, res, next) => {
   
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const [users] = await db.query('SELECT * FROM users WHERE id = ?', [decoded.id]);
     
-    if (!users[0]) {
+    // ✅ FIX: PostgreSQL syntax ($1) instead of MySQL (?)
+    const result = await db.query('SELECT * FROM users WHERE id = $1', [decoded.id]);
+    const users = result.rows || [];
+    
+    if (!users || users.length === 0) {
       return res.status(401).json({
         success: false,
         message: 'Utilisateur non trouvé'
@@ -29,6 +32,7 @@ const protect = async (req, res, next) => {
     req.user = users[0];
     next();
   } catch (error) {
+    console.error('❌ Auth middleware error:', error.message);
     return res.status(401).json({
       success: false,
       message: 'Non autorisé - Token invalide'

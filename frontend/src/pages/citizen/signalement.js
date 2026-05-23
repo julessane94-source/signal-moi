@@ -1,47 +1,49 @@
-﻿import { useState } from 'react';
-import { useRouter } from 'next/router';
-import { useAuth } from '../../context/AuthContext';
-import Navbar from '../../components/common/Navbar';
+import { useState } from 'react'
+import { useRouter } from 'next/router'
+import { useAuth } from '../../context/AuthContext'
+import { API_BASE } from '../../config/api'
+import Navbar from '../../components/common/Navbar'
+import { toast } from 'react-toastify'
 
 export default function NewSignalement() {
-  const { user } = useAuth();
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [files, setFiles] = useState([]);
+  const { user } = useAuth()
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [files, setFiles] = useState([])
   const [formData, setFormData] = useState({
     titre: '',
     description: '',
     type: 'autre',
     localisation: '',
     estAnonyme: false
-  });
+  })
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, type, checked } = e.target
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
-    }));
-  };
+    }))
+  }
 
   const handleFileChange = (e) => {
-    setFiles(prev => [...prev, ...Array.from(e.target.files)]);
-  };
+    setFiles(prev => [...prev, ...Array.from(e.target.files)])
+  }
 
   const removeFile = (index) => {
-    setFiles(prev => prev.filter((_, i) => i !== index));
-  };
+    setFiles(prev => prev.filter((_, i) => i !== index))
+  }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+    e.preventDefault()
+    setLoading(true)
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token')
       if (!user || !user.id) {
-        alert('Veuillez vous reconnecter');
-        router.push('/login');
-        return;
+        toast.error('Veuillez vous reconnecter')
+        router.push('/login')
+        return
       }
 
       const payload = {
@@ -51,30 +53,32 @@ export default function NewSignalement() {
         type: formData.type,
         localisation: formData.localisation,
         fichiers: []
-      };
+      }
 
-      const response = await fetch('https://signal-moi-api.onrender.com/api/signalements', {
+      // ✅ FIX: Use API_BASE config instead of hardcoded URL
+      const response = await fetch(`${API_BASE}/api/signalements`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(payload)
-      });
+      })
 
       if (response.ok) {
-        router.push('/citizen/dashboard');
+        toast.success('Signalement créé avec succès !')
+        router.push('/citizen/dashboard')
       } else {
-        const error = await response.json();
-        alert(error.error || 'Erreur lors de la création');
+        const error = await response.json()
+        toast.error(error.error || 'Erreur lors de la création')
       }
     } catch (error) {
-      console.error(error);
-      alert('Erreur réseau');
+      console.error('[NewSignalement] Error:', error)
+      toast.error('Erreur réseau : impossible de créer le signalement')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <>
@@ -100,10 +104,10 @@ export default function NewSignalement() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Description *</label>
-                <textarea name="description" required rows="4" value={formData.description} onChange={handleChange} className="w-full border rounded px-3 py-2"></textarea>
+                <textarea name="description" required rows="4" value={formData.description} onChange={handleChange} className="w-full border rounded px-3 py-2" placeholder="Décrivez votre signalement en détail..."></textarea>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Lieu *</label>
+                <label className="block text-sm font-medium mb-1">Localisation *</label>
                 <input type="text" name="localisation" required value={formData.localisation} onChange={handleChange} className="w-full border rounded px-3 py-2" placeholder="Ex: Carrefour Mvan, Yaoundé" />
               </div>
               <div>
@@ -133,5 +137,5 @@ export default function NewSignalement() {
         </div>
       </div>
     </>
-  );
+  )
 }
