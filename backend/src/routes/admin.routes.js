@@ -210,7 +210,7 @@ router.get('/site-config', authMiddleware, async (req, res) => {
 // GET /api/admin/campagnes - Récupère toutes les campagnes
 router.get('/campagnes', authMiddleware, async (req, res) => {
   try {
-    // Récupérer les campagnes
+    // Récupérer les campagnes avec un LEFT JOIN simple
     const result = await db.query(`
       SELECT c.*, 
              u.prenom, u.nom, u.email
@@ -219,35 +219,26 @@ router.get('/campagnes', authMiddleware, async (req, res) => {
       ORDER BY c.date_debut DESC
     `);
     
-    // Pour chaque campagne, compter les inscriptions
-    const campagnes = await Promise.all((result.rows || []).map(async (c) => {
-      const inscResult = await db.query(
-        'SELECT COUNT(*) as count FROM signal_moi.inscriptions_campagnes WHERE campagne_id = $1',
-        [c.id]
-      );
-      const inscCount = parseInt((inscResult.rows[0] || {}).count) || 0;
-      
-      return {
-        id: c.id,
-        titre: c.titre,
-        description: c.description,
-        type: c.type,
-        date_debut: c.date_debut,
-        date_fin: c.date_fin,
-        lieu: c.lieu,
-        capacite_max: c.capacite_max,
-        est_actif: c.est_actif,
-        image_url: c.image_url,
-        created_at: c.created_at,
-        updated_at: c.updated_at,
-        creator: {
-          id: c.user_id,
-          prenom: c.prenom,
-          nom: c.nom,
-          email: c.email
-        },
-        inscriptions_count: inscCount
-      };
+    // Mapper les résultats
+    const campagnes = (result.rows || []).map(c => ({
+      id: c.id,
+      titre: c.titre,
+      description: c.description,
+      type: c.type,
+      date_debut: c.date_debut,
+      date_fin: c.date_fin,
+      lieu: c.lieu,
+      capacite_max: c.capacite_max,
+      est_actif: c.est_actif,
+      image_url: c.image_url,
+      created_at: c.created_at,
+      updated_at: c.updated_at,
+      creator: {
+        id: c.user_id,
+        prenom: c.prenom,
+        nom: c.nom,
+        email: c.email
+      }
     }));
     
     res.json(campagnes);
