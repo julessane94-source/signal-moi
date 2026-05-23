@@ -1,21 +1,59 @@
-﻿import Head from 'next/head'
+import { useState, useEffect } from 'react'
+import Head from 'next/head'
 import Navbar from '../components/common/Navbar'
 import Footer from '../components/common/Footer'
 import { motion } from 'framer-motion'
+import { API_BASE } from '../config/api'
 
 export default function About() {
+  const [stats, setStats] = useState([
+    { value: 'Chargement...', label: 'Signalements traites' },
+    { value: 'Chargement...', label: 'Citoyens engages' },
+    { value: 'Chargement...', label: 'Campagnes organisees' },
+    { value: '24/7', label: 'Support disponible' },
+  ])
+
   const team = [
     { name: 'Jean Dupont', role: 'Fondateur & CEO', image: '👨‍💼', description: 'Expert en securite citoyenne' },
     { name: 'Marie Camara', role: 'Directrice Technique', image: '👩‍💻', description: 'Architecte logiciel' },
     { name: 'Pierre Martin', role: 'Coordinateur', image: '👨‍📋', description: 'Liaison avec les autorites' },
   ]
 
-  const stats = [
-    { value: '500+', label: 'Signalements traites' },
-    { value: '1000+', label: 'Citoyens engages' },
-    { value: '50+', label: 'Campagnes organisees' },
-    { value: '24/7', label: 'Support disponible' },
-  ]
+  useEffect(() => {
+    fetchStats()
+  }, [])
+
+  const fetchStats = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {}
+      
+      const [sigRes, campRes, usersRes] = await Promise.all([
+        fetch(`${API_BASE}/api/admin/signalements`, { headers }),
+        fetch(`${API_BASE}/api/campagnes`, { headers }),
+        fetch(`${API_BASE}/api/admin/users`, { headers })
+      ])
+      
+      const sigData = sigRes.ok ? await sigRes.json() : []
+      const campData = campRes.ok ? await campRes.json() : []
+      const usersData = usersRes.ok ? await usersRes.json() : []
+      
+      setStats([
+        { value: `${sigData.length || 0}+`, label: 'Signalements traites' },
+        { value: `${usersData.length || 0}+`, label: 'Citoyens engages' },
+        { value: `${campData.length || 0}+`, label: 'Campagnes organisees' },
+        { value: '24/7', label: 'Support disponible' },
+      ])
+    } catch (err) {
+      console.error('Erreur fetchStats:', err)
+      setStats([
+        { value: '500+', label: 'Signalements traites' },
+        { value: '1000+', label: 'Citoyens engages' },
+        { value: '50+', label: 'Campagnes organisees' },
+        { value: '24/7', label: 'Support disponible' },
+      ])
+    }
+  }
 
   return (
     <>
