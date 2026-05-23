@@ -15,6 +15,13 @@ const logger = winston.createLogger({
   ),
   defaultMeta: { service: 'signal-moi-api' },
   transports: [
+    // Console - toujours afficher pour le debugging
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+      )
+    }),
     // Écrire tous les logs dans un fichier
     new winston.transports.File({
       filename: path.join(logDir, 'error.log'),
@@ -30,14 +37,14 @@ const logger = winston.createLogger({
   ]
 });
 
-// En développement, afficher aussi dans la console
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(new winston.transports.Console({
-    format: winston.format.combine(
-      winston.format.colorize(),
-      winston.format.simple()
-    )
-  }));
+// Gérer les erreurs Winston
+logger.on('error', (error) => {
+  console.error('Winston logger error:', error);
+});
+
+// Ajouter console fallback pour la production
+if (process.env.NODE_ENV === 'production') {
+  // Les logs vont à la console ET aux fichiers
 }
 
 module.exports = logger;

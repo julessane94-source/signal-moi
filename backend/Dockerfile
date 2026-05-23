@@ -8,6 +8,7 @@ RUN npm install --production
 COPY . .
 
 ENV NODE_ENV=production
-EXPOSE 5000
+# Port configuré dans render.yaml et utilisé par server.js
+EXPOSE 3000
 
 CMD ["npm", "start"]

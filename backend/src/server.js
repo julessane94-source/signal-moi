@@ -33,18 +33,73 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Middleware de logging pour toutes les requêtes
+app.use((req, res, next) => {
+    const authHeader = req.header('Authorization');
+    const authStatus = authHeader ? '✅ Présent' : '❌ Manquant';
+    console.log(`📨 [${new Date().toISOString()}] ${req.method} ${req.path}`);
+    console.log(`   Headers: Authorization=${authStatus}`);
+    if (authHeader) {
+        console.log(`   Token: ${authHeader.substring(0, 20)}...`);
+    }
+    next();
+});
+
+// Routes protégées
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/campagnes', campagneRoutes);
 app.use('/api/signalements', signalementRoutes);
 app.use('/api/plaidoyers', plaidoyerRoutes);
 
+// Health check endpoint (PUBLIC)
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'OK', message: 'Backend fonctionne', timestamp: new Date().toISOString() });
+    res.json({ 
+        status: 'OK', 
+        message: 'Backend fonctionne', 
+        timestamp: new Date().toISOString(),
+        port: process.env.PORT || 8080,
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
+
+// Endpoint racine (PUBLIC)
+app.get('/', (req, res) => {
+    res.status(200).json({ 
+        message: 'Service disponible',
+        status: 'running',
+        version: '1.0.0',
+        timestamp: new Date().toISOString()
+    });
+});
+
+// HEAD / (PUBLIC - pour les health checks)
+app.head('/', (req, res) => {
+    res.status(200).send();
+});
+
+// 404 Handler
+app.use((req, res) => {
+    res.status(404).json({ 
+        error: 'Endpoint non trouvé', 
+        path: req.path,
+        method: req.method
+    });
+});
+
+// Error Handler
+app.use((err, req, res, next) => {
+    console.error('❌ Erreur serveur:', err.message);
+    res.status(err.status || 500).json({ 
+        error: 'Erreur serveur interne',
+        message: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
 });
 
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-    console.log(`✅ Serveur démarré sur le port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`\n✅ Serveur démarré sur le port ${PORT}`);
     console.log(`📡 Frontend URL configurée: ${process.env.FRONTEND_URL || 'non défini'}`);
+    console.log(`🌍 Environnement: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`📊 Timestamp démarrage: ${new Date().toISOString()}\n`);
 });
