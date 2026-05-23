@@ -34,25 +34,25 @@ const optionalAuthMiddleware = (req, res, next) => {
 };
 
 router.post('/', authMiddleware, async (req, res) => {
-    console.log('Body reçu pour signalement :', req.body);
-    console.log('Utilisateur connecté:', req.user);
+    console.log('Body reï¿½u pour signalement :', req.body);
+    console.log('Utilisateur connectï¿½:', req.user);
 
-    const { titre, description, type, localisation, latitude, longitude, fichiers } = req.body;
+    const { titre, description, type, localisation, latitude, longitude } = req.body;
     const user_id = req.user.id;  // ? FIX: Get user_id from JWT token, not from request body
 
-    // Vérifier les champs obligatoires
+    // Vï¿½rifier les champs obligatoires
     if (!titre || !description || !type || !localisation) {
         return res.status(400).json({ error: 'Champs manquants : titre, description, type, localisation' });
     }
 
     try {
         const result = await db.query(
-            `INSERT INTO signal_moi.signalements (user_id, titre, description, type, localisation, latitude, longitude, fichiers)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            `INSERT INTO signal_moi.signalements (user_id, titre, description, type, localisation, latitude, longitude)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)
              RETURNING *`,
-            [user_id, titre, description, type, localisation, latitude || null, longitude || null, fichiers || []]
+            [user_id, titre, description, type, localisation, latitude || null, longitude || null]
         );
-        console.log('Signalement créé:', result.rows[0]);
+        console.log('Signalement crï¿½ï¿½:', result.rows[0]);
         res.status(201).json(result.rows[0]);
     } catch (err) {
         console.error('Erreur SQL :', err);
@@ -63,7 +63,7 @@ router.post('/', authMiddleware, async (req, res) => {
     // GET public: liste publique des signalements
         router.get('/public', async (req, res) => {
             try {
-                const result = await db.query(`SELECT id, user_id, titre, description, type, statut, localisation, latitude, longitude, fichiers, created_at, updated_at
+                const result = await db.query(`SELECT id, user_id, titre, description, type, statut, localisation, latitude, longitude, created_at, updated_at
                                                FROM signal_moi.signalements ORDER BY created_at DESC LIMIT 200`);
                 const rows = result.rows.map(r => ({
                     id: r.id,
@@ -75,7 +75,6 @@ router.post('/', authMiddleware, async (req, res) => {
                     localisation: r.localisation,
                     latitude: r.latitude !== null ? parseFloat(r.latitude) : null,
                     longitude: r.longitude !== null ? parseFloat(r.longitude) : null,
-                    fichiers: r.fichiers || {},
                     createdAt: r.created_at,
                     updatedAt: r.updated_at
                 }));
@@ -86,11 +85,11 @@ router.post('/', authMiddleware, async (req, res) => {
             }
         });
 
-        // GET générique: signalements selon le rôle / utilisateur
+        // GET gï¿½nï¿½rique: signalements selon le rï¿½le / utilisateur
         router.get('/', optionalAuthMiddleware, async (req, res) => {
             try {
                 if (req.user && req.user.role === 'citoyen') {
-                    const result = await db.query(`SELECT id, user_id, titre, description, type, statut, localisation, latitude, longitude, fichiers, created_at, updated_at
+                    const result = await db.query(`SELECT id, user_id, titre, description, type, statut, localisation, latitude, longitude, created_at, updated_at
                                                    FROM signal_moi.signalements WHERE user_id = $1 ORDER BY created_at DESC LIMIT 200`, [req.user.id]);
                     const rows = result.rows.map(r => ({
                         id: r.id,
@@ -102,7 +101,6 @@ router.post('/', authMiddleware, async (req, res) => {
                         localisation: r.localisation,
                         latitude: r.latitude !== null ? parseFloat(r.latitude) : null,
                         longitude: r.longitude !== null ? parseFloat(r.longitude) : null,
-                        fichiers: r.fichiers || {},
                         createdAt: r.created_at,
                         updatedAt: r.updated_at
                     }));
@@ -111,7 +109,7 @@ router.post('/', authMiddleware, async (req, res) => {
                 // Si c'est la police, ne retourner que les types pertinents (violence, vol)
                 if (req.user && req.user.role === 'police') {
                     const allowed = ['violence', 'vol', 'theft'];
-                    const result = await db.query(`SELECT s.*, u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone
+                    const result = await db.query(`SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, s.latitude, s.longitude, s.created_at, s.updated_at, u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone
                                                    FROM signal_moi.signalements s
                                                    LEFT JOIN signal_moi.users u ON u.id = s.user_id
                                                    WHERE LOWER(s.type) = ANY($1::text[])
@@ -125,7 +123,6 @@ router.post('/', authMiddleware, async (req, res) => {
                         localisation: r.localisation,
                         latitude: r.latitude !== null ? parseFloat(r.latitude) : null,
                         longitude: r.longitude !== null ? parseFloat(r.longitude) : null,
-                        fichiers: r.fichiers || {},
                         createdAt: r.created_at,
                         updatedAt: r.updated_at,
                         author: {
@@ -138,7 +135,7 @@ router.post('/', authMiddleware, async (req, res) => {
                     return res.json(rows);
                 }
 
-                const result = await db.query(`SELECT s.*, u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone
+                const result = await db.query(`SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, s.latitude, s.longitude, s.created_at, s.updated_at, u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone
                                                FROM signal_moi.signalements s
                                                LEFT JOIN signal_moi.users u ON u.id = s.user_id
                                                ORDER BY s.created_at DESC LIMIT 500`);
@@ -151,7 +148,6 @@ router.post('/', authMiddleware, async (req, res) => {
                     localisation: r.localisation,
                     latitude: r.latitude !== null ? parseFloat(r.latitude) : null,
                     longitude: r.longitude !== null ? parseFloat(r.longitude) : null,
-                    fichiers: r.fichiers || {},
                     createdAt: r.created_at,
                     updatedAt: r.updated_at,
                     author: {
@@ -168,15 +164,15 @@ router.post('/', authMiddleware, async (req, res) => {
             }
         });
 
-        // GET pour un utilisateur: ses propres signalements (protégé)
+        // GET pour un utilisateur: ses propres signalements (protï¿½gï¿½)
         router.get('/user/:userId', authMiddleware, async (req, res) => {
             const { userId } = req.params;
-            // ? FIX: Empêcher un utilisateur de voir les signalements d'un autre
+            // ? FIX: Empï¿½cher un utilisateur de voir les signalements d'un autre
             if (userId !== req.user.id && req.user.role !== 'admin') {
-                return res.status(403).json({ error: 'Accès refusé' });
+                return res.status(403).json({ error: 'Accï¿½s refusï¿½' });
             }
             try {
-                const result = await db.query(`SELECT id, user_id, titre, description, type, statut, localisation, latitude, longitude, fichiers, created_at, updated_at
+                const result = await db.query(`SELECT id, user_id, titre, description, type, statut, localisation, latitude, longitude, created_at, updated_at
                                                FROM signal_moi.signalements WHERE user_id = $1 ORDER BY created_at DESC`, [userId]);
                 const rows = result.rows.map(r => ({
                     id: r.id,
@@ -188,7 +184,6 @@ router.post('/', authMiddleware, async (req, res) => {
                     localisation: r.localisation,
                     latitude: r.latitude !== null ? parseFloat(r.latitude) : null,
                     longitude: r.longitude !== null ? parseFloat(r.longitude) : null,
-                    fichiers: r.fichiers || {},
                     createdAt: r.created_at,
                     updatedAt: r.updated_at
                 }));
@@ -200,5 +195,7 @@ router.post('/', authMiddleware, async (req, res) => {
         });
 
 module.exports = router;
+
+
 
 
