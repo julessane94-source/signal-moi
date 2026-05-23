@@ -1,7 +1,21 @@
-const { Client } = require('pg');
-const bcrypt = require('bcrypt');
+const databaseUrl = process.env.DATABASE_URL;
 
-const databaseUrl = process.env.DATABASE_URL || "postgresql://signal_moi_db_bqhw_user:YOwlsgv09ScniveqtI0ostBM7mHZmaKb@dpg-d80gj4vaqgkc73a3tq2g-a.frankfurt-postgres.render.com/signal_moi_db_bqhw";
+// Vérifier si on doit exécuter le script
+if (!databaseUrl) {
+    console.log('⚠️  DATABASE_URL non défini, script de réinitialisation des mots de passe ignoré');
+    process.exit(0);
+}
+
+let Client, bcrypt;
+
+try {
+    ({ Client } = require('pg'));
+    bcrypt = require('bcrypt');
+} catch (error) {
+    console.warn('⚠️  Modules pg ou bcrypt non disponibles, script ignoré');
+    console.warn('   (Les dépendances seront installées dans backend/)');
+    process.exit(0);
+}
 
 async function resetPasswords() {
     const client = new Client({
