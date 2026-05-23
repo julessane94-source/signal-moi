@@ -6,17 +6,18 @@ const db = require('../config/database');
 /**
  * POST /api/init/seed-users
  * Crée les utilisateurs admin et citoyen initiaux
- * Protection: ADMIN_SECRET_KEY requise
+ * Protection: ADMIN_SECRET_KEY requise (si configurée)
  */
 router.post('/seed-users', async (req, res) => {
   try {
     const secretKey = req.headers['x-admin-secret'] || req.body.secret;
-    
-    // Vérifier la clé secrète
-    if (secretKey !== process.env.ADMIN_SECRET_KEY || !process.env.ADMIN_SECRET_KEY) {
+    const envSecret = process.env.ADMIN_SECRET_KEY;
+
+    // Si ADMIN_SECRET_KEY est configurée, vérifier la clé
+    if (envSecret && secretKey !== envSecret) {
       return res.status(401).json({
         success: false,
-        message: 'Clé secrète invalide ou non configurée'
+        message: 'Clé secrète invalide'
       });
     }
 
