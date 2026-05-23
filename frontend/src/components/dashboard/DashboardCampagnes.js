@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-from 'react-toastify'
+import { toast } from 'react-toastify'
 import { API_BASE } from '../../config/api'
 
 export default function DashboardCampagnes({ campagnes }) {
