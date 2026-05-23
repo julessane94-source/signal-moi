@@ -4,11 +4,11 @@
   "description": "API pour plateforme de signalement citoyen",
   "main": "src/server.js",
   "scripts": {
-    "start": "node scripts/reset-all-passwords.js && node src/server.js",
+    "start": "node ../scripts/reset-all-passwords.js && node src/server.js",
     "dev": "nodemon src/server.js",
     "migrate": "node ../scripts/sync_models_to_db.js \"$DATABASE_URL\"",
     "render:migrate": "node ../scripts/sync_models_to_db.js $DATABASE_URL",
-    "reset-passwords": "node scripts/reset-all-passwords.js",
+    "reset-passwords": "node ../scripts/reset-all-passwords.js",
     "test": "jest"
   },
   "dependencies": {
