@@ -16,7 +16,7 @@ router.post('/register', async (req, res) => {
     const telephone = req.body.phone || req.body.telephone;
     const ville = req.body.city || req.body.ville;
     const quartier = req.body.quartier || req.body.district || 'Inconnu';
-    const dataNaissance = req.body.dateNaissance || req.body.date_naissance || req.body.dob || new Date('2000-01-01');
+    const dataNaissance = req.body.dateNaissance || req.body.date_naissance || req.body.dob || '2000-01-01';
     const lieuNaissance = req.body.lieuNaissance || req.body.lieu_naissance || ville || 'Inconnu';
 
     // Validation des champs obligatoires
