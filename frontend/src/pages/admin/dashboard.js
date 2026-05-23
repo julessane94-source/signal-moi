@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import Navbar from '../../components/common/Navbar'
 import { toast } from 'react-toastify'
@@ -226,7 +226,7 @@ export default function AdminDashboard() {
     totalUsers: users.length,
     totalSignalements: stats.totalSignalements,
     totalCampagnes: stats.totalCampagnes,
-    activeUsers: users.filter(u => u.isActive !== false).length
+    activeUsers: users.filter(u => u.is_active !== false).length
   }
 
   if (loading) {
