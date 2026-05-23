@@ -7,7 +7,7 @@ const bcrypt = require('bcrypt');
 const SiteConfig = require('../models/SiteConfig');
 
 // ? Middleware d'authentification admin
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
     try {
         const token = req.headers.authorization?.replace('Bearer ', '');
         if (!token) {
@@ -15,13 +15,24 @@ const authMiddleware = (req, res, next) => {
         }
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret-key');
         
-        // V�rifier que c'est un admin
-        if (decoded.role !== 'admin') {
-            return res.status(403).json({ error: 'Acc�s administrateur requis' });
+        // Vérifier le rôle depuis le token OU depuis la base de données
+        if (decoded.role === 'admin') {
+            req.user = decoded;
+            return next();
         }
         
-        req.user = decoded;
-        next();
+        // Fallback: vérifier dans la base de données
+        const userResult = await db.query(
+            'SELECT id, role FROM signal_moi.users WHERE id = $1',
+            [decoded.id]
+        );
+        const user = (userResult.rows || [])[0];
+        if (user && user.role === 'admin') {
+            req.user = { id: decoded.id, role: 'admin' };
+            return next();
+        }
+        
+        return res.status(403).json({ error: 'Accès administrateur requis' });
     } catch (err) {
         return res.status(401).json({ error: 'Token invalide', details: err.message });
     }
@@ -50,7 +61,7 @@ router.get('/users', authMiddleware, async (req, res) => {
   }
 });
 
-// POST /api/admin/users - Cr�e un nouvel utilisateur (prot�g�)
+// POST /api/admin/users - Crée un nouvel utilisateur (protégé)
 router.post('/users', authMiddleware, async (req, res) => {
   console.log('[ADMIN POST /users] Body reçu:', req.body);
   const { prenom, nom, email, telephone, password, ville, quartier, role } = req.body;
@@ -63,17 +74,17 @@ router.post('/users', authMiddleware, async (req, res) => {
   try {
     const hashed = await require('bcrypt').hash(password, 10);
     const insertQuery = `
-      INSERT INTO users (prenom, nom, email, telephone, password, ville, quartier, role)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      INSERT INTO signal_moi.users (prenom, nom, email, telephone, password, ville, quartier, role, is_active, email_verified)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING id, prenom, nom, email, role
     `;
-    const values = [prenom, nom, email, telephone, hashed, ville, quartier, role || 'citoyen'];
+    const values = [prenom, nom, email, telephone, hashed, ville, quartier, role || 'citoyen', true, true];
     const result = await db.query(insertQuery, values);
-    console.log('[ADMIN POST /users] Utilisateur cr��:', result.rows[0]);
+    console.log('[ADMIN POST /users] Utilisateur créé:', result.rows[0]);
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error('[ADMIN POST /users] Erreur SQL:', err);
-    res.status(500).json({ error: 'Erreur lors de la cr�ation', details: err.message });
+    res.status(500).json({ error: 'Erreur lors de la création', details: err.message });
   }
 });
 
