@@ -8,26 +8,30 @@ const { protect } = require('../middleware/auth.middleware');
 // Inscription
 router.post('/register', async (req, res) => {
   try {
-    // Support des deux formats : camelCase (firstName) et snake_case (first_name)
-    const firstName = req.body.firstName || req.body.first_name || req.body.prenom;
-    const lastName = req.body.lastName || req.body.last_name || req.body.nom;
+    // Support des formats: camelCase, snake_case, et français
+    const prenom = req.body.firstName || req.body.first_name || req.body.prenom;
+    const nom = req.body.lastName || req.body.last_name || req.body.nom;
     const email = req.body.email;
     const password = req.body.password;
-    const phone = req.body.phone || req.body.telephone;
-    const city = req.body.city || req.body.ville;
+    const telephone = req.body.phone || req.body.telephone;
+    const ville = req.body.city || req.body.ville;
+    const quartier = req.body.quartier || req.body.district || 'Inconnu';
+    const dataNaissance = req.body.dateNaissance || req.body.date_naissance || req.body.dob || new Date('2000-01-01');
+    const lieuNaissance = req.body.lieuNaissance || req.body.lieu_naissance || ville || 'Inconnu';
 
     // Validation des champs obligatoires
-    if (!firstName || !lastName || !email || !password || !phone || !city) {
+    if (!prenom || !nom || !email || !password || !telephone || !ville) {
       return res.status(400).json({ 
         success: false, 
         message: 'Tous les champs sont obligatoires',
-        missing: {
-          firstName: !firstName,
-          lastName: !lastName,
-          email: !email,
-          password: !password,
-          phone: !phone,
-          city: !city
+        required: ['prenom', 'nom', 'email', 'password', 'telephone', 'ville'],
+        received: {
+          prenom: !!prenom,
+          nom: !!nom,
+          email: !!email,
+          password: !!password,
+          telephone: !!telephone,
+          ville: !!ville
         }
       });
     }
@@ -47,8 +51,8 @@ router.post('/register', async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const insertResult = await db.query(
-      'INSERT INTO users (first_name, last_name, email, password, phone, city, role) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
-      [firstName, lastName, email, hashedPassword, phone, city, 'citizen']
+      'INSERT INTO users (prenom, nom, email, password, telephone, ville, quartier, date_naissance, lieu_naissance, role) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id',
+      [prenom, nom, email, hashedPassword, telephone, ville, quartier, dataNaissance, lieuNaissance, 'citoyen']
     );
 
     const newUserId = insertResult.rows[0].id;
@@ -56,7 +60,13 @@ router.post('/register', async (req, res) => {
     res.status(201).json({
       success: true,
       token,
-      user: { id: newUserId, firstName, lastName, email, role: 'citizen' }
+      user: { 
+        id: newUserId, 
+        prenom, 
+        nom, 
+        email, 
+        role: 'citoyen' 
+      }
     });
   } catch (error) {
     console.error('[AUTH REGISTER] Erreur:', error.message);
@@ -64,14 +74,22 @@ router.post('/register', async (req, res) => {
     if (error.message.includes('Named bind parameter')) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Champs manquants ou invalides. Tous les champs sont obligatoires: firstName, lastName, email, password, phone, city'
+        message: 'Champs manquants ou invalides. Tous les champs sont obligatoires: prenom, nom, email, password, telephone, ville'
       });
     }
     
-    if (error.message.includes('duplicate key')) {
+    if (error.message.includes('duplicate key') || error.message.includes('UNIQUE constraint')) {
       return res.status(400).json({ 
         success: false, 
         message: 'Cet email est déjà utilisé'
+      });
+    }
+
+    if (error.message.includes('does not exist')) {
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Erreur schéma base de données',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
 
@@ -113,8 +131,8 @@ router.post('/login', async (req, res) => {
       token,
       user: {
         id: user.id,
-        firstName: user.first_name,
-        lastName: user.last_name,
+        prenom: user.prenom,
+        nom: user.nom,
         email: user.email,
         role: user.role
       }
