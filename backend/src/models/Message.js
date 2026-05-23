@@ -1,75 +1,97 @@
-﻿const { DataTypes } = require('sequelize');
 const db = require('../config/database');
 
-const Message = db.define('Message', {
-  id: {
-    type: DataTypes.UUID,
-    defaultValue: DataTypes.UUIDV4,
-    primaryKey: true
-  },
-  expediteurId: {
-    type: DataTypes.UUID,
-    allowNull: false,
-    field: 'expediteur_id',
-    // references removed for sync-order tolerance
-  },
-  destinataireId: {
-    type: DataTypes.UUID,
-    allowNull: false,
-    field: 'destinataire_id',
-    // references removed for sync-order tolerance
-  },
-  signalementId: {
-    type: DataTypes.UUID,
-    allowNull: true,
-    field: 'signalement_id',
-    // references removed for sync-order tolerance
-  },
-  contenu: {
-    type: DataTypes.TEXT,
-    allowNull: false,
-    validate: {
-      len: [1, 5000]
-    }
-  },
-  estLu: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false,
-    field: 'est_lu'
-  },
-  dateLecture: {
-    type: DataTypes.DATE,
-    allowNull: true,
-    field: 'date_lecture'
-  },
-  piecesJointes: {
-    type: DataTypes.JSON,
-    allowNull: true,
-    field: 'pieces_jointes'
-  },
-  isDeletedBySender: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false,
-    field: 'is_deleted_by_sender'
-  },
-  isDeletedByReceiver: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false,
-    field: 'is_deleted_by_receiver'
-  }
-}, {
-  tableName: 'messages',
-  timestamps: true,
-  underscored: true
-});
+const Message = {
+    findAll: async () => {
+        const res = await db.query('SELECT * FROM messages ORDER BY created_at DESC');
+        return res.rows;
+    },
 
-// Méthodes d'instance
-Message.prototype.markAsRead = async function() {
-  if (!this.estLu) {
-    this.estLu = true;
-    this.dateLecture = new Date();
-    await this.save();
-  }
+    findById: async (id) => {
+        const res = await db.query('SELECT * FROM messages WHERE id = $1', [id]);
+        return res.rows[0] || null;
+    },
+
+    findByUser: async (userId) => {
+        const res = await db.query(
+            `SELECT * FROM messages 
+             WHERE (expediteur_id = $1 OR destinataire_id = $1) 
+             AND is_deleted_by_sender = false AND is_deleted_by_receiver = false
+             ORDER BY created_at DESC`,
+            [userId]
+        );
+        return res.rows;
+    },
+
+    findBetweenUsers: async (userId1, userId2) => {
+        const res = await db.query(
+            `SELECT * FROM messages 
+             WHERE (expediteur_id = $1 AND destinataire_id = $2) 
+             OR (expediteur_id = $2 AND destinataire_id = $1)
+             ORDER BY created_at ASC`,
+            [userId1, userId2]
+        );
+        return res.rows;
+    },
+
+    create: async (data) => {
+        const { id, expediteurId, destinataireId, signalementId, contenu, piecesJointes } = data;
+        const res = await db.query(
+            `INSERT INTO messages (id, expediteur_id, destinataire_id, signalement_id, contenu, pieces_jointes)
+             VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+            [id, expediteurId, destinataireId, signalementId || null, contenu, piecesJointes || null]
+        );
+        return res.rows[0];
+    },
+
+    markAsRead: async (messageId) => {
+        const res = await db.query(
+            `UPDATE messages SET est_lu = true, date_lecture = NOW() WHERE id = $1 RETURNING *`,
+            [messageId]
+        );
+        return res.rows[0];
+    },
+
+    update: async (id, data) => {
+        const fields = [];
+        const values = [];
+        let paramIndex = 1;
+
+        Object.entries(data).forEach(([key, value]) => {
+            const dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+            fields.push(`${dbKey} = $${paramIndex}`);
+            values.push(value);
+            paramIndex++;
+        });
+
+        if (fields.length === 0) return null;
+
+        values.push(id);
+        const res = await db.query(
+            `UPDATE messages SET ${fields.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+            values
+        );
+        return res.rows[0] || null;
+    },
+
+    delete: async (id) => {
+        await db.query('DELETE FROM messages WHERE id = $1', [id]);
+    },
+
+    softDeleteBySender: async (messageId) => {
+        const res = await db.query(
+            `UPDATE messages SET is_deleted_by_sender = true WHERE id = $1 RETURNING *`,
+            [messageId]
+        );
+        return res.rows[0];
+    },
+
+    softDeleteByReceiver: async (messageId) => {
+        const res = await db.query(
+            `UPDATE messages SET is_deleted_by_receiver = true WHERE id = $1 RETURNING *`,
+            [messageId]
+        );
+        return res.rows[0];
+    }
 };
 
 module.exports = Message;
