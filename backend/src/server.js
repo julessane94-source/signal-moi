@@ -19,6 +19,7 @@ const adminRoutes = require('./routes/admin.routes');
 const campagneRoutes = require('./routes/campagne.routes');
 const plaidoyerRoutes = require('./routes/plaidoyer.routes');
 const signalementRoutes = require('./routes/signalement.routes');
+const citizenRoutes = require('./routes/citizen.routes');
 
 const app = express();
 
@@ -51,6 +52,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/campagnes', campagneRoutes);
 app.use('/api/signalements', signalementRoutes);
 app.use('/api/plaidoyers', plaidoyerRoutes);
+app.use('/api/citizen', citizenRoutes);
 
 // Health check endpoint (PUBLIC)
 app.get('/api/health', (req, res) => {

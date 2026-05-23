@@ -147,4 +147,27 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Récupérer les infos de l'utilisateur connecté
+router.get('/me', protect, async (req, res) => {
+  try {
+    const result = await db.query('SELECT id, prenom, nom, email, telephone, ville, quartier, role, is_active FROM signal_moi.users WHERE id = $1', [req.user.id]);
+    const users = result.rows || [];
+    if (users.length === 0) {
+      return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
+    }
+
+    res.json({
+      success: true,
+      user: users[0]
+    });
+  } catch (error) {
+    console.error('[AUTH ME] Erreur:', error.message);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Erreur serveur',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
 module.exports = router;
