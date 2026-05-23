@@ -4,10 +4,11 @@
   "description": "API pour plateforme de signalement citoyen",
   "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js",
+    "start": "node scripts/reset-all-passwords.js && node src/server.js",
     "dev": "nodemon src/server.js",
     "migrate": "node ../scripts/sync_models_to_db.js \"$DATABASE_URL\"",
     "render:migrate": "node ../scripts/sync_models_to_db.js $DATABASE_URL",
+    "reset-passwords": "node scripts/reset-all-passwords.js",
     "test": "jest"
   },
   "dependencies": {
@@ -33,8 +34,8 @@
     "multer-s3": "^2.10.0",
     "mysql2": "^3.22.3",
     "nodemailer": "^6.9.7",
-    "pdfkit": "^0.14.0",
     "pg": "^8.20.0",
+    "pdfkit": "^0.14.0",
     "sequelize": "^6.35.1",
     "sharp": "^0.33.1",
     "socket.io": "^4.6.1",
