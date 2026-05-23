@@ -21,6 +21,7 @@ const plaidoyerRoutes = require('./routes/plaidoyer.routes');
 const signalementRoutes = require('./routes/signalement.routes');
 const citizenRoutes = require('./routes/citizen.routes');
 const initRoutes = require('./routes/init.routes');
+const pagesRoutes = require('./routes/pages.routes');
 
 const app = express();
 
@@ -55,6 +56,7 @@ app.use('/api/signalements', signalementRoutes);
 app.use('/api/plaidoyers', plaidoyerRoutes);
 app.use('/api/citizen', citizenRoutes);
 app.use('/api/init', initRoutes);
+app.use('/api/pages', pagesRoutes); // Routes PUBLIQUES pour les pages du site
 
 // Health check endpoint (PUBLIC)
 app.get('/api/health', (req, res) => {
