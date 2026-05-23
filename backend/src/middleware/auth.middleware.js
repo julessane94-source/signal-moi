@@ -19,7 +19,7 @@ const protect = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // ✅ FIX: PostgreSQL syntax ($1) instead of MySQL (?)
-    const result = await db.query('SELECT * FROM users WHERE id = $1', [decoded.id]);
+    const result = await db.query('SELECT * FROM signal_moi.users WHERE id = $1', [decoded.id]);
     const users = result.rows || [];
     
     if (!users || users.length === 0) {
