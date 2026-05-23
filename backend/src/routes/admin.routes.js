@@ -215,7 +215,7 @@ router.get('/campagnes', authMiddleware, async (req, res) => {
       SELECT c.*, 
              u.prenom, u.nom, u.email
       FROM signal_moi.campagnes c
-      LEFT JOIN signal_moi.users u ON u.id = c.user_id
+      LEFT JOIN signal_moi.users u ON u.id = c.created_by
       ORDER BY c.date_debut DESC
     `);
     
@@ -234,7 +234,7 @@ router.get('/campagnes', authMiddleware, async (req, res) => {
       created_at: c.created_at,
       updated_at: c.updated_at,
       creator: {
-        id: c.user_id,
+        id: c.created_by,
         prenom: c.prenom,
         nom: c.nom,
         email: c.email
