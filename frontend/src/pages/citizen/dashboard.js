@@ -1,9 +1,14 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE } from '../../config/api'
 import Navbar from '../../components/common/Navbar'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import DashboardStats from '../../components/dashboard/DashboardStats'
+import DashboardSignalements from '../../components/dashboard/DashboardSignalements'
+import DashboardCampagnes from '../../components/dashboard/DashboardCampagnes'
+import DashboardPlaidoyers from '../../components/dashboard/DashboardPlaidoyers'
+import DashboardMessages from '../../components/dashboard/DashboardMessages'
 
 export default function CitizenDashboard() {
   const { user } = useAuth()
@@ -52,19 +57,9 @@ export default function CitizenDashboard() {
     { id: 'signalements', name: 'Mes signalements', icon: '📋' },
     { id: 'campagnes', name: 'Campagnes', icon: '🎯' },
     { id: 'plaidoyers', name: 'Plaidoyers', icon: '✍️' },
+    { id: 'messages', name: 'Messages', icon: '💬' },
     { id: 'profil', name: 'Mon profil', icon: '👤' }
   ]
-
-  const getStatusBadge = (statut) => {
-    const statusMap = {
-      'nouveau': { color: 'bg-blue-100 text-blue-700', text: 'Nouveau' },
-      'en_cours': { color: 'bg-yellow-100 text-yellow-700', text: 'En cours' },
-      'traite': { color: 'bg-green-100 text-green-700', text: 'Traite' },
-      'transfere': { color: 'bg-purple-100 text-purple-700', text: 'Transfere' }
-    }
-    const s = statusMap[statut] || statusMap['nouveau']
-    return <span className={`px-2 py-1 text-xs rounded-full ${s.color}`}>{s.text}</span>
-  }
 
   if (loading) {
     return (
@@ -82,11 +77,13 @@ export default function CitizenDashboard() {
       <Navbar />
       <div className="min-h-screen bg-gray-50 pt-16">
         <div className="max-w-7xl mx-auto px-4 py-8">
+          {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Espace Citoyen</h1>
-            <p className="text-gray-600">Bienvenue {user?.prenom} ! Votre voix compte.</p>
+            <p className="text-gray-600 mt-2">Bienvenue {user?.prenom} ! Votre voix compte.</p>
           </div>
 
+          {/* Call to Action - Create Report */}
           <Link href="/citizen/signalement">
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -98,7 +95,7 @@ export default function CitizenDashboard() {
                   <div className="text-6xl">🚨</div>
                   <div className="text-left">
                     <div className="text-2xl font-bold">Faire un signalement</div>
-                    <div className="text-red-100">Violence, vol, probleme d'eclairage, nid-de-poule...</div>
+                    <div className="text-red-100">Violence, vol, problème d\'éclairage, nid-de-poule...</div>
                   </div>
                 </div>
                 <div className="text-3xl">→</div>
@@ -106,16 +103,20 @@ export default function CitizenDashboard() {
             </motion.button>
           </Link>
 
+          {/* Statistics */}
+          {activeTab === 'signalements' && <DashboardStats user={user} />}
+
+          {/* Tabs Navigation */}
           <div className="border-b border-gray-200 mb-6">
-            <nav className="flex space-x-8">
+            <nav className="flex space-x-1 overflow-x-auto">
               {tabs.map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm ${
+                  className={`flex items-center space-x-2 py-4 px-4 border-b-2 font-medium text-sm whitespace-nowrap transition ${
                     activeTab === tab.id
                       ? 'border-red-500 text-red-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
                   <span>{tab.icon}</span>
@@ -125,104 +126,78 @@ export default function CitizenDashboard() {
             </nav>
           </div>
 
-          {activeTab === 'signalements' && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold mb-4">Evolution de mes signalements</h2>
-              {signalements.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-xl">
-                  <div className="text-6xl mb-4">📭</div>
-                  <p className="text-gray-500">Aucun signalement pour le moment</p>
-                  <Link href="/citizen/signalement" className="text-red-500 mt-2 inline-block">Creer mon premier signalement →</Link>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {signalements.map(s => (
-                    <div key={s.id} className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            {getStatusBadge(s.statut)}
-                            <span className="text-xs text-gray-400">{new Date(s.createdAt).toLocaleDateString()}</span>
-                          </div>
-                          <h3 className="font-semibold text-lg">{s.titre}</h3>
-                          <p className="text-gray-600 mt-1">{s.description}</p>
-                          <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
-                            <span>📍 {s.localisation}</span>
-                            <span>📎 {s.fichiers?.length || 0} piece(s) jointe(s)</span>
-                          </div>
-                        </div>
-                        <Link href={`/citizen/signalement/${s.id}`}>
-                          <button className="text-red-500 hover:text-red-600">Voir details →</button>
-                        </Link>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+          {/* Tab Content */}
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            {activeTab === 'signalements' && (
+              <>
+                <h2 className="text-xl font-semibold mb-4 text-gray-900">Évolution de mes signalements</h2>
+                <DashboardSignalements signalements={signalements} />
+              </>
+            )}
 
-          {activeTab === 'campagnes' && (
-            <div>
-              <h2 className="text-xl font-semibold mb-4">S'inscrire aux campagnes</h2>
-              {campagnes.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-xl"><p className="text-gray-500">Aucune campagne disponible</p></div>
-              ) : (
-                <div className="grid md:grid-cols-2 gap-6">
-                  {campagnes.map(c => (
-                    <div key={c.id} className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition">
-                      <h3 className="font-semibold text-lg">{c.titre}</h3>
-                      <p className="text-gray-600 mt-1">{c.description}</p>
-                      <div className="mt-4 flex justify-between items-center">
-                        <div className="text-sm text-gray-500">
-                          <div>📅 {new Date(c.dateDebut).toLocaleDateString()}</div>
-                          <div>📍 {c.lieu}</div>
-                        </div>
-                        <button className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition">S'inscrire →</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+            {activeTab === 'campagnes' && (
+              <>
+                <h2 className="text-xl font-semibold mb-4 text-gray-900">S\'inscrire aux campagnes</h2>
+                <DashboardCampagnes campagnes={campagnes} />
+              </>
+            )}
 
-          {activeTab === 'plaidoyers' && (
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Signer des plaidoyers</h2>
-              {plaidoyers.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-xl"><p className="text-gray-500">Aucun plaidoyer disponible</p></div>
-              ) : (
-                <div className="space-y-4">
-                  {plaidoyers.map(p => (
-                    <div key={p.id} className="bg-white rounded-xl shadow-md p-6">
-                      <h3 className="font-semibold text-lg">{p.titre}</h3>
-                      <p className="text-gray-600 mt-1">{p.description}</p>
-                      <div className="mt-4 flex justify-between items-center">
-                        <span className="text-sm text-gray-500">📊 {p.signatures || 0} signatures</span>
-                        <button className="bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition">✍️ Signer</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+            {activeTab === 'plaidoyers' && (
+              <>
+                <h2 className="text-xl font-semibold mb-4 text-gray-900">Signer des pétitions</h2>
+                <DashboardPlaidoyers plaidoyers={plaidoyers} />
+              </>
+            )}
 
-          {activeTab === 'profil' && (
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <h2 className="text-xl font-semibold mb-4">Mon profil</h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div><strong>Nom complet:</strong> {user?.prenom} {user?.nom}</div>
-                <div><strong>Email:</strong> {user?.email}</div>
-                <div><strong>Telephone:</strong> {user?.telephone}</div>
-                <div><strong>Ville:</strong> {user?.ville}</div>
-                <div><strong>Quartier:</strong> {user?.quartier}</div>
-                <div><strong>Role:</strong> {user?.role}</div>
+            {activeTab === 'messages' && (
+              <>
+                <h2 className="text-xl font-semibold mb-4 text-gray-900">Vos messages</h2>
+                <DashboardMessages />
+              </>
+            )}
+
+            {activeTab === 'profil' && (
+              <div className="bg-white rounded-xl shadow-md p-6">
+                <h2 className="text-xl font-semibold mb-6 text-gray-900">Mon profil</h2>
+                <div className="grid md:grid-cols-2 gap-6 mb-6">
+                  <div className="border-l-4 border-indigo-500 pl-4">
+                    <p className="text-sm text-gray-600">Nom complet</p>
+                    <p className="text-lg font-semibold text-gray-900">{user?.prenom} {user?.nom}</p>
+                  </div>
+                  <div className="border-l-4 border-indigo-500 pl-4">
+                    <p className="text-sm text-gray-600">Email</p>
+                    <p className="text-lg font-semibold text-gray-900">{user?.email}</p>
+                  </div>
+                  <div className="border-l-4 border-indigo-500 pl-4">
+                    <p className="text-sm text-gray-600">Téléphone</p>
+                    <p className="text-lg font-semibold text-gray-900">{user?.telephone || '—'}</p>
+                  </div>
+                  <div className="border-l-4 border-indigo-500 pl-4">
+                    <p className="text-sm text-gray-600">Ville</p>
+                    <p className="text-lg font-semibold text-gray-900">{user?.ville || '—'}</p>
+                  </div>
+                  <div className="border-l-4 border-indigo-500 pl-4">
+                    <p className="text-sm text-gray-600">Quartier</p>
+                    <p className="text-lg font-semibold text-gray-900">{user?.quartier || '—'}</p>
+                  </div>
+                  <div className="border-l-4 border-indigo-500 pl-4">
+                    <p className="text-sm text-gray-600">Rôle</p>
+                    <p className="text-lg font-semibold text-gray-900 capitalize">{user?.role}</p>
+                  </div>
+                </div>
+                <Link href="/profile">
+                  <button className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition font-medium">
+                    Modifier mon profil
+                  </button>
+                </Link>
               </div>
-              <Link href="/profile"><button className="mt-4 bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition">Modifier mon profil</button></Link>
-            </div>
-          )}
+            )}
+          </motion.div>
         </div>
       </div>
     </>
