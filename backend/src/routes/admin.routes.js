@@ -207,6 +207,50 @@ router.get('/site-config', authMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/admin/campagnes - Récupère toutes les campagnes
+router.get('/campagnes', authMiddleware, async (req, res) => {
+  try {
+    const result = await db.query(`
+      SELECT c.id, c.titre, c.description, c.type, c.date_debut, c.date_fin, 
+             c.lieu, c.capacite_max, c.est_actif, c.image_url, c.created_at, c.updated_at,
+             u.id AS creator_id, u.prenom, u.nom, u.email,
+             COUNT(ic.id) AS inscriptions_count
+      FROM signal_moi.campagnes c
+      LEFT JOIN signal_moi.users u ON u.id = c.user_id
+      LEFT JOIN signal_moi.inscriptions_campagnes ic ON ic.campagne_id = c.id
+      GROUP BY c.id, u.id, u.prenom, u.nom, u.email
+      ORDER BY c.date_debut DESC
+    `);
+    
+    const campagnes = (result.rows || []).map(c => ({
+      id: c.id,
+      titre: c.titre,
+      description: c.description,
+      type: c.type,
+      date_debut: c.date_debut,
+      date_fin: c.date_fin,
+      lieu: c.lieu,
+      capacite_max: c.capacite_max,
+      est_actif: c.est_actif,
+      image_url: c.image_url,
+      created_at: c.created_at,
+      updated_at: c.updated_at,
+      creator: {
+        id: c.creator_id,
+        prenom: c.prenom,
+        nom: c.nom,
+        email: c.email
+      },
+      inscriptions_count: parseInt(c.inscriptions_count) || 0
+    }));
+    
+    res.json(campagnes);
+  } catch (err) {
+    console.error('[ADMIN GET /campagnes] Erreur:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
+  }
+});
+
 router.post('/site-config', authMiddleware, async (req, res) => {
   try {
     const { siteName, contactEmail, contactPhone, address, contactPage, aboutPage, homePage } = req.body;
