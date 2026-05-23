@@ -1,4 +1,4 @@
-﻿// backend/src/routes/admin.routes.js
+// backend/src/routes/admin.routes.js
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const SiteConfig = require('../models/SiteConfig');
 
-// ✅ Middleware d'authentification admin
+// ? Middleware d'authentification admin
 const authMiddleware = (req, res, next) => {
     try {
         const token = req.headers.authorization?.replace('Bearer ', '');
@@ -15,9 +15,9 @@ const authMiddleware = (req, res, next) => {
         }
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret-key');
         
-        // Vérifier que c'est un admin
+        // V�rifier que c'est un admin
         if (decoded.role !== 'admin') {
-            return res.status(403).json({ error: 'Accès administrateur requis' });
+            return res.status(403).json({ error: 'Acc�s administrateur requis' });
         }
         
         req.user = decoded;
@@ -27,7 +27,7 @@ const authMiddleware = (req, res, next) => {
     }
 };
 
-// --- Routes de test (Ã  conserver pour le dÃ©bogage) ---
+// --- Routes de test (à conserver pour le débogage) ---
 router.get('/test-db', async (req, res) => {
   try {
     const result = await db.query('SELECT NOW() as now');
@@ -39,10 +39,10 @@ router.get('/test-db', async (req, res) => {
 });
 
 // --- Gestion des utilisateurs ---
-// GET /api/admin/users - Récupère la liste de tous les utilisateurs (protégé)
+// GET /api/admin/users - R�cup�re la liste de tous les utilisateurs (prot�g�)
 router.get('/users', authMiddleware, async (req, res) => {
   try {
-    const result = await db.query('SELECT id, prenom, nom, email, telephone, ville, quartier, role, is_active FROM users ORDER BY created_at DESC');
+    const result = await db.query('SELECT id, prenom, nom, email, telephone, ville, quartier, role, is_active FROM signal_moi.users ORDER BY created_at DESC');
     res.json(result.rows);
   } catch (err) {
     console.error('[ADMIN GET /users] Erreur:', err);
@@ -50,9 +50,9 @@ router.get('/users', authMiddleware, async (req, res) => {
   }
 });
 
-// POST /api/admin/users - Crée un nouvel utilisateur (protégé)
+// POST /api/admin/users - Cr�e un nouvel utilisateur (prot�g�)
 router.post('/users', authMiddleware, async (req, res) => {
-  console.log('[ADMIN POST /users] Body reÃ§u:', req.body);
+  console.log('[ADMIN POST /users] Body reçu:', req.body);
   const { prenom, nom, email, telephone, password, ville, quartier, role } = req.body;
 
   // Validation basique des champs obligatoires
@@ -69,15 +69,15 @@ router.post('/users', authMiddleware, async (req, res) => {
     `;
     const values = [prenom, nom, email, telephone, hashed, ville, quartier, role || 'citoyen'];
     const result = await db.query(insertQuery, values);
-    console.log('[ADMIN POST /users] Utilisateur créé:', result.rows[0]);
+    console.log('[ADMIN POST /users] Utilisateur cr��:', result.rows[0]);
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error('[ADMIN POST /users] Erreur SQL:', err);
-    res.status(500).json({ error: 'Erreur lors de la création', details: err.message });
+    res.status(500).json({ error: 'Erreur lors de la cr�ation', details: err.message });
   }
 });
 
-// PUT /api/admin/users/:id - Met à jour un utilisateur
+// PUT /api/admin/users/:id - Met � jour un utilisateur
 router.put('/users/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
   const { prenom, nom, email, telephone, ville, quartier, role, is_active } = req.body;
@@ -95,25 +95,25 @@ router.put('/users/:id', authMiddleware, async (req, res) => {
     if (is_active !== undefined) { fields.push(`is_active = $${fields.length + 1}`); values.push(is_active) }
 
     if (fields.length === 0) {
-      return res.status(400).json({ error: 'Aucun champ à mettre à jour' });
+      return res.status(400).json({ error: 'Aucun champ � mettre � jour' });
     }
 
-    const query = `UPDATE users SET ${fields.join(', ')} WHERE id = $${fields.length + 1} RETURNING id, prenom, nom, email, telephone, ville, quartier, role, is_active`;
+    const query = `UPDATE signal_moi.users SET ${fields.join(', ')} WHERE id = $${fields.length + 1} RETURNING id, prenom, nom, email, telephone, ville, quartier, role, is_active`;
     values.push(id);
     const result = await db.query(query, values);
     res.json(result.rows[0]);
   } catch (err) {
     console.error('[ADMIN PUT /users/:id] Erreur:', err);
-    res.status(500).json({ error: 'Erreur lors de la mise à jour', details: err.message });
+    res.status(500).json({ error: 'Erreur lors de la mise � jour', details: err.message });
   }
 });
 
-// DELETE /api/admin/users/:id - Supprime (ou désactive) un utilisateur
+// DELETE /api/admin/users/:id - Supprime (ou d�sactive) un utilisateur
 router.delete('/users/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
   try {
-    // Ici on choisit de désactiver plutôt que supprimer physiquement
-    const result = await db.query('UPDATE users SET is_active = false WHERE id = $1 RETURNING id', [id]);
+    // Ici on choisit de d�sactiver plut�t que supprimer physiquement
+    const result = await db.query('UPDATE signal_moi.users SET is_active = false WHERE id = $1 RETURNING id', [id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Utilisateur introuvable' });
     res.json({ success: true });
   } catch (err) {
@@ -122,42 +122,42 @@ router.delete('/users/:id', authMiddleware, async (req, res) => {
   }
 });
 
-// POST /api/admin/users/:id/reset-password - Réinitialise le mot de passe d'un utilisateur
+// POST /api/admin/users/:id/reset-password - R�initialise le mot de passe d'un utilisateur
 router.post('/users/:id/reset-password', authMiddleware, async (req, res) => {
   const { id } = req.params;
   try {
     const defaultPassword = process.env.DEFAULT_RESET_PASSWORD || 'Default123!';
     const hashed = await bcrypt.hash(defaultPassword, 10);
-    const result = await db.query('UPDATE users SET password = $1 WHERE id = $2 RETURNING id', [hashed, id]);
+    const result = await db.query('UPDATE signal_moi.users SET password = $1 WHERE id = $2 RETURNING id', [hashed, id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Utilisateur introuvable' });
     res.json({ success: true });
   } catch (err) {
     console.error('[ADMIN POST /users/:id/reset-password] Erreur:', err);
-    res.status(500).json({ error: 'Erreur lors de la réinitialisation', details: err.message });
+    res.status(500).json({ error: 'Erreur lors de la r�initialisation', details: err.message });
   }
 });
 
-// PATCH /api/admin/users/:id/role - Change le rôle d'un utilisateur
+// PATCH /api/admin/users/:id/role - Change le r�le d'un utilisateur
 router.patch('/users/:id/role', authMiddleware, async (req, res) => {
   const { id } = req.params;
   const { role } = req.body;
   if (!role) return res.status(400).json({ error: 'Role requis' });
   try {
-    const result = await db.query('UPDATE users SET role = $1 WHERE id = $2 RETURNING id, role', [role, id]);
+    const result = await db.query('UPDATE signal_moi.users SET role = $1 WHERE id = $2 RETURNING id, role', [role, id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Utilisateur introuvable' });
     res.json(result.rows[0]);
   } catch (err) {
     console.error('[ADMIN PATCH /users/:id/role] Erreur:', err);
-    res.status(500).json({ error: 'Erreur lors du changement de rôle', details: err.message });
+    res.status(500).json({ error: 'Erreur lors du changement de r�le', details: err.message });
   }
 });
 
-// Ajoutez cette route après les autres routes GET (par exemple après `/users`)
+// Ajoutez cette route apr�s les autres routes GET (par exemple apr�s `/users`)
 router.get('/signalements', authMiddleware, async (req, res) => {
   try {
     const result = await db.query(`SELECT s.*, u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone, u.email AS user_email
-                                   FROM signalements s
-                                   LEFT JOIN users u ON u.id = s.user_id
+                                   FROM signal_moi.signalements s
+                                   LEFT JOIN signal_moi.users u ON u.id = s.user_id
                                    ORDER BY s.created_at DESC LIMIT 200`);
     const rows = result.rows.map(r => ({
       id: r.id,
@@ -223,4 +223,6 @@ router.post('/site-config', authMiddleware, async (req, res) => {
 });
 
 module.exports = router;
+
+
 

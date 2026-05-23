@@ -1,9 +1,9 @@
-ï»¿const express = require('express');
+const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const jwt = require('jsonwebtoken');
 
-// âœ… Middleware d'authentification
+// ? Middleware d'authentification
 const authMiddleware = (req, res, next) => {
     try {
         const token = req.headers.authorization?.replace('Bearer ', '');
@@ -21,7 +21,7 @@ const authMiddleware = (req, res, next) => {
 // GET toutes les campagnes
 router.get('/', async (req, res) => {
   try {
-    const result = await db.query('SELECT * FROM campagnes ORDER BY date_debut ASC');
+    const result = await db.query('SELECT * FROM signal_moi.campagnes ORDER BY date_debut ASC');
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -29,12 +29,12 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST pour crÃ©er une campagne (protÃ©gÃ© - admin uniquement)
+// POST pour créer une campagne (protégé - admin uniquement)
 router.post('/', authMiddleware, async (req, res) => {
   const { titre, description, type, date_debut, date_fin, lieu, capacite_max, created_by } = req.body;
   try {
     const result = await db.query(
-      `INSERT INTO campagnes (titre, description, type, date_debut, date_fin, lieu, capacite_max, created_by)
+      `INSERT INTO signal_moi.campagnes (titre, description, type, date_debut, date_fin, lieu, capacite_max, created_by)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
       [titre, description, type, date_debut, date_fin, lieu, capacite_max || 100, created_by]
@@ -42,8 +42,9 @@ router.post('/', authMiddleware, async (req, res) => {
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Erreur crÃ©ation campagne' });
+    res.status(500).json({ error: 'Erreur création campagne' });
   }
 });
 
 module.exports = router;
+

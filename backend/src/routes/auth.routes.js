@@ -43,7 +43,7 @@ router.post('/register', async (req, res) => {
     }
 
     // Vérifier si l'email existe déjà
-    const result = await db.query('SELECT id FROM users WHERE email = $1', [email]);
+    const result = await db.query('SELECT id FROM signal_moi.users WHERE email = $1', [email]);
     const existing = result.rows || [];
     if (existing.length > 0) {
       return res.status(400).json({ success: false, message: 'Cet email est déjà utilisé' });
@@ -51,7 +51,7 @@ router.post('/register', async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const insertResult = await db.query(
-      'INSERT INTO users (prenom, nom, email, password, telephone, ville, quartier, date_naissance, lieu_naissance, role) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id',
+      'INSERT INTO signal_moi.users (prenom, nom, email, password, telephone, ville, quartier, date_naissance, lieu_naissance, role) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id',
       [prenom, nom, email, hashedPassword, telephone, ville, quartier, dataNaissance, lieuNaissance, 'citoyen']
     );
 
@@ -113,7 +113,7 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+    const result = await db.query('SELECT * FROM signal_moi.users WHERE email = $1', [email]);
     const users = result.rows || [];
     if (users.length === 0) {
       return res.status(401).json({ success: false, message: 'Email ou mot de passe incorrect' });

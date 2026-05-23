@@ -1,4 +1,4 @@
-ï»¿const express = require('express');
+const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const jwt = require('jsonwebtoken');
@@ -34,25 +34,25 @@ const optionalAuthMiddleware = (req, res, next) => {
 };
 
 router.post('/', authMiddleware, async (req, res) => {
-    console.log('Body reÃ§u pour signalement :', req.body);
-    console.log('Utilisateur connectÃ©:', req.user);
+    console.log('Body reçu pour signalement :', req.body);
+    console.log('Utilisateur connecté:', req.user);
 
     const { titre, description, type, localisation, latitude, longitude, fichiers } = req.body;
-    const user_id = req.user.id;  // âœ… FIX: Get user_id from JWT token, not from request body
+    const user_id = req.user.id;  // ? FIX: Get user_id from JWT token, not from request body
 
-    // VÃ©rifier les champs obligatoires
+    // Vérifier les champs obligatoires
     if (!titre || !description || !type || !localisation) {
         return res.status(400).json({ error: 'Champs manquants : titre, description, type, localisation' });
     }
 
     try {
         const result = await db.query(
-            `INSERT INTO signalements (user_id, titre, description, type, localisation, latitude, longitude, fichiers)
+            `INSERT INTO signal_moi.signalements (user_id, titre, description, type, localisation, latitude, longitude, fichiers)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
              RETURNING *`,
             [user_id, titre, description, type, localisation, latitude || null, longitude || null, fichiers || []]
         );
-        console.log('Signalement crÃ©Ã©:', result.rows[0]);
+        console.log('Signalement créé:', result.rows[0]);
         res.status(201).json(result.rows[0]);
     } catch (err) {
         console.error('Erreur SQL :', err);
@@ -64,7 +64,7 @@ router.post('/', authMiddleware, async (req, res) => {
         router.get('/public', async (req, res) => {
             try {
                 const result = await db.query(`SELECT id, user_id, titre, description, type, statut, localisation, latitude, longitude, fichiers, created_at, updated_at
-                                               FROM signalements ORDER BY created_at DESC LIMIT 200`);
+                                               FROM signal_moi.signalements ORDER BY created_at DESC LIMIT 200`);
                 const rows = result.rows.map(r => ({
                     id: r.id,
                     userId: r.user_id,
@@ -86,12 +86,12 @@ router.post('/', authMiddleware, async (req, res) => {
             }
         });
 
-        // GET gÃ©nÃ©rique: signalements selon le rÃ´le / utilisateur
+        // GET générique: signalements selon le rôle / utilisateur
         router.get('/', optionalAuthMiddleware, async (req, res) => {
             try {
                 if (req.user && req.user.role === 'citoyen') {
                     const result = await db.query(`SELECT id, user_id, titre, description, type, statut, localisation, latitude, longitude, fichiers, created_at, updated_at
-                                                   FROM signalements WHERE user_id = $1 ORDER BY created_at DESC LIMIT 200`, [req.user.id]);
+                                                   FROM signal_moi.signalements WHERE user_id = $1 ORDER BY created_at DESC LIMIT 200`, [req.user.id]);
                     const rows = result.rows.map(r => ({
                         id: r.id,
                         userId: r.user_id,
@@ -112,8 +112,8 @@ router.post('/', authMiddleware, async (req, res) => {
                 if (req.user && req.user.role === 'police') {
                     const allowed = ['violence', 'vol', 'theft'];
                     const result = await db.query(`SELECT s.*, u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone
-                                                   FROM signalements s
-                                                   LEFT JOIN users u ON u.id = s.user_id
+                                                   FROM signal_moi.signalements s
+                                                   LEFT JOIN signal_moi.users u ON u.id = s.user_id
                                                    WHERE LOWER(s.type) = ANY($1::text[])
                                                    ORDER BY s.created_at DESC LIMIT 500`, [allowed]);
                     const rows = result.rows.map(r => ({
@@ -139,8 +139,8 @@ router.post('/', authMiddleware, async (req, res) => {
                 }
 
                 const result = await db.query(`SELECT s.*, u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone
-                                               FROM signalements s
-                                               LEFT JOIN users u ON u.id = s.user_id
+                                               FROM signal_moi.signalements s
+                                               LEFT JOIN signal_moi.users u ON u.id = s.user_id
                                                ORDER BY s.created_at DESC LIMIT 500`);
                 const rows = result.rows.map(r => ({
                     id: r.id,
@@ -168,16 +168,16 @@ router.post('/', authMiddleware, async (req, res) => {
             }
         });
 
-        // GET pour un utilisateur: ses propres signalements (protÃ©gÃ©)
+        // GET pour un utilisateur: ses propres signalements (protégé)
         router.get('/user/:userId', authMiddleware, async (req, res) => {
             const { userId } = req.params;
-            // âœ… FIX: EmpÃªcher un utilisateur de voir les signalements d'un autre
+            // ? FIX: Empêcher un utilisateur de voir les signalements d'un autre
             if (userId !== req.user.id && req.user.role !== 'admin') {
-                return res.status(403).json({ error: 'AccÃ¨s refusÃ©' });
+                return res.status(403).json({ error: 'Accès refusé' });
             }
             try {
                 const result = await db.query(`SELECT id, user_id, titre, description, type, statut, localisation, latitude, longitude, fichiers, created_at, updated_at
-                                               FROM signalements WHERE user_id = $1 ORDER BY created_at DESC`, [userId]);
+                                               FROM signal_moi.signalements WHERE user_id = $1 ORDER BY created_at DESC`, [userId]);
                 const rows = result.rows.map(r => ({
                     id: r.id,
                     userId: r.user_id,
@@ -200,3 +200,5 @@ router.post('/', authMiddleware, async (req, res) => {
         });
 
 module.exports = router;
+
+
