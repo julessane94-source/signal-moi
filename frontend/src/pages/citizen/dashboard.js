@@ -1,27 +1,42 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE } from '../../config/api'
 import Navbar from '../../components/common/Navbar'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import { toast } from 'react-toastify'
 
 export default function CitizenDashboard() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [activeTab, setActiveTab] = useState('signalements')
   const [signalements, setSignalements] = useState([])
   const [campagnes, setCampagnes] = useState([])
   const [plaidoyers, setPlaidoyers] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
+  // ✅ FIX: Déclencher le fetch APRÈS que auth soit chargé ET user existe
   useEffect(() => {
-    if (!loading && user) {
+    if (!authLoading && user) {
       fetchData()
+    } else if (!authLoading && !user) {
+      // Pas d'utilisateur connecté après chargement auth
+      setLoading(false)
     }
-  }, [user, loading])
+  }, [authLoading, user])
 
   const fetchData = async () => {
     try {
+      setLoading(true)
+      setError(null)
       const token = localStorage.getItem('token')
+      
+      if (!token) {
+        setError('Veuillez vous reconnecter')
+        setLoading(false)
+        return
+      }
+
       const headers = { 'Authorization': `Bearer ${token}` }
       
       const base = API_BASE
@@ -31,15 +46,28 @@ export default function CitizenDashboard() {
         fetch(`${base}/api/plaidoyers`, { headers })
       ])
       
-      const signalData = await signalRes.json()
-      const campData = await campRes.json()
-      const plaidData = await plaidRes.json()
+      // Vérifier les réponses
+      if (!signalRes.ok) {
+        console.error('[Dashboard] Erreur signalements:', signalRes.status)
+      }
+      if (!campRes.ok) {
+        console.error('[Dashboard] Erreur campagnes:', campRes.status)
+      }
+      if (!plaidRes.ok) {
+        console.error('[Dashboard] Erreur plaidoyers:', plaidRes.status)
+      }
+
+      const signalData = signalRes.ok ? await signalRes.json() : []
+      const campData = campRes.ok ? await campRes.json() : []
+      const plaidData = plaidRes.ok ? await plaidRes.json() : []
       
       setSignalements(Array.isArray(signalData) ? signalData : [])
       setCampagnes(Array.isArray(campData) ? campData : [])
       setPlaidoyers(Array.isArray(plaidData) ? plaidData : [])
     } catch (error) {
-      console.error('Erreur:', error)
+      console.error('[CitizenDashboard] Erreur fetch:', error)
+      setError('Erreur lors du chargement des données. Vérifiez votre connexion.')
+      toast.error('Erreur réseau : impossible de charger les données')
       setSignalements([])
       setCampagnes([])
       setPlaidoyers([])
@@ -66,12 +94,32 @@ export default function CitizenDashboard() {
     return <span className={`px-2 py-1 text-xs rounded-full ${s.color}`}>{s.text}</span>
   }
 
-  if (loading) {
+  // ✅ Afficher le loader pendant le chargement de l'auth OU des données
+  if (authLoading || loading) {
     return (
       <>
         <Navbar />
         <div className="min-h-screen pt-16 flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        </div>
+      </>
+    )
+  }
+
+  // ✅ Afficher message d'erreur si problème auth
+  if (!user) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen pt-16 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-500 mb-4">Erreur : Veuillez vous reconnecter</p>
+            <Link href="/login">
+              <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg">
+                Aller à la connexion
+              </button>
+            </Link>
+          </div>
         </div>
       </>
     )
@@ -86,6 +134,13 @@ export default function CitizenDashboard() {
             <h1 className="text-3xl font-bold text-gray-900">Espace Citoyen</h1>
             <p className="text-gray-600">Bienvenue {user?.prenom} ! Votre voix compte.</p>
           </div>
+
+          {/* ✅ Affichage du message d'erreur si present */}
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
+              <p>{error}</p>
+            </div>
+          )}
 
           <Link href="/citizen/signalement">
             <motion.button
