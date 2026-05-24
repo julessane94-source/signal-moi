@@ -2,6 +2,7 @@
 import Head from 'next/head'
 import Link from 'next/link'
 import { useAuth } from '../context/AuthContext'
+import { API_BASE } from '../config/api'
 import Navbar from '../components/common/Navbar'
 import Footer from '../components/common/Footer'
 
@@ -9,6 +10,15 @@ export default function Home() {
   const { user } = useAuth()
   const [deferredPrompt, setDeferredPrompt] = useState(null)
   const [showInstallButton, setShowInstallButton] = useState(false)
+  const [config, setConfig] = useState({
+    home_page: {
+      title: 'Signalez les incidents',
+      heroText: 'dans votre quartier',
+      content: 'Une plateforme citoyenne pour signaler et suivre les problemes de votre communaute.',
+      images: [],
+      videos: []
+    }
+  })
 
   useEffect(() => {
     // PWA Installation
@@ -17,7 +27,24 @@ export default function Home() {
       setDeferredPrompt(e)
       setShowInstallButton(true)
     })
+    
+    fetchConfig()
   }, [])
+
+  const fetchConfig = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/site-config`)
+      if (res.ok) {
+        const data = await res.json()
+        if (data.home_page) {
+          const homePage = typeof data.home_page === 'string' ? JSON.parse(data.home_page) : data.home_page
+          setConfig({ home_page: homePage })
+        }
+      }
+    } catch (err) {
+      console.error('Erreur fetchConfig:', err)
+    }
+  }
 
   const handleInstall = async () => {
     if (!deferredPrompt) return
@@ -44,13 +71,13 @@ export default function Home() {
         <section className="bg-gradient-to-br from-indigo-50 to-white py-20">
           <div className="max-w-7xl mx-auto px-4 text-center">
             <h1 className="text-5xl font-bold text-gray-900 mb-4">
-              Signalez les incidents
+              {config.home_page?.title || 'Signalez les incidents'}
             </h1>
             <h2 className="text-4xl font-bold text-indigo-600 mb-6">
-              dans votre quartier
+              {config.home_page?.heroText || 'dans votre quartier'}
             </h2>
             <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
-              Une plateforme citoyenne pour signaler et suivre les problemes de votre communaute.
+              {config.home_page?.content || 'Une plateforme citoyenne pour signaler et suivre les problemes de votre communaute.'}
             </p>
             
             {/* Bouton d'installation PWA */}
@@ -88,6 +115,47 @@ export default function Home() {
             <p className="text-sm text-gray-500 mt-3 text-center">La carte est un aperçu libre; cliquez pour ouvrir OpenStreetMap et localiser précisément.</p>
           </div>
         </section>
+
+        {/* Images et Vidéos de la page d'accueil */}
+        {(config.home_page?.images?.length > 0 || config.home_page?.videos?.length > 0) && (
+          <section className="py-16 bg-gray-50">
+            <div className="max-w-7xl mx-auto px-4">
+              {config.home_page?.images?.length > 0 && (
+                <div className="mb-12">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Galerie</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {config.home_page.images.map((img, idx) => (
+                      <img
+                        key={idx}
+                        src={img}
+                        alt="Galerie"
+                        className="w-full h-64 object-cover rounded-lg shadow-md hover:shadow-lg transition"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {config.home_page?.videos?.length > 0 && (
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Vidéos</h2>
+                  <div className="grid grid-cols-1 gap-6">
+                    {config.home_page.videos.map((vid, idx) => (
+                      <iframe
+                        key={idx}
+                        width="100%"
+                        height="400"
+                        src={vid}
+                        frameBorder="0"
+                        allowFullScreen
+                        className="rounded-lg"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* Features et reste de la page... */}
       </main>

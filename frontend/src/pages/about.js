@@ -13,6 +13,15 @@ export default function About() {
     { value: '24/7', label: 'Support disponible' },
   ])
 
+  const [config, setConfig] = useState({
+    about_page: {
+      title: 'Notre histoire',
+      content: 'Signal-Moi est ne d\'un constat simple : les citoyens manquent souvent de canaux efficaces pour signaler les incidents dans leur quartier.',
+      images: [],
+      videos: []
+    }
+  })
+
   const team = [
     { name: 'Jean Dupont', role: 'Fondateur & CEO', image: '👨‍💼', description: 'Expert en securite citoyenne' },
     { name: 'Marie Camara', role: 'Directrice Technique', image: '👩‍💻', description: 'Architecte logiciel' },
@@ -21,7 +30,23 @@ export default function About() {
 
   useEffect(() => {
     fetchStats()
+    fetchConfig()
   }, [])
+
+  const fetchConfig = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/site-config`)
+      if (res.ok) {
+        const data = await res.json()
+        if (data.about_page) {
+          const aboutPage = typeof data.about_page === 'string' ? JSON.parse(data.about_page) : data.about_page
+          setConfig({ about_page: aboutPage })
+        }
+      }
+    } catch (err) {
+      console.error('Erreur fetchConfig:', err)
+    }
+  }
 
   const fetchStats = async () => {
     try {
@@ -109,19 +134,26 @@ export default function About() {
         {/* Notre histoire */}
         <section className="py-16 bg-gray-50">
           <div className="max-w-4xl mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">Notre histoire</h2>
+            <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">{config.about_page?.title || 'Notre histoire'}</h2>
             <div className="space-y-6 text-gray-600 text-lg">
-              <p>
-                Signal-Moi est ne d'un constat simple : les citoyens manquent souvent de canaux efficaces 
-                pour signaler les incidents dans leur quartier. Creee en 2023, notre plateforme connecte 
-                directement les citoyens avec les autorites competentes.
-              </p>
-              <p>
-                Aujourd'hui, plus de 1000 citoyens utilisent Signal-Moi pour ameliorer leur cadre de vie. 
-                Notre objectif est de creer un reseau national de veille citoyenne pour une reponse plus 
-                rapide et plus efficace aux problemes de securite et d'infrastructure.
-              </p>
+              {config.about_page?.content && (
+                <p>{config.about_page.content}</p>
+              )}
             </div>
+            {config.about_page?.images && config.about_page.images.length > 0 && (
+              <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+                {config.about_page.images.map((img, idx) => (
+                  <img key={idx} src={img} alt="Image" className="w-full rounded-lg" />
+                ))}
+              </div>
+            )}
+            {config.about_page?.videos && config.about_page.videos.length > 0 && (
+              <div className="mt-8 grid grid-cols-1 gap-4">
+                {config.about_page.videos.map((vid, idx) => (
+                  <iframe key={idx} width="100%" height="400" src={vid} frameBorder="0" allowFullScreen className="rounded-lg"></iframe>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 

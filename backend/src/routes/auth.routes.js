@@ -4,6 +4,18 @@ const jwt = require('jsonwebtoken');
 const router = express.Router();
 const db = require('../config/database');
 const { protect } = require('../middleware/auth.middleware');
+const SiteConfig = require('../models/SiteConfig');
+
+// GET /api/auth/site-config - Récupère la configuration du site (PUBLIC - sans auth)
+router.get('/site-config', async (req, res) => {
+  try {
+    const config = await SiteConfig.getAll();
+    res.json(config);
+  } catch (err) {
+    console.error('[GET /site-config] Erreur:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
+  }
+});
 
 // Inscription
 router.post('/register', async (req, res) => {

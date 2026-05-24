@@ -25,16 +25,14 @@ export default function Contact() {
 
   const fetchConfig = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const headers = token ? { 'Authorization': `Bearer ${token}` } : {}
-      const res = await fetch(`${API_BASE}/api/admin/site-config`, { headers })
+      const res = await fetch(`${API_BASE}/api/auth/site-config`)
       if (res.ok) {
         const data = await res.json()
         setSiteConfig({
           contactEmail: data.contactEmail || siteConfig.contactEmail,
           contactPhone: data.contactPhone || siteConfig.contactPhone,
           address: data.address || siteConfig.address,
-          contactPage: data.contact_page || data.contactPage || siteConfig.contactPage
+          contactPage: (typeof data.contact_page === 'string' ? JSON.parse(data.contact_page) : data.contact_page) || siteConfig.contactPage
         })
       }
     } catch (err) {
@@ -136,6 +134,53 @@ export default function Contact() {
             </div>
           </div>
         </section>
+
+        {/* Images et Videos de la page Contact */}
+        {(siteConfig.contactPage?.images?.length > 0 || siteConfig.contactPage?.videos?.length > 0) && (
+          <section className="py-16 bg-gray-50">
+            <div className="max-w-6xl mx-auto px-4">
+              {siteConfig.contactPage?.images?.length > 0 && (
+                <div className="mb-12">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Galerie photo</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {siteConfig.contactPage.images.map((img, idx) => (
+                      <motion.img
+                        key={idx}
+                        src={img}
+                        alt="Photo"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: idx * 0.1 }}
+                        className="w-full h-64 object-cover rounded-lg shadow-md hover:shadow-lg transition"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {siteConfig.contactPage?.videos?.length > 0 && (
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Vidéos</h2>
+                  <div className="grid grid-cols-1 gap-6">
+                    {siteConfig.contactPage.videos.map((vid, idx) => (
+                      <motion.iframe
+                        key={idx}
+                        width="100%"
+                        height="400"
+                        src={vid}
+                        frameBorder="0"
+                        allowFullScreen
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: idx * 0.1 }}
+                        className="rounded-lg"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* Contact Form */}
         <section className="py-16 bg-white">
