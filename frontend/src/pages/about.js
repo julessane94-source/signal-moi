@@ -136,8 +136,12 @@ export default function About() {
           <div className="max-w-4xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">{config.about_page?.title || 'Notre histoire'}</h2>
             <div className="space-y-6 text-gray-600 text-lg">
-              {config.about_page?.content && (
-                <p>{config.about_page.content}</p>
+              {config.about_page?.content && config.about_page.content.includes('<') ? (
+                <div dangerouslySetInnerHTML={{ __html: config.about_page.content }} />
+              ) : (
+                config.about_page?.content && <p>{config.about_page.content}</p>
+              )}
+            </div>
               )}
             </div>
             {config.about_page?.images && config.about_page.images.length > 0 && (

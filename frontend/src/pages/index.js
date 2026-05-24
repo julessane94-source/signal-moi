@@ -76,8 +76,16 @@ export default function Home() {
             <h2 className="text-4xl font-bold text-indigo-600 mb-6">
               {config.home_page?.heroText || 'dans votre quartier'}
             </h2>
-            <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
-              {config.home_page?.content || 'Une plateforme citoyenne pour signaler et suivre les problemes de votre communaute.'}
+            {config.home_page?.content && config.home_page.content.includes('<') ? (
+              <div 
+                className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto"
+                dangerouslySetInnerHTML={{ __html: config.home_page.content }}
+              />
+            ) : (
+              <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
+                {config.home_page?.content || 'Une plateforme citoyenne pour signaler et suivre les problemes de votre communaute.'}
+              </p>
+            )}
             </p>
             
             {/* Bouton d'installation PWA */}

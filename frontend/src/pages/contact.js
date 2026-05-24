@@ -71,14 +71,24 @@ export default function Contact() {
             >
               {siteConfig.contactPage?.title || 'Contactez-nous'}
             </motion.h1>
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-xl text-indigo-100"
-            >
-              {siteConfig.contactPage?.content || 'Pour toute question, nous sommes la pour vous aider'}
-            </motion.p>
+            {siteConfig.contactPage?.content && siteConfig.contactPage.content.includes('<') ? (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-xl text-indigo-100"
+                dangerouslySetInnerHTML={{ __html: siteConfig.contactPage.content }}
+              />
+            ) : (
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-xl text-indigo-100"
+              >
+                {siteConfig.contactPage?.content || 'Pour toute question, nous sommes la pour vous aider'}
+              </motion.p>
+            )}
           </div>
         </section>
 
