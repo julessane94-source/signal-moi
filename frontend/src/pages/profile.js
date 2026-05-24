@@ -141,13 +141,27 @@ export default function Profile() {
                   <div className="flex-1 pb-2">
                     <h1 className="text-2xl font-bold text-gray-900">{user?.prenom} {user?.nom}</h1>
                     <p className="text-gray-600">{user?.email}</p>
-                    <div className="mt-2 flex items-center gap-2">
+                    <div className="mt-2 flex items-center gap-3 flex-wrap">
                       <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium">
                         {user?.role === 'admin' ? '👨‍💼 Administrateur' : 
                          user?.role === 'police' ? '👮 Police' :
                          user?.role === 'collaborateur' ? '🤝 Collaborateur' :
                          '👤 Citoyen'}
                       </span>
+                      {user?.role !== 'citoyen' && (
+                        <Button
+                          size="sm"
+                          variant="primary"
+                          onClick={() => {
+                            const dashboardUrl = user?.role === 'admin' ? '/admin/dashboard' :
+                                              user?.role === 'police' ? '/police/dashboard' :
+                                              '/collaborator/dashboard'
+                            window.location.href = dashboardUrl
+                          }}
+                        >
+                          📊 Tableau de bord
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>

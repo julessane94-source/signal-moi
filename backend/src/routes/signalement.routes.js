@@ -109,28 +109,45 @@ router.post('/', authMiddleware, async (req, res) => {
                 // Si c'est la police, ne retourner que les types pertinents (violence, vol)
                 if (req.user && req.user.role === 'police') {
                     const allowed = ['violence', 'vol', 'theft'];
-                    const result = await db.query(`SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, s.latitude, s.longitude, s.created_at, s.updated_at, u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone
+                    const result = await db.query(`SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, s.latitude, s.longitude, s.priorite, s.est_anonyme, s.created_at, s.updated_at, u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone, u.email AS user_email
                                                    FROM signal_moi.signalements s
                                                    LEFT JOIN signal_moi.users u ON u.id = s.user_id
                                                    WHERE LOWER(s.type) = ANY($1::text[])
                                                    ORDER BY s.created_at DESC LIMIT 500`, [allowed]);
-                    const rows = result.rows.map(r => ({
-                        id: r.id,
-                        titre: r.titre,
-                        description: r.description,
-                        type: r.type,
-                        statut: r.statut,
-                        localisation: r.localisation,
-                        latitude: r.latitude !== null ? parseFloat(r.latitude) : null,
-                        longitude: r.longitude !== null ? parseFloat(r.longitude) : null,
-                        createdAt: r.created_at,
-                        updatedAt: r.updated_at,
-                        author: {
-                            id: r.user_id,
-                            prenom: r.user_prenom,
-                            nom: r.user_nom,
-                            telephone: r.user_telephone
-                        }
+                    const rows = await Promise.all(result.rows.map(async (r) => {
+                        // Récupérer les fichiers pour ce signalement
+                        const filesRes = await db.query(`SELECT id, signalement_id, nom_fichier, chemin, type, taille, mime_type, description
+                                                        FROM signal_moi.fichiers WHERE signalement_id = $1 ORDER BY created_at DESC`, [r.id]);
+                        return {
+                            id: r.id,
+                            titre: r.titre,
+                            description: r.description,
+                            type: r.type,
+                            statut: r.statut,
+                            priorite: r.priorite,
+                            estAnonyme: r.est_anonyme,
+                            localisation: r.localisation,
+                            latitude: r.latitude !== null ? parseFloat(r.latitude) : null,
+                            longitude: r.longitude !== null ? parseFloat(r.longitude) : null,
+                            createdAt: r.created_at,
+                            updatedAt: r.updated_at,
+                            user: {
+                                id: r.user_id,
+                                prenom: r.user_prenom,
+                                nom: r.user_nom,
+                                telephone: r.user_telephone,
+                                email: r.user_email
+                            },
+                            fichiers: filesRes.rows.map(f => ({
+                                id: f.id,
+                                nom_fichier: f.nom_fichier,
+                                chemin: f.chemin,
+                                type: f.type,
+                                mime_type: f.mime_type,
+                                taille: f.taille,
+                                description: f.description
+                            }))
+                        };
                     }));
                     return res.json(rows);
                 }

@@ -321,7 +321,10 @@ export default function PoliceDashboard() {
                         <Button
                           size="sm"
                           icon={DocumentTextIcon}
-                          onClick={() => setSelectedSignal(s)}
+                          onClick={() => {
+                            console.log('Ouverture détails signal:', s);
+                            setSelectedSignal(s);
+                          }}
                         >
                           Détails
                         </Button>
@@ -403,71 +406,110 @@ export default function PoliceDashboard() {
               </p>
             </div>
 
-            {/* Fichiers */}
+            {/* Fichiers et Images */}
             {selectedSignal.fichiers?.length > 0 && (
               <div>
-                <p className="font-semibold mb-2">Preuves jointes</p>
-                <div className="flex flex-wrap gap-2">
-                  {selectedSignal.fichiers.map((f, i) => (
-                    <a key={i} href="#" className="text-indigo-600 hover:underline text-sm">
-                      📎 {f.nomFichier}
-                    </a>
-                  ))}
+                <p className="font-semibold mb-4">Preuves jointes ({selectedSignal.fichiers.length})</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  {selectedSignal.fichiers.map((f, i) => {
+                    const isImage = f.mime_type?.startsWith('image/') || f.type?.startsWith('image/')
+                    const fileUrl = f.chemin ? `${API_BASE}${f.chemin}` : `${API_BASE}/uploads/signalements/${f.id}`
+                    return (
+                      <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="border border-gray-200 rounded-lg overflow-hidden">
+                        {isImage ? (
+                          <div className="relative bg-gray-100 h-48">
+                            <img
+                              src={fileUrl}
+                              alt={f.nom_fichier || f.nomFichier}
+                              className="w-full h-full object-cover hover:scale-105 transition"
+                              onError={(e) => {
+                                e.target.style.display = 'none'
+                                e.target.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:48px;">📸</div>'
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="bg-gray-100 h-48 flex items-center justify-center">
+                            <span className="text-4xl">📄</span>
+                          </div>
+                        )}
+                        <div className="p-3 bg-gray-50">
+                          <p className="text-sm font-medium text-gray-900 truncate">{f.nom_fichier || f.nomFichier}</p>
+                          <a
+                            href={fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-indigo-600 hover:underline text-xs mt-1 inline-block"
+                          >
+                            📥 Télécharger
+                          </a>
+                        </div>
+                      </motion.div>
+                    )
+                  })}
                 </div>
               </div>
             )}
 
-            {/* Actions */}
-            <div className="border-t pt-4 space-y-3">
-              <p className="font-semibold">Mettre à jour le statut</p>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  variant="warning"
-                  onClick={() => updateStatus(selectedSignal.id, 'en_cours')}
-                >
-                  En cours
-                </Button>
-                <Button
-                  size="sm"
-                  variant="success"
-                  onClick={() => updateStatus(selectedSignal.id, 'traite')}
-                >
-                  Traité
-                </Button>
-                <Button
-                  size="sm"
-                  variant="primary"
-                  onClick={() => updateStatus(selectedSignal.id, 'transfere')}
-                >
-                  Transférer
-                </Button>
+            {/* Contact et Actions */}
+            <div className="border-t pt-4 space-y-4">
+              {!selectedSignal.estAnonyme && selectedSignal.user?.telephone && (
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <p className="font-semibold text-blue-900 mb-3">📞 Contacter la victime</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      size="sm"
+                      variant="success"
+                      icon={PhoneIcon}
+                      onClick={() => window.open(`tel:${selectedSignal.user.telephone}`)}
+                    >
+                      Appeler
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="success"
+                      onClick={() => {
+                        const phone = selectedSignal.user.telephone.replace(/\D/g, '')
+                        window.open(`https://wa.me/${phone}`)
+                      }}
+                    >
+                      WhatsApp
+                    </Button>
+                  </div>
+                  <p className="text-sm text-blue-800 mt-2">📱 {selectedSignal.user.telephone}</p>
+                  {selectedSignal.user?.email && (
+                    <p className="text-sm text-blue-800">📧 {selectedSignal.user.email}</p>
+                  )}
+                </div>
+              )}
+
+              <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                <p className="font-semibold text-yellow-900 mb-3">Mettre à jour le statut</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="warning"
+                    onClick={() => updateStatus(selectedSignal.id, 'en_cours')}
+                  >
+                    En cours
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="success"
+                    onClick={() => updateStatus(selectedSignal.id, 'traite')}
+                  >
+                    Traité
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    onClick={() => updateStatus(selectedSignal.id, 'transfere')}
+                  >
+                    Transférer
+                  </Button>
+                </div>
               </div>
             </div>
-
-            {/* Contact */}
-            {!selectedSignal.estAnonyme && selectedSignal.user?.telephone && (
-              <div className="border-t pt-4 space-y-2">
-                <p className="font-semibold">Contacter la victime</p>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="success"
-                    icon={PhoneIcon}
-                    onClick={() => window.open(`tel:${selectedSignal.user.telephone}`)}
-                  >
-                    Appeler
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="success"
-                    onClick={() => window.open(`https://wa.me/${selectedSignal.user.telephone.replace(/\D/g, '')}`)}
-                  >
-                    WhatsApp
-                  </Button>
-                </div>
-              </div>
-            )}
           </div>
         )}
       </Modal>
