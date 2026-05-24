@@ -93,6 +93,33 @@ export default function PoliceDashboard() {
     return signalements.filter(s => s.statut === filter)
   }
 
+  const priorityOrder = { 'urgente': 4, 'haute': 3, 'moyenne': 2, 'basse': 1 }
+
+  const getPriorityColor = (prio) => {
+    switch((prio || '').toLowerCase()) {
+      case 'urgente': return 'bg-red-600 text-white'
+      case 'haute': return 'bg-orange-500 text-white'
+      case 'moyenne': return 'bg-yellow-400 text-black'
+      case 'basse': return 'bg-green-100 text-green-800'
+      default: return 'bg-gray-100 text-gray-700'
+    }
+  }
+
+  // Retourne la liste triée par priorité (les plus urgents en premier)
+  const getSortedFilteredSignalements = () => {
+    return getFilteredSignalements().slice().sort((a, b) => {
+      const pa = priorityOrder[(a.priorite || '').toLowerCase()] || 0
+      const pb = priorityOrder[(b.priorite || '').toLowerCase()] || 0
+      // plus haut = priorité plus élevée
+      return pb - pa || new Date(b.createdAt) - new Date(a.createdAt)
+    })
+  }
+
+  const getHighestPrioritySignalement = () => {
+    const sorted = getSortedFilteredSignalements()
+    return sorted.length > 0 ? sorted[0] : null
+  }
+
   const getStatusColor = (statut) => {
     switch(statut) {
       case 'nouveau': return 'bg-red-100 text-red-700 border-red-200'
@@ -117,6 +144,33 @@ export default function PoliceDashboard() {
     <>
       <Navbar />
       <div className="min-h-screen bg-gray-50 pt-16">
+        {/* Sticky quick-action bar pour la police */}
+        {getHighestPrioritySignalement() && (
+          <div className="sticky top-16 z-40 bg-white border-b shadow-sm">
+            <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+              <div>
+                <span className="font-semibold text-gray-800">Signalement prioritaire:</span>
+                <span className="ml-3 text-sm text-gray-600">{getHighestPrioritySignalement().titre} — <span className="font-medium">{getHighestPrioritySignalement().priorite || '—'}</span></span>
+              </div>
+              <div className="flex items-center gap-3">
+                <button onClick={async () => {
+                  const top = getHighestPrioritySignalement()
+                  if (!top) return
+                  await updateStatus(top.id, 'en_cours')
+                }} className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">Prendre en charge</button>
+                <button onClick={() => {
+                  const top = getHighestPrioritySignalement()
+                  if (!top) return
+                  if (top.latitude && top.longitude) {
+                    window.open(`https://www.google.com/maps/search/?api=1&query=${top.latitude},${top.longitude}`, '_blank')
+                  } else {
+                    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(top.localisation)}`, '_blank')
+                  }
+                }} className="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200">Itinéraire</button>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="max-w-7xl mx-auto px-4 py-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Espace Police / Gendarmerie</h1>
           <p className="text-gray-600 mb-8">Bienvenue {user?.prenom} {user?.nom}</p>
@@ -151,7 +205,7 @@ export default function PoliceDashboard() {
 
           {/* Liste des signalements */}
           <div className="space-y-4">
-            {getFilteredSignalements().map(s => (
+            {getSortedFilteredSignalements().map(s => (
               <div key={s.id} className={`bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition border-l-4 ${getStatusColor(s.statut)}`}>
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
@@ -159,6 +213,8 @@ export default function PoliceDashboard() {
                       <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(s.statut)}`}>
                         {s.statut || 'Nouveau'}
                       </span>
+                      {/* Badge priorité */}
+                      <span className={`px-2 py-1 text-xs rounded-full ${getPriorityColor(s.priorite)}`}> {s.priorite || '—'} </span>
                       <span className="px-2 py-1 bg-gray-100 rounded-full text-xs">{s.type}</span>
                     </div>
                     <h3 className="font-semibold text-lg">{s.titre}</h3>
@@ -169,9 +225,27 @@ export default function PoliceDashboard() {
                       <span>📅 {new Date(s.createdAt).toLocaleDateString()}</span>
                     </div>
                   </div>
-                  <button onClick={() => setSelectedSignal(s)} className="ml-4 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
-                    Traiter
-                  </button>
+                  <div className="ml-4 flex flex-col gap-2">
+                    <button onClick={() => { setSelectedSignal(s) }} className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+                      Traiter
+                    </button>
+                    <button onClick={async () => {
+                      // action principale: se déclarer en intervention
+                      await updateStatus(s.id, 'en_cours')
+                    }} className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
+                      Intervenir
+                    </button>
+                    <button onClick={() => {
+                      // Ouvrir localisation: si lat/lng -> Google Maps, sinon recherche par adresse
+                      if (s.latitude && s.longitude) {
+                        window.open(`https://www.google.com/maps/search/?api=1&query=${s.latitude},${s.longitude}`, '_blank')
+                      } else {
+                        window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.localisation)}`, '_blank')
+                      }
+                    }} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300">
+                      Localiser
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

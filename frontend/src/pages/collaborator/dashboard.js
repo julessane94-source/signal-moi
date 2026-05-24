@@ -3,16 +3,33 @@ import { useAuth } from '../../context/AuthContext'
 import { API_BASE } from '../../config/api'
 import Navbar from '../../components/common/Navbar'
 import { toast } from 'react-toastify'
+import { useSocket } from '../../context/SocketContext'
 
 export default function CollaboratorDashboard() {
   const { user } = useAuth()
   const [signalements, setSignalements] = useState([])
   const [campagnes, setCampagnes] = useState([])
+  const [notifications, setNotifications] = useState([])
+  const [rappels, setRappels] = useState([])
+  const { socket } = useSocket()
   const [filterType, setFilterType] = useState('all')
   const [filterStatut, setFilterStatut] = useState('all')
 
   useEffect(() => {
     fetchData()
+    fetchNotifications()
+
+    if (socket) {
+      socket.on('new_signalement_notification', (n) => {
+        toast.warning(`Nouveau signalement: ${n.title}`)
+        setNotifications(prev => [n, ...prev])
+      })
+    }
+    return () => {
+      if (socket) {
+        socket.off('new_signalement_notification')
+      }
+    }
   }, [])
 
   const fetchData = async () => {
@@ -36,6 +53,34 @@ export default function CollaboratorDashboard() {
   const exportData = (format) => {
     toast.success(`Export ${format.toUpperCase()} lance`)
     // Implémentation réelle à ajouter
+  }
+
+  const fetchNotifications = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${API_BASE}/api/collaborator/notifications`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const data = await res.json()
+      setNotifications(Array.isArray(data) ? data : [])
+      // Générer des rappels de suivi basiques depuis notifications non-lues
+      setRappels((Array.isArray(data) ? data : []).filter(n => !n.isRead).slice(0,5))
+    } catch (err) {
+      console.error('Erreur notifications:', err)
+    }
+  }
+
+  const analyserCas = (signalement) => {
+    toast.info(`Ouverture de l'analyse pour: ${signalement?.titre || '—'}`)
+    // TODO: rediriger vers page d'analyse détaillée
+  }
+
+  const contacterVictime = (signalement) => {
+    if (signalement?.author?.telephone) {
+      window.open(`tel:${signalement.author.telephone}`)
+    } else {
+      toast.info('Téléphone non disponible')
+    }
   }
 
   const filteredSignalements = signalements.filter(s => {

@@ -73,6 +73,21 @@ export default function Home() {
             </Link>
           </div>
         </section>
+        {/* Carte libre intégrée */}
+        <section className="py-12 bg-white">
+          <div className="max-w-7xl mx-auto px-4">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">Carte des signalements (aperçu)</h2>
+            <div className="rounded-xl overflow-hidden shadow-lg">
+              <iframe
+                title="Carte Signal-Moi"
+                src="https://www.openstreetmap.org/export/embed.html?bbox=2.2137%2C46.2276%2C2.2137%2C46.2276&layer=mapnik&marker=46.2276%2C2.2137"
+                className="w-full h-96"
+                style={{ border: 0 }}
+              />
+            </div>
+            <p className="text-sm text-gray-500 mt-3 text-center">La carte est un aperçu libre; cliquez pour ouvrir OpenStreetMap et localiser précisément.</p>
+          </div>
+        </section>
 
         {/* Features et reste de la page... */}
       </main>

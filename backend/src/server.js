@@ -22,6 +22,8 @@ const signalementRoutes = require('./routes/signalement.routes');
 const citizenRoutes = require('./routes/citizen.routes');
 const initRoutes = require('./routes/init.routes');
 const pagesRoutes = require('./routes/pages.routes');
+const collaboratorRoutes = require('./routes/collaborator.routes');
+const lawEnforcementRoutes = require('./routes/law-enforcement.routes');
 
 const app = express();
 
@@ -57,6 +59,8 @@ app.use('/api/plaidoyers', plaidoyerRoutes);
 app.use('/api/citizen', citizenRoutes);
 app.use('/api/init', initRoutes);
 app.use('/api/pages', pagesRoutes); // Routes PUBLIQUES pour les pages du site
+app.use('/api/collaborator', collaboratorRoutes); // Dashboard collaborateur (ONG/Association)
+app.use('/api/law-enforcement', lawEnforcementRoutes); // Dashboard police/gendarmerie
 
 // Health check endpoint (PUBLIC)
 app.get('/api/health', (req, res) => {
