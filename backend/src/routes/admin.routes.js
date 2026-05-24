@@ -162,6 +162,62 @@ router.patch('/users/:id/role', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Erreur lors du changement de r�le', details: err.message });
   }
 });
+// PUT /api/admin/users/:id - Modifier les infos d'un utilisateur (admin)
+router.put('/users/:id', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  const { prenom, nom, email, telephone, ville, quartier, role, is_active } = req.body;
+  try {
+    // Construire dynamiquement la clause SET
+    const fields = [];
+    const values = [];
+    if (prenom !== undefined) { fields.push(`prenom = $${fields.length + 1}`); values.push(prenom) }
+    if (nom !== undefined) { fields.push(`nom = $${fields.length + 1}`); values.push(nom) }
+    if (email !== undefined) { fields.push(`email = $${fields.length + 1}`); values.push(email) }
+    if (telephone !== undefined) { fields.push(`telephone = $${fields.length + 1}`); values.push(telephone) }
+    if (ville !== undefined) { fields.push(`ville = $${fields.length + 1}`); values.push(ville) }
+    if (quartier !== undefined) { fields.push(`quartier = $${fields.length + 1}`); values.push(quartier) }
+    if (role !== undefined) { fields.push(`role = $${fields.length + 1}`); values.push(role) }
+    if (is_active !== undefined) { fields.push(`is_active = $${fields.length + 1}`); values.push(is_active) }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: 'Aucun champ à mettre à jour' });
+    }
+
+    const query = `UPDATE signal_moi.users SET ${fields.join(', ')} WHERE id = $${fields.length + 1} RETURNING id, prenom, nom, email, telephone, ville, quartier, role, is_active`;
+    values.push(id);
+    const result = await db.query(query, values);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Utilisateur introuvable' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('[ADMIN PUT /users/:id] Erreur:', err);
+    res.status(500).json({ error: 'Erreur lors de la modification', details: err.message });
+  }
+});
+
+// DELETE /api/admin/users/:id - Supprimer (désactiver) un utilisateur
+router.delete('/users/:id', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Vérifier que l'admin ne supprime pas le seul admin
+    const adminCheck = await db.query('SELECT COUNT(*) as count FROM signal_moi.users WHERE role = $1 AND is_active = true', ['admin']);
+    const activeAdmins = parseInt(adminCheck.rows[0].count || '0');
+    
+    const userCheck = await db.query('SELECT role FROM signal_moi.users WHERE id = $1', [id]);
+    if (userCheck.rows.length === 0) return res.status(404).json({ error: 'Utilisateur introuvable' });
+    const isAdmin = userCheck.rows[0].role === 'admin';
+    
+    if (isAdmin && activeAdmins <= 1) {
+      return res.status(400).json({ error: 'Impossible de supprimer le dernier administrateur' });
+    }
+
+    // Désactiver plutôt que supprimer physiquement
+    const result = await db.query('UPDATE signal_moi.users SET is_active = false WHERE id = $1 RETURNING id', [id]);
+    res.json({ success: true, message: 'Utilisateur désactivé avec succès' });
+  } catch (err) {
+    console.error('[ADMIN DELETE /users/:id] Erreur:', err);
+    res.status(500).json({ error: 'Erreur lors de la suppression', details: err.message });
+  }
+});
 
 // Ajoutez cette route apr�s les autres routes GET (par exemple apr�s `/users`)
 router.get('/signalements', authMiddleware, async (req, res) => {

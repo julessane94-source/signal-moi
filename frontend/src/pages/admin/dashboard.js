@@ -148,18 +148,22 @@ export default function AdminDashboard() {
   }
 
   const deleteUser = async (userId) => {
-    if (!confirm('Supprimer cet utilisateur ?')) return
+    if (!confirm('Désactiver cet utilisateur ? Cette action est irréversible.')) return
     try {
       const token = localStorage.getItem('token')
       const base = API_BASE
-      await fetch(`${base}/api/admin/users/${userId}`, {
+      const res = await fetch(`${base}/api/admin/users/${userId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       })
-      toast.success('Utilisateur supprime')
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.error || 'Erreur lors de la suppression')
+      }
+      toast.success('Utilisateur désactivé avec succès')
       fetchUsers()
     } catch (error) {
-      toast.error('Erreur')
+      toast.error(error.message || 'Erreur lors de la suppression')
     }
   }
 

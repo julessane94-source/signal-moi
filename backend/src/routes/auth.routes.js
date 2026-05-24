@@ -170,4 +170,66 @@ router.get('/me', protect, async (req, res) => {
   }
 });
 
+// GET /api/auth/profile - alias pour /me
+router.get('/profile', protect, async (req, res) => {
+  try {
+    const result = await db.query('SELECT id, prenom, nom, email, telephone, ville, quartier, role, is_active FROM signal_moi.users WHERE id = $1', [req.user.id]);
+    const users = result.rows || [];
+    if (users.length === 0) return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
+    const user = users[0];
+    res.json({ success: true, user });
+  } catch (error) {
+    console.error('[AUTH PROFILE] Erreur:', error.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+});
+
+// PUT /api/auth/profile - mettre à jour le profil utilisateur connecté
+router.put('/profile', protect, async (req, res) => {
+  try {
+    const { prenom, nom, telephone, ville, quartier } = req.body;
+    const fields = [];
+    const values = [];
+    let idx = 1;
+    if (prenom !== undefined) { fields.push(`prenom = $${idx++}`); values.push(prenom) }
+    if (nom !== undefined) { fields.push(`nom = $${idx++}`); values.push(nom) }
+    if (telephone !== undefined) { fields.push(`telephone = $${idx++}`); values.push(telephone) }
+    if (ville !== undefined) { fields.push(`ville = $${idx++}`); values.push(ville) }
+    if (quartier !== undefined) { fields.push(`quartier = $${idx++}`); values.push(quartier) }
+
+    if (fields.length === 0) return res.status(400).json({ success: false, message: 'Aucun champ à mettre à jour' });
+
+    values.push(req.user.id);
+    const query = `UPDATE signal_moi.users SET ${fields.join(', ')} WHERE id = $${idx} RETURNING id, prenom, nom, email, telephone, ville, quartier, role`;
+    const result = await db.query(query, values);
+    const updated = result.rows[0];
+    res.json({ success: true, message: 'Profil mis à jour', user: updated });
+  } catch (error) {
+    console.error('[AUTH PUT /profile] Erreur:', error.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+});
+
+// POST /api/auth/change-password - changer le mot de passe de l'utilisateur connecté
+router.post('/change-password', protect, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) return res.status(400).json({ success: false, message: 'Champs requis manquants' });
+
+    const result = await db.query('SELECT password FROM signal_moi.users WHERE id = $1', [req.user.id]);
+    const userRow = result.rows[0];
+    if (!userRow) return res.status(404).json({ success: false, message: 'Utilisateur introuvable' });
+
+    const valid = await bcrypt.compare(currentPassword, userRow.password);
+    if (!valid) return res.status(401).json({ success: false, message: 'Mot de passe actuel incorrect' });
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await db.query('UPDATE signal_moi.users SET password = $1 WHERE id = $2', [hashed, req.user.id]);
+    res.json({ success: true, message: 'Mot de passe modifié avec succès' });
+  } catch (error) {
+    console.error('[AUTH POST /change-password] Erreur:', error.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+});
+
 module.exports = router;

@@ -78,5 +78,29 @@ export const AuthProvider = ({ children }) => {
     router.push('/')
   }
 
-  return <AuthContext.Provider value={{ user, loading, login, register, logout, fetchUser }}>{children}</AuthContext.Provider>
+  const updateProfile = async (profileData) => {
+    try {
+      const response = await axios.put(`${API_URL}/api/auth/profile`, profileData)
+      const updatedUser = response.data.user
+      setUser(updatedUser)
+      toast.success(response.data.message || 'Profil mis à jour avec succès')
+      return true
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Erreur lors de la mise à jour')
+      return false
+    }
+  }
+
+  const changePassword = async (passwordData) => {
+    try {
+      const response = await axios.post(`${API_URL}/api/auth/change-password`, passwordData)
+      toast.success(response.data.message || 'Mot de passe modifié avec succès')
+      return true
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Erreur lors du changement')
+      return false
+    }
+  }
+
+  return <AuthContext.Provider value={{ user, loading, login, register, logout, fetchUser, updateProfile, changePassword }}>{children}</AuthContext.Provider>
 }
