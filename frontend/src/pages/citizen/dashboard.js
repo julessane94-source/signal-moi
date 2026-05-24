@@ -2,9 +2,17 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE } from '../../config/api'
 import Navbar from '../../components/common/Navbar'
+import { Button, Card, Badge } from '../../components/ui'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { toast } from 'react-toastify'
+import {
+  DocumentTextIcon,
+  CheckCircleIcon,
+  PencilSquareIcon,
+  UserGroupIcon,
+  PlusIcon
+} from '@heroicons/react/24/outline'
 
 export default function CitizenDashboard() {
   const { user, loading: authLoading } = useAuth()
@@ -77,21 +85,26 @@ export default function CitizenDashboard() {
   }
 
   const tabs = [
-    { id: 'signalements', name: 'Mes signalements', icon: '📋' },
-    { id: 'campagnes', name: 'Campagnes', icon: '🎯' },
-    { id: 'plaidoyers', name: 'Plaidoyers', icon: '✍️' },
-    { id: 'profil', name: 'Mon profil', icon: '👤' }
+    { id: 'signalements', name: 'Mes signalements', icon: DocumentTextIcon },
+    { id: 'campagnes', name: 'Campagnes', icon: CheckCircleIcon },
+    { id: 'plaidoyers', name: 'Plaidoyers', icon: PencilSquareIcon },
+    { id: 'profil', name: 'Mon profil', icon: UserGroupIcon }
   ]
 
   const getStatusBadge = (statut) => {
     const statusMap = {
-      'nouveau': { color: 'bg-blue-100 text-blue-700', text: 'Nouveau' },
-      'en_cours': { color: 'bg-yellow-100 text-yellow-700', text: 'En cours' },
-      'traite': { color: 'bg-green-100 text-green-700', text: 'Traite' },
-      'transfere': { color: 'bg-purple-100 text-purple-700', text: 'Transfere' }
+      'nouveau': 'info',
+      'en_cours': 'warning',
+      'traite': 'success',
+      'transfere': 'primary'
     }
-    const s = statusMap[statut] || statusMap['nouveau']
-    return <span className={`px-2 py-1 text-xs rounded-full ${s.color}`}>{s.text}</span>
+    const textMap = {
+      'nouveau': 'Nouveau',
+      'en_cours': 'En cours',
+      'traite': 'Traité',
+      'transfere': 'Transféré'
+    }
+    return <Badge variant={statusMap[statut] || 'info'}>{textMap[statut] || statut}</Badge>
   }
 
   // ✅ Afficher le loader pendant le chargement de l'auth OU des données
@@ -128,155 +141,237 @@ export default function CitizenDashboard() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50 pt-16">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Espace Citoyen</h1>
-            <p className="text-gray-600">Bienvenue {user?.prenom} ! Votre voix compte.</p>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 pt-20 pb-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Page Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <h1 className="text-4xl font-bold text-gray-900">
+              Espace Citoyen
+            </h1>
+            <p className="text-gray-600 mt-2">
+              Bienvenue {user?.prenom} ! Votre voix compte.
+            </p>
+          </motion.div>
 
-          {/* ✅ Affichage du message d'erreur si present */}
+          {/* CTA Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="mb-8"
+          >
+            <Link href="/citizen/signalement">
+              <Button size="lg" icon={PlusIcon} className="w-full md:w-auto bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg">
+                🚨 Faire un signalement
+              </Button>
+            </Link>
+          </motion.div>
+
+          {/* Error Message */}
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
-              <p>{error}</p>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg"
+            >
+              <p className="text-red-700">{error}</p>
+            </motion.div>
           )}
 
-          <Link href="/citizen/signalement">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white p-6 rounded-xl shadow-lg mb-8 hover:shadow-xl transition-all"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="text-6xl">🚨</div>
-                  <div className="text-left">
-                    <div className="text-2xl font-bold">Faire un signalement</div>
-                    <div className="text-red-100">Violence, vol, probleme d'eclairage, nid-de-poule...</div>
-                  </div>
-                </div>
-                <div className="text-3xl">→</div>
-              </div>
-            </motion.button>
-          </Link>
-
-          <div className="border-b border-gray-200 mb-6">
-            <nav className="flex space-x-8">
-              {tabs.map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === tab.id
-                      ? 'border-red-500 text-red-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <span>{tab.icon}</span>
-                  <span>{tab.name}</span>
-                </button>
-              ))}
-            </nav>
+          {/* Tabs Navigation */}
+          <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
+            {tabs.map((tab) => (
+              <motion.button
+                key={tab.id}
+                whileHover={{ y: -2 }}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'bg-indigo-600 text-white shadow-lg'
+                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                }`}
+              >
+                <tab.icon className="h-5 w-5" />
+                {tab.name}
+              </motion.button>
+            ))}
           </div>
 
+          {/* Signalements Tab */}
           {activeTab === 'signalements' && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold mb-4">Evolution de mes signalements</h2>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-4"
+            >
               {signalements.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-xl">
+                <Card className="p-12 text-center">
                   <div className="text-6xl mb-4">📭</div>
-                  <p className="text-gray-500">Aucun signalement pour le moment</p>
-                  <Link href="/citizen/signalement" className="text-red-500 mt-2 inline-block">Creer mon premier signalement →</Link>
-                </div>
+                  <p className="text-gray-500 mb-4">Aucun signalement pour le moment</p>
+                  <Link href="/citizen/signalement">
+                    <Button variant="primary" icon={PlusIcon}>
+                      Créer mon premier signalement
+                    </Button>
+                  </Link>
+                </Card>
               ) : (
-                <div className="space-y-4">
-                  {signalements.map(s => (
-                    <div key={s.id} className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            {getStatusBadge(s.statut)}
-                            <span className="text-xs text-gray-400">{new Date(s.createdAt).toLocaleDateString()}</span>
-                          </div>
-                          <h3 className="font-semibold text-lg">{s.titre}</h3>
-                          <p className="text-gray-600 mt-1">{s.description}</p>
-                          <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
-                            <span>📍 {s.localisation}</span>
-                            <span>📎 {s.fichiers?.length || 0} piece(s) jointe(s)</span>
-                          </div>
-                        </div>
+                <div className="grid grid-cols-1 gap-4">
+                  {signalements.map((s, idx) => (
+                    <motion.div
+                      key={s.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                    >
+                      <Card className="p-6 hover:shadow-lg transition cursor-pointer">
                         <Link href={`/citizen/signalement/${s.id}`}>
-                          <button className="text-red-500 hover:text-red-600">Voir details →</button>
+                          <div className="flex justify-between items-start gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                {getStatusBadge(s.statut)}
+                                <span className="text-xs text-gray-400">
+                                  {new Date(s.createdAt).toLocaleDateString()}
+                                </span>
+                              </div>
+                              <h3 className="font-semibold text-lg text-gray-900">{s.titre}</h3>
+                              <p className="text-gray-600 mt-1 line-clamp-2">{s.description}</p>
+                              <div className="flex items-center gap-4 mt-3 text-sm text-gray-600">
+                                <span>📍 {s.localisation}</span>
+                                <span>📎 {s.fichiers?.length || 0} pièce(s)</span>
+                              </div>
+                            </div>
+                            <div className="text-2xl">→</div>
+                          </div>
                         </Link>
-                      </div>
-                    </div>
+                      </Card>
+                    </motion.div>
                   ))}
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
 
+          {/* Campagnes Tab */}
           {activeTab === 'campagnes' && (
-            <div>
-              <h2 className="text-xl font-semibold mb-4">S'inscrire aux campagnes</h2>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+            >
               {campagnes.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-xl"><p className="text-gray-500">Aucune campagne disponible</p></div>
+                <Card className="p-12 text-center">
+                  <div className="text-6xl mb-4">🎯</div>
+                  <p className="text-gray-500">Aucune campagne disponible</p>
+                </Card>
               ) : (
-                <div className="grid md:grid-cols-2 gap-6">
-                  {campagnes.map(c => (
-                    <div key={c.id} className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition">
-                      <h3 className="font-semibold text-lg">{c.titre}</h3>
-                      <p className="text-gray-600 mt-1">{c.description}</p>
-                      <div className="mt-4 flex justify-between items-center">
-                        <div className="text-sm text-gray-500">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {campagnes.map((c, idx) => (
+                    <motion.div
+                      key={c.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                    >
+                      <Card className="h-full p-6 flex flex-col hover:shadow-lg transition">
+                        <h3 className="font-semibold text-lg text-gray-900">{c.titre}</h3>
+                        <p className="text-gray-600 mt-2 flex-1">{c.description}</p>
+                        <div className="mt-4 pt-4 border-t border-gray-200 space-y-2 text-sm text-gray-600">
                           <div>📅 {new Date(c.dateDebut).toLocaleDateString()}</div>
                           <div>📍 {c.lieu}</div>
                         </div>
-                        <button className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition">S'inscrire →</button>
-                      </div>
-                    </div>
+                        <Button variant="success" className="mt-4 w-full">
+                          S'inscrire
+                        </Button>
+                      </Card>
+                    </motion.div>
                   ))}
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
 
+          {/* Plaidoyers Tab */}
           {activeTab === 'plaidoyers' && (
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Signer des plaidoyers</h2>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-4"
+            >
               {plaidoyers.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-xl"><p className="text-gray-500">Aucun plaidoyer disponible</p></div>
+                <Card className="p-12 text-center">
+                  <div className="text-6xl mb-4">✍️</div>
+                  <p className="text-gray-500">Aucun plaidoyer disponible</p>
+                </Card>
               ) : (
-                <div className="space-y-4">
-                  {plaidoyers.map(p => (
-                    <div key={p.id} className="bg-white rounded-xl shadow-md p-6">
-                      <h3 className="font-semibold text-lg">{p.titre}</h3>
-                      <p className="text-gray-600 mt-1">{p.description}</p>
-                      <div className="mt-4 flex justify-between items-center">
-                        <span className="text-sm text-gray-500">📊 {p.signatures || 0} signatures</span>
-                        <button className="bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition">✍️ Signer</button>
-                      </div>
-                    </div>
+                <div className="grid grid-cols-1 gap-4">
+                  {plaidoyers.map((p, idx) => (
+                    <motion.div
+                      key={p.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                    >
+                      <Card className="p-6 hover:shadow-lg transition">
+                        <h3 className="font-semibold text-lg text-gray-900">{p.titre}</h3>
+                        <p className="text-gray-600 mt-2">{p.description}</p>
+                        <div className="mt-4 flex justify-between items-center">
+                          <span className="text-sm text-gray-600">
+                            📊 {p.signatures || 0} signatures
+                          </span>
+                          <Button variant="primary" size="sm">
+                            ✍️ Signer
+                          </Button>
+                        </div>
+                      </Card>
+                    </motion.div>
                   ))}
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
 
+          {/* Profil Tab */}
           {activeTab === 'profil' && (
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <h2 className="text-xl font-semibold mb-4">Mon profil</h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div><strong>Nom complet:</strong> {user?.prenom} {user?.nom}</div>
-                <div><strong>Email:</strong> {user?.email}</div>
-                <div><strong>Telephone:</strong> {user?.telephone}</div>
-                <div><strong>Ville:</strong> {user?.ville}</div>
-                <div><strong>Quartier:</strong> {user?.quartier}</div>
-                <div><strong>Role:</strong> {user?.role}</div>
-              </div>
-              <Link href="/profile"><button className="mt-4 bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition">Modifier mon profil</button></Link>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+            >
+              <Card className="p-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Mon profil</h2>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600">Prénom</p>
+                    <p className="font-semibold text-gray-900">{user?.prenom}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600">Nom</p>
+                    <p className="font-semibold text-gray-900">{user?.nom}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600">Email</p>
+                    <p className="font-semibold text-gray-900">{user?.email}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600">Téléphone</p>
+                    <p className="font-semibold text-gray-900">{user?.telephone}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600">Ville</p>
+                    <p className="font-semibold text-gray-900">{user?.ville}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600">Quartier</p>
+                    <p className="font-semibold text-gray-900">{user?.quartier}</p>
+                  </div>
+                </div>
+                <Link href="/profile">
+                  <Button className="mt-8">Modifier mon profil</Button>
+                </Link>
+              </Card>
+            </motion.div>
           )}
         </div>
       </div>

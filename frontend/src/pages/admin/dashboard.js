@@ -1,24 +1,37 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import Navbar from '../../components/common/Navbar'
+import { Button, Card, FormField, Input, Modal, DataTable, StatBox, Badge } from '../../components/ui'
+import { motion } from 'framer-motion'
 import { toast } from 'react-toastify'
 import { API_BASE } from '../../config/api'
+import {
+  UserGroupIcon,
+  DocumentTextIcon,
+  CogIcon,
+  ChartBarIcon,
+  PlusIcon,
+  PencilIcon,
+  TrashIcon,
+  KeyIcon,
+  UserIcon
+} from '@heroicons/react/24/outline'
 
 export default function AdminDashboard() {
   const { user, loading } = useAuth()
   const [users, setUsers] = useState([])
-  const [activeTab, setActiveTab] = useState('users')
+  const [activeTab, setActiveTab] = useState('dashboard')
   const [showModal, setShowModal] = useState(false)
   const [editingUser, setEditingUser] = useState(null)
   const [formData, setFormData] = useState({
     prenom: '', nom: '', email: '', telephone: '', password: '', ville: '', quartier: '', role: 'citoyen'
   })
+  const [errors, setErrors] = useState({})
   const [siteConfig, setSiteConfig] = useState({
     siteName: 'Signal-Moi',
     contactEmail: 'contact@signal-moi.com',
     contactPhone: '+237 600 000 000',
-    address: 'Yaounde, Cameroun'
-    ,
+    address: 'Yaounde, Cameroun',
     contactPage: {
       title: 'Contactez-nous',
       content: 'Pour toute question, contactez-nous.',
@@ -70,6 +83,7 @@ export default function AdminDashboard() {
       setUsers(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Erreur fetchUsers:', error)
+      toast.error('Erreur de chargement des utilisateurs')
     }
   }
 
@@ -119,8 +133,32 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }))
+    }
+  }
+
+  const validateForm = () => {
+    const newErrors = {}
+    if (!formData.prenom) newErrors.prenom = 'Prénom requis'
+    if (!formData.nom) newErrors.nom = 'Nom requis'
+    if (!formData.email) newErrors.email = 'Email requis'
+    if (!formData.telephone) newErrors.telephone = 'Téléphone requis'
+    if (!editingUser && !formData.password) newErrors.password = 'Mot de passe requis'
+    return newErrors
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
+    const newErrors = validateForm()
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      return
+    }
+
     try {
       const token = localStorage.getItem('token')
       const base = API_BASE
@@ -137,13 +175,14 @@ export default function AdminDashboard() {
         const errorBody = await response.json()
         throw new Error(errorBody.error || 'Erreur lors de la création')
       }
-      toast.success(editingUser ? 'Utilisateur modifié' : 'Utilisateur créé')
+      toast.success(editingUser ? '✅ Utilisateur modifié' : '✅ Utilisateur créé')
       setShowModal(false)
       setEditingUser(null)
       setFormData({ prenom: '', nom: '', email: '', telephone: '', password: '', ville: '', quartier: '', role: 'citoyen' })
+      setErrors({})
       fetchUsers()
     } catch (error) {
-      toast.error(error.message || 'Erreur')
+      toast.error('❌ ' + (error.message || 'Erreur'))
     }
   }
 
@@ -160,10 +199,10 @@ export default function AdminDashboard() {
         const errorData = await res.json()
         throw new Error(errorData.error || 'Erreur lors de la suppression')
       }
-      toast.success('Utilisateur désactivé avec succès')
+      toast.success('✅ Utilisateur désactivé')
       fetchUsers()
     } catch (error) {
-      toast.error(error.message || 'Erreur lors de la suppression')
+      toast.error('❌ ' + (error.message || 'Erreur'))
     }
   }
 
@@ -175,9 +214,9 @@ export default function AdminDashboard() {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       })
-      toast.success('Mot de passe reinitialise a "Default123!"')
+      toast.success('✅ Mot de passe réinitialisé à "Default123!"')
     } catch (error) {
-      toast.error('Erreur')
+      toast.error('❌ Erreur')
     }
   }
 
@@ -190,10 +229,10 @@ export default function AdminDashboard() {
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ role: newRole })
       })
-      toast.success('Role modifie')
+      toast.success('✅ Rôle modifié')
       fetchUsers()
     } catch (error) {
-      toast.error('Erreur')
+      toast.error('❌ Erreur')
     }
   }
 
@@ -220,9 +259,9 @@ export default function AdminDashboard() {
         const error = await res.json()
         throw new Error(error.error || 'Erreur lors de la sauvegarde')
       }
-      toast.success('Configuration sauvegardée')
+      toast.success('✅ Configuration sauvegardée')
     } catch (error) {
-      toast.error(error.message || 'Erreur')
+      toast.error('❌ ' + (error.message || 'Erreur'))
     }
   }
 
@@ -231,6 +270,18 @@ export default function AdminDashboard() {
     totalSignalements: stats.totalSignalements,
     totalCampagnes: stats.totalCampagnes,
     activeUsers: users.filter(u => u.is_active !== false).length
+  }
+
+  const openModal = (userData = null) => {
+    if (userData) {
+      setEditingUser(userData)
+      setFormData(userData)
+    } else {
+      setEditingUser(null)
+      setFormData({ prenom: '', nom: '', email: '', telephone: '', password: '', ville: '', quartier: '', role: 'citoyen' })
+    }
+    setErrors({})
+    setShowModal(true)
   }
 
   if (loading) {
@@ -246,8 +297,330 @@ export default function AdminDashboard() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50 pt-16">
-        <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 pt-20 pb-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Page Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <h1 className="text-4xl font-bold text-gray-900 flex items-center gap-3">
+              <ChartBarIcon className="h-10 w-10 text-indigo-600" />
+              Tableau de bord administrateur
+            </h1>
+            <p className="text-gray-600 mt-2">Gérez les utilisateurs, les signalements et la configuration du site</p>
+          </motion.div>
+
+          {/* Tabs Navigation */}
+          <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
+            {[
+              { id: 'dashboard', label: 'Tableau de bord', icon: ChartBarIcon },
+              { id: 'users', label: 'Utilisateurs', icon: UserGroupIcon },
+              { id: 'signalements', label: 'Signalements', icon: DocumentTextIcon },
+              { id: 'config', label: 'Configuration', icon: CogIcon }
+            ].map((tab) => (
+              <motion.button
+                key={tab.id}
+                whileHover={{ y: -2 }}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'bg-indigo-600 text-white shadow-lg'
+                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                }`}
+              >
+                <tab.icon className="h-5 w-5" />
+                {tab.label}
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Dashboard Tab - Stats */}
+          {activeTab === 'dashboard' && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-6"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <StatBox
+                  title="Total utilisateurs"
+                  value={statsData.totalUsers}
+                  color="indigo"
+                  icon={UserGroupIcon}
+                />
+                <StatBox
+                  title="Signalements"
+                  value={statsData.totalSignalements}
+                  color="red"
+                  icon={DocumentTextIcon}
+                />
+                <StatBox
+                  title="Campagnes actives"
+                  value={statsData.totalCampagnes}
+                  color="blue"
+                  icon={ChartBarIcon}
+                />
+                <StatBox
+                  title="Utilisateurs actifs"
+                  value={statsData.activeUsers}
+                  color="green"
+                  icon={UserGroupIcon}
+                />
+              </div>
+            </motion.div>
+          )}
+
+          {/* Users Tab */}
+          {activeTab === 'users' && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-6"
+            >
+              <div className="flex justify-end">
+                <Button icon={PlusIcon} onClick={() => openModal()}>
+                  Ajouter un utilisateur
+                </Button>
+              </div>
+
+              <DataTable
+                columns={[
+                  { key: 'prenom', label: 'Prénom' },
+                  { key: 'email', label: 'Email' },
+                  { key: 'role', label: 'Rôle', render: (role) => <Badge variant="info">{role}</Badge> },
+                  {
+                    key: 'actions',
+                    label: 'Actions',
+                    render: (_, user) => (
+                      <div className="flex gap-2">
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          onClick={() => openModal(user)}
+                          className="p-2 hover:bg-indigo-50 rounded-lg transition"
+                          title="Modifier"
+                        >
+                          <PencilIcon className="h-4 w-4 text-indigo-600" />
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          onClick={() => resetPassword(user.id)}
+                          className="p-2 hover:bg-yellow-50 rounded-lg transition"
+                          title="Réinitialiser mot de passe"
+                        >
+                          <KeyIcon className="h-4 w-4 text-yellow-600" />
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          onClick={() => deleteUser(user.id)}
+                          className="p-2 hover:bg-red-50 rounded-lg transition"
+                          title="Désactiver"
+                        >
+                          <TrashIcon className="h-4 w-4 text-red-600" />
+                        </motion.button>
+                      </div>
+                    )
+                  }
+                ]}
+                data={users}
+                emptyMessage="Aucun utilisateur trouvé"
+              />
+            </motion.div>
+          )}
+
+          {/* Signalements Tab */}
+          {activeTab === 'signalements' && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-4"
+            >
+              {signalements.length === 0 ? (
+                <Card className="p-12 text-center">
+                  <div className="text-6xl mb-4">📭</div>
+                  <p className="text-gray-500">Aucun signalement disponible</p>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 gap-4">
+                  {signalements.map((s, idx) => (
+                    <motion.div
+                      key={s.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                    >
+                      <Card className="p-6 hover:shadow-lg transition">
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-semibold text-lg">{s.titre}</h3>
+                              <Badge variant="success">{s.statut}</Badge>
+                            </div>
+                            <p className="text-gray-600 mb-3">{s.description}</p>
+                            <div className="flex items-center gap-4 text-sm text-gray-600">
+                              <span>📍 {s.localisation}</span>
+                              <span>👤 {s.author?.prenom} {s.author?.nom}</span>
+                            </div>
+                          </div>
+                          {Array.isArray(s.fichiers) && s.fichiers[0] && (
+                            <img src={s.fichiers[0]} alt="aperçu" className="w-20 h-20 object-cover rounded-lg" />
+                          )}
+                        </div>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* Configuration Tab */}
+          {activeTab === 'config' && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+            >
+              <Card className="p-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Configuration du site</h2>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField label="Nom du site">
+                      <Input
+                        value={siteConfig.siteName}
+                        onChange={e => setSiteConfig({...siteConfig, siteName: e.target.value})}
+                      />
+                    </FormField>
+                    <FormField label="Email de contact">
+                      <Input
+                        type="email"
+                        value={siteConfig.contactEmail}
+                        onChange={e => setSiteConfig({...siteConfig, contactEmail: e.target.value})}
+                      />
+                    </FormField>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField label="Téléphone">
+                      <Input
+                        value={siteConfig.contactPhone}
+                        onChange={e => setSiteConfig({...siteConfig, contactPhone: e.target.value})}
+                      />
+                    </FormField>
+                    <FormField label="Adresse">
+                      <Input
+                        value={siteConfig.address}
+                        onChange={e => setSiteConfig({...siteConfig, address: e.target.value})}
+                      />
+                    </FormField>
+                  </div>
+
+                  <Button onClick={saveConfig} variant="primary">
+                    Sauvegarder la configuration
+                  </Button>
+                </div>
+              </Card>
+            </motion.div>
+          )}
+        </div>
+      </div>
+
+      {/* Modal Create/Edit User */}
+      <Modal
+        isOpen={showModal}
+        onClose={() => {
+          setShowModal(false)
+          setEditingUser(null)
+          setFormData({ prenom: '', nom: '', email: '', telephone: '', password: '', ville: '', quartier: '', role: 'citoyen' })
+          setErrors({})
+        }}
+        title={editingUser ? 'Modifier l\'utilisateur' : 'Créer un utilisateur'}
+        size="lg"
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField label="Prénom" error={errors.prenom} required>
+              <Input
+                name="prenom"
+                placeholder="Jean"
+                value={formData.prenom}
+                onChange={handleInputChange}
+                error={!!errors.prenom}
+              />
+            </FormField>
+            <FormField label="Nom" error={errors.nom} required>
+              <Input
+                name="nom"
+                placeholder="Dupont"
+                value={formData.nom}
+                onChange={handleInputChange}
+                error={!!errors.nom}
+              />
+            </FormField>
+          </div>
+
+          <FormField label="Email" error={errors.email} required>
+            <Input
+              type="email"
+              name="email"
+              placeholder="exemple@email.com"
+              value={formData.email}
+              onChange={handleInputChange}
+              error={!!errors.email}
+            />
+          </FormField>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField label="Téléphone" error={errors.telephone} required>
+              <Input
+                type="tel"
+                name="telephone"
+                value={formData.telephone}
+                onChange={handleInputChange}
+                error={!!errors.telephone}
+              />
+            </FormField>
+            <FormField label="Rôle">
+              <select
+                name="role"
+                value={formData.role}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="citoyen">Citoyen</option>
+                <option value="police">Police</option>
+                <option value="collaborateur">Collaborateur</option>
+                <option value="admin">Admin</option>
+              </select>
+            </FormField>
+          </div>
+
+          {!editingUser && (
+            <FormField label="Mot de passe" error={errors.password} required>
+              <Input
+                type="password"
+                name="password"
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={handleInputChange}
+                error={!!errors.password}
+              />
+            </FormField>
+          )}
+
+          <div className="flex gap-3 pt-4">
+            <Button type="button" variant="secondary" className="flex-1" onClick={() => setShowModal(false)}>
+              Annuler
+            </Button>
+            <Button type="submit" className="flex-1">
+              {editingUser ? 'Modifier' : 'Créer'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+    </>
+  )
+}
           {/* En-tete */}
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Administration</h1>

@@ -1,132 +1,242 @@
 ﻿import { useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '../../context/AuthContext'
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Button } from '../ui'
+import {
+  Bars3Icon,
+  XMarkIcon,
+  HomeIcon,
+  InformationCircleIcon,
+  DocumentTextIcon,
+  UserGroupIcon,
+  EnvelopeIcon,
+  UserCircleIcon,
+  ArrowRightOnRectangleIcon
+} from '@heroicons/react/24/outline'
 
 export default function Navbar() {
   const { user, logout } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
 
   const navigation = [
-    { name: 'Accueil', href: '/' },
-    { name: 'A propos', href: '/about' },
-    { name: 'Signalements', href: '/signalements' },
-    { name: 'Campagnes', href: '/campagnes' },
-    { name: 'Contact', href: '/contact' },
+    { name: 'Accueil', href: '/', icon: HomeIcon },
+    { name: 'À propos', href: '/about', icon: InformationCircleIcon },
+    { name: 'Signalements', href: '/signalements', icon: DocumentTextIcon },
+    { name: 'Campagnes', href: '/campagnes', icon: UserGroupIcon },
+    { name: 'Contact', href: '/contact', icon: EnvelopeIcon },
   ]
 
   return (
-    <nav className="bg-white shadow-md fixed w-full z-50">
+    <nav className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 fixed w-full z-50 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+        <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <div className="flex items-center">
+          <motion.div whileHover={{ scale: 1.05 }}>
             <Link href="/" className="flex items-center space-x-2">
               <span className="text-2xl">🚨</span>
-              <span className="text-xl font-bold text-indigo-600">Signal-Moi</span>
+              <span className="text-xl font-bold text-white">Signal-Moi</span>
             </Link>
-          </div>
+          </motion.div>
 
           {/* Navigation Desktop */}
-          <div className="hidden md:flex items-center space-x-8">
-            {!user && navigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="text-gray-700 hover:text-indigo-600 transition-colors"
-              >
-                {item.name}
-              </Link>
-            ))}
-            
+          <div className="hidden md:flex items-center space-x-1">
+            {!user && navigation.map((item) => {
+              const Icon = item.icon
+              return (
+                <Link key={item.name} href={item.href}>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    className="text-white hover:text-indigo-100 px-3 py-2 rounded-lg transition-colors flex items-center gap-2 cursor-pointer group relative"
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span>{item.name}</span>
+                    <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-300"></div>
+                  </motion.div>
+                </Link>
+              )
+            })}
+          </div>
+
+          {/* Right side buttons */}
+          <div className="hidden md:flex items-center space-x-4">
             {!user ? (
               <>
                 <Link href="/login">
-                  <button className="text-gray-700 hover:text-indigo-600">Connexion</button>
+                  <motion.div whileHover={{ scale: 1.05 }}>
+                    <button className="text-white hover:text-indigo-100 transition-colors">
+                      Connexion
+                    </button>
+                  </motion.div>
                 </Link>
                 <Link href="/register">
-                  <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="text-indigo-600 hover:text-indigo-700"
+                  >
                     Inscription
-                  </button>
+                  </Button>
                 </Link>
               </>
             ) : (
               <div className="flex items-center space-x-4">
                 <Link href="/citizen/signalement">
-                  <button className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2">
-                    <span>🚨</span>
-                    <span>Signaler</span>
-                  </button>
-                </Link>
-                <div className="flex items-center space-x-3">
-                  <Link href="/profile">
-                    <button className="text-gray-700 hover:text-indigo-600 transition-colors">
-                      Profil
-                    </button>
-                  </Link>
-                  <span className="text-sm text-gray-600">
-                    {user.prenom} {user.nom}
-                  </span>
-                  <button
-                    onClick={logout}
-                    className="text-gray-600 hover:text-red-600 transition-colors"
+                  <Button
+                    size="sm"
+                    variant="danger"
+                    className="text-white"
                   >
-                    Deconnexion
-                  </button>
+                    🚨 Signaler
+                  </Button>
+                </Link>
+
+                {/* Profile Dropdown */}
+                <div className="relative">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                    className="flex items-center gap-2 text-white hover:text-indigo-100 transition-colors px-3 py-2 rounded-lg hover:bg-white/10"
+                  >
+                    <UserCircleIcon className="h-5 w-5" />
+                    <span className="text-sm font-medium">{user?.prenom}</span>
+                  </motion.button>
+
+                  {/* Dropdown Menu */}
+                  <AnimatePresence>
+                    {profileDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50"
+                        onMouseLeave={() => setProfileDropdownOpen(false)}
+                      >
+                        <div className="px-4 py-2 border-b border-gray-100">
+                          <p className="text-sm font-semibold text-gray-900">
+                            {user?.prenom} {user?.nom}
+                          </p>
+                          <p className="text-xs text-gray-500">{user?.email}</p>
+                        </div>
+                        <Link href="/profile">
+                          <motion.div
+                            whileHover={{ backgroundColor: '#f0f9ff' }}
+                            className="px-4 py-2 text-gray-700 hover:text-indigo-600 cursor-pointer flex items-center gap-2"
+                            onClick={() => setProfileDropdownOpen(false)}
+                          >
+                            <UserCircleIcon className="h-4 w-4" />
+                            Mon profil
+                          </motion.div>
+                        </Link>
+                        <motion.button
+                          whileHover={{ backgroundColor: '#fee2e2' }}
+                          onClick={() => {
+                            logout()
+                            setProfileDropdownOpen(false)
+                          }}
+                          className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 flex items-center gap-2"
+                        >
+                          <ArrowRightOnRectangleIcon className="h-4 w-4" />
+                          Déconnexion
+                        </motion.button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Bouton mobile */}
-          <button
-            className="md:hidden"
+          {/* Mobile menu button */}
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            className="md:hidden text-white"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? <XMarkIcon className="h-6 w-6" /> : <Bars3Icon className="h-6 w-6" />}
-          </button>
+          </motion.button>
         </div>
       </div>
 
-      {/* Menu mobile */}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-t">
-          <div className="px-4 py-2 space-y-2">
-            {!user && navigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="block py-2 text-gray-700 hover:text-indigo-600"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item.name}
-              </Link>
-            ))}
-            {!user ? (
-              <>
-                <Link href="/login" className="block py-2 text-gray-700">
-                  Connexion
-                </Link>
-                <Link href="/register" className="block py-2 bg-indigo-600 text-white text-center rounded-lg">
-                  Inscription
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link href="/citizen/signalement" className="block py-2 bg-red-600 text-white text-center rounded-lg">
-                  🚨 Signaler
-                </Link>
-                <Link href="/profile" className="block py-2 text-gray-700">
-                  Profil
-                </Link>
-                <button onClick={logout} className="block w-full text-left py-2 text-red-600">
-                  Deconnexion
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden bg-indigo-700 border-t border-indigo-500"
+          >
+            <div className="px-4 py-4 space-y-2">
+              {!user && navigation.map((item) => {
+                const Icon = item.icon
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <motion.div
+                      whileHover={{ x: 4 }}
+                      className="flex items-center gap-3 py-3 px-3 text-white hover:bg-indigo-600 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <Icon className="h-5 w-5" />
+                      {item.name}
+                    </motion.div>
+                  </Link>
+                )
+              })}
+
+              {!user ? (
+                <>
+                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                    <motion.div className="py-3 px-3 text-white hover:bg-indigo-600 rounded-lg">
+                      Connexion
+                    </motion.div>
+                  </Link>
+                  <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
+                    <Button
+                      className="w-full"
+                      variant="secondary"
+                    >
+                      Inscription
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link href="/citizen/signalement" onClick={() => setMobileMenuOpen(false)}>
+                    <Button
+                      className="w-full text-white"
+                      variant="danger"
+                    >
+                      🚨 Signaler
+                    </Button>
+                  </Link>
+                  <Link href="/profile" onClick={() => setMobileMenuOpen(false)}>
+                    <motion.div className="flex items-center gap-3 py-3 px-3 text-white hover:bg-indigo-600 rounded-lg">
+                      <UserCircleIcon className="h-5 w-5" />
+                      {user?.prenom} {user?.nom}
+                    </motion.div>
+                  </Link>
+                  <motion.button
+                    whileHover={{ x: 4 }}
+                    onClick={() => {
+                      logout()
+                      setMobileMenuOpen(false)
+                    }}
+                    className="w-full text-left flex items-center gap-3 py-3 px-3 text-red-300 hover:bg-indigo-600 rounded-lg"
+                  >
+                    <ArrowRightOnRectangleIcon className="h-5 w-5" />
+                    Déconnexion
+                  </motion.button>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   )
 }

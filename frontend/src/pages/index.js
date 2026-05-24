@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect } from 'react'
+import createDOMPurify from 'isomorphic-dompurify'
 import Head from 'next/head'
 import Link from 'next/link'
 import { useAuth } from '../context/AuthContext'
@@ -56,6 +57,10 @@ export default function Home() {
     setDeferredPrompt(null)
   }
 
+  // Sanitize HTML content from site config
+  const DOMPurify = createDOMPurify()
+  const sanitizedHomeContent = config.home_page?.content ? DOMPurify.sanitize(config.home_page.content) : ''
+
   return (
     <>
       <Head>
@@ -79,7 +84,7 @@ export default function Home() {
             {config.home_page?.content && config.home_page.content.includes('<') ? (
               <div 
                 className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto"
-                dangerouslySetInnerHTML={{ __html: config.home_page.content }}
+                dangerouslySetInnerHTML={{ __html: sanitizedHomeContent }}
               />
             ) : (
               <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">

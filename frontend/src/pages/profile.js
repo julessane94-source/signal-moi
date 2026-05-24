@@ -1,13 +1,24 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import Navbar from '../components/common/Navbar'
+import { Button, Card, FormField, Input } from '../components/ui'
 import { motion } from 'framer-motion'
-import { UserCircleIcon, KeyIcon, BellIcon } from '@heroicons/react/24/outline'
+import {
+  UserCircleIcon,
+  KeyIcon,
+  BellIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  MapPinIcon,
+  CameraIcon,
+  CheckIcon
+} from '@heroicons/react/24/outline'
 
 export default function Profile() {
   const { user, updateProfile, changePassword } = useAuth()
   const [activeTab, setActiveTab] = useState('profile')
   const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
   const [formData, setFormData] = useState({
     prenom: '',
     nom: '',
@@ -20,6 +31,8 @@ export default function Profile() {
     newPassword: '',
     confirmNewPassword: ''
   })
+  const [passwordErrors, setPasswordErrors] = useState({})
+  const [profileErrors, setProfileErrors] = useState({})
 
   useEffect(() => {
     if (user) {
@@ -41,31 +54,53 @@ export default function Profile() {
   const handlePasswordChange = (e) => {
     const { name, value } = e.target
     setPasswordData(prev => ({ ...prev, [name]: value }))
+    if (passwordErrors[name]) {
+      setPasswordErrors(prev => ({ ...prev, [name]: '' }))
+    }
   }
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
-    await updateProfile(formData)
+    setMessage('')
+    try {
+      await updateProfile(formData)
+      setMessage('Profil mis à jour avec succès')
+      setTimeout(() => setMessage(''), 3000)
+    } catch (err) {
+      setMessage('Erreur lors de la mise à jour')
+    }
     setLoading(false)
   }
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault()
+    const errors = {}
+    if (!passwordData.newPassword) errors.newPassword = 'Nouveau mot de passe requis'
     if (passwordData.newPassword !== passwordData.confirmNewPassword) {
-      alert('Les mots de passe ne correspondent pas')
+      errors.confirmNewPassword = 'Les mots de passe ne correspondent pas'
+    }
+    if (Object.keys(errors).length > 0) {
+      setPasswordErrors(errors)
       return
     }
     setLoading(true)
-    await changePassword({
-      currentPassword: passwordData.currentPassword,
-      newPassword: passwordData.newPassword
-    })
-    setPasswordData({
-      currentPassword: '',
-      newPassword: '',
-      confirmNewPassword: ''
-    })
+    setMessage('')
+    try {
+      await changePassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
+      })
+      setMessage('Mot de passe changé avec succès')
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmNewPassword: ''
+      })
+      setTimeout(() => setMessage(''), 3000)
+    } catch (err) {
+      setMessage('Erreur lors du changement de mot de passe')
+    }
     setLoading(false)
   }
 
@@ -78,211 +113,266 @@ export default function Profile() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50 pt-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 pt-20 pb-12">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Profile Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl shadow-xl overflow-hidden"
           >
-            {/* En-tête */}
-            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-8">
-              <div className="flex items-center space-x-4">
-                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center">
-                  <span className="text-4xl font-bold text-indigo-600">
-                    {user?.prenom?.[0]}{user?.nom?.[0]}
-                  </span>
-                </div>
-                <div className="text-white">
-                  <h1 className="text-2xl font-bold">{user?.prenom} {user?.nom}</h1>
-                  <p className="text-indigo-100">{user?.email}</p>
-                  <p className="text-indigo-100 text-sm mt-1">Rôle: {user?.role}</p>
+            <Card className="overflow-hidden mb-8">
+              {/* Gradient Background */}
+              <div className="h-32 bg-gradient-to-r from-indigo-500 to-purple-600"></div>
+
+              {/* Profile Info */}
+              <div className="px-6 pb-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 -mt-16">
+                  <div className="relative">
+                    <div className="w-24 h-24 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-xl shadow-lg flex items-center justify-center border-4 border-white">
+                      <span className="text-4xl font-bold text-white">
+                        {user?.prenom?.[0]}{user?.nom?.[0]}
+                      </span>
+                    </div>
+                    <button className="absolute bottom-0 right-0 bg-indigo-600 text-white p-2 rounded-lg shadow-md hover:bg-indigo-700 transition">
+                      <CameraIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <div className="flex-1 pb-2">
+                    <h1 className="text-2xl font-bold text-gray-900">{user?.prenom} {user?.nom}</h1>
+                    <p className="text-gray-600">{user?.email}</p>
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium">
+                        {user?.role === 'admin' ? '👨‍💼 Administrateur' : 
+                         user?.role === 'police' ? '👮 Police' :
+                         user?.role === 'collaborateur' ? '🤝 Collaborateur' :
+                         '👤 Citoyen'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            </Card>
+          </motion.div>
 
-            {/* Onglets */}
-            <div className="border-b border-gray-200 px-6">
-              <nav className="flex space-x-8">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm ${
-                      activeTab === tab.id
-                        ? 'border-indigo-500 text-indigo-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    <tab.icon className="h-5 w-5" />
-                    <span>{tab.name}</span>
-                  </button>
-                ))}
-              </nav>
-            </div>
+          {/* Tabs Navigation */}
+          <div className="flex gap-2 mb-6 border-b border-gray-200">
+            {tabs.map((tab) => (
+              <motion.button
+                key={tab.id}
+                whileHover={{ y: -2 }}
+                onClick={() => {
+                  setActiveTab(tab.id)
+                  setMessage('')
+                }}
+                className={`flex items-center gap-2 px-4 py-3 font-medium transition-all border-b-2 ${
+                  activeTab === tab.id
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <tab.icon className="h-5 w-5" />
+                <span>{tab.name}</span>
+              </motion.button>
+            ))}
+          </div>
 
-            {/* Contenu */}
-            <div className="p-6">
-              {activeTab === 'profile' && (
+          {/* Message */}
+          {message && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`mb-6 p-4 rounded-lg flex items-center gap-2 ${
+                message.includes('succès')
+                  ? 'bg-green-50 text-green-700 border border-green-200'
+                  : 'bg-red-50 text-red-700 border border-red-200'
+              }`}
+            >
+              <CheckIcon className="h-5 w-5" />
+              {message}
+            </motion.div>
+          )}
+
+          {/* Tab Content */}
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+          >
+            {/* Profile Tab */}
+            {activeTab === 'profile' && (
+              <Card className="p-8">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">Informations personnelles</h2>
                 <form onSubmit={handleProfileSubmit} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Prénom
-                      </label>
-                      <input
-                        type="text"
+                    <FormField label="Prénom" error={profileErrors.prenom}>
+                      <Input
                         name="prenom"
+                        placeholder="Jean"
                         value={formData.prenom}
                         onChange={handleProfileChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        icon={UserCircleIcon}
+                        error={!!profileErrors.prenom}
                       />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Nom
-                      </label>
-                      <input
-                        type="text"
+                    </FormField>
+                    <FormField label="Nom" error={profileErrors.nom}>
+                      <Input
                         name="nom"
+                        placeholder="Dupont"
                         value={formData.nom}
                         onChange={handleProfileChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        icon={UserCircleIcon}
+                        error={!!profileErrors.nom}
                       />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Téléphone
-                      </label>
-                      <input
+                    </FormField>
+                  </div>
+
+                  <FormField label="Email" helperText="Non modifiable">
+                    <Input
+                      type="email"
+                      value={user?.email || ''}
+                      disabled
+                      icon={EnvelopeIcon}
+                    />
+                  </FormField>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField label="Téléphone">
+                      <Input
                         type="tel"
                         name="telephone"
+                        placeholder="+237 6xx xxx xxx"
                         value={formData.telephone}
                         onChange={handleProfileChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        icon={PhoneIcon}
                       />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Ville
-                      </label>
-                      <input
-                        type="text"
+                    </FormField>
+                    <FormField label="Ville">
+                      <Input
                         name="ville"
+                        placeholder="Yaoundé"
                         value={formData.ville}
                         onChange={handleProfileChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        icon={MapPinIcon}
                       />
-                    </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Quartier
-                      </label>
-                      <input
-                        type="text"
-                        name="quartier"
-                        value={formData.quartier}
-                        onChange={handleProfileChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      />
-                    </div>
+                    </FormField>
                   </div>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-                  >
-                    {loading ? 'Enregistrement...' : 'Enregistrer les modifications'}
-                  </button>
-                </form>
-              )}
 
-              {activeTab === 'password' && (
-                <form onSubmit={handlePasswordSubmit} className="space-y-6 max-w-md">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Mot de passe actuel
-                    </label>
-                    <input
+                  <FormField label="Quartier">
+                    <Input
+                      name="quartier"
+                      placeholder="Centre-ville"
+                      value={formData.quartier}
+                      onChange={handleProfileChange}
+                      icon={MapPinIcon}
+                    />
+                  </FormField>
+
+                  <div className="pt-4 flex gap-3">
+                    <Button type="submit" loading={loading}>
+                      Enregistrer les modifications
+                    </Button>
+                  </div>
+                </form>
+              </Card>
+            )}
+
+            {/* Security Tab */}
+            {activeTab === 'password' && (
+              <Card className="p-8 max-w-md">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">Changer le mot de passe</h2>
+                <form onSubmit={handlePasswordSubmit} className="space-y-5">
+                  <FormField label="Mot de passe actuel" error={passwordErrors.currentPassword} required>
+                    <Input
                       type="password"
                       name="currentPassword"
+                      placeholder="••••••••"
                       value={passwordData.currentPassword}
                       onChange={handlePasswordChange}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      icon={KeyIcon}
+                      error={!!passwordErrors.currentPassword}
                     />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Nouveau mot de passe
-                    </label>
-                    <input
+                  </FormField>
+
+                  <FormField label="Nouveau mot de passe" error={passwordErrors.newPassword} required helperText="Minimum 8 caractères">
+                    <Input
                       type="password"
                       name="newPassword"
+                      placeholder="••••••••"
                       value={passwordData.newPassword}
                       onChange={handlePasswordChange}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      icon={KeyIcon}
+                      error={!!passwordErrors.newPassword}
                     />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Confirmer le nouveau mot de passe
-                    </label>
-                    <input
+                  </FormField>
+
+                  <FormField label="Confirmer le mot de passe" error={passwordErrors.confirmNewPassword} required>
+                    <Input
                       type="password"
                       name="confirmNewPassword"
+                      placeholder="••••••••"
                       value={passwordData.confirmNewPassword}
                       onChange={handlePasswordChange}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      icon={KeyIcon}
+                      error={!!passwordErrors.confirmNewPassword}
                     />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-                  >
-                    {loading ? 'Changement...' : 'Changer le mot de passe'}
-                  </button>
-                </form>
-              )}
+                  </FormField>
 
-              {activeTab === 'notifications' && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div>
-                      <h3 className="font-medium text-gray-900">Notifications email</h3>
-                      <p className="text-sm text-gray-600">Recevoir des notifications par email</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" defaultChecked />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                    </label>
-                  </div>
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div>
-                      <h3 className="font-medium text-gray-900">Notifications push</h3>
-                      <p className="text-sm text-gray-600">Recevoir des notifications dans le navigateur</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" defaultChecked />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                    </label>
-                  </div>
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div>
-                      <h3 className="font-medium text-gray-900">Nouveaux signalements</h3>
-                      <p className="text-sm text-gray-600">Être alerté des nouveaux signalements</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" defaultChecked />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                    </label>
-                  </div>
-                </div>
-              )}
-            </div>
+                  <Button type="submit" loading={loading} className="w-full">
+                    Changer le mot de passe
+                  </Button>
+                </form>
+              </Card>
+            )}
+
+            {/* Notifications Tab */}
+            {activeTab === 'notifications' && (
+              <div className="space-y-4">
+                {[
+                  {
+                    icon: EnvelopeIcon,
+                    title: 'Notifications par email',
+                    description: 'Recevoir des alertes par email'
+                  },
+                  {
+                    icon: BellIcon,
+                    title: 'Notifications push',
+                    description: 'Recevoir des notifications dans le navigateur'
+                  },
+                  {
+                    icon: UserCircleIcon,
+                    title: 'Nouveaux signalements',
+                    description: 'Être alerté des nouveaux signalements près de vous'
+                  }
+                ].map((notif, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                  >
+                    <Card className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="p-3 bg-indigo-50 rounded-lg">
+                            <notif.icon className="h-6 w-6 text-indigo-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">{notif.title}</h3>
+                            <p className="text-sm text-gray-600">{notif.description}</p>
+                          </div>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" defaultChecked className="sr-only peer" />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        </label>
+                      </div>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </motion.div>
         </div>
       </div>
