@@ -11,45 +11,73 @@ import DashboardPlaidoyers from '../../components/dashboard/DashboardPlaidoyers'
 import DashboardMessages from '../../components/dashboard/DashboardMessages'
 
 export default function CitizenDashboard() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [activeTab, setActiveTab] = useState('signalements')
   const [signalements, setSignalements] = useState([])
   const [campagnes, setCampagnes] = useState([])
   const [plaidoyers, setPlaidoyers] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [dataLoading, setDataLoading] = useState(false)
 
+  // 🔧 BUGFIX: Utiliser useEffect correctement avec authLoading
   useEffect(() => {
-    if (!loading && user) {
+    // Attendre que l'auth soit chargé ET que user existe
+    if (!authLoading && user && user.id) {
+      console.log('[DASHBOARD] Chargement des données pour:', user.email)
       fetchData()
     }
-  }, [user, loading])
+  }, [authLoading, user?.id])
 
   const fetchData = async () => {
+    setDataLoading(true)
     try {
       const token = localStorage.getItem('token')
-      const headers = { 'Authorization': `Bearer ${token}` }
+      if (!token) {
+        console.error('[DASHBOARD] Pas de token trouvé')
+        return
+      }
       
+      const headers = { 'Authorization': `Bearer ${token}` }
       const base = API_BASE
+      
+      console.log('[DASHBOARD] Récupération des données depuis:', base)
+      
       const [signalRes, campRes, plaidRes] = await Promise.all([
         fetch(`${base}/api/signalements`, { headers }),
         fetch(`${base}/api/campagnes`, { headers }),
         fetch(`${base}/api/plaidoyers`, { headers })
       ])
       
-      const signalData = await signalRes.json()
-      const campData = await campRes.json()
-      const plaidData = await plaidRes.json()
+      // Vérifier les réponses
+      if (!signalRes.ok) {
+        console.error('[DASHBOARD] Erreur GET /api/signalements:', signalRes.status)
+      }
+      if (!campRes.ok) {
+        console.error('[DASHBOARD] Erreur GET /api/campagnes:', campRes.status)
+      }
+      if (!plaidRes.ok) {
+        console.error('[DASHBOARD] Erreur GET /api/plaidoyers:', plaidRes.status)
+      }
+      
+      const signalData = signalRes.ok ? await signalRes.json() : []
+      const campData = campRes.ok ? await campRes.json() : []
+      const plaidData = plaidRes.ok ? await plaidRes.json() : []
+      
+      console.log('[DASHBOARD] Données reçues:', {
+        signalements: signalData.length,
+        campagnes: campData.length,
+        plaidoyers: plaidData.length
+      })
       
       setSignalements(Array.isArray(signalData) ? signalData : [])
       setCampagnes(Array.isArray(campData) ? campData : [])
       setPlaidoyers(Array.isArray(plaidData) ? plaidData : [])
     } catch (error) {
-      console.error('Erreur:', error)
+      console.error('[DASHBOARD] Erreur fetchData:', error)
       setSignalements([])
       setCampagnes([])
       setPlaidoyers([])
     } finally {
-      setLoading(false)
+      setDataLoading(false)
     }
   }
 
@@ -61,12 +89,45 @@ export default function CitizenDashboard() {
     { id: 'profil', name: 'Mon profil', icon: '👤' }
   ]
 
-  if (loading) {
+  // Afficher le chargement d'auth
+  if (authLoading) {
     return (
       <>
         <Navbar />
         <div className="min-h-screen pt-16 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+          <div className="flex flex-col items-center gap-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            <p className="text-gray-600">Vérification de votre identité...</p>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  // Rediriger si pas authentifié
+  if (!user || !user.id) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen pt-16 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-gray-600">Veuillez vous connecter</p>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  // Afficher le chargement des données
+  if (dataLoading && signalements.length === 0) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen pt-16 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            <p className="text-gray-600">Chargement de votre tableau de bord...</p>
+          </div>
         </div>
       </>
     )
