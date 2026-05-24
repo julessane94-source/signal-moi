@@ -38,8 +38,16 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Middleware de logging pour toutes les requêtes
+// Middleware de logging pour toutes les requêtes (sauf health checks)
 app.use((req, res, next) => {
+    // Ignorer les logs pour health checks
+    if (req.path === '/' && (req.method === 'GET' || req.method === 'HEAD')) {
+        return next();
+    }
+    if (req.path === '/api/health') {
+        return next();
+    }
+    
     const authHeader = req.header('Authorization');
     const authStatus = authHeader ? '✅ Présent' : '❌ Manquant';
     console.log(`📨 [${new Date().toISOString()}] ${req.method} ${req.path}`);
