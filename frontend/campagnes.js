@@ -16,12 +16,12 @@ export default function Campagnes() {
 
   const fetchCampagnes = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/campagnes/public`)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/campagnes`)
       const data = await response.json()
       if (Array.isArray(data)) {
         setCampagnes(data)
       } else {
-        console.warn('Réponse /api/campagnes/public inattendue, attendu un tableau :', data)
+        console.warn('Réponse /api/campagnes inattendue, attendu un tableau :', data)
         setCampagnes([])
       }
       setLoading(false)
