@@ -62,7 +62,7 @@ export const SocketProvider = ({ children }) => {
         newSocket.close()
       }
     }
-  }, [user])
+  }, [user?.id])
 
   const sendMessage = useCallback((destinataireId, contenu, signalementId = null) => {
     if (socket) {
