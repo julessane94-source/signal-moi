@@ -10,9 +10,10 @@ export const useSocket = () => useContext(SocketContext)
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null)
   const [notifications, setNotifications] = useState([])
-  const { user, token } = useAuth()
+  const { user } = useAuth()
 
   useEffect(() => {
+    const token = localStorage.getItem('token')
     if (user && token) {
       const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
       const opts = { auth: { token }, transports: ['websocket'] }
@@ -61,7 +62,7 @@ export const SocketProvider = ({ children }) => {
         newSocket.close()
       }
     }
-  }, [user, token])
+  }, [user])
 
   const sendMessage = useCallback((destinataireId, contenu, signalementId = null) => {
     if (socket) {
