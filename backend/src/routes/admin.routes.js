@@ -271,7 +271,7 @@ router.get('/campagnes', authMiddleware, async (req, res) => {
       SELECT 
         c.id, c.titre, c.description, c.type, c.date_debut, c.date_fin, 
         c.lieu, c.capacite_max, c.est_actif, c.image_url, c.created_at, c.updated_at,
-        u.id AS creator_id, u.prenom, u.nom, u.email
+        u.id AS creator_id, u.prenom, u.nom, u.email, u.role AS creator_role
       FROM signal_moi.campagnes c
       LEFT JOIN signal_moi.users u ON u.id = c.created_by
       ORDER BY c.date_debut DESC
@@ -295,7 +295,8 @@ router.get('/campagnes', authMiddleware, async (req, res) => {
         id: c.creator_id,
         prenom: c.prenom,
         nom: c.nom,
-        email: c.email
+        email: c.email,
+        role: c.creator_role
       }
     }));
     

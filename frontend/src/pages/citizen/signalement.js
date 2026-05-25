@@ -46,23 +46,24 @@ export default function NewSignalement() {
         return
       }
 
-      const payload = {
-        user_id: user.id,
-        titre: formData.titre,
-        description: formData.description,
-        type: formData.type,
-        localisation: formData.localisation,
-        fichiers: []
-      }
+      const fd = new FormData()
+      fd.append('titre', formData.titre)
+      fd.append('description', formData.description)
+      fd.append('type', formData.type)
+      fd.append('localisation', formData.localisation)
+      if (formData.latitude) fd.append('latitude', formData.latitude)
+      if (formData.longitude) fd.append('longitude', formData.longitude)
 
-      // ✅ FIX: Use API_BASE config instead of hardcoded URL
+      // Append files
+      files.forEach((f) => fd.append('fichiers', f))
+
       const response = await fetch(`${API_BASE}/api/signalements`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${token}`
+          // Do not set Content-Type; browser will set multipart boundaries
         },
-        body: JSON.stringify(payload)
+        body: fd
       })
 
       if (response.ok) {
@@ -99,6 +100,7 @@ export default function NewSignalement() {
                   <option value="vol">Vol</option>
                   <option value="probleme_eclairage">Problème éclairage</option>
                   <option value="nid_de_poule">Nid-de-poule</option>
+                  <option value="citoyenne">Citoyenne</option>
                   <option value="autre">Autre</option>
                 </select>
               </div>

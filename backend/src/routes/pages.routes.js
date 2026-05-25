@@ -5,6 +5,7 @@
 const express = require('express');
 const router = express.Router();
 const SiteConfig = require('../models/SiteConfig');
+const db = require('../config/database');
 
 // GET /api/pages/all - Récupère TOUTES les pages (publiques)
 router.get('/all', async (req, res) => {
@@ -36,9 +37,30 @@ router.get('/home', async (req, res) => {
       heroText: 'Bienvenue sur Signal-Moi',
       content: 'Plateforme citoyenne'
     };
-    
-    console.log('[PUBLIC GET /pages/home] ✅ Page d\'accueil retournée');
-    res.json(homePage);
+    // Récupérer les campagnes créées par des collaborateurs pour la page d'accueil
+    const campagnesRes = await db.query(`
+      SELECT c.id, c.titre, c.description, c.type, c.date_debut, c.date_fin, c.lieu, c.image_url,
+             u.id AS creator_id, u.prenom, u.nom, u.role
+      FROM signal_moi.campagnes c
+      LEFT JOIN signal_moi.users u ON u.id = c.created_by
+      WHERE c.est_actif = true AND u.role = 'collaborateur'
+      ORDER BY c.date_debut DESC
+      LIMIT 6
+    `);
+    const collaboratorCampaigns = (campagnesRes.rows || []).map(c => ({
+      id: c.id,
+      titre: c.titre,
+      description: c.description,
+      type: c.type,
+      date_debut: c.date_debut,
+      date_fin: c.date_fin,
+      lieu: c.lieu,
+      image_url: c.image_url,
+      creator: { id: c.creator_id, prenom: c.prenom, nom: c.nom, role: c.role }
+    }));
+
+    console.log('[PUBLIC GET /pages/home] ✅ Page d\'accueil retournée avec campagnes collaborateurs');
+    res.json({ ...homePage, collaboratorCampaigns });
   } catch (err) {
     console.error('[PUBLIC GET /pages/home] Erreur:', err);
     res.status(500).json({ error: 'Erreur serveur', details: err.message });

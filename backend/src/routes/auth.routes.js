@@ -10,7 +10,33 @@ const SiteConfig = require('../models/SiteConfig');
 router.get('/site-config', async (req, res) => {
   try {
     const config = await SiteConfig.getAll();
-    res.json(config);
+    // Récupérer quelques campagnes des collaborateurs à afficher sur l'accueil
+    try {
+      const campagnesRes = await db.query(`
+        SELECT c.id, c.titre, c.description, c.type, c.date_debut, c.date_fin, c.lieu, c.image_url,
+               u.id AS creator_id, u.prenom, u.nom, u.role
+        FROM signal_moi.campagnes c
+        LEFT JOIN signal_moi.users u ON u.id = c.created_by
+        WHERE c.est_actif = true AND u.role = 'collaborateur'
+        ORDER BY c.date_debut DESC
+        LIMIT 6
+      `);
+      const collaboratorCampaigns = (campagnesRes.rows || []).map(c => ({
+        id: c.id,
+        titre: c.titre,
+        description: c.description,
+        type: c.type,
+        date_debut: c.date_debut,
+        date_fin: c.date_fin,
+        lieu: c.lieu,
+        image_url: c.image_url,
+        creator: { id: c.creator_id, prenom: c.prenom, nom: c.nom, role: c.role }
+      }));
+      res.json({ ...config, collaboratorCampaigns });
+    } catch (err) {
+      console.error('[GET /site-config] Erreur campagnes:', err);
+      res.json(config);
+    }
   } catch (err) {
     console.error('[GET /site-config] Erreur:', err);
     res.status(500).json({ error: 'Erreur serveur', details: err.message });

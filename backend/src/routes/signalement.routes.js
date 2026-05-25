@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const jwt = require('jsonwebtoken');
+const { uploadMultiple } = require('../middlewares/upload');
+const { v4: uuidv4 } = require('uuid');
 
 // Middleware d'authentification
 const authMiddleware = (req, res, next) => {
@@ -33,27 +35,52 @@ const optionalAuthMiddleware = (req, res, next) => {
     next();
 };
 
-router.post('/', authMiddleware, async (req, res) => {
-    console.log('Body re�u pour signalement :', req.body);
-    console.log('Utilisateur connect�:', req.user);
+router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, res) => {
+    console.log('Body reçu pour signalement :', req.body);
+    console.log('Utilisateur connecté :', req.user);
 
     const { titre, description, type, localisation, latitude, longitude } = req.body;
-    const user_id = req.user.id;  // ? FIX: Get user_id from JWT token, not from request body
+    const user_id = req.user.id;
 
-    // V�rifier les champs obligatoires
+    // Vérifier les champs obligatoires
     if (!titre || !description || !type || !localisation) {
         return res.status(400).json({ error: 'Champs manquants : titre, description, type, localisation' });
     }
 
     try {
         const result = await db.query(
-            `INSERT INTO signal_moi.signalements (user_id, titre, description, type, localisation, latitude, longitude)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)
+            `INSERT INTO signal_moi.signalements (user_id, titre, description, type, localisation, latitude, longitude, image_url, images)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
              RETURNING *`,
-            [user_id, titre, description, type, localisation, latitude || null, longitude || null]
+            [user_id, titre, description, type, localisation, latitude || null, longitude || null, null, '[]']
         );
-        console.log('Signalement cr��:', result.rows[0]);
-        res.status(201).json(result.rows[0]);
+        const signalement = result.rows[0];
+
+        // Gérer les fichiers uploadés (s'il y en a)
+        if (req.files && req.files.length > 0) {
+            const insertFiles = req.files.map(f => {
+                const fileType = f.mimetype.startsWith('image') ? 'image' : f.mimetype.startsWith('video') ? 'video' : f.mimetype.startsWith('audio') ? 'audio' : 'document';
+                const fileId = uuidv4();
+                const chemin = f.path || (`uploads/signalements/${f.filename}`);
+                return db.query(
+                    `INSERT INTO signal_moi.fichiers (id, signalement_id, nom_fichier, chemin, type, taille, mime_type, uploaded_by)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+                    [fileId, signalement.id, f.originalname, chemin, fileType, f.size || 0, f.mimetype, user_id]
+                );
+            });
+            await Promise.all(insertFiles);
+
+            // Mettre à jour la colonne image_url si le premier fichier est une image
+            const firstImage = req.files.find(ff => ff.mimetype.startsWith('image'));
+            if (firstImage) {
+                const imagePath = firstImage.path || (`uploads/signalements/${firstImage.filename}`);
+                await db.query('UPDATE signal_moi.signalements SET image_url = $1 WHERE id = $2', [imagePath, signalement.id]);
+                signalement.image_url = imagePath;
+            }
+        }
+
+        console.log('Signalement créé:', signalement);
+        res.status(201).json(signalement);
     } catch (err) {
         console.error('Erreur SQL :', err);
         res.status(500).json({ error: 'Erreur serveur', details: err.message });

@@ -20,6 +20,7 @@ export default function Home() {
       videos: []
     }
   })
+  const [collaboratorCampaigns, setCollaboratorCampaigns] = useState([])
 
   useEffect(() => {
     // PWA Installation
@@ -40,6 +41,7 @@ export default function Home() {
         if (data.home_page) {
           const homePage = typeof data.home_page === 'string' ? JSON.parse(data.home_page) : data.home_page
           setConfig({ home_page: homePage })
+          if (Array.isArray(data.collaboratorCampaigns)) setCollaboratorCampaigns(data.collaboratorCampaigns)
         }
       }
     } catch (err) {
@@ -180,6 +182,32 @@ export default function Home() {
         )}
 
         {/* Features et reste de la page... */}
+        {/* Campagnes des collaborateurs */}
+        {collaboratorCampaigns.length > 0 && (
+          <section className="py-12 bg-white">
+            <div className="max-w-7xl mx-auto px-4">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Campagnes des collaborateurs</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {collaboratorCampaigns.map(c => (
+                  <div key={c.id} className="rounded-lg shadow-lg overflow-hidden bg-white">
+                    {c.image_url ? (
+                      <img src={c.image_url} alt={c.titre} className="w-full h-48 object-cover" />
+                    ) : (
+                      <div className="w-full h-48 bg-gray-100 flex items-center justify-center text-gray-400">Pas d'image</div>
+                    )}
+                    <div className="p-4">
+                      <h3 className="text-lg font-semibold mb-2">{c.titre}</h3>
+                      <p className="text-sm text-gray-600 mb-3">{c.description?.slice(0, 140)}</p>
+                      <Link href={`/campagnes`}>
+                        <a className="text-indigo-600 font-medium">Voir la campagne →</a>
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
       </main>
 
       <Footer />
