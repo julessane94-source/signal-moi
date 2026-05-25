@@ -56,15 +56,15 @@ export default function CollaboratorDashboard() {
   useEffect(() => {
     fetchData()
     fetchNotifications()
+  }, [])
 
+  useEffect(() => {
     if (socket) {
       socket.on('new_signalement_notification', (n) => {
         toast.warning(`🚨 Nouveau signalement: ${n.title}`)
         setNotifications(prev => [n, ...prev])
       })
-    }
-    return () => {
-      if (socket) {
+      return () => {
         socket.off('new_signalement_notification')
       }
     }
