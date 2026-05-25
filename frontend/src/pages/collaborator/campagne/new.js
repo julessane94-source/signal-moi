@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
-import Navbar from '../../../../components/common/Navbar'
-import { Button, Card } from '../../../../components/ui'
+import Navbar from '../../../components/common/Navbar'
+import { Button, Card } from '../../../components/ui'
 import { toast } from 'react-toastify'
-import { API_BASE } from '../../../../config/api'
+import { API_BASE } from '../../../config/api'
 
 export default function NewCampagne() {
   const router = useRouter()
