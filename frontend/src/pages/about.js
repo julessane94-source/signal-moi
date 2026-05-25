@@ -142,8 +142,6 @@ export default function About() {
                 config.about_page?.content && <p>{config.about_page.content}</p>
               )}
             </div>
-              )}
-            </div>
             {config.about_page?.images && config.about_page.images.length > 0 && (
               <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
                 {config.about_page.images.map((img, idx) => (

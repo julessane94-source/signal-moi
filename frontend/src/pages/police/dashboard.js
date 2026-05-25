@@ -10,7 +10,7 @@ import {
   MapPinIcon,
   PhoneIcon,
   DocumentTextIcon,
-  ExclamationIcon,
+  ExclamationTriangleIcon,
   CheckCircleIcon
 } from '@heroicons/react/24/outline'
 
@@ -171,7 +171,7 @@ export default function PoliceDashboard() {
           >
             <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
               <div className="flex items-center gap-3 flex-1">
-                <ExclamationIcon className="h-6 w-6 flex-shrink-0" />
+                <ExclamationTriangleIcon className="h-6 w-6 flex-shrink-0" />
                 <div>
                   <p className="font-semibold">{topSignal.titre}</p>
                   <p className="text-red-100 text-sm">Priorité: {topSignal.priorite || 'Normal'}</p>

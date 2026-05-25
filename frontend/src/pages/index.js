@@ -1,5 +1,5 @@
-﻿import { useState, useEffect } from 'react'
-import createDOMPurify from 'isomorphic-dompurify'
+﻿'use client'
+import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 import { useAuth } from '../context/AuthContext'
@@ -57,9 +57,19 @@ export default function Home() {
     setDeferredPrompt(null)
   }
 
-  // Sanitize HTML content from site config
-  const DOMPurify = createDOMPurify()
-  const sanitizedHomeContent = config.home_page?.content ? DOMPurify.sanitize(config.home_page.content) : ''
+  // Sanitize HTML content from site config (client-side only)
+  const [sanitizedHomeContent, setSanitizedHomeContent] = useState('')
+
+  useEffect(() => {
+    // Only sanitize on client side
+    if (config.home_page?.content && config.home_page.content.includes('<')) {
+      import('isomorphic-dompurify').then((module) => {
+        const createDOMPurify = module.default
+        const DOMPurify = createDOMPurify()
+        setSanitizedHomeContent(DOMPurify.sanitize(config.home_page.content))
+      })
+    }
+  }, [config.home_page?.content])
 
   return (
     <>

@@ -7,11 +7,11 @@ import { toast } from 'react-toastify'
 import { motion } from 'framer-motion'
 import { useSocket } from '../../context/SocketContext'
 import {
-  DocumentDownloadIcon,
+  ArrowDownTrayIcon,
   ChartBarIcon,
   CheckCircleIcon,
   PlusIcon,
-  ExclamationIcon
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
 
 export default function CollaboratorDashboard() {
@@ -139,7 +139,7 @@ export default function CollaboratorDashboard() {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
           >
             <Button
-              icon={DocumentDownloadIcon}
+              icon={ArrowDownTrayIcon}
               onClick={() => exportData('pdf')}
               className="flex justify-center items-center gap-2 w-full"
             >
