@@ -68,7 +68,7 @@ export default function CollaboratorDashboard() {
         socket.off('new_signalement_notification')
       }
     }
-  }, [])
+  }, [socket])
 
   const fetchData = async () => {
     try {
