@@ -91,7 +91,6 @@ export default function Home() {
                 {config.home_page?.content || 'Une plateforme citoyenne pour signaler et suivre les problemes de votre communaute.'}
               </p>
             )}
-            </p>
             
             {/* Bouton d'installation PWA */}
             {showInstallButton && (
