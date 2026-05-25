@@ -5,6 +5,7 @@ const Fichier = require('./Fichier');
 const Campagne = require('./Campagne');
 const InscriptionCampagne = require('./InscriptionCampagne');
 const Message = require('./Message');
+const FollowedCase = require('./FollowedCase');
 
 // Définir les associations uniquement si les modèles sont des modèles Sequelize
 const isSequelizeModel = (m) => m && typeof m === 'function' && typeof m.associate === 'undefined' && (m.hasMany || m.belongsTo || m.belongsToMany || m.schema);
@@ -65,4 +66,5 @@ module.exports = {
   Campagne,
   InscriptionCampagne,
   Message
+  ,FollowedCase
 };

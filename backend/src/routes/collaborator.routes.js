@@ -5,6 +5,9 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const jwt = require('jsonwebtoken');
+const FollowedCase = require('../models/FollowedCase');
+const ExcelJS = require('exceljs');
+const PDFDocument = require('pdfkit');
 
 // Middleware d'authentification collaborateur
 const authMiddleware = async (req, res, next) => {
@@ -225,6 +228,88 @@ router.get('/statistics', authMiddleware, async (req, res) => {
     res.json(stats);
   } catch (err) {
     console.error('[COLLABORATOR GET /statistics] Erreur:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
+  }
+});
+
+// POST /api/collaborator/follow - suivre un signalement
+router.post('/follow', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { caseId } = req.body;
+    if (!caseId) return res.status(400).json({ error: 'caseId requis' });
+    await FollowedCase.add(userId, caseId);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[COLLABORATOR POST /follow] Erreur:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
+  }
+});
+
+// DELETE /api/collaborator/follow/:caseId - ne plus suivre
+router.delete('/follow/:caseId', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { caseId } = req.params;
+    await FollowedCase.remove(userId, caseId);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[COLLABORATOR DELETE /follow/:caseId] Erreur:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
+  }
+});
+
+// GET /api/collaborator/followed - lister les dossiers suivis par le collaborateur
+router.get('/followed', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const rows = await FollowedCase.listByUser(userId);
+    res.json(rows);
+  } catch (err) {
+    console.error('[COLLABORATOR GET /followed] Erreur:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
+  }
+});
+
+// GET /api/collaborator/export/cases?format=pdf|excel - exporter dossiers suivis
+router.get('/export/cases', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const format = (req.query.format || 'pdf').toLowerCase();
+    const cases = await FollowedCase.listByUser(userId);
+
+    if (format === 'excel' || format === 'xlsx') {
+      const workbook = new ExcelJS.Workbook();
+      const sheet = workbook.addWorksheet('Dossiers suivis');
+      sheet.columns = [
+        { header: 'ID', key: 'id', width: 36 },
+        { header: 'Titre', key: 'titre', width: 40 },
+        { header: 'Statut', key: 'statut', width: 20 },
+        { header: 'Créé le', key: 'created_at', width: 24 }
+      ];
+      cases.forEach(c => sheet.addRow({ id: c.id, titre: c.titre, statut: c.statut, created_at: c.created_at }));
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', 'attachment; filename="dossiers_suivis.xlsx"');
+      await workbook.xlsx.write(res);
+      res.end();
+      return;
+    }
+
+    // Default PDF
+    const doc = new PDFDocument({ margin: 30, size: 'A4' });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="dossiers_suivis.pdf"');
+    doc.pipe(res);
+    doc.fontSize(18).text('Dossiers suivis', { align: 'center' });
+    doc.moveDown();
+    cases.forEach((c, idx) => {
+      doc.fontSize(12).text(`${idx + 1}. ${c.titre} (${c.id})`);
+      doc.fontSize(10).text(`Statut: ${c.statut || 'N/A'}  •  Créé: ${c.created_at}`);
+      doc.moveDown();
+    });
+    doc.end();
+  } catch (err) {
+    console.error('[COLLABORATOR GET /export/cases] Erreur:', err);
     res.status(500).json({ error: 'Erreur serveur', details: err.message });
   }
 });

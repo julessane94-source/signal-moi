@@ -137,6 +137,8 @@ const io = socketIO(server, {
 
 // Configurer les handlers socket
 setupSocket(io);
+// Rendre l'objet io accessible depuis les routes via global.io
+global.io = io;
 
 // Démarrer le serveur
 server.listen(PORT, '0.0.0.0', () => {

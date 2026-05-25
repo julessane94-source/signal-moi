@@ -5,6 +5,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const jwt = require('jsonwebtoken');
+const FollowedCase = require('../models/FollowedCase');
 
 // Middleware d'authentification police/gendarmerie
 const authMiddleware = async (req, res, next) => {
@@ -241,6 +242,35 @@ router.put('/case/:id/status', authMiddleware, async (req, res) => {
     }
 
     console.log(`[LAW-ENFORCEMENT PUT /case/:id/status] ${caseId} -> ${statut}`);
+
+    // Notifier les followers du signalement (création d'entrées notifications + émission socket)
+    try {
+      const followers = await FollowedCase.followersByCase(caseId);
+      if (followers && followers.length > 0) {
+        const notifText = `Le statut du dossier ${caseId} a été mis à jour: ${statut}`;
+        const insertPromises = followers.map(uid => db.query(
+          `INSERT INTO signal_moi.notifications (id, user_id, type, titre, message, reference_id, est_lu, created_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+          [require('uuid').v4(), uid, 'statut', 'Mise à jour dossier', notifText, caseId, false]
+        ));
+        await Promise.all(insertPromises);
+
+        // Émettre via socket si disponible
+        if (global.io) {
+          followers.forEach(uid => {
+            global.io.to(`user_${uid}`).emit('followed_case_update', {
+              signalementId: caseId,
+              nouveauStatut: statut,
+              message: notifText,
+              timestamp: new Date()
+            });
+          });
+        }
+      }
+    } catch (nerr) {
+      console.error('[LAW-ENFORCEMENT PUT /case/:id/status] Erreur notification followers:', nerr.message);
+    }
+
     res.json({ success: true, statut: result.rows[0].statut });
   } catch (err) {
     console.error('[LAW-ENFORCEMENT PUT /case/:id/status] Erreur:', err);

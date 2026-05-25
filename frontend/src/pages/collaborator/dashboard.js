@@ -1,9 +1,10 @@
-﻿import { useEffect, useState } from 'react'
+﻿import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '../../context/AuthContext'
 import Navbar from '../../components/common/Navbar'
 import { API_BASE } from '../../config/api'
 import { toast } from 'react-toastify'
+import { io as socketIOClient } from 'socket.io-client'
 
 export default function CollaboratorDashboard() {
   const router = useRouter()
@@ -32,9 +33,9 @@ export default function CollaboratorDashboard() {
   }
   const [signalements, setSignalements] = useState([])
   const [loadingSignals, setLoadingSignals] = useState(true)
-  const [followed, setFollowed] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('followedCases') || '[]') } catch { return [] }
-  })
+  const [followed, setFollowed] = useState([])
+  const [followedList, setFollowedList] = useState([])
+  const socketRef = useRef(null)
 
   useEffect(() => {
     const fetchSignals = async () => {
@@ -55,18 +56,89 @@ export default function CollaboratorDashboard() {
       }
     }
     fetchSignals()
+    // fetch followed list from server
+    const fetchFollowed = async () => {
+      try {
+        const token = localStorage.getItem('token')
+        const r = await fetch(`${API_BASE}/api/collaborator/followed`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+        if (r.ok) {
+          const d = await r.json()
+          setFollowedList(d || [])
+          setFollowed((d || []).map(x => x.id))
+        }
+      } catch (e) {
+        console.warn('fetchFollowed failed', e)
+      }
+    }
+    fetchFollowed()
+
+    // setup socket
+    try {
+      const token = localStorage.getItem('token')
+      const socket = socketIOClient(API_BASE.replace(/^http/, 'ws'), { auth: { token } })
+      socketRef.current = socket
+      socket.on('connect', () => console.log('socket connected'))
+      socket.on('followed_case_update', (payload) => {
+        toast.info(payload.message || 'Mise à jour dossier')
+        // Update local state for signalements if present
+        setSignalements(prev => prev.map(s => s.id === payload.signalementId ? { ...s, statut: payload.nouveauStatut } : s))
+      })
+    } catch (e) {
+      console.warn('socket init failed', e)
+    }
   }, [])
 
-  const toggleFollow = (id) => {
-    const next = followed.includes(id) ? followed.filter(x => x !== id) : [...followed, id]
-    setFollowed(next)
-    try { localStorage.setItem('followedCases', JSON.stringify(next)) } catch (e){}
-    toast.info(next.includes(id) ? 'Dossier suivi' : 'Suivi retiré')
+  const toggleFollow = async (id) => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!followed.includes(id)) {
+        const res = await fetch(`${API_BASE}/api/collaborator/follow`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          body: JSON.stringify({ caseId: id })
+        })
+        if (!res.ok) throw new Error('failed')
+        setFollowed(prev => [...prev, id])
+        // refresh followed list
+        const r = await fetch(`${API_BASE}/api/collaborator/followed`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+        if (r.ok) { const d = await r.json(); setFollowedList(d || []) }
+        toast.info('Dossier suivi')
+      } else {
+        const res = await fetch(`${API_BASE}/api/collaborator/follow/${id}`, { method: 'DELETE', headers: token ? { Authorization: `Bearer ${token}` } : {} })
+        if (!res.ok) throw new Error('failed')
+        setFollowed(prev => prev.filter(x => x !== id))
+        const r = await fetch(`${API_BASE}/api/collaborator/followed`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+        if (r.ok) { const d = await r.json(); setFollowedList(d || []) }
+        toast.info('Suivi retiré')
+      }
+    } catch (err) {
+      console.error('toggleFollow error', err)
+      toast.error('Impossible de modifier le suivi')
+    }
   }
 
   const contact = (email) => {
     if (!email) { toast.error('Email non disponible') ; return }
     window.location.href = `mailto:${email}`
+  }
+
+  const exportCases = async (format = 'pdf') => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${API_BASE}/api/collaborator/export/cases?format=${format}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+      if (!res.ok) throw new Error('export failed')
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = format === 'excel' ? 'dossiers_suivis.xlsx' : 'dossiers_suivis.pdf'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (e) {
+      console.error('export error', e)
+      toast.error('Export impossible')
+    }
   }
 
   return (
@@ -78,13 +150,13 @@ export default function CollaboratorDashboard() {
           <p className="text-gray-600 mt-2">Bienvenue {user?.prenom}! Dashboard collaborateur.</p>
 
           <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
-            <button onClick={() => toast.info('Export PDF non implémenté')} className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700">📄 Export PDF</button>
-            <button onClick={() => toast.info('Export Excel non implémenté')} className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700">📊 Export Excel</button>
+            <button onClick={() => exportCases('pdf')} className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700">📄 Export PDF</button>
+            <button onClick={() => exportCases('excel')} className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700">📊 Export Excel</button>
             <button onClick={() => router.push('/collaborator/campagne/new')} className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">🎯 Créer campagne</button>
             <button onClick={() => toast.info('Statistiques non implémentées dans cette vue')} className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700">📈 Statistiques</button>
           </div>
 
-          <div className="mt-10">
+            <div className="mt-10">
             <h2 className="text-2xl font-semibold mb-4">Signalements assignés</h2>
             {loadingSignals ? (
               <div className="pt-8">Chargement des signalements...</div>
@@ -99,7 +171,7 @@ export default function CollaboratorDashboard() {
                       <span className="text-xs text-gray-500">{new Date(s.createdAt).toLocaleDateString()}</span>
                     </div>
                     <p className="text-sm text-gray-600 flex-1 mt-2 line-clamp-3">{s.description}</p>
-                    <div className="mt-4 flex items-center justify-between">
+                      <div className="mt-4 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <button onClick={() => contact(s.author?.email)} className="text-sm bg-indigo-50 text-indigo-700 px-3 py-1 rounded">Contacter la victime</button>
                         <a href={`/citizen/signalement/${s.id}`} className="text-sm text-indigo-600 hover:underline">Détails</a>
@@ -115,6 +187,28 @@ export default function CollaboratorDashboard() {
               </div>
             )}
           </div>
+
+            <div className="mt-10">
+              <h2 className="text-2xl font-semibold mb-4">Dossiers suivis</h2>
+              {followedList.length === 0 ? (
+                <div className="text-gray-600">Vous ne suivez aucun dossier.</div>
+              ) : (
+                <div className="space-y-3">
+                  {followedList.map(f => (
+                    <div key={f.id} className="bg-white rounded p-3 shadow flex items-center justify-between">
+                      <div>
+                        <div className="font-medium">{f.titre}</div>
+                        <div className="text-sm text-gray-500">{f.statut || 'N/A'}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <a href={`/citizen/signalement/${f.id}`} className="text-indigo-600 hover:underline">Voir</a>
+                        <button onClick={() => toggleFollow(f.id)} className="text-sm px-3 py-1 bg-red-50 rounded text-red-600">Ne plus suivre</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
         </div>
       </div>
     </>
