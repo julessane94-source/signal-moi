@@ -39,7 +39,7 @@ export default function CollaboratorDashboard() {
         return
       }
     }
-  }, [user, loading])
+  }, [user?.id, user?.role, loading])
 
   // Si l'utilisateur n'a pas les bonnes permissions, afficher un écran vide
   if (loading || !user || user.role !== 'collaborateur') {
