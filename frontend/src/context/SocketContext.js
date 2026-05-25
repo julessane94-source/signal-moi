@@ -41,34 +41,38 @@ export const SocketProvider = ({ children }) => {
           console.info('Socket reconnect attempt', attempt)
         })
 
-      newSocket.on('new_message', (message) => {
-        toast.info(`Nouveau message de ${message.expediteurNom}`)
-        setNotifications(prev => [message, ...prev])
-      })
+        newSocket.on('new_message', (message) => {
+          toast.info(`Nouveau message de ${message.expediteurNom}`)
+          setNotifications(prev => [message, ...prev])
+        })
 
-      newSocket.on('new_signalement_notification', (signalement) => {
-        toast.warning(`Nouveau signalement: ${signalement.title}`)
-        setNotifications(prev => [signalement, ...prev])
-      })
+        newSocket.on('new_signalement_notification', (signalement) => {
+          toast.warning(`Nouveau signalement: ${signalement.title}`)
+          setNotifications(prev => [signalement, ...prev])
+        })
 
-      newSocket.on('status_updated', (data) => {
-        toast.info(`Votre signalement #${data.signalementId} est maintenant ${data.nouveauStatut}`)
-        setNotifications(prev => [data, ...prev])
-      })
+        newSocket.on('status_updated', (data) => {
+          toast.info(`Votre signalement #${data.signalementId} est maintenant ${data.nouveauStatut}`)
+          setNotifications(prev => [data, ...prev])
+        })
 
-      newSocket.on('user_typing', (data) => {
-        // Gérer l'indicateur de frappe
-        console.log(`${data.expediteurNom} est en train d'écrire...`)
-      })
+        newSocket.on('user_typing', (data) => {
+          // Gérer l'indicateur de frappe
+          console.log(`${data.expediteurNom} est en train d'écrire...`)
+        })
 
-      newSocket.on('disconnect', () => {
-        console.log('Socket déconnecté')
-      })
+        newSocket.on('disconnect', () => {
+          console.log('Socket déconnecté')
+        })
 
-      setSocket(newSocket)
+        setSocket(newSocket)
 
-      return () => {
-        newSocket.close()
+        return () => {
+          newSocket.close()
+        }
+      } catch (err) {
+        console.warn('Socket initialization error:', err)
+        // Socket connection failed but don't crash the app
       }
     }
   }, [user?.id])
