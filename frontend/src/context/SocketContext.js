@@ -14,9 +14,9 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     const token = localStorage.getItem('token')
-    if (user && token) {
+    if (user?.id && token) {
       const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      const opts = { auth: { token }, transports: ['websocket'] }
+      const opts = { auth: { token }, transports: ['websocket'], reconnection: true, reconnectionDelay: 1000, reconnectionDelayMax: 5000, reconnectionAttempts: 5 }
       console.info('Socket: attempting connect', { socketUrl, opts: { transports: opts.transports } })
       const newSocket = io(socketUrl, opts)
 
