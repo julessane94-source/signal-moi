@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react'
 import io from 'socket.io-client'
 import { useAuth } from './AuthContext'
 import { toast } from 'react-toastify'
@@ -63,31 +63,31 @@ export const SocketProvider = ({ children }) => {
     }
   }, [user, token])
 
-  const sendMessage = (destinataireId, contenu, signalementId = null) => {
+  const sendMessage = useCallback((destinataireId, contenu, signalementId = null) => {
     if (socket) {
       socket.emit('send_message', { destinataireId, contenu, signalementId })
     }
-  }
+  }, [socket])
 
-  const markAsRead = (messageId) => {
+  const markAsRead = useCallback((messageId) => {
     if (socket) {
       socket.emit('mark_message_read', messageId)
     }
-  }
+  }, [socket])
 
-  const sendTyping = (destinataireId) => {
+  const sendTyping = useCallback((destinataireId) => {
     if (socket) {
       socket.emit('typing', { destinataireId })
     }
-  }
+  }, [socket])
 
-  const value = {
+  const value = useMemo(() => ({
     socket,
     notifications,
     sendMessage,
     markAsRead,
     sendTyping
-  }
+  }), [socket, notifications, sendMessage, markAsRead, sendTyping])
 
   return <SocketContext.Provider value={value}>{children}</SocketContext.Provider>
 }
