@@ -28,10 +28,18 @@ export const AuthProvider = ({ children }) => {
   const fetchUser = async () => {
     try {
       const response = await axios.get(`${API_URL}/api/auth/profile`)
-      setUser(response.data)
+      // API returns { success: true, user: { ... } }
+      const payload = response.data
+      if (payload) {
+        setUser(payload.user || payload)
+      } else {
+        setUser(null)
+      }
     } catch (error) {
+      // On auth error, clear token and user
       localStorage.removeItem('token')
       delete axios.defaults.headers.common['Authorization']
+      setUser(null)
     } finally {
       setLoading(false)
     }
