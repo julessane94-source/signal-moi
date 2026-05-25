@@ -673,11 +673,14 @@ export default function AdminDashboard() {
                     <h3 className="text-lg font-semibold">Réseaux sociaux</h3>
                     <div className="flex items-center gap-3 mt-2">
                       <Button size="sm" variant="secondary" onClick={() => {
-                        // Importer les coordonnées fournies par l'utilisateur
                         const imported = {
-                          contactPhone: '+221 778851691',
-                          contactEmail: 'julessane94@gmail.com',
-                          address: 'Sedhiou, Sénégal',
+                          contactPhone: '778851691',
+                          contactEmail: 'contact@signal-moi.com/julessane94@gmail.com',
+                          address: 'Sedhiou, Senegal',
+                          contactPage: {
+                            title: 'Contactez-nous',
+                            content: `Pour toute question ou suggestion, n'hésitez pas à nous contacter. Notre équipe est disponible pour vous aider.`
+                          },
                           socialLinks: {
                             facebook: 'https://www.fb.com/l/6lp1kJRRR',
                             whatsapp: '+221778851691',
@@ -688,6 +691,57 @@ export default function AdminDashboard() {
                         setSiteConfig(prev => ({ ...prev, ...imported }))
                       }}>
                         Importer mes coordonnées
+                      </Button>
+
+                      <Button size="sm" variant="primary" onClick={async () => {
+                        const imported = {
+                          contactPhone: '778851691',
+                          contactEmail: 'contact@signal-moi.com/julessane94@gmail.com',
+                          address: 'Sedhiou, Senegal',
+                          contactPage: {
+                            title: 'Contactez-nous',
+                            content: `Pour toute question ou suggestion, n'hésitez pas à nous contacter. Notre équipe est disponible pour vous aider.`
+                          },
+                          socialLinks: {
+                            facebook: 'https://www.fb.com/l/6lp1kJRRR',
+                            whatsapp: '+221778851691',
+                            twitter: '',
+                            instagram: ''
+                          }
+                        }
+                        // Update UI immediately
+                        setSiteConfig(prev => ({ ...prev, ...imported }))
+                        // Save to backend using existing saveConfig logic but with payload
+                        try {
+                          const token = localStorage.getItem('token')
+                          const base = API_BASE
+                          const payload = {
+                            siteName: siteConfig.siteName,
+                            contactEmail: imported.contactEmail,
+                            contactPhone: imported.contactPhone,
+                            address: imported.address,
+                            contactPage: imported.contactPage,
+                            aboutPage: siteConfig.aboutPage,
+                            homePage: siteConfig.homePage,
+                            socialLinks: imported.socialLinks
+                          }
+                          const res = await fetch(`${base}/api/admin/site-config`, {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                          })
+                          if (!res.ok) {
+                            const err = await res.json()
+                            toast.error('Erreur sauvegarde: ' + (err.error || err.message || ''))
+                            return
+                          }
+                          toast.success('✅ Coordonnées importées et sauvegardées')
+                        } catch (e) {
+                          console.error('Erreur import+save:', e)
+                          toast.error('Erreur lors de la sauvegarde')
+                        }
+                      }}>
+                        Importer et sauvegarder
                       </Button>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
