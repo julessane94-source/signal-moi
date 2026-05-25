@@ -242,6 +242,59 @@ export default function AdminDashboard() {
     }
   }
 
+  // About page helpers: partners and team
+  const addPartner = () => {
+    setSiteConfig(prev => ({
+      ...prev,
+      aboutPage: {
+        ...(prev.aboutPage || {}),
+        partners: [...(prev.aboutPage?.partners || []), { name: '', url: '' }]
+      }
+    }))
+  }
+
+  const updatePartner = (idx, field, value) => {
+    setSiteConfig(prev => {
+      const partners = (prev.aboutPage?.partners || []).slice()
+      partners[idx] = { ...(partners[idx] || {}), [field]: value }
+      return { ...prev, aboutPage: { ...(prev.aboutPage || {}), partners } }
+    })
+  }
+
+  const removePartner = (idx) => {
+    setSiteConfig(prev => {
+      const partners = (prev.aboutPage?.partners || []).slice()
+      partners.splice(idx, 1)
+      return { ...prev, aboutPage: { ...(prev.aboutPage || {}), partners } }
+    })
+  }
+
+  const addTeamMember = () => {
+    setSiteConfig(prev => ({
+      ...prev,
+      aboutPage: {
+        ...(prev.aboutPage || {}),
+        team: [...(prev.aboutPage?.team || []), { name: '', role: '' }]
+      }
+    }))
+  }
+
+  const updateTeamMember = (idx, field, value) => {
+    setSiteConfig(prev => {
+      const team = (prev.aboutPage?.team || []).slice()
+      team[idx] = { ...(team[idx] || {}), [field]: value }
+      return { ...prev, aboutPage: { ...(prev.aboutPage || {}), team } }
+    })
+  }
+
+  const removeTeamMember = (idx) => {
+    setSiteConfig(prev => {
+      const team = (prev.aboutPage?.team || []).slice()
+      team.splice(idx, 1)
+      return { ...prev, aboutPage: { ...(prev.aboutPage || {}), team } }
+    })
+  }
+
   const saveConfig = async () => {
     try {
       const token = localStorage.getItem('token')
@@ -257,6 +310,11 @@ export default function AdminDashboard() {
       }
       // Include social links if present
       if (siteConfig.socialLinks) payload.socialLinks = siteConfig.socialLinks
+
+      // Ensure aboutPage contains partners/team arrays
+      payload.aboutPage = payload.aboutPage || {}
+      payload.aboutPage.partners = payload.aboutPage.partners || siteConfig.aboutPage?.partners || []
+      payload.aboutPage.team = payload.aboutPage.team || siteConfig.aboutPage?.team || []
 
       const res = await fetch(`${base}/api/admin/site-config`, {
         method: 'POST',
@@ -557,6 +615,39 @@ export default function AdminDashboard() {
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg min-h-[120px] focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
                       </FormField>
+                      {/* Partners list */}
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-semibold">Nos partenaires</h4>
+                          <Button size="sm" onClick={addPartner}>Ajouter partenaire</Button>
+                        </div>
+                        <div className="space-y-2 mt-3">
+                          {(siteConfig.aboutPage?.partners || []).map((p, idx) => (
+                            <div key={idx} className="flex gap-2">
+                              <Input placeholder="Nom" value={p.name || ''} onChange={e => updatePartner(idx, 'name', e.target.value)} />
+                              <Input placeholder="URL" value={p.url || ''} onChange={e => updatePartner(idx, 'url', e.target.value)} />
+                              <Button size="sm" variant="danger" onClick={() => removePartner(idx)}>Supprimer</Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Team list */}
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-semibold">Notre équipe</h4>
+                          <Button size="sm" onClick={addTeamMember}>Ajouter membre</Button>
+                        </div>
+                        <div className="space-y-2 mt-3">
+                          {(siteConfig.aboutPage?.team || []).map((m, idx) => (
+                            <div key={idx} className="flex gap-2">
+                              <Input placeholder="Nom" value={m.name || ''} onChange={e => updateTeamMember(idx, 'name', e.target.value)} />
+                              <Input placeholder="Rôle" value={m.role || ''} onChange={e => updateTeamMember(idx, 'role', e.target.value)} />
+                              <Button size="sm" variant="danger" onClick={() => removeTeamMember(idx)}>Supprimer</Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
 
                     <h3 className="text-lg font-semibold">Contact (Contact Page)</h3>
