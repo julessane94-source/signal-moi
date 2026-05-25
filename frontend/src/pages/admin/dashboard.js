@@ -50,6 +50,12 @@ export default function AdminDashboard() {
       content: 'Bienvenue sur Signal-Moi',
       images: [],
       videos: []
+    },
+    socialLinks: {
+      facebook: '',
+      whatsapp: '',
+      twitter: '',
+      instagram: ''
     }
   })
   
@@ -249,6 +255,8 @@ export default function AdminDashboard() {
         aboutPage: siteConfig.aboutPage,
         homePage: siteConfig.homePage
       }
+      // Include social links if present
+      if (siteConfig.socialLinks) payload.socialLinks = siteConfig.socialLinks
 
       const res = await fetch(`${base}/api/admin/site-config`, {
         method: 'POST',
@@ -569,10 +577,41 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  <div className="pt-4">
-                    <Button onClick={saveConfig} variant="primary">
-                      Sauvegarder la configuration
-                    </Button>
+                  {/* Réseaux sociaux */}
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold">Réseaux sociaux</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                      <FormField label="Facebook (URL)">
+                        <Input
+                          value={siteConfig.socialLinks?.facebook}
+                          onChange={e => setSiteConfig({...siteConfig, socialLinks: {...siteConfig.socialLinks, facebook: e.target.value}})}
+                        />
+                      </FormField>
+                      <FormField label="WhatsApp (numéro)">
+                        <Input
+                          value={siteConfig.socialLinks?.whatsapp}
+                          onChange={e => setSiteConfig({...siteConfig, socialLinks: {...siteConfig.socialLinks, whatsapp: e.target.value}})}
+                        />
+                      </FormField>
+                      <FormField label="Twitter (URL)">
+                        <Input
+                          value={siteConfig.socialLinks?.twitter}
+                          onChange={e => setSiteConfig({...siteConfig, socialLinks: {...siteConfig.socialLinks, twitter: e.target.value}})}
+                        />
+                      </FormField>
+                      <FormField label="Instagram (URL)">
+                        <Input
+                          value={siteConfig.socialLinks?.instagram}
+                          onChange={e => setSiteConfig({...siteConfig, socialLinks: {...siteConfig.socialLinks, instagram: e.target.value}})}
+                        />
+                      </FormField>
+                    </div>
+
+                    <div className="pt-4">
+                      <Button onClick={() => saveConfig()} variant="primary">
+                        Sauvegarder la configuration
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </Card>

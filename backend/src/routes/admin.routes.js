@@ -310,7 +310,7 @@ router.get('/campagnes', authMiddleware, async (req, res) => {
 
 router.post('/site-config', authMiddleware, async (req, res) => {
   try {
-    const { siteName, contactEmail, contactPhone, address, contactPage, aboutPage, homePage } = req.body;
+    const { siteName, contactEmail, contactPhone, address, contactPage, aboutPage, homePage, socialLinks } = req.body;
     if (!siteName || !contactEmail || !contactPhone || !address) {
       return res.status(400).json({ error: 'Les champs de base (siteName, contactEmail, contactPhone, address) sont requis' });
     }
@@ -325,6 +325,14 @@ router.post('/site-config', authMiddleware, async (req, res) => {
     if (contactPage !== undefined) tasks.push(SiteConfig.set('contact_page', JSON.stringify(contactPage)));
     if (aboutPage !== undefined) tasks.push(SiteConfig.set('about_page', JSON.stringify(aboutPage)));
     if (homePage !== undefined) tasks.push(SiteConfig.set('home_page', JSON.stringify(homePage)));
+    // Supporter un objet de liens sociaux (facebook, twitter, instagram, whatsapp, etc.)
+    if (socialLinks !== undefined) {
+      try {
+        tasks.push(SiteConfig.set('social_links', JSON.stringify(socialLinks)));
+      } catch (e) {
+        console.warn('[ADMIN POST /site-config] socialLinks non JSONifiable', e);
+      }
+    }
 
     await Promise.all(tasks);
     res.json({ success: true });
