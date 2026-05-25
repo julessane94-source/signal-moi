@@ -48,51 +48,6 @@ export default function CollaboratorDashboard() {
     </>
   )
 }
-    try {
-      const token = localStorage.getItem('token')
-      const headers = { 'Authorization': `Bearer ${token}` }
-      
-      const base = API_BASE
-      const [signalRes, campRes] = await Promise.all([
-        fetch(`${base}/api/signalements`, { headers }),
-        fetch(`${base}/api/campagnes`, { headers })
-      ])
-      
-      const signalData = await signalRes.json()
-      const campData = await campRes.json()
-      setSignalements(Array.isArray(signalData) ? signalData : [])
-      setCampagnes(Array.isArray(campData) ? campData : [])
-    } catch (error) {
-      console.error('Erreur:', error)
-      toast.error('Erreur de chargement des données')
-    }
-  }
-
-  const exportData = async (format) => {
-    try {
-      toast.info(`📥 Export ${format.toUpperCase()} en cours...`)
-      // Implémentation réelle à ajouter
-      setTimeout(() => {
-        toast.success(`✅ Export ${format.toUpperCase()} téléchargé`)
-      }, 1000)
-    } catch (error) {
-      toast.error('❌ Erreur lors de l\'export')
-    }
-  }
-
-  const fetchNotifications = async () => {
-    try {
-      const token = localStorage.getItem('token')
-      const res = await fetch(`${API_BASE}/api/collaborator/notifications`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      const data = await res.json()
-      setNotifications(Array.isArray(data) ? data : [])
-      setRappels((Array.isArray(data) ? data : []).filter(n => !n.isRead).slice(0, 5))
-    } catch (err) {
-      console.error('Erreur notifications:', err)
-    }
-  }
 
   const filteredSignalements = signalements.filter(s => {
     if (filterType !== 'all' && s.type !== filterType) return false
