@@ -8,12 +8,14 @@ export default function CollaboratorDashboard() {
   const { user, loading } = useAuth()
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (loading) return
+    
+    if (!user) {
       router.push('/login')
-    } else if (!loading && user?.role !== 'collaborateur') {
+    } else if (user.role !== 'collaborateur') {
       router.push('/')
     }
-  }, [loading, user?.id, user?.role, router])
+  }, [user, loading])
 
   if (loading) {
     return (
