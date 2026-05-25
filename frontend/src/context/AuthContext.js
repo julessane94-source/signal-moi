@@ -1,4 +1,4 @@
-﻿import { createContext, useContext, useState, useEffect, useMemo } from 'react'
+﻿import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import axios from 'axios'
 import { API_BASE } from '../config/api'
@@ -25,7 +25,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, [])
 
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     try {
       const response = await axios.get(`${API_URL}/api/auth/profile`)
       // API returns { success: true, user: { ... } }
@@ -43,9 +43,9 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const login = async (email, password) => {
+  const login = useCallback(async (email, password) => {
     try {
       const response = await axios.post(`${API_URL}/api/auth/login`, { email, password })
       const { token, user: userData } = response.data
@@ -60,9 +60,9 @@ export const AuthProvider = ({ children }) => {
       toast.error(error.response?.data?.error || 'Erreur de connexion')
       return false
     }
-  }
+  }, [router])
 
-  const register = async (userData) => {
+  const register = useCallback(async (userData) => {
     try {
       const response = await axios.post(`${API_URL}/api/auth/register`, userData)
       const { token, user: userDataResponse } = response.data
@@ -76,17 +76,17 @@ export const AuthProvider = ({ children }) => {
       toast.error(error.response?.data?.error || 'Erreur inscription')
       return false
     }
-  }
+  }, [router])
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     localStorage.removeItem('token')
     delete axios.defaults.headers.common['Authorization']
     setUser(null)
     toast.info('Deconnexion reussie')
     router.push('/')
-  }
+  }, [router])
 
-  const updateProfile = async (profileData) => {
+  const updateProfile = useCallback(async (profileData) => {
     try {
       const response = await axios.put(`${API_URL}/api/auth/profile`, profileData)
       const updatedUser = response.data.user
@@ -97,9 +97,9 @@ export const AuthProvider = ({ children }) => {
       toast.error(error.response?.data?.message || 'Erreur lors de la mise à jour')
       return false
     }
-  }
+  }, [])
 
-  const changePassword = async (passwordData) => {
+  const changePassword = useCallback(async (passwordData) => {
     try {
       const response = await axios.post(`${API_URL}/api/auth/change-password`, passwordData)
       toast.success(response.data.message || 'Mot de passe modifié avec succès')
@@ -108,7 +108,7 @@ export const AuthProvider = ({ children }) => {
       toast.error(error.response?.data?.message || 'Erreur lors du changement')
       return false
     }
-  }
+  }, [])
 
   const value = useMemo(() => ({
     user,
@@ -119,7 +119,7 @@ export const AuthProvider = ({ children }) => {
     fetchUser,
     updateProfile,
     changePassword
-  }), [user, loading])
+  }), [user, loading, login, register, logout, fetchUser, updateProfile, changePassword])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
