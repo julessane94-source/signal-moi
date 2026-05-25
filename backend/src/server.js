@@ -1,7 +1,10 @@
 ﻿require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const http = require('http');
+const socketIO = require('socket.io');
 const db = require('./config/database');
+const { setupSocket } = require('./socket/socket.handler');
 
 // ✅ Vérifier les variables d'environnement essentielles
 console.log('🔍 Vérification des variables d\'environnement...');
@@ -115,9 +118,31 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, '0.0.0.0', () => {
+
+// Créer serveur HTTP pour socket.io
+const server = http.createServer(app);
+
+// Initialiser socket.io
+const io = socketIO(server, {
+    cors: {
+        origin: [
+            'http://localhost:3000',
+            'http://localhost:3001',
+            process.env.FRONTEND_URL || '*'
+        ],
+        credentials: true
+    },
+    transports: ['websocket', 'polling']
+});
+
+// Configurer les handlers socket
+setupSocket(io);
+
+// Démarrer le serveur
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`\n✅ Serveur démarré sur le port ${PORT}`);
     console.log(`📡 Frontend URL configurée: ${process.env.FRONTEND_URL || 'non défini'}`);
     console.log(`🌍 Environnement: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🔌 Socket.io initialisé`);
     console.log(`📊 Timestamp démarrage: ${new Date().toISOString()}\n`);
 });
