@@ -165,12 +165,19 @@ export default function Contact() {
               >
                 <div className="text-5xl mb-4">📱</div>
                 <h3 className="text-xl font-semibold mb-3 text-gray-900">Téléphone</h3>
-                <a 
-                  href={`tel:${siteConfig.contactPhone.replace(/[^0-9+]/g, '')}`}
-                  className="text-purple-600 hover:text-purple-700 font-medium hover:underline"
-                >
-                  {siteConfig.contactPhone}
-                </a>
+                {(() => {
+                  const rawPhone = siteConfig.contactPhone
+                  const phoneStr = typeof rawPhone === 'string' ? rawPhone : (rawPhone && (rawPhone.number || rawPhone.value)) ? (rawPhone.number || rawPhone.value) : String(rawPhone || '')
+                  const hrefPhone = phoneStr.replace(/[^0-9+]/g, '')
+                  return (
+                    <a 
+                      href={`tel:${hrefPhone}`}
+                      className="text-purple-600 hover:text-purple-700 font-medium hover:underline"
+                    >
+                      {phoneStr}
+                    </a>
+                  )
+                })()}
                 <p className="text-gray-600 text-sm mt-3">Lun-Ven: 09:00-18:00</p>
               </motion.div>
 
