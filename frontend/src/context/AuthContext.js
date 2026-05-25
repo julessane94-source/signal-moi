@@ -54,13 +54,14 @@ export const AuthProvider = ({ children }) => {
       setUser(userData)
       toast.success(`Bienvenue ${userData.prenom} !`)
       const routes = { admin: '/admin/dashboard', police: '/police/dashboard', collaborateur: '/collaborator/dashboard', citoyen: '/citizen/dashboard' }
-      router.push(routes[userData.role] || '/')
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      setTimeout(() => router.push(routes[userData.role] || '/'), 100)
       return true
     } catch (error) {
       toast.error(error.response?.data?.error || 'Erreur de connexion')
       return false
     }
-  }, [router])
+  }, [])
 
   const register = useCallback(async (userData) => {
     try {
@@ -70,21 +71,23 @@ export const AuthProvider = ({ children }) => {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       setUser(userDataResponse)
       toast.success('Inscription reussie !')
-      router.push('/citizen/dashboard')
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      setTimeout(() => router.push('/citizen/dashboard'), 100)
       return true
     } catch (error) {
       toast.error(error.response?.data?.error || 'Erreur inscription')
       return false
     }
-  }, [router])
+  }, [])
 
   const logout = useCallback(async () => {
     localStorage.removeItem('token')
     delete axios.defaults.headers.common['Authorization']
     setUser(null)
     toast.info('Deconnexion reussie')
-    router.push('/')
-  }, [router])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setTimeout(() => router.push('/'), 100)
+  }, [])
 
   const updateProfile = useCallback(async (profileData) => {
     try {
@@ -119,7 +122,7 @@ export const AuthProvider = ({ children }) => {
     fetchUser,
     updateProfile,
     changePassword
-  }), [user, loading, login, register, logout, fetchUser, updateProfile, changePassword])
+  }), [user, loading])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
