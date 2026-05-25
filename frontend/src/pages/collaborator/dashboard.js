@@ -49,17 +49,6 @@ export default function CollaboratorDashboard() {
   )
 }
 
-  const filteredSignalements = signalements.filter(s => {
-    if (filterType !== 'all' && s.type !== filterType) return false
-    if (filterStatut !== 'all' && s.statut !== filterStatut) return false
-    return true
-  })
-
-  const myCampagnes = campagnes.filter(c => c.createdBy === user?.id)
-
-  const stats = {
-    total: filteredSignalements.length,
-    nouveau: filteredSignalements.filter(s => s.statut === 'nouveau').length,
     enCours: filteredSignalements.filter(s => s.statut === 'en_cours').length,
     traite: filteredSignalements.filter(s => s.statut === 'traite').length
   }
