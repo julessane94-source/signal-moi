@@ -515,9 +515,65 @@ export default function AdminDashboard() {
                     </FormField>
                   </div>
 
-                  <Button onClick={saveConfig} variant="primary">
-                    Sauvegarder la configuration
-                  </Button>
+                  {/* Pages éditables: Home, About, Contact */}
+                  <div className="space-y-6 mt-6">
+                    <h3 className="text-lg font-semibold">Accueil (Home Page)</h3>
+                    <div className="grid grid-cols-1 gap-4">
+                      <FormField label="Titre">
+                        <Input
+                          value={siteConfig.homePage?.title}
+                          onChange={e => setSiteConfig({...siteConfig, homePage: {...siteConfig.homePage, title: e.target.value}})}
+                        />
+                      </FormField>
+                      <FormField label="Contenu">
+                        <textarea
+                          value={siteConfig.homePage?.content}
+                          onChange={e => setSiteConfig({...siteConfig, homePage: {...siteConfig.homePage, content: e.target.value}})}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg min-h-[120px] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </FormField>
+                    </div>
+
+                    <h3 className="text-lg font-semibold">À propos (About Page)</h3>
+                    <div className="grid grid-cols-1 gap-4">
+                      <FormField label="Titre">
+                        <Input
+                          value={siteConfig.aboutPage?.title}
+                          onChange={e => setSiteConfig({...siteConfig, aboutPage: {...siteConfig.aboutPage, title: e.target.value}})}
+                        />
+                      </FormField>
+                      <FormField label="Contenu">
+                        <textarea
+                          value={siteConfig.aboutPage?.content}
+                          onChange={e => setSiteConfig({...siteConfig, aboutPage: {...siteConfig.aboutPage, content: e.target.value}})}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg min-h-[120px] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </FormField>
+                    </div>
+
+                    <h3 className="text-lg font-semibold">Contact (Contact Page)</h3>
+                    <div className="grid grid-cols-1 gap-4">
+                      <FormField label="Titre">
+                        <Input
+                          value={siteConfig.contactPage?.title}
+                          onChange={e => setSiteConfig({...siteConfig, contactPage: {...siteConfig.contactPage, title: e.target.value}})}
+                        />
+                      </FormField>
+                      <FormField label="Contenu">
+                        <textarea
+                          value={siteConfig.contactPage?.content}
+                          onChange={e => setSiteConfig({...siteConfig, contactPage: {...siteConfig.contactPage, content: e.target.value}})}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg min-h-[120px] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </FormField>
+                    </div>
+                  </div>
+
+                  <div className="pt-4">
+                    <Button onClick={saveConfig} variant="primary">
+                      Sauvegarder la configuration
+                    </Button>
+                  </div>
                 </div>
               </Card>
             </motion.div>
