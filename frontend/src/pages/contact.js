@@ -2,6 +2,7 @@
 import Head from 'next/head'
 import { useState, useEffect } from 'react'
 import Navbar from '../components/common/Navbar'
+import ErrorBoundary from '../components/common/ErrorBoundary'
 import Footer from '../components/common/Footer'
 import { motion } from 'framer-motion'
 import { toast } from 'react-toastify'
@@ -110,6 +111,7 @@ export default function Contact() {
         <meta name="description" content="Contactez-nous pour toute question ou suggestion" />
       </Head>
       <Navbar />
+      <ErrorBoundary>
       <main className="min-h-screen bg-gray-50 pt-16">
         {/* Hero Section */}
         <section className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white py-20">
@@ -392,6 +394,7 @@ export default function Contact() {
           </div>
         </section>
       </main>
+      </ErrorBoundary>
 
       <Footer />
     </>
