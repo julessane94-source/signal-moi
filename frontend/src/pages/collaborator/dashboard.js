@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE } from '../../config/api'
 import Navbar from '../../components/common/Navbar'
@@ -15,7 +16,8 @@ import {
 } from '@heroicons/react/24/outline'
 
 export default function CollaboratorDashboard() {
-  const { user } = useAuth()
+  const router = useRouter()
+  const { user, loading } = useAuth()
   const [signalements, setSignalements] = useState([])
   const [campagnes, setCampagnes] = useState([])
   const [notifications, setNotifications] = useState([])
@@ -23,6 +25,33 @@ export default function CollaboratorDashboard() {
   const { socket } = useSocket()
   const [filterType, setFilterType] = useState('all')
   const [filterStatut, setFilterStatut] = useState('all')
+
+  // Vérifier les permissions d'accès
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        router.push('/login')
+        return
+      }
+      if (user.role !== 'collaborateur') {
+        toast.error('❌ Accès refusé - Vous devez être collaborateur')
+        router.push('/')
+        return
+      }
+    }
+  }, [user, loading, router])
+
+  // Si l'utilisateur n'a pas les bonnes permissions, afficher un écran vide
+  if (loading || !user || user.role !== 'collaborateur') {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen pt-16 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        </div>
+      </>
+    )
+  }
 
   useEffect(() => {
     fetchData()
