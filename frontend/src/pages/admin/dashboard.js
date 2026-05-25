@@ -580,6 +580,25 @@ export default function AdminDashboard() {
                   {/* Réseaux sociaux */}
                   <div className="mt-6">
                     <h3 className="text-lg font-semibold">Réseaux sociaux</h3>
+                    <div className="flex items-center gap-3 mt-2">
+                      <Button size="sm" variant="secondary" onClick={() => {
+                        // Importer les coordonnées fournies par l'utilisateur
+                        const imported = {
+                          contactPhone: '+221 778851691',
+                          contactEmail: 'julessane94@gmail.com',
+                          address: 'Sedhiou, Sénégal',
+                          socialLinks: {
+                            facebook: 'https://www.fb.com/l/6lp1kJRRR',
+                            whatsapp: '+221778851691',
+                            twitter: '',
+                            instagram: ''
+                          }
+                        }
+                        setSiteConfig(prev => ({ ...prev, ...imported }))
+                      }}>
+                        Importer mes coordonnées
+                      </Button>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
                       <FormField label="Facebook (URL)">
                         <Input
