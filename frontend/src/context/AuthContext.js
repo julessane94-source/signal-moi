@@ -1,4 +1,4 @@
-﻿import { createContext, useContext, useState, useEffect } from 'react'
+﻿import { createContext, useContext, useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/router'
 import axios from 'axios'
 import { API_BASE } from '../config/api'
@@ -110,5 +110,16 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  return <AuthContext.Provider value={{ user, loading, login, register, logout, fetchUser, updateProfile, changePassword }}>{children}</AuthContext.Provider>
+  const value = useMemo(() => ({
+    user,
+    loading,
+    login,
+    register,
+    logout,
+    fetchUser,
+    updateProfile,
+    changePassword
+  }), [user, loading])
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
