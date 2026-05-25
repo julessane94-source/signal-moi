@@ -1,48 +1,21 @@
-﻿import { useState, useEffect } from 'react'
+﻿import { useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '../../context/AuthContext'
-import { API_BASE } from '../../config/api'
 import Navbar from '../../components/common/Navbar'
-import { Button, Card, Badge, StatBox } from '../../components/ui'
-import { toast } from 'react-toastify'
-import { motion } from 'framer-motion'
-import { useSocket } from '../../context/SocketContext'
-import {
-  ArrowDownTrayIcon,
-  ChartBarIcon,
-  CheckCircleIcon,
-  PlusIcon,
-  ExclamationTriangleIcon
-} from '@heroicons/react/24/outline'
 
 export default function CollaboratorDashboard() {
   const router = useRouter()
   const { user, loading } = useAuth()
-  const [signalements, setSignalements] = useState([])
-  const [campagnes, setCampagnes] = useState([])
-  const [notifications, setNotifications] = useState([])
-  const [rappels, setRappels] = useState([])
-  const { socket } = useSocket()
-  const [filterType, setFilterType] = useState('all')
-  const [filterStatut, setFilterStatut] = useState('all')
 
-  // Vérifier les permissions d'accès
   useEffect(() => {
-    if (!loading) {
-      if (!user) {
-        router.push('/login')
-        return
-      }
-      if (user.role !== 'collaborateur') {
-        toast.error('❌ Accès refusé - Vous devez être collaborateur')
-        router.push('/')
-        return
-      }
+    if (!loading && !user) {
+      router.push('/login')
+    } else if (!loading && user?.role !== 'collaborateur') {
+      router.push('/')
     }
-  }, [user?.id, user?.role, loading])
+  }, [loading, user?.id, user?.role, router])
 
-  // Si l'utilisateur n'a pas les bonnes permissions, afficher un écran vide
-  if (loading || !user || user.role !== 'collaborateur') {
+  if (loading) {
     return (
       <>
         <Navbar />
@@ -53,24 +26,28 @@ export default function CollaboratorDashboard() {
     )
   }
 
-  useEffect(() => {
-    fetchData()
-    fetchNotifications()
-  }, [])
+  if (!user || user.role !== 'collaborateur') {
+    return null
+  }
 
-  useEffect(() => {
-    if (socket) {
-      socket.on('new_signalement_notification', (n) => {
-        toast.warning(`🚨 Nouveau signalement: ${n.title}`)
-        setNotifications(prev => [n, ...prev])
-      })
-      return () => {
-        socket.off('new_signalement_notification')
-      }
-    }
-  }, [socket])
-
-  const fetchData = async () => {
+  return (
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 pt-20 pb-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h1 className="text-4xl font-bold text-gray-900">Espace Collaborateur</h1>
+          <p className="text-gray-600 mt-2">Bienvenue {user?.prenom}! Dashboard collaborateur.</p>
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+            <button className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700">📄 Export PDF</button>
+            <button className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700">📊 Export Excel</button>
+            <button onClick={() => router.push('/collaborator/campagne/new')} className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">🎯 Créer campagne</button>
+            <button className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700">📈 Statistiques</button>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
     try {
       const token = localStorage.getItem('token')
       const headers = { 'Authorization': `Bearer ${token}` }
