@@ -1,0 +1,141 @@
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
+import Navbar from '../../../../components/common/Navbar'
+import { Button, Card } from '../../../../components/ui'
+import { toast } from 'react-toastify'
+import { API_BASE } from '../../../../config/api'
+
+export default function NewCampagne() {
+  const router = useRouter()
+  const [titre, setTitre] = useState('')
+  const [description, setDescription] = useState('')
+  const [type, setType] = useState('atelier')
+  const [dateDebut, setDateDebut] = useState('')
+  const [dateFin, setDateFin] = useState('')
+  const [lieu, setLieu] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState({})
+  const [serverError, setServerError] = useState('')
+
+  useEffect(() => {
+    // simple guard: if no token, redirect to login
+    const token = localStorage.getItem('token')
+    if (!token) router.push('/login')
+  }, [router])
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setServerError('')
+    const nextErrors = {}
+    if (!titre || titre.trim().length < 3) nextErrors.titre = 'Le titre doit contenir au moins 3 caractères.'
+    if (!type) nextErrors.type = 'Le type est requis.'
+    if (dateDebut && dateFin && new Date(dateDebut) > new Date(dateFin)) nextErrors.dateFin = 'La date de fin doit être après la date de début.'
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors)
+      return
+    }
+    setErrors({})
+    setLoading(true)
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${API_BASE}/api/collaborator/campaigns`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          titre,
+          description,
+          type,
+          dateDebut,
+          dateFin,
+          lieu
+        })
+      })
+
+      if (res.status === 201) {
+        const data = await res.json()
+        toast.success('✅ Campagne créée')
+        if (data && data.id) {
+          router.push(`/campagne/${data.id}`)
+        } else {
+          router.push('/collaborator/dashboard')
+        }
+      } else {
+        let errText = 'Erreur création'
+        try {
+          const err = await res.json()
+          errText = err.error || err.message || JSON.stringify(err)
+        } catch (parseErr) {
+          errText = res.statusText || 'Erreur serveur'
+        }
+        console.error('Création campagne erreur', errText)
+        setServerError(errText)
+        toast.error(errText)
+      }
+    } catch (err) {
+      console.error(err)
+      setServerError('Erreur réseau')
+      toast.error('Erreur réseau')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <>
+      <Navbar />
+      <div className="min-h-screen pt-20 bg-gray-50">
+        <div className="max-w-3xl mx-auto px-4">
+          <Card className="p-8 mt-8">
+            <h1 className="text-2xl font-bold mb-4">Créer une campagne</h1>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Titre</label>
+                <input value={titre} onChange={(e) => setTitre(e.target.value)} className="mt-1 block w-full border rounded-md p-2" />
+                {errors.titre && <p className="text-red-600 text-sm mt-1">{errors.titre}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Description</label>
+                <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="mt-1 block w-full border rounded-md p-2 h-32" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Type</label>
+                  <select value={type} onChange={(e) => setType(e.target.value)} className="mt-1 block w-full border rounded-md p-2">
+                    <option value="atelier">Atelier</option>
+                    <option value="publication">Publication</option>
+                    <option value="action_terrain">Action terrain</option>
+                  </select>
+                  {errors.type && <p className="text-red-600 text-sm mt-1">{errors.type}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Lieu</label>
+                  <input value={lieu} onChange={(e) => setLieu(e.target.value)} className="mt-1 block w-full border rounded-md p-2" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Date début</label>
+                  <input type="date" value={dateDebut} onChange={(e) => setDateDebut(e.target.value)} className="mt-1 block w-full border rounded-md p-2" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Date fin</label>
+                  <input type="date" value={dateFin} onChange={(e) => setDateFin(e.target.value)} className="mt-1 block w-full border rounded-md p-2" />
+                  {errors.dateFin && <p className="text-red-600 text-sm mt-1">{errors.dateFin}</p>}
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <Button type="submit" disabled={loading} className="px-4">{loading ? 'Création...' : 'Créer'}</Button>
+                <Button type="button" variant="secondary" onClick={() => router.push('/collaborator/dashboard')}>Annuler</Button>
+              </div>
+              {serverError && <p className="text-red-600 mt-2">{serverError}</p>}
+            </form>
+          </Card>
+        </div>
+      </div>
+    </>
+  )
+}
