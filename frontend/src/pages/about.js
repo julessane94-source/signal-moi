@@ -13,6 +13,10 @@ export default function About() {
     { value: '24/7', label: 'Support disponible' },
   ])
 
+  const [collaborators, setCollaborators] = useState([])
+  const [police, setPolice] = useState([])
+  const [loadingPartners, setLoadingPartners] = useState(true)
+
   const [config, setConfig] = useState({
     about_page: {
       title: 'Notre histoire',
@@ -31,7 +35,35 @@ export default function About() {
   useEffect(() => {
     fetchStats()
     fetchConfig()
+    fetchPartners()
   }, [])
+
+  const fetchPartners = async () => {
+    try {
+      setLoadingPartners(true)
+      const token = localStorage.getItem('token')
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {}
+      
+      const [collabRes, policeRes] = await Promise.all([
+        fetch(`${API_BASE}/api/admin/users?role=collaborateur`, { headers }),
+        fetch(`${API_BASE}/api/admin/users?role=police`, { headers })
+      ])
+      
+      if (collabRes.ok) {
+        const collabData = await collabRes.json()
+        setCollaborators(Array.isArray(collabData) ? collabData : [])
+      }
+      
+      if (policeRes.ok) {
+        const policeData = await policeRes.json()
+        setPolice(Array.isArray(policeData) ? policeData : [])
+      }
+    } catch (err) {
+      console.error('Erreur chargement partenaires:', err)
+    } finally {
+      setLoadingPartners(false)
+    }
+  }
 
   const fetchConfig = async () => {
     try {
@@ -183,7 +215,83 @@ export default function About() {
           </div>
         </section>
 
-        {/* Equipe */}
+        {/* Partenaires Collaborateurs */}
+        <section className="py-16 bg-gradient-to-r from-blue-50 to-blue-100">
+          <div className="max-w-6xl mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">Nos Partenaires Collaborateurs</h2>
+            <p className="text-center text-gray-600 mb-8 max-w-2xl mx-auto">
+              Les ONGs, associations et organisations sociales qui travaillent quotidiennement 
+              pour ameliorer nos quartiers.
+            </p>
+            
+            {loadingPartners ? (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+            ) : collaborators.length === 0 ? (
+              <div className="text-center py-8 text-gray-600">
+                Aucun partenaire collaborateur enregistre pour le moment.
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {collaborators.map((collab, idx) => (
+                  <motion.div
+                    key={collab.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition"
+                  >
+                    <div className="text-4xl mb-3">🏢</div>
+                    <h3 className="font-semibold text-lg text-gray-900">{collab.prenom} {collab.nom}</h3>
+                    <p className="text-sm text-gray-600 mt-1">{collab.email}</p>
+                    {collab.telephone && <p className="text-sm text-gray-600">📞 {collab.telephone}</p>}
+                    {collab.ville && <p className="text-sm text-gray-600">📍 {collab.ville}</p>}
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Partenaires Police */}
+        <section className="py-16 bg-gradient-to-r from-green-50 to-green-100">
+          <div className="max-w-6xl mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">Nos Partenaires Autorites</h2>
+            <p className="text-center text-gray-600 mb-8 max-w-2xl mx-auto">
+              Les services de police et de gendarmerie qui traitent et resolvent 
+              les problemes signales par notre communaute.
+            </p>
+            
+            {loadingPartners ? (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+              </div>
+            ) : police.length === 0 ? (
+              <div className="text-center py-8 text-gray-600">
+                Aucun agent d'autorite enregistre pour le moment.
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {police.map((agent, idx) => (
+                  <motion.div
+                    key={agent.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition"
+                  >
+                    <div className="text-4xl mb-3">👮</div>
+                    <h3 className="font-semibold text-lg text-gray-900">{agent.prenom} {agent.nom}</h3>
+                    <p className="text-sm text-gray-600 mt-1">{agent.email}</p>
+                    {agent.telephone && <p className="text-sm text-gray-600">📞 {agent.telephone}</p>}
+                    {agent.ville && <p className="text-sm text-gray-600">📍 {agent.ville}</p>}
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
         <section className="py-16 bg-gray-50">
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">Notre equipe</h2>

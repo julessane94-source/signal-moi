@@ -13,6 +13,8 @@ export default function NewCampagne() {
   const [dateDebut, setDateDebut] = useState('')
   const [dateFin, setDateFin] = useState('')
   const [lieu, setLieu] = useState('')
+  const [image, setImage] = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
   const [serverError, setServerError] = useState('')
@@ -22,6 +24,23 @@ export default function NewCampagne() {
     const token = localStorage.getItem('token')
     if (!token) router.push('/login')
   }, [router])
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors(prev => ({ ...prev, image: 'L\'image ne doit pas dépasser 5MB' }))
+        return
+      }
+      setImage(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result)
+      }
+      reader.readAsDataURL(file)
+      setErrors(prev => ({ ...prev, image: '' }))
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -38,20 +57,23 @@ export default function NewCampagne() {
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
+      const formData = new FormData()
+      formData.append('titre', titre)
+      formData.append('description', description)
+      formData.append('type', type)
+      formData.append('dateDebut', dateDebut)
+      formData.append('dateFin', dateFin)
+      formData.append('lieu', lieu)
+      if (image) {
+        formData.append('image', image)
+      }
+
       const res = await fetch(`${API_BASE}/api/collaborator/campaigns`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          titre,
-          description,
-          type,
-          dateDebut,
-          dateFin,
-          lieu
-        })
+        body: formData
       })
 
       if (res.status === 201) {
@@ -99,6 +121,28 @@ export default function NewCampagne() {
               <div>
                 <label className="block text-sm font-medium text-gray-700">Description</label>
                 <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="mt-1 block w-full border rounded-md p-2 h-32" />
+              </div>
+
+              {/* Image Upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Image de la campagne</label>
+                <div className="mt-2 flex items-center gap-4">
+                  <div className="flex-1">
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleImageChange} 
+                      className="block w-full border rounded-md p-2 text-sm" 
+                    />
+                    {errors.image && <p className="text-red-600 text-sm mt-1">{errors.image}</p>}
+                    <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF (max 5MB)</p>
+                  </div>
+                  {imagePreview && (
+                    <div className="flex-shrink-0">
+                      <img src={imagePreview} alt="Aperçu" className="h-20 w-20 object-cover rounded-md" />
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>

@@ -4,9 +4,9 @@
 CREATE SCHEMA IF NOT EXISTS signal_moi;
 
 CREATE TABLE IF NOT EXISTS signal_moi.followed_cases (
-  id VARCHAR(36) PRIMARY KEY,
-  user_id VARCHAR(36) NOT NULL,
-  signalement_id VARCHAR(36) NOT NULL,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL,
+  signalement_id UUID NOT NULL,
   created_at TIMESTAMP DEFAULT NOW()
 );
 

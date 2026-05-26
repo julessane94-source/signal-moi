@@ -5,9 +5,41 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const FollowedCase = require('../models/FollowedCase');
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
+
+// Configuration multer pour les images de campagne
+const uploadDir = path.join(__dirname, '../uploads/campagnes');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Type de fichier non autorisé'));
+    }
+  }
+});
 
 // Middleware d'authentification collaborateur
 const authMiddleware = async (req, res, next) => {
@@ -180,26 +212,38 @@ router.get('/campaigns', authMiddleware, async (req, res) => {
 });
 
 // POST /api/collaborator/campaigns - Créer une campagne
-router.post('/campaigns', authMiddleware, async (req, res) => {
+router.post('/campaigns', authMiddleware, upload.single('image'), async (req, res) => {
   try {
     const userId = req.user.id;
     const { titre, description, type, dateDebut, dateFin, lieu, capaciteMax } = req.body;
 
     if (!titre || !type) {
+      if (req.file) {
+        fs.unlinkSync(req.file.path);
+      }
       return res.status(400).json({ error: 'Titre et type sont requis' });
+    }
+
+    // Construire l'URL de l'image
+    let imageUrl = null;
+    if (req.file) {
+      imageUrl = `/uploads/campagnes/${req.file.filename}`;
     }
 
     const result = await db.query(`
       INSERT INTO signal_moi.campagnes 
-      (titre, description, type, date_debut, date_fin, lieu, capacite_max, created_by, est_actif)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-      RETURNING id, titre, type
-    `, [titre, description, type, dateDebut, dateFin, lieu, capaciteMax, userId, true]);
+      (titre, description, type, date_debut, date_fin, lieu, capacite_max, created_by, est_actif, image_url)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      RETURNING id, titre, type, image_url
+    `, [titre, description, type, dateDebut, dateFin, lieu, capaciteMax, userId, true, imageUrl]);
 
     const campaign = result.rows[0];
     console.log(`[COLLABORATOR POST /campaigns] Campagne créée: ${campaign.id}`);
     res.status(201).json(campaign);
   } catch (err) {
+    if (req.file) {
+      fs.unlinkSync(req.file.path);
+    }
     console.error('[COLLABORATOR POST /campaigns] Erreur:', err);
     res.status(500).json({ error: 'Erreur lors de la création', details: err.message });
   }
@@ -276,40 +320,97 @@ router.get('/export/cases', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
     const format = (req.query.format || 'pdf').toLowerCase();
-    const cases = await FollowedCase.listByUser(userId);
-
-    if (format === 'excel' || format === 'xlsx') {
-      const workbook = new ExcelJS.Workbook();
-      const sheet = workbook.addWorksheet('Dossiers suivis');
-      sheet.columns = [
-        { header: 'ID', key: 'id', width: 36 },
-        { header: 'Titre', key: 'titre', width: 40 },
-        { header: 'Statut', key: 'statut', width: 20 },
-        { header: 'Créé le', key: 'created_at', width: 24 }
-      ];
-      cases.forEach(c => sheet.addRow({ id: c.id, titre: c.titre, statut: c.statut, created_at: c.created_at }));
-      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-      res.setHeader('Content-Disposition', 'attachment; filename="dossiers_suivis.xlsx"');
-      await workbook.xlsx.write(res);
-      res.end();
-      return;
+    console.log(`[EXPORT] Début export format=${format} userId=${userId}`);
+    
+    // Vérifier que les dépendances existent
+    if (!ExcelJS) {
+      console.error('[EXPORT] ❌ ExcelJS non chargé');
+      return res.status(500).json({ error: 'ExcelJS non disponible' });
+    }
+    if (!PDFDocument) {
+      console.error('[EXPORT] ❌ PDFDocument non chargé');
+      return res.status(500).json({ error: 'PDFDocument non disponible' });
     }
 
-    // Default PDF
-    const doc = new PDFDocument({ margin: 30, size: 'A4' });
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename="dossiers_suivis.pdf"');
-    doc.pipe(res);
-    doc.fontSize(18).text('Dossiers suivis', { align: 'center' });
-    doc.moveDown();
-    cases.forEach((c, idx) => {
-      doc.fontSize(12).text(`${idx + 1}. ${c.titre} (${c.id})`);
-      doc.fontSize(10).text(`Statut: ${c.statut || 'N/A'}  •  Créé: ${c.created_at}`);
+    // Récupérer les dossiers suivis
+    const cases = await FollowedCase.listByUser(userId);
+    console.log(`[EXPORT] ${cases.length} dossiers trouvés pour l'utilisateur`);
+
+    // Export Excel
+    if (format === 'excel' || format === 'xlsx') {
+      try {
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet('Dossiers suivis');
+        sheet.columns = [
+          { header: 'ID', key: 'id', width: 36 },
+          { header: 'Titre', key: 'titre', width: 40 },
+          { header: 'Statut', key: 'statut', width: 20 },
+          { header: 'Créé le', key: 'created_at', width: 24 }
+        ];
+        
+        // Ajouter les données
+        cases.forEach(c => {
+          sheet.addRow({
+            id: c.id || 'N/A',
+            titre: c.titre || 'Sans titre',
+            statut: c.statut || 'N/A',
+            created_at: c.created_at || new Date().toISOString()
+          });
+        });
+
+        // Configurer les headers de réponse
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', 'attachment; filename="dossiers_suivis.xlsx"');
+        
+        // Écrire le fichier
+        await workbook.xlsx.write(res);
+        console.log(`[EXPORT] ✅ Export Excel réussi`);
+        return;
+      } catch (excelErr) {
+        console.error('[EXPORT] ❌ Erreur Excel:', excelErr.message);
+        return res.status(500).json({ error: 'Erreur lors de l\'export Excel', details: excelErr.message });
+      }
+    }
+
+    // Export PDF (par défaut)
+    try {
+      const doc = new PDFDocument({ margin: 30, size: 'A4' });
+      
+      // Configurer les headers de réponse
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'attachment; filename="dossiers_suivis.pdf"');
+      
+      // Pipe le document vers la réponse
+      doc.pipe(res);
+      
+      // Ajouter le contenu
+      doc.fontSize(18).text('Dossiers suivis', { align: 'center' });
       doc.moveDown();
-    });
-    doc.end();
+      
+      if (cases.length === 0) {
+        doc.fontSize(12).text('Aucun dossier suivi');
+      } else {
+        cases.forEach((c, idx) => {
+          doc.fontSize(12).text(`${idx + 1}. ${c.titre || 'Sans titre'} (${c.id})`);
+          doc.fontSize(10).text(`Statut: ${c.statut || 'N/A'}  •  Créé: ${c.created_at || 'N/A'}`);
+          doc.moveDown();
+        });
+      }
+      
+      // Finaliser le document
+      doc.on('finish', () => {
+        console.log(`[EXPORT] ✅ Export PDF réussi`);
+      });
+      doc.on('error', (err) => {
+        console.error('[EXPORT] ❌ Erreur PDF:', err.message);
+      });
+      doc.end();
+    } catch (pdfErr) {
+      console.error('[EXPORT] ❌ Erreur PDF:', pdfErr.message);
+      return res.status(500).json({ error: 'Erreur lors de l\'export PDF', details: pdfErr.message });
+    }
   } catch (err) {
-    console.error('[COLLABORATOR GET /export/cases] Erreur:', err);
+    console.error('[EXPORT] ❌ Erreur générale:', err.message);
     res.status(500).json({ error: 'Erreur serveur', details: err.message });
   }
 });
