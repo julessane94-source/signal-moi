@@ -238,6 +238,74 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
             }
         });
 
+        // GET detail d'un signalement specifique avec fichiers
+        router.get('/:id', optionalAuthMiddleware, async (req, res) => {
+            const { id } = req.params;
+            try {
+                const signalementResult = await db.query(`
+                    SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, 
+                           s.latitude, s.longitude, s.image_url, s.created_at, s.updated_at,
+                           u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone, u.email AS user_email
+                    FROM signal_moi.signalements s
+                    LEFT JOIN signal_moi.users u ON u.id = s.user_id
+                    WHERE s.id = $1
+                `, [id]);
+
+                if (signalementResult.rows.length === 0) {
+                    return res.status(404).json({ error: 'Signalement non trouve' });
+                }
+
+                const signalement = signalementResult.rows[0];
+
+                // Recuperer les fichiers
+                const filesResult = await db.query(`
+                    SELECT id, signalement_id, nom_fichier, chemin, type, taille, mime_type, description, created_at
+                    FROM signal_moi.fichiers
+                    WHERE signalement_id = $1
+                    ORDER BY created_at DESC
+                `, [id]);
+
+                const fichiers = filesResult.rows.map(f => ({
+                    id: f.id,
+                    nom: f.nom_fichier,
+                    url: f.chemin.startsWith('http') ? f.chemin : `${process.env.API_BASE_URL || 'http://localhost:3000'}/${f.chemin}`,
+                    chemin: f.chemin,
+                    type: f.type,
+                    taille: f.taille,
+                    mimeType: f.mime_type,
+                    description: f.description,
+                    createdAt: f.created_at
+                }));
+
+                res.json({
+                    id: signalement.id,
+                    titre: signalement.titre,
+                    description: signalement.description,
+                    type: signalement.type,
+                    statut: signalement.statut,
+                    localisation: signalement.localisation,
+                    latitude: signalement.latitude !== null ? parseFloat(signalement.latitude) : null,
+                    longitude: signalement.longitude !== null ? parseFloat(signalement.longitude) : null,
+                    imageUrl: signalement.image_url,
+                    telephone: signalement.user_telephone,
+                    email: signalement.user_email,
+                    auteur: {
+                        id: signalement.user_id,
+                        prenom: signalement.user_prenom,
+                        nom: signalement.user_nom,
+                        telephone: signalement.user_telephone,
+                        email: signalement.user_email
+                    },
+                    fichiers: fichiers,
+                    createdAt: signalement.created_at,
+                    updatedAt: signalement.updated_at
+                });
+            } catch (err) {
+                console.error('Erreur GET /:id signalement:', err);
+                res.status(500).json({ error: 'Erreur serveur', details: err.message });
+            }
+        });
+
 module.exports = router;
 
 

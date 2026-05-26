@@ -99,10 +99,14 @@ app.head('/', (req, res) => {
     res.status(200).send();
 });
 
+// Servir les fichiers statiques (uploads)
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // 404 Handler
 app.use((req, res) => {
     res.status(404).json({ 
-        error: 'Endpoint non trouvé', 
+        error: 'Endpoint non trouve', 
         path: req.path,
         method: req.method
     });

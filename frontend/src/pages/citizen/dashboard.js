@@ -20,8 +20,10 @@ export default function CitizenDashboard() {
   const [signalements, setSignalements] = useState([])
   const [campagnes, setCampagnes] = useState([])
   const [plaidoyers, setPlaidoyers] = useState([])
+  const [signedPetitionIds, setSignedPetitionIds] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [signingPetition, setSigningPetition] = useState(null)
 
   // ✅ FIX: Déclencher le fetch APRÈS que auth soit chargé ET user existe
   useEffect(() => {
@@ -48,10 +50,11 @@ export default function CitizenDashboard() {
       const headers = { 'Authorization': `Bearer ${token}` }
       
       const base = API_BASE
-      const [signalRes, campRes, plaidRes] = await Promise.all([
+      const [signalRes, campRes, plaidRes, signedRes] = await Promise.all([
         fetch(`${base}/api/signalements`, { headers }),
         fetch(`${base}/api/campagnes`, { headers }),
-        fetch(`${base}/api/plaidoyers`, { headers })
+        fetch(`${base}/api/plaidoyers`, { headers }),
+        fetch(`${base}/api/plaidoyers/signed/user/${user.id}`, { headers })
       ])
       
       // Vérifier les réponses
@@ -68,19 +71,49 @@ export default function CitizenDashboard() {
       const signalData = signalRes.ok ? await signalRes.json() : []
       const campData = campRes.ok ? await campRes.json() : []
       const plaidData = plaidRes.ok ? await plaidRes.json() : []
+      const signedData = signedRes.ok ? await signedRes.json() : []
       
       setSignalements(Array.isArray(signalData) ? signalData : [])
       setCampagnes(Array.isArray(campData) ? campData : [])
       setPlaidoyers(Array.isArray(plaidData) ? plaidData : [])
+      setSignedPetitionIds(Array.isArray(signedData) ? signedData.map(p => p.id) : [])
     } catch (error) {
       console.error('[CitizenDashboard] Erreur fetch:', error)
-      setError('Erreur lors du chargement des données. Vérifiez votre connexion.')
-      toast.error('Erreur réseau : impossible de charger les données')
+      setError('Erreur lors du chargement des donnees. Verifiez votre connexion.')
+      toast.error('Erreur reseau : impossible de charger les donnees')
       setSignalements([])
       setCampagnes([])
       setPlaidoyers([])
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSignPetition = async (petitionId) => {
+    setSigningPetition(petitionId)
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${API_BASE}/api/plaidoyers/${petitionId}/sign`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!res.ok) {
+        const errData = await res.json()
+        throw new Error(errData.error || 'Erreur lors de la signature')
+      }
+
+      // Ajouter a la liste des plaidoyers signes
+      setSignedPetitionIds(prev => [...prev, petitionId])
+      toast.success('Plaidoyer signe avec succes!')
+    } catch (error) {
+      console.error('Erreur signature:', error)
+      toast.error(error.message || 'Impossible de signer le plaidoyer')
+    } finally {
+      setSigningPetition(null)
     }
   }
 
@@ -307,27 +340,38 @@ export default function CitizenDashboard() {
                 </Card>
               ) : (
                 <div className="grid grid-cols-1 gap-4">
-                  {plaidoyers.map((p, idx) => (
-                    <motion.div
-                      key={p.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.05 }}
-                    >
-                      <Card className="p-6 hover:shadow-lg transition">
-                        <h3 className="font-semibold text-lg text-gray-900">{p.titre}</h3>
-                        <p className="text-gray-600 mt-2">{p.description}</p>
-                        <div className="mt-4 flex justify-between items-center">
-                          <span className="text-sm text-gray-600">
-                            📊 {p.signatures || 0} signatures
-                          </span>
-                          <Button variant="primary" size="sm">
-                            ✍️ Signer
-                          </Button>
-                        </div>
-                      </Card>
-                    </motion.div>
-                  ))}
+                  {plaidoyers.map((p, idx) => {
+                    const isSigned = signedPetitionIds.includes(p.id)
+                    return (
+                      <motion.div
+                        key={p.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                      >
+                        <Card className="p-6 hover:shadow-lg transition">
+                          <h3 className="font-semibold text-lg text-gray-900">{p.titre}</h3>
+                          <p className="text-gray-600 mt-2">{p.description}</p>
+                          <div className="mt-4 flex justify-between items-center">
+                            <span className="text-sm text-gray-600">
+                              📊 {p.signatures || 0}/{p.objectif_signatures || '?'} signatures
+                            </span>
+                            <button
+                              onClick={() => handleSignPetition(p.id)}
+                              disabled={signingPetition === p.id || isSigned}
+                              className={`px-4 py-2 rounded font-medium ${
+                                isSigned
+                                  ? 'bg-gray-200 text-gray-600 cursor-not-allowed'
+                                  : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                              }`}
+                            >
+                              {isSigned ? '✓ Signe' : signingPetition === p.id ? '...' : '✍️ Signer'}
+                            </button>
+                          </div>
+                        </Card>
+                      </motion.div>
+                    )
+                  })}
                 </div>
               )}
             </motion.div>
