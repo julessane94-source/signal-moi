@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
-import Navbar from '../../src/components/common/Navbar'
-import Footer from '../../src/components/common/Footer'
+import Navbar from '../../components/common/Navbar'
+import Footer from '../../components/common/Footer'
 import { motion } from 'framer-motion'
 
 export default function DetailCampagne() {
