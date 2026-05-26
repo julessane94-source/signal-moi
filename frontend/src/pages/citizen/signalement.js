@@ -1,9 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE } from '../../config/api'
 import Navbar from '../../components/common/Navbar'
 import { toast } from 'react-toastify'
+import dynamic from 'next/dynamic'
+
+const LeafletMap = dynamic(() => import('../../components/Map/LeafletMap'), { ssr: false })
 
 export default function NewSignalement() {
   const { user } = useAuth()
@@ -17,6 +20,35 @@ export default function NewSignalement() {
     localisation: '',
     estAnonyme: false
   })
+  const [latitude, setLatitude] = useState(null)
+  const [longitude, setLongitude] = useState(null)
+
+  useEffect(() => {
+    // Try to get browser geolocation on mount
+    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        const lat = pos.coords.latitude
+        const lng = pos.coords.longitude
+        setLatitude(lat)
+        setLongitude(lng)
+        // reverse geocode with Nominatim to fill localisation if empty
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+          if (res.ok) {
+            const data = await res.json()
+            const addr = data.display_name
+            setFormData(prev => ({ ...prev, localisation: prev.localisation || addr, latitude: lat, longitude: lng }))
+          } else {
+            setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }))
+          }
+        } catch (e) {
+          setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }))
+        }
+      }, (err) => {
+        // ignore if user denies
+      })
+    }
+  }, [])
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -51,8 +83,9 @@ export default function NewSignalement() {
       fd.append('description', formData.description)
       fd.append('type', formData.type)
       fd.append('localisation', formData.localisation)
-      if (formData.latitude) fd.append('latitude', formData.latitude)
-      if (formData.longitude) fd.append('longitude', formData.longitude)
+      // append coordinates if available (from geolocation or map)
+      if (latitude) fd.append('latitude', latitude)
+      if (longitude) fd.append('longitude', longitude)
 
       // Append files
       files.forEach((f) => fd.append('fichiers', f))
@@ -111,6 +144,31 @@ export default function NewSignalement() {
               <div>
                 <label className="block text-sm font-medium mb-1">Localisation *</label>
                 <input type="text" name="localisation" required value={formData.localisation} onChange={handleChange} className="w-full border rounded px-3 py-2" placeholder="Ex: Carrefour Mvan, Yaoundé" />
+                <div className="mt-2 flex gap-2 items-center">
+                  <button type="button" onClick={() => {
+                    if (navigator && navigator.geolocation) {
+                      navigator.geolocation.getCurrentPosition(async (pos) => {
+                        const lat = pos.coords.latitude
+                        const lng = pos.coords.longitude
+                        setLatitude(lat)
+                        setLongitude(lng)
+                        try {
+                          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+                          if (res.ok) {
+                            const data = await res.json()
+                            setFormData(prev => ({ ...prev, localisation: prev.localisation || data.display_name }))
+                          }
+                        } catch (e) { }
+                      }, () => {})
+                    } else {
+                      toast.error('Géolocalisation non prise en charge')
+                    }
+                  }} className="text-sm px-3 py-1 bg-gray-100 rounded">Localiser automatiquement</button>
+                  <span className="text-sm text-gray-500">{latitude && longitude ? `Coord: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}` : ''}</span>
+                </div>
+                <div className="mt-3">
+                  <LeafletMap lat={latitude} lng={longitude} setLat={setLatitude} setLng={setLongitude} />
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Preuves (photos, vidéos, audio)</label>
