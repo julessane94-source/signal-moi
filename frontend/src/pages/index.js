@@ -140,6 +140,61 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Comment ça marche */}
+        <section className="py-16 bg-indigo-50">
+          <div className="max-w-7xl mx-auto px-4">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">Comment ça marche ?</h2>
+            <p className="text-lg text-gray-600 text-center mb-12 max-w-2xl mx-auto">
+              5 étapes simples pour améliorer votre quartier
+            </p>
+            
+            <div className="grid md:grid-cols-5 gap-6">
+              {/* Etape 1 */}
+              <div className="text-center">
+                <div className="bg-indigo-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-4">1</div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Créer un compte</h3>
+                <p className="text-gray-600 text-sm">Inscrivez-vous gratuitement ou connectez-vous avec vos identifiants</p>
+              </div>
+
+              {/* Etape 2 */}
+              <div className="text-center">
+                <div className="bg-indigo-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-4">2</div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Décrire le problème</h3>
+                <p className="text-gray-600 text-sm">Expliquez l'incident et choisissez un type (nid-de-poule, vol, vandalisme...)</p>
+              </div>
+
+              {/* Etape 3 */}
+              <div className="text-center">
+                <div className="bg-indigo-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-4">📷</div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Ajouter des preuves</h3>
+                <p className="text-gray-600 text-sm">Joignez des photos, vidéos ou audios pour plus de clarté</p>
+              </div>
+
+              {/* Etape 4 */}
+              <div className="text-center">
+                <div className="bg-indigo-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-4">📍</div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Localiser</h3>
+                <p className="text-gray-600 text-sm">Indiquez le quartier ou la localisation précise du problème</p>
+              </div>
+
+              {/* Etape 5 */}
+              <div className="text-center">
+                <div className="bg-indigo-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-4">5</div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Suivre la résolution</h3>
+                <p className="text-gray-600 text-sm">Recevez des mises à jour en temps réel sur le traitement</p>
+              </div>
+            </div>
+
+            <div className="mt-12 text-center">
+              <Link href={user ? "/citizen/signalement" : "/login"}>
+                <button className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition">
+                  Commencer maintenant →
+                </button>
+              </Link>
+            </div>
+          </div>
+        </section>
+
         {/* Images et Vidéos de la page d'accueil */}
         {(config.home_page?.images?.length > 0 || config.home_page?.videos?.length > 0) && (
           <section className="py-16 bg-gray-50">
@@ -208,6 +263,48 @@ export default function Home() {
             </div>
           </section>
         )}
+
+        {/* Rejoindre la communauté */}
+        <section className="py-16 bg-gradient-to-r from-green-500 to-teal-600 text-white">
+          <div className="max-w-4xl mx-auto px-4 text-center">
+            <h2 className="text-3xl font-bold mb-4">Rejoignez notre communauté</h2>
+            <p className="text-xl text-green-50 mb-8 max-w-2xl mx-auto">
+              Des milliers de citoyens engagés améliorent déjà leur quartier ensemble. 
+              Chaque signalement compte et contribue à un changement positif.
+            </p>
+            
+            <div className="grid md:grid-cols-3 gap-6 mb-10">
+              <div className="bg-white bg-opacity-20 rounded-lg p-6 backdrop-blur">
+                <div className="text-4xl mb-3">🤝</div>
+                <h3 className="text-xl font-semibold mb-2">Collaborer</h3>
+                <p className="text-green-50">Travaillez avec des ONGs et autorités locales</p>
+              </div>
+              <div className="bg-white bg-opacity-20 rounded-lg p-6 backdrop-blur">
+                <div className="text-4xl mb-3">📢</div>
+                <h3 className="text-xl font-semibold mb-2">Influencer</h3>
+                <p className="text-green-50">Vos signalements créent un impact réel</p>
+              </div>
+              <div className="bg-white bg-opacity-20 rounded-lg p-6 backdrop-blur">
+                <div className="text-4xl mb-3">🏆</div>
+                <h3 className="text-xl font-semibold mb-2">Progresser</h3>
+                <p className="text-green-50">Quartiers plus sûrs et mieux entretenus</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-4 justify-center">
+              <Link href={user ? "/citizen/dashboard" : "/register"}>
+                <button className="bg-white text-teal-600 px-8 py-3 rounded-xl font-semibold hover:bg-gray-100 transition">
+                  {user ? "✓ Aller au dashboard" : "👥 Rejoindre maintenant"}
+                </button>
+              </Link>
+              <Link href="/signalements">
+                <button className="bg-teal-700 text-white px-8 py-3 rounded-xl font-semibold hover:bg-teal-800 transition border-2 border-white">
+                  📊 Voir les signalements
+                </button>
+              </Link>
+            </div>
+          </div>
+        </section>
       </main>
 
       <Footer />
