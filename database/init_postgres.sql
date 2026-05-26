@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS signalements (
   est_anonyme BOOLEAN DEFAULT false,
   assigned_to UUID,
   transferred_from UUID,
+  images TEXT DEFAULT '[]',
   date_signalement TIMESTAMP WITH TIME ZONE DEFAULT now(),
   date_resolution TIMESTAMP,
   commentaire_resolution TEXT,

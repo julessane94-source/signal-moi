@@ -49,10 +49,10 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
 
     try {
         const result = await db.query(
-            `INSERT INTO signal_moi.signalements (user_id, titre, description, type, localisation, latitude, longitude, image_url, images)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            `INSERT INTO signal_moi.signalements (user_id, titre, description, type, localisation, latitude, longitude, images)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
              RETURNING *`,
-            [user_id, titre, description, type, localisation, latitude || null, longitude || null, null, '[]']
+            [user_id, titre, description, type, localisation, latitude || null, longitude || null, '[]']
         );
         const signalement = result.rows[0];
 
@@ -69,14 +69,6 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
                 );
             });
             await Promise.all(insertFiles);
-
-            // Mettre à jour la colonne image_url si le premier fichier est une image
-            const firstImage = req.files.find(ff => ff.mimetype.startsWith('image'));
-            if (firstImage) {
-                const imagePath = firstImage.path || (`uploads/signalements/${firstImage.filename}`);
-                await db.query('UPDATE signal_moi.signalements SET image_url = $1 WHERE id = $2', [imagePath, signalement.id]);
-                signalement.image_url = imagePath;
-            }
         }
 
         console.log('Signalement créé:', signalement);
@@ -244,7 +236,7 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
             try {
                 const signalementResult = await db.query(`
                     SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, 
-                           s.latitude, s.longitude, s.image_url, s.created_at, s.updated_at,
+                           s.latitude, s.longitude, s.images, s.created_at, s.updated_at,
                            u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone, u.email AS user_email
                     FROM signal_moi.signalements s
                     LEFT JOIN signal_moi.users u ON u.id = s.user_id
@@ -286,7 +278,7 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
                     localisation: signalement.localisation,
                     latitude: signalement.latitude !== null ? parseFloat(signalement.latitude) : null,
                     longitude: signalement.longitude !== null ? parseFloat(signalement.longitude) : null,
-                    imageUrl: signalement.image_url,
+                    images: signalement.images ? JSON.parse(signalement.images) : [],
                     telephone: signalement.user_telephone,
                     email: signalement.user_email,
                     auteur: {

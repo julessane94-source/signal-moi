@@ -25,16 +25,16 @@ const Signalement = {
         return res.rows;
     },
     create: async (data) => {
-        const { user_id, titre, description, type, localisation, latitude, longitude, image_url, images } = data;
+        const { user_id, titre, description, type, localisation, latitude, longitude, images } = data;
         const res = await db.query(
-            `INSERT INTO signal_moi.signalements (user_id, titre, description, type, localisation, latitude, longitude, image_url, images)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-            [user_id, titre, description, type, localisation, latitude, longitude, image_url, images || '[]']
+            `INSERT INTO signal_moi.signalements (user_id, titre, description, type, localisation, latitude, longitude, images)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+            [user_id, titre, description, type, localisation, latitude, longitude, images || '[]']
         );
         return res.rows[0];
     },
     update: async (id, data) => {
-        const { titre, description, type, localisation, latitude, longitude, image_url, images, statut } = data;
+        const { titre, description, type, localisation, latitude, longitude, images, statut } = data;
         const fields = [];
         const values = [];
         let paramCount = 1;
@@ -45,7 +45,6 @@ const Signalement = {
         if (localisation !== undefined) { fields.push(`localisation = $${paramCount}`); values.push(localisation); paramCount++; }
         if (latitude !== undefined) { fields.push(`latitude = $${paramCount}`); values.push(latitude); paramCount++; }
         if (longitude !== undefined) { fields.push(`longitude = $${paramCount}`); values.push(longitude); paramCount++; }
-        if (image_url !== undefined) { fields.push(`image_url = $${paramCount}`); values.push(image_url); paramCount++; }
         if (images !== undefined) { fields.push(`images = $${paramCount}`); values.push(images); paramCount++; }
         if (statut !== undefined) { fields.push(`statut = $${paramCount}`); values.push(statut); paramCount++; }
 
