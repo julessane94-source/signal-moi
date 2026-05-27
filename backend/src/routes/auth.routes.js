@@ -270,4 +270,82 @@ router.post('/change-password', protect, async (req, res) => {
   }
 });
 
+// POST /api/auth/google - Authentification via Google OAuth (STUB - à intégrer avec Google Cloud)
+router.post('/google', async (req, res) => {
+  try {
+    const { token, idToken, email, name, picture } = req.body;
+
+    if (!idToken && !token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Token Google requis'
+      });
+    }
+
+    // IMPORTANT: En production, vérifier le token avec Google API
+    // Pour l'instant, c'est un stub qui simule l'authentification
+
+    // Chercher ou créer l'utilisateur avec l'email Google
+    const userEmail = email || 'unknown@google.com';
+    
+    const userRes = await db.query(
+      'SELECT id, email, prenom, nom, role FROM signal_moi.users WHERE email = $1',
+      [userEmail]
+    );
+
+    let userId;
+    if (userRes.rows.length > 0) {
+      // Utilisateur existant
+      userId = userRes.rows[0].id;
+      console.log('[AUTH POST /google] ✅ Utilisateur existant connecté via Google:', userEmail);
+    } else {
+      // Créer un nouvel utilisateur (citoyen par défaut)
+      const nomComplet = name || 'Utilisateur Google';
+      const nomParts = nomComplet.split(' ');
+      const prenom = nomParts[0] || 'Citoyen';
+      const nom = nomParts.slice(1).join(' ') || 'Google';
+
+      // Générer un mot de passe aléatoire (l'utilisateur ne le connaît pas)
+      const randomPassword = require('crypto').randomBytes(16).toString('hex');
+      const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+      const newUserRes = await db.query(
+        `INSERT INTO signal_moi.users 
+        (email, password, prenom, nom, role, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, 'citoyen', NOW(), NOW())
+        RETURNING id`,
+        [userEmail, hashedPassword, prenom, nom]
+      );
+
+      userId = newUserRes.rows[0].id;
+      console.log('[AUTH POST /google] ✅ Nouvel utilisateur créé via Google:', userEmail);
+    }
+
+    // Générer un JWT
+    const jwtToken = jwt.sign(
+      { id: userId, email: userEmail },
+      process.env.JWT_SECRET || 'default_secret_key',
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      success: true,
+      message: 'Authentification Google réussie',
+      token: jwtToken,
+      user: {
+        id: userId,
+        email: userEmail
+      }
+    });
+
+  } catch (err) {
+    console.error('[AUTH POST /google] Erreur:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de l\'authentification Google',
+      details: err.message
+    });
+  }
+});
+
 module.exports = router;
