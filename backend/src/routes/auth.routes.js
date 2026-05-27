@@ -10,6 +10,21 @@ const SiteConfig = require('../models/SiteConfig');
 router.get('/site-config', async (req, res) => {
   try {
     const config = await SiteConfig.getAll();
+    // Coerce certains champs pour éviter les erreurs côté client
+    const safeConfig = {
+      ...config,
+      contactEmail: config.contactEmail != null ? String(config.contactEmail) : '',
+      contactPhone: config.contactPhone != null ? String(config.contactPhone) : '',
+      address: config.address != null ? String(config.address) : '',
+      socialLinks: typeof config.socialLinks === 'object' && config.socialLinks !== null
+        ? {
+            facebook: config.socialLinks.facebook != null ? String(config.socialLinks.facebook) : '',
+            twitter: config.socialLinks.twitter != null ? String(config.socialLinks.twitter) : '',
+            instagram: config.socialLinks.instagram != null ? String(config.socialLinks.instagram) : '',
+            whatsapp: config.socialLinks.whatsapp != null ? String(config.socialLinks.whatsapp) : ''
+          }
+        : {}
+    };
     // Récupérer quelques campagnes des collaborateurs à afficher sur l'accueil
     try {
       const campagnesRes = await db.query(`
@@ -32,7 +47,7 @@ router.get('/site-config', async (req, res) => {
         image_url: c.image_url,
         creator: { id: c.creator_id, prenom: c.prenom, nom: c.nom, role: c.role }
       }));
-      res.json({ ...config, collaboratorCampaigns });
+      res.json({ ...safeConfig, collaboratorCampaigns });
     } catch (err) {
       console.error('[GET /site-config] Erreur campagnes:', err);
       res.json(config);
