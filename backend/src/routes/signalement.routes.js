@@ -54,7 +54,13 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
              RETURNING *`,
             [user_id, titre, description, type, localisation, latitude || null, longitude || null]
         );
-        const signalement = result.rows[0];
+        const signalement = Array.isArray(result.rows) ? result.rows[0] : result[0];
+
+        if (!signalement || signalement.id === undefined || signalement.id === null) {
+            throw new Error('Signalement créé sans identifiant valide');
+        }
+
+        const signalementId = signalement.id;
 
         // Gérer les fichiers uploadés (s'il y en a)
         if (req.files && req.files.length > 0) {
@@ -65,7 +71,7 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
                 return db.query(
                     `INSERT INTO signal_moi.fichiers (id, signalement_id, nom_fichier, chemin, type, taille, mime_type, uploaded_by)
                      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-                    [fileId, signalement.id, f.originalname, chemin, fileType, f.size || 0, f.mimetype, user_id]
+                    [fileId, signalementId, f.originalname, chemin, fileType, f.size || 0, f.mimetype, user_id]
                 );
             });
             await Promise.all(insertFiles);
