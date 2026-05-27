@@ -49,10 +49,10 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
 
     try {
         const result = await db.query(
-            `INSERT INTO signal_moi.signalements (user_id, titre, description, type, localisation, latitude, longitude, images)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            `INSERT INTO signal_moi.signalements (user_id, titre, description, type, localisation, latitude, longitude)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)
              RETURNING *`,
-            [user_id, titre, description, type, localisation, latitude || null, longitude || null, '[]']
+            [user_id, titre, description, type, localisation, latitude || null, longitude || null
         );
         const signalement = result.rows[0];
 
@@ -236,7 +236,7 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
             try {
                 const signalementResult = await db.query(`
                     SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, 
-                           s.latitude, s.longitude, s.images, s.created_at, s.updated_at,
+                           s.latitude, s.longitude, s.created_at, s.updated_at,
                            u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone, u.email AS user_email
                     FROM signal_moi.signalements s
                     LEFT JOIN signal_moi.users u ON u.id = s.user_id
@@ -278,7 +278,6 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
                     localisation: signalement.localisation,
                     latitude: signalement.latitude !== null ? parseFloat(signalement.latitude) : null,
                     longitude: signalement.longitude !== null ? parseFloat(signalement.longitude) : null,
-                    images: signalement.images ? JSON.parse(signalement.images) : [],
                     telephone: signalement.user_telephone,
                     email: signalement.user_email,
                     auteur: {
@@ -288,7 +287,7 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
                         telephone: signalement.user_telephone,
                         email: signalement.user_email
                     },
-                    fichiers: fichiers,
+                    fichiers: fichiers,  // Images de preuve stockées dans la table fichiers
                     createdAt: signalement.created_at,
                     updatedAt: signalement.updated_at
                 });
