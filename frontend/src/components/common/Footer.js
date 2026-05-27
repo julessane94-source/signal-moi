@@ -43,8 +43,9 @@ const SocialIcons = {
 export default function Footer() {
   const [contactInfo, setContactInfo] = useState({
     contactEmail: 'contact@signal-moi.com',
-    contactPhone: '+237 77 88516 91',
-    address: 'Yaoundé, Cameroun',
+    contactPhone: '+221 77 88516 91',
+    address: 'Dakar, Sénégal',
+    country: 'SN',
     socialLinks: {
       facebook: '',
       whatsapp: '',
@@ -55,7 +56,56 @@ export default function Footer() {
 
   useEffect(() => {
     fetchConfig()
+    detectLocation()
   }, [])
+
+  const detectLocation = () => {
+    // Détecte le pays/fuseau horaire automatiquement
+    try {
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+      
+      // Mapper les fuseaux horaires aux pays
+      const timezoneToCountry = {
+        'Africa/Dakar': 'SN',
+        'Africa/Abidjan': 'CI',
+        'Africa/Lagos': 'NG',
+        'Africa/Douala': 'CM',
+        'Africa/Kinshasa': 'CD',
+        'Africa/Bangui': 'CF',
+        'Africa/Accra': 'GH'
+      }
+
+      const detectedCountry = timezoneToCountry[timezone] || 'SN'
+      
+      // Configurer les infos selon le pays détecté
+      const countryConfigs = {
+        SN: {
+          contactEmail: 'contact@signal-moi.com',
+          contactPhone: '+221 77 88516 91',
+          address: 'Dakar, Sénégal',
+          country: 'SN'
+        },
+        CM: {
+          contactEmail: 'contact@signal-moi.com',
+          contactPhone: '+237 77 88516 91',
+          address: 'Yaoundé, Cameroun',
+          country: 'CM'
+        },
+        CI: {
+          contactEmail: 'contact@signal-moi.com',
+          contactPhone: '+225 77 88516 91',
+          address: 'Abidjan, Côte d\'Ivoire',
+          country: 'CI'
+        }
+      }
+
+      const config = countryConfigs[detectedCountry] || countryConfigs.SN
+      setContactInfo(prev => ({ ...prev, ...config }))
+    } catch (err) {
+      console.error('Erreur detectLocation:', err)
+      // Par défaut Sénégal
+    }
+  }
 
   const fetchConfig = async () => {
     try {

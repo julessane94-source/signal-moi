@@ -11,8 +11,9 @@ import { API_BASE } from '../config/api'
 export default function Contact() {
   const [siteConfig, setSiteConfig] = useState({
     contactEmail: 'contact@signal-moi.com',
-    contactPhone: '+237 600 000 000',
-    address: 'Yaounde, Cameroun',
+    contactPhone: '+221 77 88516 91',
+    address: 'Dakar, Sénégal',
+    country: 'SN',
     contactPage: { 
       title: 'Contactez-nous', 
       content: 'Pour toute question ou suggestion, n\'hésitez pas à nous contacter. Notre équipe est disponible pour vous aider.',
@@ -32,8 +33,56 @@ export default function Contact() {
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
+    detectLocation()
     fetchConfig()
   }, [])
+
+  const detectLocation = () => {
+    // Détecte le pays/fuseau horaire automatiquement
+    try {
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+      
+      // Mapper les fuseaux horaires aux pays
+      const timezoneToCountry = {
+        'Africa/Dakar': 'SN',
+        'Africa/Abidjan': 'CI',
+        'Africa/Lagos': 'NG',
+        'Africa/Douala': 'CM',
+        'Africa/Kinshasa': 'CD',
+        'Africa/Bangui': 'CF',
+        'Africa/Accra': 'GH'
+      }
+
+      const detectedCountry = timezoneToCountry[timezone] || 'SN'
+      
+      // Configurer les infos selon le pays détecté
+      const countryConfigs = {
+        SN: {
+          contactEmail: 'contact@signal-moi.com',
+          contactPhone: '+221 77 88516 91',
+          address: 'Dakar, Sénégal',
+          country: 'SN'
+        },
+        CM: {
+          contactEmail: 'contact@signal-moi.com',
+          contactPhone: '+237 77 88516 91',
+          address: 'Yaoundé, Cameroun',
+          country: 'CM'
+        },
+        CI: {
+          contactEmail: 'contact@signal-moi.com',
+          contactPhone: '+225 77 88516 91',
+          address: 'Abidjan, Côte d\'Ivoire',
+          country: 'CI'
+        }
+      }
+
+      const config = countryConfigs[detectedCountry] || countryConfigs.SN
+      setSiteConfig(prev => ({ ...prev, ...config }))
+    } catch (err) {
+      console.error('Erreur detectLocation:', err)
+    }
+  }
 
   const fetchConfig = async () => {
     try {
@@ -390,7 +439,7 @@ export default function Contact() {
                 width="100%"
                 height="400"
                 frameBorder="0"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3978.7758486206447!2d11.502368!3d3.848034!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x108bcf7d8e8e8e8d%3A0x1234567890abcdef!2sYaound%C3%A9%2C%20Cameroon!5e0!3m2!1sfr!2scm!4v1234567890"
+                src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3925.6481223${siteConfig.country === 'CM' ? '5639!2d11.502368' : '2d-17.04'}!2d${siteConfig.country === 'CM' ? '3.848034' : '14.776547'}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x${siteConfig.country === 'CM' ? '108bcf7d8e8e8e8d' : '1f69a8000'}%3A${siteConfig.country === 'CM' ? '0x1234567890abcdef' : '0x1234567890abcdef'}!2s${siteConfig.country === 'CM' ? 'Yaound%C3%A9' : 'Dakar'}%2C+${siteConfig.country === 'CM' ? 'Cameroon' : 'Senegal'}!5e0!3m2!1sfr!2s${siteConfig.country === 'CM' ? 'cm' : 'sn'}!4v1234567890`}
                 allowFullScreen=""
                 loading="lazy"
               ></iframe>
