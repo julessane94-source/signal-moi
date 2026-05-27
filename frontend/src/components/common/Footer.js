@@ -155,7 +155,9 @@ export default function Footer() {
       links.push({ name: 'Instagram', icon: SocialIcons.Instagram, href: contactInfo.socialLinks.instagram })
     }
     if (contactInfo.socialLinks?.whatsapp) {
-      links.push({ name: 'WhatsApp', icon: SocialIcons.WhatsApp, href: `https://wa.me/${contactInfo.socialLinks.whatsapp.replace(/[^0-9]/g, '')}` })
+      const rawWa = String(contactInfo.socialLinks.whatsapp || '')
+      const waNum = rawWa.replace(/[^0-9]/g, '')
+      links.push({ name: 'WhatsApp', icon: SocialIcons.WhatsApp, href: `https://wa.me/${waNum}` })
     }
     return links.length > 0 ? links : [{ name: 'Twitter', icon: SocialIcons.Twitter, href: '#' }]
   }
@@ -242,9 +244,16 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-2 text-gray-400 text-sm">
                 <PhoneIcon className="h-4 w-4 text-red-500" />
-                <a href={`tel:${contactInfo.contactPhone.replace(/[^0-9+]/g, '')}`} className="hover:text-white transition-colors">
-                  {contactInfo.contactPhone}
-                </a>
+                {(() => {
+                  const rawPhone = String(contactInfo.contactPhone || '')
+                  const telHref = `tel:${rawPhone.replace(/[^0-9+]/g, '')}`
+                  const display = contactInfo.contactPhone ?? rawPhone
+                  return (
+                    <a href={telHref} className="hover:text-white transition-colors">
+                      {display}
+                    </a>
+                  )
+                })()}
               </li>
               <li className="flex items-start gap-2 text-gray-400 text-sm">
                 <MapPinIcon className="h-4 w-4 text-red-500 flex-shrink-0 mt-0.5" />
