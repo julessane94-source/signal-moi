@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
-import Navbar from './src/components/common/Navbar'
-import Footer from './src/components/common/Footer'
 import { motion } from 'framer-motion'
 
 export default function Campagnes() {
@@ -177,7 +175,6 @@ export default function Campagnes() {
         </section>
       </main>
 
-      <Footer />
     </>
   )
 }

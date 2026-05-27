@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
-import Navbar from '../components/common/Navbar'
-import Footer from '../components/common/Footer'
 import { motion } from 'framer-motion'
 
 export default function SignalementsPublic() {
@@ -192,7 +190,6 @@ export default function SignalementsPublic() {
         </section>
       </main>
 
-      <Footer />
     </>
   )
 }

@@ -1,8 +1,6 @@
 ﻿import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
-import Navbar from '../components/common/Navbar'
-import Footer from '../components/common/Footer'
 
 export default function SignalementsPublic() {
   const [signalements, setSignalements] = useState([])
@@ -154,7 +152,6 @@ export default function SignalementsPublic() {
         </section>
       </main>
 
-      <Footer />
     </>
   )
 }
