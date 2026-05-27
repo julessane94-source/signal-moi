@@ -52,7 +52,7 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
             `INSERT INTO signal_moi.signalements (user_id, titre, description, type, localisation, latitude, longitude)
              VALUES ($1, $2, $3, $4, $5, $6, $7)
              RETURNING *`,
-            [user_id, titre, description, type, localisation, latitude || null, longitude || null
+            [user_id, titre, description, type, localisation, latitude || null, longitude || null]
         );
         const signalement = result.rows[0];
 
