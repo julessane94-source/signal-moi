@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import Navbar from './src/components/common/Navbar'
 
 export default function Campagnes() {
   const [campagnes, setCampagnes] = useState([])
