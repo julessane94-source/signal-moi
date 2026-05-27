@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import { useState, useEffect } from 'react'
+import { API_BASE } from '../../config/api'
 import {
   EnvelopeIcon,
   PhoneIcon,
@@ -25,10 +27,54 @@ const SocialIcons = {
     <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
       <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.475-2.236-1.986-2.236-1.081 0-1.722.722-2.004 1.418-.103.249-.129.597-.129.946v5.441h-3.554s.05-8.81 0-9.728h3.554v1.375c.427-.659 1.191-1.592 2.897-1.592 2.117 0 3.704 1.385 3.704 4.362v5.583zM5.337 8.855c-1.144 0-1.915-.762-1.915-1.715 0-.953.77-1.715 1.958-1.715 1.188 0 1.915.762 1.915 1.715 0 .953-.727 1.715-1.958 1.715zm1.581 11.597H3.635V9.579h3.283v10.873zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.225 0z" />
     </svg>
+  ),
+  Instagram: () => (
+    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.521 17.521h-11.042V6.521h11.042v11zm-5.521-9.404c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2z" />
+    </svg>
+  ),
+  WhatsApp: () => (
+    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.272-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371 0-.57 0-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a9.87 9.87 0 00-5.031 1.378c-3.055 2.28-4.753 6.193-4.542 10.19.211 3.997 2.813 7.429 6.487 8.795a9.9 9.9 0 004.773 1.255h.004c5.452 0 9.885-4.433 9.885-9.885 0-2.65-.994-5.151-2.8-7.152-1.806-2.001-4.281-3.1-6.869-3.1" />
+    </svg>
   )
 }
 
 export default function Footer() {
+  const [contactInfo, setContactInfo] = useState({
+    contactEmail: 'contact@signal-moi.com',
+    contactPhone: '+237 77 88516 91',
+    address: 'Yaoundé, Cameroun',
+    socialLinks: {
+      facebook: '',
+      whatsapp: '',
+      twitter: '',
+      instagram: ''
+    }
+  })
+
+  useEffect(() => {
+    fetchConfig()
+  }, [])
+
+  const fetchConfig = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/site-config`)
+      if (res.ok) {
+        const data = await res.json()
+        setContactInfo(prev => ({
+          ...prev,
+          contactEmail: data.contactEmail || prev.contactEmail,
+          contactPhone: data.contactPhone || prev.contactPhone,
+          address: data.address || prev.address,
+          socialLinks: data.socialLinks || prev.socialLinks
+        }))
+      }
+    } catch (err) {
+      console.error('Erreur fetchConfig:', err)
+    }
+  }
+
   const footerLinks = {
     Produit: [
       { name: 'Signaler', href: '/citizen/signalement' },
@@ -47,11 +93,24 @@ export default function Footer() {
     ]
   }
 
-  const socialLinks = [
-    { name: 'Twitter', icon: SocialIcons.Twitter, href: 'https://twitter.com' },
-    { name: 'Facebook', icon: SocialIcons.Facebook, href: 'https://facebook.com' },
-    { name: 'LinkedIn', icon: SocialIcons.LinkedIn, href: 'https://linkedin.com' },
-  ]
+  const buildSocialLinks = () => {
+    const links = []
+    if (contactInfo.socialLinks?.facebook) {
+      links.push({ name: 'Facebook', icon: SocialIcons.Facebook, href: contactInfo.socialLinks.facebook })
+    }
+    if (contactInfo.socialLinks?.twitter) {
+      links.push({ name: 'Twitter', icon: SocialIcons.Twitter, href: contactInfo.socialLinks.twitter })
+    }
+    if (contactInfo.socialLinks?.instagram) {
+      links.push({ name: 'Instagram', icon: SocialIcons.Instagram, href: contactInfo.socialLinks.instagram })
+    }
+    if (contactInfo.socialLinks?.whatsapp) {
+      links.push({ name: 'WhatsApp', icon: SocialIcons.WhatsApp, href: `https://wa.me/${contactInfo.socialLinks.whatsapp.replace(/[^0-9]/g, '')}` })
+    }
+    return links.length > 0 ? links : [{ name: 'Twitter', icon: SocialIcons.Twitter, href: '#' }]
+  }
+
+  const socialLinks = buildSocialLinks()
 
   return (
     <footer className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white py-16">
@@ -127,19 +186,19 @@ export default function Footer() {
             <ul className="space-y-3">
               <li className="flex items-center gap-2 text-gray-400 text-sm">
                 <EnvelopeIcon className="h-4 w-4 text-red-500" />
-                <a href="mailto:contact@signal-moi.com" className="hover:text-white transition-colors">
-                  contact@signal-moi.com
+                <a href={`mailto:${contactInfo.contactEmail}`} className="hover:text-white transition-colors">
+                  {contactInfo.contactEmail}
                 </a>
               </li>
               <li className="flex items-center gap-2 text-gray-400 text-sm">
                 <PhoneIcon className="h-4 w-4 text-red-500" />
-                <a href="tel:+237600000000" className="hover:text-white transition-colors">
-                  +237 6 00 00 00 00
+                <a href={`tel:${contactInfo.contactPhone.replace(/[^0-9+]/g, '')}`} className="hover:text-white transition-colors">
+                  {contactInfo.contactPhone}
                 </a>
               </li>
               <li className="flex items-start gap-2 text-gray-400 text-sm">
                 <MapPinIcon className="h-4 w-4 text-red-500 flex-shrink-0 mt-0.5" />
-                <span>Yaoundé, Cameroun</span>
+                <span>{contactInfo.address}</span>
               </li>
             </ul>
           </motion.div>
