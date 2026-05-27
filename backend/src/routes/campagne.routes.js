@@ -206,7 +206,14 @@ router.get('/:id/inscrit', authMiddleware, async (req, res) => {
 
 // POST pour créer une campagne (protégé - admin uniquement)
 router.post('/', authMiddleware, async (req, res) => {
-  const { titre, description, type, date_debut, date_fin, lieu, capacite_max, created_by } = req.body;
+  const { titre, description, type, date_debut, date_fin, lieu, capacite_max } = req.body;
+  const created_by = req.user.id;
+  
+  // Validation des champs obligatoires
+  if (!titre || !description || !type || !date_debut || !date_fin || !lieu) {
+    return res.status(400).json({ error: 'Champs manquants: titre, description, type, date_debut, date_fin, lieu' });
+  }
+  
   try {
     const result = await db.query(
       `INSERT INTO signal_moi.campagnes (titre, description, type, date_debut, date_fin, lieu, capacite_max, created_by)
@@ -216,8 +223,8 @@ router.post('/', authMiddleware, async (req, res) => {
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erreur cr�ation campagne' });
+    console.error('[POST /] Erreur création campagne:', err);
+    res.status(500).json({ error: 'Erreur création campagne', details: err.message });
   }
 });
 

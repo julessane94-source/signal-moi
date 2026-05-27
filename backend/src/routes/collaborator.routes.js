@@ -213,17 +213,18 @@ router.get('/campaigns', authMiddleware, async (req, res) => {
 
 // POST /api/collaborator/campaigns - Créer une campagne
 router.post('/campaigns', authMiddleware, upload.single('image'), async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { titre, description, type, dateDebut, dateFin, lieu, capaciteMax } = req.body;
+  const userId = req.user.id;
+  const { titre, description, type, dateDebut, dateFin, lieu, capaciteMax } = req.body;
 
-    if (!titre || !type) {
-      if (req.file) {
-        fs.unlinkSync(req.file.path);
-      }
-      return res.status(400).json({ error: 'Titre et type sont requis' });
+  // Validation des champs obligatoires
+  if (!titre || !type) {
+    if (req.file) {
+      fs.unlinkSync(req.file.path);
     }
+    return res.status(400).json({ error: 'Titre et type sont requis' });
+  }
 
+  try {
     // Construire l'URL de l'image
     let imageUrl = null;
     if (req.file) {
@@ -234,18 +235,22 @@ router.post('/campaigns', authMiddleware, upload.single('image'), async (req, re
       INSERT INTO signal_moi.campagnes 
       (titre, description, type, date_debut, date_fin, lieu, capacite_max, created_by, est_actif, image_url)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-      RETURNING id, titre, type, image_url
-    `, [titre, description, type, dateDebut, dateFin, lieu, capaciteMax, userId, true, imageUrl]);
+      RETURNING id, titre, type, image_url, created_at
+    `, [titre, description || '', type, dateDebut || null, dateFin || null, lieu || '', capaciteMax || 100, userId, true, imageUrl]);
 
     const campaign = result.rows[0];
     console.log(`[COLLABORATOR POST /campaigns] Campagne créée: ${campaign.id}`);
     res.status(201).json(campaign);
   } catch (err) {
     if (req.file) {
-      fs.unlinkSync(req.file.path);
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (unlinkErr) {
+        console.error('[COLLABORATOR POST /campaigns] Erreur suppression fichier:', unlinkErr);
+      }
     }
     console.error('[COLLABORATOR POST /campaigns] Erreur:', err);
-    res.status(500).json({ error: 'Erreur lors de la création', details: err.message });
+    res.status(500).json({ error: 'Erreur lors de la création de campagne', details: err.message });
   }
 });
 
