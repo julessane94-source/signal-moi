@@ -21,7 +21,7 @@ const authMiddleware = (req, res, next) => {
 
 router.get('/', async (req, res) => {
   try {
-    const result = await db.query('SELECT * FROM plaidoyers ORDER BY created_at DESC');
+    const result = await db.query('SELECT * FROM signal_moi.plaidoyers ORDER BY created_at DESC');
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -35,8 +35,8 @@ router.get('/signed/user/:userId', authMiddleware, async (req, res) => {
     
     try {
         const result = await db.query(`
-            SELECT p.* FROM plaidoyers p
-            INNER JOIN signatures_plaidoyers sp ON sp.plaidoyer_id = p.id
+            SELECT p.* FROM signal_moi.plaidoyers p
+            INNER JOIN signal_moi.signatures_plaidoyers sp ON sp.plaidoyer_id = p.id
             WHERE sp.user_id = $1
             ORDER BY sp.date_signature DESC
         `, [userId]);
@@ -55,14 +55,14 @@ router.post('/:id/sign', authMiddleware, async (req, res) => {
     
     try {
         // Verifier que le plaidoyer existe
-        const plaidoyerResult = await db.query('SELECT * FROM plaidoyers WHERE id = $1', [id]);
+        const plaidoyerResult = await db.query('SELECT * FROM signal_moi.plaidoyers WHERE id = $1', [id]);
         if (plaidoyerResult.rows.length === 0) {
             return res.status(404).json({ error: 'Plaidoyer non trouve' });
         }
 
         // Verifier que l'utilisateur n'a pas deja signe
         const existingResult = await db.query(
-            'SELECT * FROM signatures_plaidoyers WHERE plaidoyer_id = $1 AND user_id = $2',
+            'SELECT * FROM signal_moi.signatures_plaidoyers WHERE plaidoyer_id = $1 AND user_id = $2',
             [id, user_id]
         );
         
@@ -73,7 +73,7 @@ router.post('/:id/sign', authMiddleware, async (req, res) => {
         // Ajouter la signature
         const signatureId = uuidv4();
         const result = await db.query(
-            `INSERT INTO signatures_plaidoyers (id, plaidoyer_id, user_id, date_signature)
+            `INSERT INTO signal_moi.signatures_plaidoyers (id, plaidoyer_id, user_id, date_signature)
              VALUES ($1, $2, $3, NOW())
              RETURNING *`,
             [signatureId, id, user_id]

@@ -181,6 +181,29 @@ router.get('/:id/inscrits', authMiddleware, async (req, res) => {
   }
 });
 
+// GET vérifier si un utilisateur est inscrit à une campagne (protégé)
+router.get('/:id/inscrit', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  const user_id = req.user.id;
+  
+  try {
+    const result = await db.query(
+      'SELECT * FROM signal_moi.inscriptions_campagnes WHERE campagne_id = $1 AND user_id = $2',
+      [id, user_id]
+    );
+    
+    const isInscribed = result.rows.length > 0;
+    
+    res.json({
+      isInscribed,
+      inscription: isInscribed ? result.rows[0] : null
+    });
+  } catch (err) {
+    console.error('Erreur GET /:id/inscrit:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
+  }
+});
+
 // POST pour créer une campagne (protégé - admin uniquement)
 router.post('/', authMiddleware, async (req, res) => {
   const { titre, description, type, date_debut, date_fin, lieu, capacite_max, created_by } = req.body;

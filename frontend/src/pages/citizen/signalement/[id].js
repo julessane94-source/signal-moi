@@ -56,7 +56,7 @@ export default function SignalementDetail() {
           })
           if (signedRes.ok) {
             const signedData = await signedRes.json()
-            setSignedPetitionIds(Array.isArray(signedData) ? signedData.map(p => p.plaidoyer_id) : [])
+            setSignedPetitionIds(Array.isArray(signedData) ? signedData.map(p => p.plaidoyer_id || p.id) : [])
           }
         }
       }

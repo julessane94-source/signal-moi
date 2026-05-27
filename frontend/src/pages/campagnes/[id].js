@@ -17,11 +17,14 @@ export default function DetailCampagne() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    const token = localStorage.getItem('auth_token')
+    const token = localStorage.getItem('token')
     setAuthToken(token)
     
     if (id) {
       fetchCampagne()
+      if (token) {
+        checkInscription()
+      }
     }
   }, [id])
 
@@ -41,6 +44,26 @@ export default function DetailCampagne() {
       console.error('Erreur:', err)
       setError('Erreur lors du chargement')
       setLoading(false)
+    }
+  }
+
+  const checkInscription = async () => {
+    if (!authToken) return
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/campagnes/${id}/inscrit`,
+        {
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        }
+      )
+      if (response.ok) {
+        const data = await response.json()
+        setIsInscribed(data.isInscribed)
+      }
+    } catch (err) {
+      console.error('Erreur vérification inscription:', err)
     }
   }
 
