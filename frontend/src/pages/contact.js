@@ -2,6 +2,7 @@
 import Head from 'next/head'
 import { useState, useEffect } from 'react'
 import ErrorBoundary from '../components/common/ErrorBoundary'
+import Navbar from '../components/common/Navbar'
 import { motion } from 'framer-motion'
 import { toast } from 'react-toastify'
 import { API_BASE } from '../config/api'

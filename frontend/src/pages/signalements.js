@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
+import Navbar from '../components/common/Navbar'
 
 export default function SignalementsPublic() {
   const [signalements, setSignalements] = useState([])
