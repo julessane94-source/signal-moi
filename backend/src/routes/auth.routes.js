@@ -39,7 +39,14 @@ router.get('/site-config', async (req, res) => {
     }
   } catch (err) {
     console.error('[GET /site-config] Erreur:', err);
-    res.status(500).json({ error: 'Erreur serveur', details: err.message });
+    // Retourner une configuration par défaut pour le dev local au lieu d'une 500
+    const defaultConfig = {
+      siteName: 'Signal-Moi (local)',
+      logoUrl: '/icons/icon-192x192.png',
+      theme: 'default',
+      collaboratorCampaigns: []
+    };
+    res.json(defaultConfig);
   }
 });
 

@@ -1,14 +1,17 @@
 const { Sequelize, QueryTypes } = require('sequelize');
 require('dotenv').config();
 
+// Activer SSL uniquement en production ou si explictement demandé via DATABASE_SSL
+const useSsl = process.env.DATABASE_SSL === 'true' || process.env.NODE_ENV === 'production';
+
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
-    dialectOptions: {
+    dialectOptions: useSsl ? {
         ssl: {
             require: true,
             rejectUnauthorized: false
         }
-    },
+    } : {},
     logging: false
 });
 
