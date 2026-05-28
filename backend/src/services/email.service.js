@@ -67,6 +67,42 @@ const templates = {
         <a href="${data.messageUrl}" style="display: inline-block; padding: 10px 20px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 5px;">Voir le message</a>
       </div>
     `
+  }),
+  
+  'signalement-deleted': (data) => ({
+    subject: '⚠️ Votre signalement a été supprimé',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+        <h1 style="color: #DC2626;">Notification de suppression</h1>
+        <p>Bonjour ${data.name},</p>
+        <p>Votre signalement intitulé <strong>"${data.titre}"</strong> a été supprimé de la plateforme Signal-Moi.</p>
+        <p><strong>Raison :</strong></p>
+        <div style="background-color: #FEE2E2; padding: 15px; border-left: 4px solid #DC2626; border-radius: 5px; margin: 10px 0;">
+          ${data.reason}
+        </div>
+        <p>Si vous estimez que cette suppression est injustifiée, veuillez nous contacter à <a href="mailto:${data.contactEmail}">${data.contactEmail}</a></p>
+        <p>Merci de votre compréhension.</p>
+        <p>À bientôt sur Signal-Moi</p>
+      </div>
+    `
+  }),
+  
+  'campagne-deleted': (data) => ({
+    subject: '⚠️ Une campagne a été supprimée',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+        <h1 style="color: #DC2626;">Notification de suppression</h1>
+        <p>Bonjour ${data.name},</p>
+        <p>La campagne <strong>"${data.titre}"</strong> à laquelle vous aviez participé a été supprimée de la plateforme Signal-Moi.</p>
+        <p><strong>Raison :</strong></p>
+        <div style="background-color: #FEE2E2; padding: 15px; border-left: 4px solid #DC2626; border-radius: 5px; margin: 10px 0;">
+          ${data.reason}
+        </div>
+        <p>Si vous avez des questions, veuillez nous contacter à <a href="mailto:${data.contactEmail}">${data.contactEmail}</a></p>
+        <p>Merci de votre compréhension.</p>
+        <p>À bientôt sur Signal-Moi</p>
+      </div>
+    `
   })
 };
 

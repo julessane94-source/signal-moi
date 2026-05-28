@@ -5,6 +5,7 @@ const db = require('../config/database');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const SiteConfig = require('../models/SiteConfig');
+const { sendEmail } = require('../services/email.service');
 
 // ? Middleware d'authentification admin
 const authMiddleware = async (req, res, next) => {
@@ -339,6 +340,119 @@ router.post('/site-config', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('[ADMIN POST /site-config] Erreur:', err);
     res.status(500).json({ error: 'Erreur lors de la sauvegarde', details: err.message });
+  }
+});
+
+// DELETE /api/admin/signalements/:id - Supprimer un signalement et notifier l'auteur
+router.delete('/signalements/:id', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  const { reason } = req.body; // Raison de la suppression
+  
+  try {
+    // Récupérer les infos du signalement et de l'auteur
+    const signalementsResult = await db.query(
+      `SELECT s.id, s.titre, u.email, u.prenom, u.nom 
+       FROM signal_moi.signalements s
+       LEFT JOIN signal_moi.users u ON u.id = s.user_id
+       WHERE s.id = $1`,
+      [id]
+    );
+    
+    if (signalementsResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Signalement introuvable' });
+    }
+    
+    const signalement = signalementsResult.rows[0];
+    
+    // Supprimer le signalement
+    await db.query('DELETE FROM signal_moi.signalements WHERE id = $1', [id]);
+    
+    // Envoyer une notification à l'auteur si email existe
+    if (signalement.email) {
+      try {
+        await sendEmail({
+          to: signalement.email,
+          subject: '⚠️ Votre signalement a été supprimé',
+          template: 'signalement-deleted',
+          data: {
+            name: `${signalement.prenom} ${signalement.nom}`,
+            titre: signalement.titre,
+            reason: reason || 'Non spécifiée',
+            contactEmail: process.env.CONTACT_EMAIL || 'admin@signal-moi.com'
+          }
+        });
+      } catch (emailErr) {
+        console.error('[DELETE /signalements/:id] Erreur notification email:', emailErr);
+        // Ne pas bloquer la suppression si l'email échoue
+      }
+    }
+    
+    res.json({ success: true, message: 'Signalement supprimé et notification envoyée' });
+  } catch (err) {
+    console.error('[ADMIN DELETE /signalements/:id] Erreur:', err);
+    res.status(500).json({ error: 'Erreur lors de la suppression', details: err.message });
+  }
+});
+
+// DELETE /api/admin/campagnes/:id - Supprimer une campagne et notifier les inscrits
+router.delete('/campagnes/:id', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  const { reason } = req.body; // Raison de la suppression
+  
+  try {
+    // Récupérer la campagne
+    const campaigneResult = await db.query(
+      'SELECT id, titre FROM signal_moi.campagnes WHERE id = $1',
+      [id]
+    );
+    
+    if (campaigneResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Campagne introuvable' });
+    }
+    
+    const campagne = campaigneResult.rows[0];
+    
+    // Récupérer les emails des utilisateurs inscrits
+    const inscritResult = await db.query(
+      `SELECT DISTINCT u.email, u.prenom, u.nom
+       FROM signal_moi.inscriptions_campagnes ic
+       JOIN signal_moi.users u ON u.id = ic.user_id
+       WHERE ic.campagne_id = $1`,
+      [id]
+    );
+    
+    const inscrits = inscritResult.rows || [];
+    
+    // Supprimer la campagne (supprimera aussi les inscriptions via CASCADE)
+    await db.query('DELETE FROM signal_moi.campagnes WHERE id = $1', [id]);
+    
+    // Envoyer une notification à tous les inscrits
+    const notificationPromises = inscrits.map(inscrit => 
+      sendEmail({
+        to: inscrit.email,
+        subject: '⚠️ Une campagne a été supprimée',
+        template: 'campagne-deleted',
+        data: {
+          name: `${inscrit.prenom} ${inscrit.nom}`,
+          titre: campagne.titre,
+          reason: reason || 'Non spécifiée',
+          contactEmail: process.env.CONTACT_EMAIL || 'admin@signal-moi.com'
+        }
+      }).catch(err => {
+        console.error(`[DELETE /campagnes/:id] Erreur notification email pour ${inscrit.email}:`, err);
+        // Ne pas bloquer si une notification échoue
+      })
+    );
+    
+    await Promise.all(notificationPromises);
+    
+    res.json({ 
+      success: true, 
+      message: `Campagne supprimée et ${inscrits.length} notification(s) envoyée(s)` 
+    });
+  } catch (err) {
+    console.error('[ADMIN DELETE /campagnes/:id] Erreur:', err);
+    res.status(500).json({ error: 'Erreur lors de la suppression', details: err.message });
   }
 });
 

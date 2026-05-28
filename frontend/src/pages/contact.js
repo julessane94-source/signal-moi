@@ -3,6 +3,7 @@ import Head from 'next/head'
 import { useState, useEffect } from 'react'
 import ErrorBoundary from '../components/common/ErrorBoundary'
 import Navbar from '../components/common/Navbar'
+import Footer from '../components/common/Footer'
 import { motion } from 'framer-motion'
 import { toast } from 'react-toastify'
 import { API_BASE } from '../config/api'
@@ -435,16 +436,17 @@ export default function Contact() {
             <h2 className="text-3xl font-bold text-gray-900 mb-10 text-center">Localisation</h2>
             <div className="rounded-xl overflow-hidden shadow-lg">
               <iframe
+                title="Carte de localisation"
                 width="100%"
                 height="400"
                 frameBorder="0"
-                src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3925.6481223${siteConfig.country === 'CM' ? '5639!2d11.502368' : '2d-17.04'}!2d${siteConfig.country === 'CM' ? '3.848034' : '14.776547'}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x${siteConfig.country === 'CM' ? '108bcf7d8e8e8e8d' : '1f69a8000'}%3A${siteConfig.country === 'CM' ? '0x1234567890abcdef' : '0x1234567890abcdef'}!2s${siteConfig.country === 'CM' ? 'Yaound%C3%A9' : 'Dakar'}%2C+${siteConfig.country === 'CM' ? 'Cameroon' : 'Senegal'}!5e0!3m2!1sfr!2s${siteConfig.country === 'CM' ? 'cm' : 'sn'}!4v1234567890`}
+                src={siteConfig.country === 'CM' ? 'https://www.openstreetmap.org/export/embed.html?bbox=11.4385%2C3.8333%2C11.5485%2C3.9133&layer=mapnik&marker=3.8733%2C11.4933' : 'https://www.openstreetmap.org/export/embed.html?bbox=-17.5246%2C14.6414%2C-17.3946%2C14.7614&layer=mapnik&marker=14.7014%2C-17.4596'}
                 allowFullScreen=""
                 loading="lazy"
               ></iframe>
             </div>
             <p className="text-center text-gray-600 mt-6 text-sm">
-              Carte illustrative - Consultez Google Maps pour les directions
+              Carte illustrative - aperçu libre de la localisation
             </p>
           </div>
         </section>
