@@ -406,149 +406,175 @@ export default function PoliceDashboard() {
       >
         {selectedSignal && (
           <div className="space-y-6">
-            {/* Infos générales */}
-            <div>
-              <h3 className="font-semibold text-lg mb-2">{selectedSignal.titre}</h3>
-              <p className="text-gray-700 whitespace-pre-wrap">{selectedSignal.description}</p>
+            
+            {/* INFO CITOYEN - Section distincte en haut */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-5 rounded-lg border-2 border-blue-200">
+              <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-3">📋 Informations du signalant</p>
+              <div className="space-y-2">
+                <p className="text-lg font-bold text-gray-900">
+                  {selectedSignal.estAnonyme ? '👤 Signalement anonyme' : `${selectedSignal.user?.prenom || 'Inconnu'} ${selectedSignal.user?.nom || ''}`}
+                </p>
+                {!selectedSignal.estAnonyme && selectedSignal.user?.telephone && (
+                  <p className="text-sm text-gray-700">📱 {selectedSignal.user.telephone}</p>
+                )}
+                {selectedSignal.user?.email && (
+                  <p className="text-sm text-gray-700">📧 {selectedSignal.user.email}</p>
+                )}
+                {selectedSignal.user?.localisation && (
+                  <p className="text-sm text-gray-700">🏠 {selectedSignal.user.localisation}</p>
+                )}
+              </div>
             </div>
 
-            {/* Badges */}
+            {/* Détails du signalement */}
+            <div>
+              <h3 className="font-bold text-xl text-gray-900 mb-3">{selectedSignal.titre}</h3>
+              <p className="text-gray-700 whitespace-pre-wrap text-base">{selectedSignal.description}</p>
+            </div>
+
+            {/* Statut, Priorité, Type */}
             <div className="flex flex-wrap gap-2">
               <Badge variant={getStatusVariant(selectedSignal.statut)}>
-                {selectedSignal.statut}
+                Status: {selectedSignal.statut}
               </Badge>
               <Badge variant={getPriorityColor(selectedSignal.priorite)}>
                 Priorité: {selectedSignal.priorite || 'Normal'}
               </Badge>
-              {selectedSignal.type && <Badge variant="gray">{selectedSignal.type}</Badge>}
+              {selectedSignal.type && <Badge variant="gray">Type: {selectedSignal.type}</Badge>}
             </div>
 
-            {/* Localisation */}
-            <div className="bg-indigo-50 p-4 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <MapPinIcon className="h-5 w-5 text-indigo-600" />
-                <p className="font-semibold">{selectedSignal.localisation}</p>
+            {/* Localisation - avec bouton Localiser */}
+            <div className="bg-indigo-50 p-5 rounded-lg border border-indigo-200">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <MapPinIcon className="h-5 w-5 text-indigo-600 mt-1" />
+                  <div>
+                    <p className="font-semibold text-gray-900">{selectedSignal.localisation}</p>
+                    {selectedSignal.latitude && (
+                      <p className="text-xs text-gray-600 mt-1">
+                        GPS: {parseFloat(selectedSignal.latitude).toFixed(4)}, {parseFloat(selectedSignal.longitude).toFixed(4)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  icon={MapPinIcon}
+                  onClick={() => {
+                    if (selectedSignal.latitude && selectedSignal.longitude) {
+                      window.open(`https://www.google.com/maps/?q=${selectedSignal.latitude},${selectedSignal.longitude}`, '_blank')
+                    } else {
+                      window.open(`https://www.google.com/maps/search/${encodeURIComponent(selectedSignal.localisation)}`, '_blank')
+                    }
+                  }}
+                >
+                  Localiser
+                </Button>
               </div>
-              {selectedSignal.latitude && (
-                <p className="text-sm text-gray-600">
-                  GPS: {selectedSignal.latitude}, {selectedSignal.longitude}
-                </p>
-              )}
             </div>
 
-            {/* Auteur */}
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Signalé par</p>
-              <p className="font-semibold">
-                {selectedSignal.estAnonyme ? '👤 Anonyme' : selectedSignal.user?.prenom}
-              </p>
-            </div>
-
-            {/* Fichiers et Images */}
+            {/* Fichiers et Preuves - Section secondaire en bas */}
             {selectedSignal.fichiers?.length > 0 && (
-              <div>
-                <p className="font-semibold mb-4">Preuves jointes ({selectedSignal.fichiers.length})</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="border-t pt-4">
+                <p className="text-sm font-semibold mb-3 text-gray-700">📎 Preuves jointes ({selectedSignal.fichiers.length})</p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {selectedSignal.fichiers.map((f, i) => {
                     const isImage = f.mime_type?.startsWith('image/') || f.type?.startsWith('image/')
                     const fileUrl = f.chemin ? `${API_BASE}/${f.chemin}` : `${API_BASE}/uploads/signalements/${f.id}`
                     return (
-                      <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="border border-gray-200 rounded-lg overflow-hidden">
+                      <a
+                        key={i}
+                        href={fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group relative border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition"
+                        title={f.nom_fichier || f.nomFichier}
+                      >
                         {isImage ? (
-                          <div className="relative bg-gray-100 h-48">
+                          <div className="relative bg-gray-100 h-32">
                             <img
                               src={fileUrl}
                               alt={f.nom_fichier || f.nomFichier}
-                              className="w-full h-full object-cover hover:scale-105 transition"
+                              className="w-full h-full object-cover group-hover:scale-105 transition"
                               onError={(e) => {
                                 e.target.style.display = 'none'
-                                e.target.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:48px;">📸</div>'
+                                e.target.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px;background:#f3f4f6;">📸</div>'
                               }}
                             />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center">
+                              <span className="text-white text-xl opacity-0 group-hover:opacity-100 transition">📥</span>
+                            </div>
                           </div>
                         ) : (
-                          <div className="bg-gray-100 h-48 flex items-center justify-center">
-                            <span className="text-4xl">📄</span>
+                          <div className="bg-gray-100 h-32 flex items-center justify-center group-hover:bg-gray-200 transition">
+                            <span className="text-2xl">📄</span>
                           </div>
                         )}
-                        <div className="p-3 bg-gray-50">
-                          <p className="text-sm font-medium text-gray-900 truncate">{f.nom_fichier || f.nomFichier}</p>
-                          <a
-                            href={fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-indigo-600 hover:underline text-xs mt-1 inline-block"
-                          >
-                            📥 Télécharger
-                          </a>
+                        <div className="p-2 bg-gray-50 text-center border-t border-gray-200">
+                          <p className="text-xs font-medium text-gray-700 truncate">{f.nom_fichier || f.nomFichier}</p>
                         </div>
-                      </motion.div>
+                      </a>
                     )
                   })}
                 </div>
               </div>
             )}
 
-            {/* Contact et Actions */}
-            <div className="border-t pt-4 space-y-4">
-              {!selectedSignal.estAnonyme && selectedSignal.user?.telephone && (
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <p className="font-semibold text-blue-900 mb-3">📞 Contacter la victime</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      size="sm"
-                      variant="success"
-                      icon={PhoneIcon}
-                      onClick={() => window.open(`tel:${selectedSignal.user.telephone}`)}
-                    >
-                      Appeler
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="success"
-                      onClick={() => {
-                        const phone = selectedSignal.user.telephone.replace(/\D/g, '')
-                        window.open(`https://wa.me/${phone}`)
-                      }}
-                    >
-                      WhatsApp
-                    </Button>
-                  </div>
-                  <p className="text-sm text-blue-800 mt-2">📱 {selectedSignal.user.telephone}</p>
-                  {selectedSignal.user?.email && (
-                    <p className="text-sm text-blue-800">📧 {selectedSignal.user.email}</p>
-                  )}
-                </div>
-              )}
-
-              <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                <p className="font-semibold text-yellow-900 mb-3">Mettre à jour le statut</p>
-                <div className="flex flex-wrap gap-2">
+            {/* Contacter la victime - Section Actions */}
+            {!selectedSignal.estAnonyme && selectedSignal.user?.telephone && (
+              <div className="border-t pt-4">
+                <p className="text-sm font-semibold mb-3 text-gray-700">📞 Contacter la victime</p>
+                <div className="grid grid-cols-2 gap-2">
                   <Button
                     size="sm"
-                    variant="warning"
-                    onClick={() => updateStatus(selectedSignal.id, 'en_cours')}
+                    variant="success"
+                    onClick={() => window.open(`tel:${selectedSignal.user.telephone}`)}
                   >
-                    En cours
+                    📞 Appeler
                   </Button>
                   <Button
                     size="sm"
                     variant="success"
-                    onClick={() => updateStatus(selectedSignal.id, 'traite')}
-                  >
-                    Traité
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="primary"
                     onClick={() => {
-                      setTransferingSignalId(selectedSignal.id)
-                      setShowTransferModal(true)
+                      const phone = selectedSignal.user.telephone.replace(/\D/g, '')
+                      window.open(`https://wa.me/${phone}`)
                     }}
                   >
-                    Transférer
+                    💬 WhatsApp
                   </Button>
                 </div>
+              </div>
+            )}
+
+            {/* Mettre à jour le statut */}
+            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+              <p className="font-semibold text-yellow-900 mb-3">Mettre à jour le statut</p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="warning"
+                  onClick={() => updateStatus(selectedSignal.id, 'en_cours')}
+                >
+                  En cours
+                </Button>
+                <Button
+                  size="sm"
+                  variant="success"
+                  onClick={() => updateStatus(selectedSignal.id, 'traite')}
+                >
+                  Traité
+                </Button>
+                <Button
+                  size="sm"
+                  variant="primary"
+                  onClick={() => {
+                    setTransferingSignalId(selectedSignal.id)
+                    setShowTransferModal(true)
+                  }}
+                >
+                  Transférer
+                </Button>
               </div>
             </div>
           </div>
