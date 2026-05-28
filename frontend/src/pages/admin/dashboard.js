@@ -27,6 +27,11 @@ export default function AdminDashboard() {
     prenom: '', nom: '', email: '', telephone: '', password: '', ville: '', quartier: '', role: 'citoyen'
   })
   const [errors, setErrors] = useState({})
+  const [signalements, setSignalements] = useState([])
+  const [campagnes, setCampagnes] = useState([])
+  const [deleteReason, setDeleteReason] = useState('')
+  const [itemToDelete, setItemToDelete] = useState(null)
+  const [deleteType, setDeleteType] = useState(null) // 'signalement' ou 'campagne'
   const [siteConfig, setSiteConfig] = useState({
     siteName: 'Signal-Moi',
     contactEmail: 'contact@signal-moi.com',
@@ -59,7 +64,6 @@ export default function AdminDashboard() {
     }
   })
   
-  const [signalements, setSignalements] = useState([])
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalSignalements: 0,
@@ -129,6 +133,7 @@ export default function AdminDashboard() {
       const signalementsData = signalementsRes.ok ? await signalementsRes.json() : []
       const campagnesData = campagnesRes.ok ? await campagnesRes.json() : []
       setSignalements(Array.isArray(signalementsData) ? signalementsData : [])
+      setCampagnes(Array.isArray(campagnesData) ? campagnesData : [])
       setStats(prev => ({
         ...prev,
         totalSignalements: Array.isArray(signalementsData) ? signalementsData.length : 0,
@@ -239,6 +244,54 @@ export default function AdminDashboard() {
       fetchUsers()
     } catch (error) {
       toast.error('❌ Erreur')
+    }
+  }
+
+  const deleteSignalement = async () => {
+    if (!itemToDelete) return
+    try {
+      const token = localStorage.getItem('token')
+      const base = API_BASE
+      const res = await fetch(`${base}/api/admin/signalements/${itemToDelete}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: deleteReason || 'Signalement supprimé par l\'administrateur' })
+      })
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.error || 'Erreur lors de la suppression')
+      }
+      toast.success('✅ Signalement supprimé et notification envoyée')
+      setItemToDelete(null)
+      setDeleteReason('')
+      setDeleteType(null)
+      fetchStats()
+    } catch (error) {
+      toast.error('❌ ' + (error.message || 'Erreur'))
+    }
+  }
+
+  const deleteCampagne = async () => {
+    if (!itemToDelete) return
+    try {
+      const token = localStorage.getItem('token')
+      const base = API_BASE
+      const res = await fetch(`${base}/api/admin/campagnes/${itemToDelete}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: deleteReason || 'Campagne supprimée par l\'administrateur' })
+      })
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.error || 'Erreur lors de la suppression')
+      }
+      toast.success('✅ Campagne supprimée et notifications envoyées')
+      setItemToDelete(null)
+      setDeleteReason('')
+      setDeleteType(null)
+      fetchStats()
+    } catch (error) {
+      toast.error('❌ ' + (error.message || 'Erreur'))
     }
   }
 
@@ -384,6 +437,7 @@ export default function AdminDashboard() {
               { id: 'dashboard', label: 'Tableau de bord', icon: ChartBarIcon },
               { id: 'users', label: 'Utilisateurs', icon: UserGroupIcon },
               { id: 'signalements', label: 'Signalements', icon: DocumentTextIcon },
+              { id: 'campagnes', label: 'Campagnes', icon: ChartBarIcon },
               { id: 'config', label: 'Configuration', icon: CogIcon }
             ].map((tab) => (
               <motion.button
@@ -529,9 +583,23 @@ export default function AdminDashboard() {
                               <span>👤 {s.author?.prenom} {s.author?.nom}</span>
                             </div>
                           </div>
-                          {Array.isArray(s.fichiers) && s.fichiers[0] && (
-                            <img src={s.fichiers[0]} alt="aperçu" className="w-20 h-20 object-cover rounded-lg" />
-                          )}
+                          <div className="flex flex-col items-end gap-2">
+                            {Array.isArray(s.fichiers) && s.fichiers[0] && (
+                              <img src={s.fichiers[0]} alt="aperçu" className="w-20 h-20 object-cover rounded-lg" />
+                            )}
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              onClick={() => {
+                                setItemToDelete(s.id)
+                                setDeleteType('signalement')
+                                setDeleteReason('')
+                              }}
+                              className="p-2 hover:bg-red-50 rounded-lg transition"
+                              title="Supprimer ce signalement"
+                            >
+                              <TrashIcon className="h-5 w-5 text-red-600" />
+                            </motion.button>
+                          </div>
                         </div>
                       </Card>
                     </motion.div>
@@ -541,7 +609,65 @@ export default function AdminDashboard() {
             </motion.div>
           )}
 
-          {/* Configuration Tab */}
+          {/* Campagnes Tab */}
+          {activeTab === 'campagnes' && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-4"
+            >
+              {campagnes.length === 0 ? (
+                <Card className="p-12 text-center">
+                  <div className="text-6xl mb-4">📭</div>
+                  <p className="text-gray-500">Aucune campagne disponible</p>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 gap-4">
+                  {campagnes.map((c, idx) => (
+                    <motion.div
+                      key={c.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                    >
+                      <Card className="p-6 hover:shadow-lg transition">
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-semibold text-lg">{c.titre}</h3>
+                              <Badge variant="info">{c.statut || 'active'}</Badge>
+                            </div>
+                            <p className="text-gray-600 mb-3">{c.description}</p>
+                            <div className="flex items-center gap-4 text-sm text-gray-600">
+                              <span>📅 Création: {new Date(c.created_at).toLocaleDateString('fr-FR')}</span>
+                              <span>👤 {c.createur?.prenom} {c.createur?.nom}</span>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-2">
+                            {c.image && (
+                              <img src={c.image} alt="aperçu" className="w-20 h-20 object-cover rounded-lg" />
+                            )}
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              onClick={() => {
+                                setItemToDelete(c.id)
+                                setDeleteType('campagne')
+                                setDeleteReason('')
+                              }}
+                              className="p-2 hover:bg-red-50 rounded-lg transition"
+                              title="Supprimer cette campagne"
+                            >
+                              <TrashIcon className="h-5 w-5 text-red-600" />
+                            </motion.button>
+                          </div>
+                        </div>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
           {activeTab === 'config' && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
@@ -783,6 +909,54 @@ export default function AdminDashboard() {
           )}
         </div>
       </div>
+
+      {/* Modal Delete Confirmation */}
+      <Modal
+        isOpen={itemToDelete !== null}
+        onClose={() => {
+          setItemToDelete(null)
+          setDeleteReason('')
+          setDeleteType(null)
+        }}
+        title={deleteType === 'signalement' ? 'Supprimer un signalement' : 'Supprimer une campagne'}
+        size="md"
+      >
+        <div className="space-y-4">
+          <p className="text-gray-700">
+            {deleteType === 'signalement' 
+              ? 'Êtes-vous sûr de vouloir supprimer ce signalement ? L\'auteur recevra une notification.'
+              : 'Êtes-vous sûr de vouloir supprimer cette campagne ? Tous les participants recevront une notification.'}
+          </p>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Raison de la suppression (optionnel)</label>
+            <textarea
+              value={deleteReason}
+              onChange={(e) => setDeleteReason(e.target.value)}
+              placeholder="Expliquez pourquoi ce contenu est supprimé..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
+              rows="3"
+            />
+          </div>
+          <div className="flex gap-3 pt-4">
+            <button
+              onClick={() => {
+                setItemToDelete(null)
+                setDeleteReason('')
+                setDeleteType(null)
+              }}
+              className="flex-1 border rounded py-2 hover:bg-gray-50"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={() => deleteType === 'signalement' ? deleteSignalement() : deleteCampagne()}
+              className="flex-1 bg-red-600 text-white rounded py-2 hover:bg-red-700"
+            >
+              Supprimer
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Modal Create/Edit User */}
       <Modal
