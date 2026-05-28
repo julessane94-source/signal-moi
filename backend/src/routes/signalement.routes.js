@@ -84,8 +84,8 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
                 const fileId = uuidv4();
                 const chemin = f.path || (`uploads/signalements/${f.filename}`);
                 return db.query(
-                    `INSERT INTO signal_moi.fichiers (id, signalement_id, nom_fichier, chemin, type, taille, mime_type, uploaded_by)
-                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+                    `INSERT INTO signal_moi.fichiers (id, signalement_id, nom_fichier, chemin, type, taille, mime_type, uploaded_by, created_at, updated_at)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())`,
                     [fileId, signalementId, f.originalname, chemin, fileType, f.size || 0, f.mimetype, user_id]
                 );
             });
