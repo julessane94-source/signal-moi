@@ -38,6 +38,7 @@ export default function NewSignalement() {
             const data = await res.json()
             const addr = data.display_name
             setFormData(prev => ({ ...prev, localisation: prev.localisation || addr, latitude: lat, longitude: lng }))
+            toast.success('📍 Localisation automatique trouvée')
           } else {
             setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }))
           }
@@ -45,7 +46,8 @@ export default function NewSignalement() {
           setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }))
         }
       }, (err) => {
-        // ignore if user denies
+        // User denied geolocation
+        console.log('Géolocalisation refusée par l\'utilisateur')
       })
     }
   }, [])
@@ -163,8 +165,8 @@ export default function NewSignalement() {
                     } else {
                       toast.error('Géolocalisation non prise en charge')
                     }
-                  }} className="text-sm px-3 py-1 bg-gray-100 rounded">Localiser automatiquement</button>
-                  <span className="text-sm text-gray-500">{latitude && longitude ? `Coord: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}` : ''}</span>
+                  }} className="text-sm px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition font-medium">📍 Localiser</button>
+                  <span className="text-sm text-gray-600 font-medium">{latitude && longitude ? `✓ ${latitude.toFixed(5)}, ${longitude.toFixed(5)}` : 'Pas de localisation'}</span>
                 </div>
                 <div className="mt-3">
                   <LeafletMap lat={latitude} lng={longitude} setLat={setLatitude} setLng={setLongitude} />
@@ -174,13 +176,50 @@ export default function NewSignalement() {
                 <label className="block text-sm font-medium mb-1">Preuves (photos, vidéos, audio)</label>
                 <input type="file" multiple accept="image/*,video/*,audio/*" onChange={handleFileChange} className="w-full" />
                 {files.length > 0 && (
-                  <div className="mt-2 space-y-1">
-                    {files.map((f, i) => (
-                      <div key={i} className="flex justify-between bg-gray-100 p-2 rounded">
-                        <span>{f.name}</span>
-                        <button type="button" onClick={() => removeFile(i)} className="text-red-500">Supprimer</button>
-                      </div>
-                    ))}
+                  <div className="mt-4">
+                    <p className="text-sm font-medium text-gray-700 mb-3">{files.length} fichier(s) sélectionné(s)</p>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {files.map((f, i) => {
+                        const isImage = f.type.startsWith('image/')
+                        const isVideo = f.type.startsWith('video/')
+                        const isAudio = f.type.startsWith('audio/')
+                        const objectUrl = URL.createObjectURL(f)
+                        const sizeMB = (f.size / 1024 / 1024).toFixed(2)
+                        
+                        return (
+                          <div key={i} className="relative bg-gray-50 rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition">
+                            {/* Preview */}
+                            <div className="w-full h-32 bg-gray-100 flex items-center justify-center relative group">
+                              {isImage && (
+                                <img src={objectUrl} alt={f.name} className="w-full h-full object-cover" />
+                              )}
+                              {isVideo && (
+                                <div className="text-4xl">🎥</div>
+                              )}
+                              {isAudio && (
+                                <div className="text-4xl">🎵</div>
+                              )}
+                              {!isImage && !isVideo && !isAudio && (
+                                <div className="text-4xl">📄</div>
+                              )}
+                              {/* Remove button overlay */}
+                              <button
+                                type="button"
+                                onClick={() => removeFile(i)}
+                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-xs font-bold"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                            {/* File info */}
+                            <div className="p-2">
+                              <p className="text-xs font-medium text-gray-900 truncate">{f.name}</p>
+                              <p className="text-xs text-gray-500 mt-1">{sizeMB} MB</p>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
                   </div>
                 )}
               </div>

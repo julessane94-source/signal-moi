@@ -413,7 +413,7 @@ export default function PoliceDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   {selectedSignal.fichiers.map((f, i) => {
                     const isImage = f.mime_type?.startsWith('image/') || f.type?.startsWith('image/')
-                    const fileUrl = f.chemin ? `${API_BASE}${f.chemin}` : `${API_BASE}/uploads/signalements/${f.id}`
+                    const fileUrl = f.chemin ? `${API_BASE}/${f.chemin}` : `${API_BASE}/uploads/signalements/${f.id}`
                     return (
                       <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="border border-gray-200 rounded-lg overflow-hidden">
                         {isImage ? (
