@@ -25,13 +25,20 @@ const query = async (sql, params = []) => {
         const sqlTrimmed = sql.trim().toUpperCase();
         let queryType = QueryTypes.SELECT;
 
-        if (sqlTrimmed.startsWith('INSERT')) {
-            queryType = QueryTypes.INSERT;
-        } else if (sqlTrimmed.startsWith('UPDATE')) {
-            queryType = QueryTypes.UPDATE;
-        } else if (sqlTrimmed.startsWith('DELETE')) {
-            queryType = QueryTypes.DELETE;
+        // Vérifier si c'est une requête avec RETURNING (PostgreSQL)
+        const hasReturning = sqlTrimmed.includes('RETURNING');
+
+        if (!hasReturning) {
+            // Pour les requêtes sans RETURNING, déterminer le type normalement
+            if (sqlTrimmed.startsWith('INSERT')) {
+                queryType = QueryTypes.INSERT;
+            } else if (sqlTrimmed.startsWith('UPDATE')) {
+                queryType = QueryTypes.UPDATE;
+            } else if (sqlTrimmed.startsWith('DELETE')) {
+                queryType = QueryTypes.DELETE;
+            }
         }
+        // Pour les requêtes WITH RETURNING, utiliser SELECT pour obtenir les résultats
 
         // Exécuter la requête avec les paramètres correctement bindés
         const results = await originalQuery(sql, {

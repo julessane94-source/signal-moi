@@ -54,9 +54,24 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
              RETURNING *`,
             [user_id, titre, description, type, localisation, latitude || null, longitude || null]
         );
+        
+        console.log('[POST /signalements] Résultat complet de db.query:', JSON.stringify(result, null, 2));
+        console.log('[POST /signalements] result.rows:', result.rows);
+        console.log('[POST /signalements] result.rows[0]:', result.rows[0]);
+        
         const signalement = Array.isArray(result.rows) ? result.rows[0] : result[0];
 
-        if (!signalement || signalement.id === undefined || signalement.id === null) {
+        if (!signalement) {
+            console.error('[POST /signalements] Aucun signalement retourné');
+            throw new Error('Aucun signalement créé');
+        }
+
+        console.log('[POST /signalements] Signalement obtenu:', signalement);
+        console.log('[POST /signalements] Propriétés du signalement:', Object.keys(signalement || {}));
+
+        if (signalement.id === undefined || signalement.id === null) {
+            console.error('[POST /signalements] Erreur: signalement.id est undefined/null');
+            console.error('[POST /signalements] Contenu du signalement:', signalement);
             throw new Error('Signalement créé sans identifiant valide');
         }
 
