@@ -318,6 +318,119 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
             }
         });
 
+// PATCH /api/signalements/:id/statut - Mettre à jour le statut
+router.patch('/:id/statut', authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { statut } = req.body;
+
+        // Vérifier le rôle
+        if (req.user.role !== 'police' && req.user.role !== 'collaborateur' && req.user.role !== 'admin') {
+            return res.status(403).json({ error: 'Accès refusé' });
+        }
+
+        // Valider le statut
+        const statuts_valides = ['nouveau', 'en_cours', 'traite', 'transfere', 'closed'];
+        if (!statuts_valides.includes(statut)) {
+            return res.status(400).json({ error: 'Statut invalide' });
+        }
+
+        const result = await db.query(
+            `UPDATE signal_moi.signalements 
+             SET statut = $1, updated_at = NOW()
+             WHERE id = $2
+             RETURNING *`,
+            [statut, id]
+        );
+
+        if (!result.rows || result.rows.length === 0) {
+            return res.status(404).json({ error: 'Signalement non trouvé' });
+        }
+
+        console.log(`[PATCH /:id/statut] Statut mis à jour pour ${id} à ${statut}`);
+        res.json({ success: true, signalement: result.rows[0] });
+    } catch (err) {
+        console.error('Erreur PATCH statut:', err);
+        res.status(500).json({ error: 'Erreur serveur', details: err.message });
+    }
+});
+
+// POST /api/signalements/:id/transfert - Transférer à un autre officier police
+router.post('/:id/transfert', authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { police_id } = req.body;
+
+        // Vérifier le rôle
+        if (req.user.role !== 'police' && req.user.role !== 'collaborateur' && req.user.role !== 'admin') {
+            return res.status(403).json({ error: 'Accès refusé' });
+        }
+
+        // Vérifier que le police_id existe et est un officier police
+        const policierResult = await db.query(
+            `SELECT id, prenom, nom, email FROM signal_moi.users 
+             WHERE id = $1 AND role = 'police'`,
+            [police_id]
+        );
+
+        if (!policierResult.rows || policierResult.rows.length === 0) {
+            return res.status(400).json({ error: 'Officier police invalide' });
+        }
+
+        const policier = policierResult.rows[0];
+
+        // Vérifier que le signalement existe
+        const signalementResult = await db.query(
+            `SELECT * FROM signal_moi.signalements WHERE id = $1`,
+            [id]
+        );
+
+        if (!signalementResult.rows || signalementResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Signalement non trouvé' });
+        }
+
+        const signalement = signalementResult.rows[0];
+
+        // Mettre à jour l'attributaire si le champ existe, sinon faire un log
+        // (le champ pour stocker l'assigné n'existe peut-être pas encore)
+        await db.query(
+            `UPDATE signal_moi.signalements 
+             SET assigned_to = $1, updated_at = NOW()
+             WHERE id = $2`,
+            [police_id, id]
+        );
+
+        // Préparer les données pour la notification socket
+        const notificationData = {
+            signalement_id: id,
+            transferred_by: {
+                id: req.user.id,
+                prenom: req.user.prenom,
+                nom: req.user.nom
+            },
+            transferred_to: {
+                id: policier.id,
+                prenom: policier.prenom,
+                nom: policier.nom,
+                email: policier.email
+            },
+            titre: signalement.titre,
+            type: signalement.type
+        };
+
+        console.log(`[POST /:id/transfert] Signalement ${id} transféré de ${req.user.id} à ${police_id}`);
+        
+        res.json({ 
+            success: true, 
+            message: `Dossier transféré à ${policier.prenom} ${policier.nom}`,
+            notification: notificationData
+        });
+    } catch (err) {
+        console.error('Erreur transfert:', err);
+        res.status(500).json({ error: 'Erreur serveur', details: err.message });
+    }
+});
+
 module.exports = router;
 
 

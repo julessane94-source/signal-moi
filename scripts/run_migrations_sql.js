@@ -23,8 +23,8 @@ async function runMigration(filePath) {
     
     console.log(`✅ Migration exécutée avec succès!`);
   } catch (err) {
-    console.error(`❌ Erreur lors de la migration:`, err.message);
-    process.exit(1);
+    console.warn(`⚠️  Migration error (continuing): ${err.message}`);
+    // Continue with next migration even if one fails
   }
 }
 

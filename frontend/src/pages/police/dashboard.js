@@ -21,9 +21,14 @@ export default function PoliceDashboard() {
   const [selectedSignal, setSelectedSignal] = useState(null)
   const [filter, setFilter] = useState('all')
   const [loading, setLoading] = useState(true)
+  const [policiers, setPoliciers] = useState([])
+  const [showTransferModal, setShowTransferModal] = useState(false)
+  const [selectedPoliceToTransfer, setSelectedPoliceToTransfer] = useState(null)
+  const [transferingSignalId, setTransferingSignalId] = useState(null)
 
   useEffect(() => {
     fetchSignalements()
+    fetchPoliciers()
     
     if (socket) {
       socket.on('new_signalement_notification', (data) => {
@@ -60,6 +65,22 @@ export default function PoliceDashboard() {
     }
   }
 
+  const fetchPoliciers = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${API_BASE}/api/admin/users`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const data = await res.json()
+      const policiersList = Array.isArray(data) 
+        ? data.filter(u => u.role === 'police' && u.id !== user?.id) 
+        : []
+      setPoliciers(policiersList)
+    } catch (error) {
+      console.error('Erreur chargement policiers:', error)
+    }
+  }
+
   const updateStatus = async (id, statut) => {
     try {
       const token = localStorage.getItem('token')
@@ -79,20 +100,37 @@ export default function PoliceDashboard() {
     }
   }
 
-  const transferer = async (id, uniteId) => {
+  const transferer = async (signalId, policeId) => {
     try {
       const token = localStorage.getItem('token')
-      await fetch(`${API_BASE}/api/signalements/${id}/transfert`, {
+      const res = await fetch(`${API_BASE}/api/signalements/${signalId}/transfert`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ uniteId })
+        body: JSON.stringify({ police_id: policeId })
       })
-      toast.success('✅ Dossier transféré')
+      if (!res.ok) throw new Error('Erreur transfert')
+      
+      // Aussi mettre à jour le statut à 'transfere'
+      await fetch(`${API_BASE}/api/signalements/${signalId}/statut`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ statut: 'transfere' })
+      })
+      
+      toast.success('✅ Dossier transféré avec succès')
+      setShowTransferModal(false)
+      setSelectedPoliceToTransfer(null)
+      setTransferingSignalId(null)
+      setSelectedSignal(null)
       fetchSignalements()
     } catch (error) {
+      console.error('Erreur transfert:', error)
       toast.error('❌ Erreur lors du transfert')
     }
   }
@@ -503,7 +541,10 @@ export default function PoliceDashboard() {
                   <Button
                     size="sm"
                     variant="primary"
-                    onClick={() => updateStatus(selectedSignal.id, 'transfere')}
+                    onClick={() => {
+                      setTransferingSignalId(selectedSignal.id)
+                      setShowTransferModal(true)
+                    }}
                   >
                     Transférer
                   </Button>
@@ -512,6 +553,70 @@ export default function PoliceDashboard() {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Modal Transfert */}
+      <Modal
+        isOpen={showTransferModal}
+        onClose={() => {
+          setShowTransferModal(false)
+          setSelectedPoliceToTransfer(null)
+        }}
+        title="Transférer le dossier"
+      >
+        <div className="space-y-4">
+          <p className="text-gray-600">
+            Sélectionnez l'officier de police qui doit recevoir ce dossier :
+          </p>
+          
+          {policiers.length === 0 ? (
+            <p className="text-gray-500 text-center py-4">
+              Aucun autre officier disponible
+            </p>
+          ) : (
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {policiers.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => setSelectedPoliceToTransfer(p.id)}
+                  className={`w-full p-3 text-left border-2 rounded-lg transition ${
+                    selectedPoliceToTransfer === p.id
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="font-semibold text-gray-900">
+                    👮 {p.prenom} {p.nom}
+                  </div>
+                  <div className="text-sm text-gray-500">{p.email}</div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="flex gap-2 justify-end pt-4 border-t">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setShowTransferModal(false)
+                setSelectedPoliceToTransfer(null)
+              }}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="primary"
+              disabled={!selectedPoliceToTransfer}
+              onClick={() => {
+                if (selectedPoliceToTransfer && transferingSignalId) {
+                  transferer(transferingSignalId, selectedPoliceToTransfer)
+                }
+              }}
+            >
+              Transférer
+            </Button>
+          </div>
+        </div>
       </Modal>
     </>
   )
