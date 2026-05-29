@@ -54,7 +54,8 @@ export default function SignalementDetail() {
         })
         if (userRes.ok) {
           const userData = await userRes.json()
-          const signedRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/plaidoyers/signed/user/${userData.id}`, {
+          const userId = userData.user?.id || userData.id
+          const signedRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/plaidoyers/signed/user/${userId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           })
           if (signedRes.ok) {
