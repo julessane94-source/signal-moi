@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Navbar from '../components/common/Navbar'
-import Footer from '../components/common/Footer'
 import { motion } from 'framer-motion'
 import { API_BASE } from '../config/api'
 
@@ -327,8 +326,6 @@ export default function About() {
           </div>
         </section>
       </main>
-
-      <Footer />
     </>
   )
 }

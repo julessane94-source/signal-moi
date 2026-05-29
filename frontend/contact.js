@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Navbar from './src/components/common/Navbar'
-import Footer from './src/components/common/Footer'
+
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { toast } from 'react-toastify'
@@ -218,8 +218,6 @@ export default function Contact() {
           </div>
         </section>
       </main>
-
-      <Footer />
     </>
   )
 }

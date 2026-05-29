@@ -1,7 +1,6 @@
 ﻿import Head from 'next/head'
 import Link from 'next/link'
 import Navbar from '../components/common/Navbar'
-import Footer from '../components/common/Footer'
 import { useState, useEffect } from 'react'
 
 export default function DownloadApp() {
@@ -82,8 +81,6 @@ export default function DownloadApp() {
           </div>
         </div>
       </div>
-
-      <Footer />
     </>
   )
 }
