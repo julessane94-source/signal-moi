@@ -159,9 +159,18 @@ export default function NewSignalement() {
                           if (res.ok) {
                             const data = await res.json()
                             setFormData(prev => ({ ...prev, localisation: prev.localisation || data.display_name }))
+                            toast.success('📍 Localisation trouvée !')
+                          } else {
+                            setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }))
+                            toast.success('📍 Localisation trouvée (coordonnées GPS)')
                           }
-                        } catch (e) { }
-                      }, () => {})
+                        } catch (e) {
+                          setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }))
+                          toast.success('📍 Localisation trouvée (coordonnées GPS)')
+                        }
+                      }, (err) => {
+                        toast.error('Accès à la géolocalisation refusé')
+                      })
                     } else {
                       toast.error('Géolocalisation non prise en charge')
                     }
