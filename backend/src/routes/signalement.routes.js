@@ -116,7 +116,6 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
             try {
                 const result = await db.query(`SELECT id, titre, description, type, statut, localisation, latitude, longitude, created_at, updated_at
                                                FROM signal_moi.signalements 
-                                               WHERE est_anonyme = true OR est_anonyme IS NULL
                                                ORDER BY created_at DESC LIMIT 200`);
                 const rows = result.rows.map(r => ({
                     id: r.id,
