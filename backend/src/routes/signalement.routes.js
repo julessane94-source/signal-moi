@@ -341,12 +341,13 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
                 const isOwner = req.user && req.user.id === signalement.user_id;
                 const isAdmin = req.user && req.user.role === 'admin';
                 const isPolice = req.user && req.user.role === 'police';
+                const isCollaborateur = req.user && req.user.role === 'collaborateur';
 
-                console.log(`[GET /:id] Accès: isOwner=${isOwner}, isAdmin=${isAdmin}, isPolice=${isPolice}, estAnonyme=${signalement.est_anonyme}`);
+                console.log(`[GET /:id] Accès: isOwner=${isOwner}, isAdmin=${isAdmin}, isPolice=${isPolice}, isCollaborateur=${isCollaborateur}, estAnonyme=${signalement.est_anonyme}`);
 
-                // Vérifier l'accès: le propriétaire, admin, ou police peuvent voir les détails
+                // Vérifier l'accès: le propriétaire, admin, police, collaborateur peuvent voir les détails
                 // Les autres ne peuvent voir que si le signalement est anonyme
-                if (!isOwner && !isAdmin && !isPolice && !signalement.est_anonyme) {
+                if (!isOwner && !isAdmin && !isPolice && !isCollaborateur && !signalement.est_anonyme) {
                     console.log(`[GET /:id] Accès refusé pour signalement non-anonyme`);
                     return res.status(403).json({ error: 'Accès refusé' });
                 }
@@ -388,8 +389,8 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
                     updatedAt: signalement.updated_at
                 };
 
-                // Ajouter les infos de l'auteur que si: propriétaire, admin, police, ou anonyme
-                if (isOwner || isAdmin || isPolice || signalement.est_anonyme) {
+                // Ajouter les infos de l'auteur que si: propriétaire, admin, police, collaborateur, ou anonyme
+                if (isOwner || isAdmin || isPolice || isCollaborateur || signalement.est_anonyme) {
                     response.user = {
                         id: signalement.user_id,
                         prenom: signalement.user_prenom,
