@@ -82,7 +82,18 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
             const insertFiles = req.files.map(f => {
                 const fileType = f.mimetype.startsWith('image') ? 'image' : f.mimetype.startsWith('video') ? 'video' : f.mimetype.startsWith('audio') ? 'audio' : 'document';
                 const fileId = uuidv4();
-                const chemin = f.path || (`uploads/signalements/${f.filename}`);
+                // Normaliser le chemin pour éviter les chemins absolus ou mal formés
+                let chemin = f.path || `uploads/signalements/${f.filename}`;
+                // Si le chemin contient des séparateurs Windows, les remplacer par /
+                chemin = chemin.replace(/\\/g, '/');
+                // Si le chemin commence par /, le nettoyer pour avoir un chemin relatif
+                if (chemin.startsWith('/')) {
+                    chemin = chemin.substring(1);
+                }
+                // S'assurer que le chemin commence par 'uploads/'
+                if (!chemin.startsWith('uploads/')) {
+                    chemin = `uploads/signalements/${f.filename}`;
+                }
                 return db.query(
                     `INSERT INTO signal_moi.fichiers (id, signalement_id, nom_fichier, chemin, type, taille, mime_type, uploaded_by, created_at, updated_at)
                      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())`,
@@ -100,14 +111,15 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
     }
 });
 
-    // GET public: liste publique des signalements
+    // GET public: liste publique des signalements (ANONYMISÉE - pas de user_id)
         router.get('/public', async (req, res) => {
             try {
-                const result = await db.query(`SELECT id, user_id, titre, description, type, statut, localisation, latitude, longitude, created_at, updated_at
-                                               FROM signal_moi.signalements ORDER BY created_at DESC LIMIT 200`);
+                const result = await db.query(`SELECT id, titre, description, type, statut, localisation, latitude, longitude, created_at, updated_at
+                                               FROM signal_moi.signalements 
+                                               WHERE est_anonyme = true OR est_anonyme IS NULL
+                                               ORDER BY created_at DESC LIMIT 200`);
                 const rows = result.rows.map(r => ({
                     id: r.id,
-                    userId: r.user_id,
                     titre: r.titre,
                     description: r.description,
                     type: r.type,
@@ -192,29 +204,82 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
                     return res.json(rows);
                 }
 
-                const result = await db.query(`SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, s.latitude, s.longitude, s.created_at, s.updated_at, u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone
-                                               FROM signal_moi.signalements s
-                                               LEFT JOIN signal_moi.users u ON u.id = s.user_id
-                                               ORDER BY s.created_at DESC LIMIT 500`);
-                const rows = result.rows.map(r => ({
-                    id: r.id,
-                    titre: r.titre,
-                    description: r.description,
-                    type: r.type,
-                    statut: r.statut,
-                    localisation: r.localisation,
-                    latitude: r.latitude !== null ? parseFloat(r.latitude) : null,
-                    longitude: r.longitude !== null ? parseFloat(r.longitude) : null,
-                    createdAt: r.created_at,
-                    updatedAt: r.updated_at,
-                    author: {
-                        id: r.user_id,
-                        prenom: r.user_prenom,
-                        nom: r.user_nom,
-                        telephone: r.user_telephone
-                    }
-                }));
-                res.json(rows);
+                // Si c'est un collaborateur, retourner TOUS les signalements avec stats par catégorie/zone
+                if (req.user && req.user.role === 'collaborateur') {
+                    const result = await db.query(`SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, s.latitude, s.longitude, s.created_at, s.updated_at, u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone
+                                                   FROM signal_moi.signalements s
+                                                   LEFT JOIN signal_moi.users u ON u.id = s.user_id
+                                                   ORDER BY s.created_at DESC LIMIT 500`);
+                    
+                    // Calculer les statistiques par type et localisation
+                    const statsByType = {};
+                    const statsByZone = {};
+                    result.rows.forEach(r => {
+                        // Stats par type
+                        statsByType[r.type] = (statsByType[r.type] || 0) + 1;
+                        // Stats par zone (première partie de localisation)
+                        const zone = r.localisation ? r.localisation.split(',')[0].trim() : 'Zone inconnue';
+                        statsByZone[zone] = (statsByZone[zone] || 0) + 1;
+                    });
+
+                    const rows = result.rows.map(r => ({
+                        id: r.id,
+                        titre: r.titre,
+                        description: r.description,
+                        type: r.type,
+                        statut: r.statut,
+                        localisation: r.localisation,
+                        latitude: r.latitude !== null ? parseFloat(r.latitude) : null,
+                        longitude: r.longitude !== null ? parseFloat(r.longitude) : null,
+                        createdAt: r.created_at,
+                        updatedAt: r.updated_at,
+                        author: {
+                            id: r.user_id,
+                            prenom: r.user_prenom,
+                            nom: r.user_nom,
+                            telephone: r.user_telephone
+                        }
+                    }));
+                    
+                    return res.json({
+                        signalements: rows,
+                        stats: {
+                            total: result.rows.length,
+                            byType: statsByType,
+                            byZone: statsByZone
+                        }
+                    });
+                }
+
+                // Si c'est un admin, retourner TOUS les signalements pour modération/suivi
+                if (req.user && req.user.role === 'admin') {
+                    const result = await db.query(`SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, s.latitude, s.longitude, s.created_at, s.updated_at, u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone
+                                                   FROM signal_moi.signalements s
+                                                   LEFT JOIN signal_moi.users u ON u.id = s.user_id
+                                                   ORDER BY s.created_at DESC LIMIT 500`);
+                    const rows = result.rows.map(r => ({
+                        id: r.id,
+                        titre: r.titre,
+                        description: r.description,
+                        type: r.type,
+                        statut: r.statut,
+                        localisation: r.localisation,
+                        latitude: r.latitude !== null ? parseFloat(r.latitude) : null,
+                        longitude: r.longitude !== null ? parseFloat(r.longitude) : null,
+                        createdAt: r.created_at,
+                        updatedAt: r.updated_at,
+                        author: {
+                            id: r.user_id,
+                            prenom: r.user_prenom,
+                            nom: r.user_nom,
+                            telephone: r.user_telephone
+                        }
+                    }));
+                    return res.json(rows);
+                }
+
+                // Pas de signalements pour les utilisateurs non-authentifiés ou rôles inconnus
+                res.status(403).json({ error: 'Accès refusé: authentification requise' });
             } catch (err) {
                 console.error('Erreur GET / signalements:', err);
                 res.status(500).json({ error: 'Erreur serveur' });
@@ -256,7 +321,7 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
             const { id } = req.params;
             try {
                 const signalementResult = await db.query(`
-                    SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, 
+                    SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, s.est_anonyme,
                            s.latitude, s.longitude, s.created_at, s.updated_at,
                            u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone, u.email AS user_email
                     FROM signal_moi.signalements s
@@ -269,6 +334,15 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
                 }
 
                 const signalement = signalementResult.rows[0];
+                const isOwner = req.user && req.user.id === signalement.user_id;
+                const isAdmin = req.user && req.user.role === 'admin';
+                const isPolice = req.user && req.user.role === 'police';
+
+                // Vérifier l'accès: le propriétaire, admin, ou police peuvent voir les détails
+                // Les autres ne peuvent voir que si le signalement est anonyme
+                if (!isOwner && !isAdmin && !isPolice && !signalement.est_anonyme) {
+                    return res.status(403).json({ error: 'Accès refusé' });
+                }
 
                 // Recuperer les fichiers
                 const filesResult = await db.query(`
@@ -281,7 +355,7 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
                 const fichiers = filesResult.rows.map(f => ({
                     id: f.id,
                     nom: f.nom_fichier,
-                    url: f.chemin.startsWith('http') ? f.chemin : `${process.env.API_BASE_URL || 'http://localhost:3000'}/${f.chemin}`,
+                    url: f.chemin.startsWith('http') ? f.chemin : `${process.env.BACKEND_URL || process.env.API_BASE_URL || 'http://localhost:3001'}/${f.chemin}`,
                     chemin: f.chemin,
                     type: f.type,
                     taille: f.taille,
@@ -290,7 +364,8 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
                     createdAt: f.created_at
                 }));
 
-                res.json({
+                // Construire la réponse en fonction du rôle
+                const response = {
                     id: signalement.id,
                     titre: signalement.titre,
                     description: signalement.description,
@@ -299,19 +374,25 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
                     localisation: signalement.localisation,
                     latitude: signalement.latitude !== null ? parseFloat(signalement.latitude) : null,
                     longitude: signalement.longitude !== null ? parseFloat(signalement.longitude) : null,
-                    telephone: signalement.user_telephone,
-                    email: signalement.user_email,
-                    auteur: {
+                    fichiers: fichiers,
+                    createdAt: signalement.created_at,
+                    updatedAt: signalement.updated_at
+                };
+
+                // Ajouter les infos de l'auteur que si: propriétaire, admin, police, ou anonyme
+                if (isOwner || isAdmin || isPolice || signalement.est_anonyme) {
+                    response.auteur = {
                         id: signalement.user_id,
                         prenom: signalement.user_prenom,
                         nom: signalement.user_nom,
                         telephone: signalement.user_telephone,
                         email: signalement.user_email
-                    },
-                    fichiers: fichiers,  // Images de preuve stockées dans la table fichiers
-                    createdAt: signalement.created_at,
-                    updatedAt: signalement.updated_at
-                });
+                    };
+                    response.telephone = signalement.user_telephone;
+                    response.email = signalement.user_email;
+                }
+
+                res.json(response);
             } catch (err) {
                 console.error('Erreur GET /:id signalement:', err);
                 res.status(500).json({ error: 'Erreur serveur', details: err.message });

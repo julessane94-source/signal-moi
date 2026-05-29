@@ -481,7 +481,10 @@ export default function PoliceDashboard() {
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {selectedSignal.fichiers.map((f, i) => {
                     const isImage = f.mime_type?.startsWith('image/') || f.type?.startsWith('image/')
-                    const fileUrl = f.chemin ? `${API_BASE}/${f.chemin}` : `${API_BASE}/uploads/signalements/${f.id}`
+                    // Normaliser le chemin: enlever les slashes en début et fin, et les chemins absolus
+                    let normalizedPath = f.chemin || `uploads/signalements/${f.id}`
+                    if (normalizedPath.startsWith('/')) normalizedPath = normalizedPath.substring(1)
+                    const fileUrl = `${API_BASE}/${normalizedPath}`
                     return (
                       <a
                         key={i}
