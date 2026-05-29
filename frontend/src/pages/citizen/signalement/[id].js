@@ -3,6 +3,8 @@ import { useRouter } from 'next/router'
 import Navbar from '../../../components/common/Navbar'
 import Link from 'next/link'
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL
+
 export default function SignalementDetail() {
   const router = useRouter()
   const { id } = router.query
@@ -162,70 +164,78 @@ export default function SignalementDetail() {
               <div className="mb-6">
                 <h3 className="font-semibold mb-3">Preuves jointes</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {signal.fichiers.map((f, i) => (
-                    <div key={i} className="border rounded-lg overflow-hidden">
-                      {f.type === 'image' ? (
-                        <div className="flex flex-col">
-                          <img 
-                            src={f.url} 
-                            alt={f.nom}
-                            className="w-full h-64 object-cover"
-                            onError={(e) => {
-                              e.target.style.display = 'none'
-                              e.target.parentElement.querySelector('[data-fallback]').style.display = 'flex'
-                            }}
-                          />
-                          <div data-fallback style={{display: 'none'}} className="bg-gray-100 h-64 items-center justify-center">
-                            <p className="text-gray-500">Impossible de charger l'image</p>
+                  {signal.fichiers.map((f, i) => {
+                    // Construire l'URL correctement à partir du chemin
+                    let normalizedPath = f.chemin || `uploads/signalements/${f.id}`
+                    if (normalizedPath.startsWith('/')) normalizedPath = normalizedPath.substring(1)
+                    const fileUrl = `${API_BASE}/${normalizedPath}`
+                    const isImage = f.type === 'image' || f.mime_type?.startsWith('image/')
+                    
+                    return (
+                      <div key={i} className="border rounded-lg overflow-hidden">
+                        {isImage ? (
+                          <div className="flex flex-col">
+                            <img 
+                              src={fileUrl} 
+                              alt={f.nom_fichier || f.nom}
+                              className="w-full h-64 object-cover"
+                              onError={(e) => {
+                                e.target.style.display = 'none'
+                                e.target.parentElement.querySelector('[data-fallback]').style.display = 'flex'
+                              }}
+                            />
+                            <div data-fallback style={{display: 'none'}} className="bg-gray-100 h-64 flex items-center justify-center">
+                              <p className="text-gray-500">Impossible de charger l'image</p>
+                            </div>
+                            <div className="p-2 bg-gray-50 text-sm">
+                              <p className="font-medium truncate">{f.nom_fichier || f.nom}</p>
+                              <a 
+                                href={fileUrl} 
+                                target="_blank" 
+                                rel="noreferrer"
+                                className="text-indigo-600 hover:underline"
+                              >
+                                Ouvrir en plein écran
+                              </a>
+                            </div>
                           </div>
-                          <div className="p-2 bg-gray-50 text-sm">
-                            <p className="font-medium truncate">{f.nom}</p>
+                        ) : f.type === 'video' ? (
+                          <div className="flex flex-col">
+                            <video 
+                              controls 
+                              className="w-full h-64 bg-black"
+                            >
+                              <source src={fileUrl} type={f.mime_type} />
+                              Votre navigateur ne supporte pas la lecture video
+                            </video>
+                            <div className="p-2 bg-gray-50 text-sm">
+                              <p className="font-medium truncate">{f.nom_fichier || f.nom}</p>
+                            </div>
+                          </div>
+                        ) : f.type === 'audio' ? (
+                          <div className="flex flex-col p-3 bg-gray-100">
+                            <p className="font-medium mb-2">{f.nom_fichier || f.nom}</p>
+                            <audio controls className="w-full">
+                              <source src={fileUrl} type={f.mime_type} />
+                              Votre navigateur ne supporte pas la lecture audio
+                            </audio>
+                          </div>
+                        ) : (
+                          <div className="p-4 bg-gray-50 flex items-center gap-2">
+                            <span className="text-2xl">📎</span>
                             <a 
-                              href={f.url} 
+                              href={fileUrl} 
                               target="_blank" 
                               rel="noreferrer"
                               className="text-indigo-600 hover:underline"
                             >
-                              Ouvrir en plein ecran
+                              {f.nom_fichier || f.nom}
                             </a>
                           </div>
-                        </div>
-                      ) : f.type === 'video' ? (
-                        <div className="flex flex-col">
-                          <video 
-                            controls 
-                            className="w-full h-64 bg-black"
-                          >
-                            <source src={f.url} type={f.mimeType} />
-                            Votre navigateur ne supporte pas la lecture video
-                          </video>
-                          <div className="p-2 bg-gray-50 text-sm">
-                            <p className="font-medium truncate">{f.nom}</p>
-                          </div>
-                        </div>
-                      ) : f.type === 'audio' ? (
-                        <div className="flex flex-col p-3 bg-gray-100">
-                          <p className="font-medium mb-2">{f.nom}</p>
-                          <audio controls className="w-full">
-                            <source src={f.url} type={f.mimeType} />
-                            Votre navigateur ne supporte pas la lecture audio
-                          </audio>
-                        </div>
-                      ) : (
-                        <div className="p-4 bg-gray-50 flex items-center gap-2">
-                          <span className="text-2xl">📎</span>
-                          <a 
-                            href={f.url} 
-                            target="_blank" 
-                            rel="noreferrer"
-                            className="text-indigo-600 hover:underline"
-                          >
-                            {f.nom}
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             )}
