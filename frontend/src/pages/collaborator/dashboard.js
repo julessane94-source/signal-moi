@@ -17,6 +17,7 @@ export default function CollaboratorDashboard() {
   const [followedList, setFollowedList] = useState([])
   const socketRef = useRef(null)
 
+  // TOUS les useEffect doivent être appelés AVANT les conditional returns
   useEffect(() => {
     if (loading) return
     
@@ -27,19 +28,10 @@ export default function CollaboratorDashboard() {
     }
   }, [user, loading, router])
 
-  if (loading) {
-    return (
-      <div className="min-h-screen pt-16 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-      </div>
-    )
-  }
-
-  if (!user || user.role !== 'collaborateur') {
-    return null
-  }
-
   useEffect(() => {
+    // Only run effects if user is collaborateur
+    if (!user || user.role !== 'collaborateur' || loading) return
+
     const fetchSignals = async () => {
       setLoadingSignals(true)
       try {
@@ -88,7 +80,19 @@ export default function CollaboratorDashboard() {
     } catch (e) {
       console.warn('socket init failed', e)
     }
-  }, [])
+  }, [user, loading])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-16 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    )
+  }
+
+  if (!user || user.role !== 'collaborateur') {
+    return null
+  }
 
   const toggleFollow = async (id) => {
     try {
