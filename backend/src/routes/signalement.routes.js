@@ -319,9 +319,10 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
         // GET detail d'un signalement specifique avec fichiers
         router.get('/:id', optionalAuthMiddleware, async (req, res) => {
             const { id } = req.params;
+            console.log(`[GET /:id] Recherche signalement ID: ${id}`);
             try {
                 const signalementResult = await db.query(`
-                    SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, s.est_anonyme,
+                    SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, s.est_anonyme, s.priorite,
                            s.latitude, s.longitude, s.created_at, s.updated_at,
                            u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone, u.email AS user_email
                     FROM signal_moi.signalements s
@@ -329,7 +330,10 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
                     WHERE s.id = $1
                 `, [id]);
 
+                console.log(`[GET /:id] Résultat: ${signalementResult.rows.length} ligne(s) trouvée(s)`);
+                
                 if (signalementResult.rows.length === 0) {
+                    console.log(`[GET /:id] Signalement ID ${id} non trouvé`);
                     return res.status(404).json({ error: 'Signalement non trouve' });
                 }
 
@@ -338,9 +342,12 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
                 const isAdmin = req.user && req.user.role === 'admin';
                 const isPolice = req.user && req.user.role === 'police';
 
+                console.log(`[GET /:id] Accès: isOwner=${isOwner}, isAdmin=${isAdmin}, isPolice=${isPolice}, estAnonyme=${signalement.est_anonyme}`);
+
                 // Vérifier l'accès: le propriétaire, admin, ou police peuvent voir les détails
                 // Les autres ne peuvent voir que si le signalement est anonyme
                 if (!isOwner && !isAdmin && !isPolice && !signalement.est_anonyme) {
+                    console.log(`[GET /:id] Accès refusé pour signalement non-anonyme`);
                     return res.status(403).json({ error: 'Accès refusé' });
                 }
 
@@ -352,16 +359,17 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
                     ORDER BY created_at DESC
                 `, [id]);
 
+                console.log(`[GET /:id] Fichiers: ${filesResult.rows.length} fichier(s) trouvé(s)`);
+
                 const fichiers = filesResult.rows.map(f => ({
                     id: f.id,
-                    nom: f.nom_fichier,
-                    url: f.chemin.startsWith('http') ? f.chemin : `${process.env.BACKEND_URL || process.env.API_BASE_URL || 'http://localhost:3001'}/${f.chemin}`,
+                    nom_fichier: f.nom_fichier,
                     chemin: f.chemin,
                     type: f.type,
                     taille: f.taille,
-                    mimeType: f.mime_type,
+                    mime_type: f.mime_type,
                     description: f.description,
-                    createdAt: f.created_at
+                    created_at: f.created_at
                 }));
 
                 // Construire la réponse en fonction du rôle
@@ -371,6 +379,7 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
                     description: signalement.description,
                     type: signalement.type,
                     statut: signalement.statut,
+                    priorite: signalement.priorite,
                     localisation: signalement.localisation,
                     latitude: signalement.latitude !== null ? parseFloat(signalement.latitude) : null,
                     longitude: signalement.longitude !== null ? parseFloat(signalement.longitude) : null,
@@ -381,7 +390,7 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
 
                 // Ajouter les infos de l'auteur que si: propriétaire, admin, police, ou anonyme
                 if (isOwner || isAdmin || isPolice || signalement.est_anonyme) {
-                    response.auteur = {
+                    response.user = {
                         id: signalement.user_id,
                         prenom: signalement.user_prenom,
                         nom: signalement.user_nom,
@@ -392,6 +401,7 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
                     response.email = signalement.user_email;
                 }
 
+                console.log(`[GET /:id] Signalement retourné avec succès`);
                 res.json(response);
             } catch (err) {
                 console.error('Erreur GET /:id signalement:', err);

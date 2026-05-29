@@ -22,7 +22,10 @@ export default function SignalementDetail() {
   const fetchSignal = async () => {
     setLoading(true)
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/signalements/${id}`)
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/signalements/${id}`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      })
       if (!res.ok) throw new Error('Not found')
       const data = await res.json()
       setSignal(data)
