@@ -9,6 +9,13 @@ import { io as socketIOClient } from 'socket.io-client'
 export default function CollaboratorDashboard() {
   const router = useRouter()
   const { user, loading } = useAuth()
+  
+  // Déclarer tous les states avant les retours conditionnels
+  const [signalements, setSignalements] = useState([])
+  const [loadingSignals, setLoadingSignals] = useState(true)
+  const [followed, setFollowed] = useState([])
+  const [followedList, setFollowedList] = useState([])
+  const socketRef = useRef(null)
 
   useEffect(() => {
     if (loading) return
@@ -31,11 +38,6 @@ export default function CollaboratorDashboard() {
   if (!user || user.role !== 'collaborateur') {
     return null
   }
-  const [signalements, setSignalements] = useState([])
-  const [loadingSignals, setLoadingSignals] = useState(true)
-  const [followed, setFollowed] = useState([])
-  const [followedList, setFollowedList] = useState([])
-  const socketRef = useRef(null)
 
   useEffect(() => {
     const fetchSignals = async () => {
