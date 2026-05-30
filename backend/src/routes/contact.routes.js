@@ -21,10 +21,22 @@ const transporter = nodemailer.createTransport({
 // POST /api/contact/send - Envoyer un message de contact
 router.post('/send', async (req, res) => {
   try {
-    const { nom, email, sujet, message, telephone } = req.body;
+    const {
+      nom,
+      name,
+      email,
+      sujet,
+      subject,
+      message,
+      telephone
+    } = req.body;
+
+    const contactName = nom || name;
+    const contactSubject = sujet || subject;
+    const contactMessage = message;
 
     // Validation des champs obligatoires
-    if (!nom || !email || !sujet || !message) {
+    if (!contactName || !email || !contactSubject || !contactMessage) {
       return res.status(400).json({
         success: false,
         message: 'Les champs nom, email, sujet et message sont obligatoires'
@@ -59,7 +71,7 @@ router.post('/send', async (req, res) => {
       (nom, email, telephone, sujet, message, created_at, statut)
       VALUES ($1, $2, $3, $4, $5, NOW(), 'nouveau')
       RETURNING id, created_at
-    `, [nom, email, telephone || null, sujet, message]);
+    `, [contactName, email, telephone || null, contactSubject, contactMessage]);
 
     const contactId = contactRes.rows[0]?.id;
     const createdAt = contactRes.rows[0]?.created_at;
@@ -69,13 +81,13 @@ router.post('/send', async (req, res) => {
       try {
         const emailContent = `
           <h2>Nouveau Message de Contact</h2>
-          <p><strong>Nom:</strong> ${nom}</p>
+          <p><strong>Nom:</strong> ${contactName}</p>
           <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
           ${telephone ? `<p><strong>Téléphone:</strong> ${telephone}</p>` : ''}
-          <p><strong>Sujet:</strong> ${sujet}</p>
+          <p><strong>Sujet:</strong> ${contactSubject}</p>
           <hr>
           <p><strong>Message:</strong></p>
-          <p>${message.replace(/\n/g, '<br>')}</p>
+          <p>${contactMessage.replace(/\n/g, '<br>')}</p>
           <hr>
           <p><small>ID du message: #${contactId} | Reçu le: ${new Date(createdAt).toLocaleString('fr-FR')}</small></p>
         `;
@@ -83,7 +95,7 @@ router.post('/send', async (req, res) => {
         await transporter.sendMail({
           from: process.env.SMTP_USER,
           to: adminEmails.join(', '),
-          subject: `[Signal-Moi] Nouveau message: ${sujet}`,
+          subject: `[Signal-Moi] Nouveau message: ${contactSubject}`,
           html: emailContent
         });
 
@@ -110,7 +122,7 @@ router.post('/send', async (req, res) => {
             <p>Nous vous répondrons dans les meilleurs délais.</p>
             <hr>
             <p><strong>Votre message:</strong></p>
-            <p>${message.replace(/\n/g, '<br>')}</p>
+            <p>${contactMessage.replace(/\n/g, '<br>')}</p>
           `
         });
       } catch (emailErr) {
