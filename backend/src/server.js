@@ -76,6 +76,10 @@ app.use('/api/contact', contactRoutes); // Formulaire de contact PUBLIQUE
 app.use('/api/collaborator', collaboratorRoutes); // Dashboard collaborateur (ONG/Association)
 app.use('/api/law-enforcement', lawEnforcementRoutes); // Dashboard police/gendarmerie
 
+// Debug routes (dev only)
+const debugRoutes = require('./routes/debug.routes');
+app.use('/api/debug', debugRoutes);
+
 // Health check endpoint (PUBLIC)
 app.get('/api/health', (req, res) => {
     res.json({ 
