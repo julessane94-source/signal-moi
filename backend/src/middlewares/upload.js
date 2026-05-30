@@ -13,7 +13,7 @@ if (USE_S3) {
 }
 
 // Configuration du stockage
-const uploadsRoot = path.resolve(__dirname, '..', 'uploads');
+const uploadsRoot = path.resolve(__dirname, '..', '..', 'uploads');
 let storage;
 if (USE_S3 && s3 && multerS3) {
   const accessKeyId = process.env.AWS_ACCESS_KEY_ID || process.env.S3_ACCESS_KEY_ID;

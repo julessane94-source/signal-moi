@@ -13,7 +13,7 @@ const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
 
 // Configuration multer pour les images de campagne
-const uploadDir = path.join(__dirname, '../uploads/campagnes');
+const uploadDir = path.resolve(__dirname, '..', '..', 'uploads', 'campagnes');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -212,16 +212,34 @@ router.get('/campaigns', authMiddleware, async (req, res) => {
 });
 
 // POST /api/collaborator/campaigns - Créer une campagne
+const allowedCampaignTypes = ['formation', 'activite', 'sensibilisation', 'marche', 'conference', 'autre'];
+
 router.post('/campaigns', authMiddleware, upload.single('image'), async (req, res) => {
   const userId = req.user.id;
   const { titre, description, type, dateDebut, dateFin, lieu, capaciteMax } = req.body;
 
   // Validation des champs obligatoires
-  if (!titre || !type) {
+  if (!titre || !type || !dateDebut || !dateFin || !lieu) {
     if (req.file) {
       fs.unlinkSync(req.file.path);
     }
-    return res.status(400).json({ error: 'Titre et type sont requis' });
+    return res.status(400).json({ error: 'Titre, type, dates et lieu sont requis' });
+  }
+
+  if (!allowedCampaignTypes.includes(type)) {
+    if (req.file) {
+      fs.unlinkSync(req.file.path);
+    }
+    return res.status(400).json({ error: 'Type de campagne invalide' });
+  }
+
+  const startDate = new Date(dateDebut);
+  const endDate = new Date(dateFin);
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime()) || startDate > endDate) {
+    if (req.file) {
+      fs.unlinkSync(req.file.path);
+    }
+    return res.status(400).json({ error: 'Dates invalides ou incohérentes' });
   }
 
   try {
@@ -236,7 +254,7 @@ router.post('/campaigns', authMiddleware, upload.single('image'), async (req, re
       (titre, description, type, date_debut, date_fin, lieu, capacite_max, created_by, est_actif, image_url)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING id, titre, type, image_url, created_at
-    `, [titre, description || '', type, dateDebut || null, dateFin || null, lieu || '', capaciteMax || 100, userId, true, imageUrl]);
+    `, [titre, description || '', type, dateDebut, dateFin, lieu || '', capaciteMax || 100, userId, true, imageUrl]);
 
     const campaign = result.rows[0];
     console.log(`[COLLABORATOR POST /campaigns] Campagne créée: ${campaign.id}`);

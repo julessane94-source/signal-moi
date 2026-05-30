@@ -82,21 +82,26 @@ export default function About() {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('token')
-      const headers = token ? { 'Authorization': `Bearer ${token}` } : {}
-      
+      const authHeaders = token ? { 'Authorization': `Bearer ${token}` } : {}
+      const signalementsEndpoint = token ? `${API_BASE}/api/admin/signalements` : `${API_BASE}/api/signalements/public`
+
       const [sigRes, campRes, usersRes] = await Promise.all([
-        fetch(`${API_BASE}/api/admin/signalements`, { headers }),
-        fetch(`${API_BASE}/api/campagnes`, { headers }),
-        fetch(`${API_BASE}/api/admin/users`, { headers })
+        fetch(signalementsEndpoint, { headers: authHeaders }),
+        fetch(`${API_BASE}/api/campagnes`, { headers: authHeaders }),
+        token ? fetch(`${API_BASE}/api/admin/users`, { headers: authHeaders }) : Promise.resolve({ ok: false })
       ])
-      
+
       const sigData = sigRes.ok ? await sigRes.json() : []
       const campData = campRes.ok ? await campRes.json() : []
       const usersData = usersRes.ok ? await usersRes.json() : []
-      
+
+      const treatedCount = Array.isArray(sigData)
+        ? sigData.filter((s) => s.statut === 'traite').length
+        : 0
+
       setStats([
-        { value: `${sigData.length || 0}+`, label: 'Signalements traites' },
-        { value: `${usersData.length || 0}+`, label: 'Citoyens engages' },
+        { value: `${treatedCount || 0}+`, label: 'Signalements traites' },
+        { value: usersRes.ok ? `${usersData.length || 0}+` : '—', label: 'Citoyens engages' },
         { value: `${campData.length || 0}+`, label: 'Campagnes organisees' },
         { value: '24/7', label: 'Support disponible' },
       ])

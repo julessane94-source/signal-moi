@@ -65,6 +65,17 @@ router.post('/:id/inscrire', authMiddleware, async (req, res) => {
   const user_id = req.user.id;
   
   try {
+    // Vérifier que l'utilisateur existe dans la BD (pour éviter FK constraint violation)
+    const userResult = await db.query(
+      'SELECT id FROM signal_moi.users WHERE id = $1',
+      [user_id]
+    );
+    
+    if (userResult.rows.length === 0) {
+      console.warn(`[POST /:id/inscrire] Utilisateur ${user_id} non trouvé en BD`);
+      return res.status(401).json({ error: 'Utilisateur non autorisé ou inexistant' });
+    }
+    
     // Vérifier que la campagne existe
     const campagneResult = await db.query(
       'SELECT * FROM signal_moi.campagnes WHERE id = $1',
@@ -106,13 +117,14 @@ router.post('/:id/inscrire', authMiddleware, async (req, res) => {
       [id, user_id]
     );
     
+    console.log(`✅ [POST /:id/inscrire] Inscription réussie pour user ${user_id} à campagne ${id}`);
     res.status(201).json({
       success: true,
       message: 'Inscription réussie',
       inscription: insertResult.rows[0]
     });
   } catch (err) {
-    console.error('Erreur POST /:id/inscrire:', err);
+    console.error('❌ Erreur POST /:id/inscrire:', err.message);
     res.status(500).json({ error: 'Erreur serveur', details: err.message });
   }
 });

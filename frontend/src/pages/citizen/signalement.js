@@ -23,31 +23,61 @@ export default function NewSignalement() {
   const [latitude, setLatitude] = useState(null)
   const [longitude, setLongitude] = useState(null)
 
-  useEffect(() => {
-    // Try to get browser geolocation on mount
-    if (typeof navigator !== 'undefined' && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(async (pos) => {
-        const lat = pos.coords.latitude
-        const lng = pos.coords.longitude
-        setLatitude(lat)
-        setLongitude(lng)
-        // reverse geocode with Nominatim to fill localisation if empty
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
-          if (res.ok) {
-            const data = await res.json()
-            const addr = data.display_name
-            setFormData(prev => ({ ...prev, localisation: prev.localisation || addr, latitude: lat, longitude: lng }))
-            toast.success('📍 Localisation automatique trouvée')
-          } else {
-            setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }))
-          }
-        } catch (e) {
+  const [geoError, setGeoError] = useState(null)
+
+  const requestGeolocation = async () => {
+    setGeoError(null)
+
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      toast.error('Géolocalisation non prise en charge par votre navigateur')
+      setGeoError('Géolocalisation non prise en charge')
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const lat = pos.coords.latitude
+      const lng = pos.coords.longitude
+      setLatitude(lat)
+      setLongitude(lng)
+      // reverse geocode with Nominatim to fill localisation if empty
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+        if (res.ok) {
+          const data = await res.json()
+          const addr = data.display_name
+          setFormData(prev => ({ ...prev, localisation: prev.localisation || addr, latitude: lat, longitude: lng }))
+          toast.success('📍 Localisation automatique trouvée')
+        } else {
           setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }))
+          toast.success('📍 Coordonnées GPS récupérées')
         }
-      }, (err) => {
-        // User denied geolocation
-        console.log('Géolocalisation refusée par l\'utilisateur')
+      } catch (e) {
+        setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }))
+        toast.success('📍 Coordonnées GPS récupérées')
+      }
+    }, (err) => {
+      if (err.code === 1) {
+        toast.error('Accès à la géolocalisation refusé')
+        setGeoError('Accès à la géolocalisation refusé. Saisissez manuellement la localisation.')
+      } else {
+        toast.error('Impossible de récupérer la géolocalisation')
+        setGeoError('Impossible de récupérer la géolocalisation')
+      }
+      console.log('Géolocalisation erreur:', err)
+    })
+  }
+
+  useEffect(() => {
+    // If the user already granted geolocation permission, obtain it automatically.
+    if (typeof navigator !== 'undefined' && navigator.permissions && navigator.permissions.query) {
+      navigator.permissions.query({ name: 'geolocation' }).then((status) => {
+        if (status.state === 'granted') {
+          requestGeolocation()
+        } else if (status.state === 'denied') {
+          setGeoError('Accès à la géolocalisation refusé')
+        }
+      }).catch(() => {
+        // Permissions API unavailable, do not prompt automatically.
       })
     }
   }, [])
@@ -86,8 +116,8 @@ export default function NewSignalement() {
       fd.append('type', formData.type)
       fd.append('localisation', formData.localisation)
       // append coordinates if available (from geolocation or map)
-      if (latitude) fd.append('latitude', latitude)
-      if (longitude) fd.append('longitude', longitude)
+      if (latitude !== null) fd.append('latitude', latitude)
+      if (longitude !== null) fd.append('longitude', longitude)
 
       // Append files
       files.forEach((f) => fd.append('fichiers', f))
@@ -147,36 +177,10 @@ export default function NewSignalement() {
                 <label className="block text-sm font-medium mb-1">Localisation *</label>
                 <input type="text" name="localisation" required value={formData.localisation} onChange={handleChange} className="w-full border rounded px-3 py-2" placeholder="Ex: Carrefour Mvan, Yaoundé" />
                 <div className="mt-2 flex gap-2 items-center">
-                  <button type="button" onClick={() => {
-                    if (navigator && navigator.geolocation) {
-                      navigator.geolocation.getCurrentPosition(async (pos) => {
-                        const lat = pos.coords.latitude
-                        const lng = pos.coords.longitude
-                        setLatitude(lat)
-                        setLongitude(lng)
-                        try {
-                          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
-                          if (res.ok) {
-                            const data = await res.json()
-                            setFormData(prev => ({ ...prev, localisation: prev.localisation || data.display_name }))
-                            toast.success('📍 Localisation trouvée !')
-                          } else {
-                            setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }))
-                            toast.success('📍 Localisation trouvée (coordonnées GPS)')
-                          }
-                        } catch (e) {
-                          setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }))
-                          toast.success('📍 Localisation trouvée (coordonnées GPS)')
-                        }
-                      }, (err) => {
-                        toast.error('Accès à la géolocalisation refusé')
-                      })
-                    } else {
-                      toast.error('Géolocalisation non prise en charge')
-                    }
-                  }} className="text-sm px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition font-medium">📍 Localiser</button>
-                  <span className="text-sm text-gray-600 font-medium">{latitude && longitude ? `✓ ${latitude.toFixed(5)}, ${longitude.toFixed(5)}` : 'Pas de localisation'}</span>
+                  <button type="button" onClick={requestGeolocation} className="text-sm px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition font-medium">📍 Localiser</button>
+                  <span className="text-sm text-gray-600 font-medium">{latitude != null && longitude != null ? `✓ ${latitude.toFixed(5)}, ${longitude.toFixed(5)}` : 'Pas de localisation'}</span>
                 </div>
+                {geoError && <p className="text-sm text-red-600 mt-2">{geoError}</p>}
                 <div className="mt-3">
                   <LeafletMap lat={latitude} lng={longitude} setLat={setLatitude} setLng={setLongitude} />
                 </div>
