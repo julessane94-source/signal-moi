@@ -13,6 +13,7 @@ if (USE_S3) {
 }
 
 // Configuration du stockage
+const uploadsRoot = path.resolve(__dirname, '..', 'uploads');
 let storage;
 if (USE_S3 && s3 && multerS3) {
   const accessKeyId = process.env.AWS_ACCESS_KEY_ID || process.env.S3_ACCESS_KEY_ID;
@@ -38,26 +39,25 @@ if (USE_S3 && s3 && multerS3) {
   });
 } else {
   storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    let uploadPath = 'uploads/temp';
-    
-    if (req.baseUrl.includes('signalements')) {
-      uploadPath = 'uploads/signalements';
-    } else if (req.baseUrl.includes('profile')) {
-      uploadPath = 'uploads/profiles';
+    destination: (req, file, cb) => {
+      let uploadPath = path.join(uploadsRoot, 'temp');
+      if (req.baseUrl.includes('signalements')) {
+        uploadPath = path.join(uploadsRoot, 'signalements');
+      } else if (req.baseUrl.includes('profile')) {
+        uploadPath = path.join(uploadsRoot, 'profiles');
+      }
+
+      // Créer le dossier s'il n'existe pas
+      if (!fs.existsSync(uploadPath)) {
+        fs.mkdirSync(uploadPath, { recursive: true });
+      }
+
+      cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+      const uniqueName = `${uuidv4()}${path.extname(file.originalname)}`;
+      cb(null, uniqueName);
     }
-    
-    // Créer le dossier s'il n'existe pas
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
-    }
-    
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = `${uuidv4()}${path.extname(file.originalname)}`;
-    cb(null, uniqueName);
-  }
   });
 }
 
