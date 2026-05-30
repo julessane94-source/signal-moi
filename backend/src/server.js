@@ -106,6 +106,26 @@ app.head('/', (req, res) => {
 const path = require('path');
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// Ensure uploads directories exist at startup to avoid missing-folder issues
+const fs = require('fs');
+const uploadsRoot = path.join(__dirname, '..', 'uploads');
+const requiredDirs = ['signalements', 'profiles', 'temp'];
+try {
+    if (!fs.existsSync(uploadsRoot)) {
+        fs.mkdirSync(uploadsRoot, { recursive: true });
+        console.log(`✅ Created uploads root at ${uploadsRoot}`);
+    }
+    requiredDirs.forEach(d => {
+        const p = path.join(uploadsRoot, d);
+        if (!fs.existsSync(p)) {
+            fs.mkdirSync(p, { recursive: true });
+            console.log(`✅ Created uploads directory: ${p}`);
+        }
+    });
+} catch (err) {
+    console.error('❌ Failed to ensure uploads directories exist:', err.message);
+}
+
 // 404 Handler
 app.use((req, res) => {
     res.status(404).json({ 

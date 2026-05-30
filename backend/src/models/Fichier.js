@@ -63,7 +63,11 @@ const Fichier = {
             const region = process.env.S3_REGION || process.env.AWS_REGION;
             return `https://${process.env.S3_BUCKET}.s3.${region}.amazonaws.com/${chemin}`;
         }
-        return `${process.env.API_URL}/${chemin}`;
+        // Fallback when API_URL is not defined: use localhost with PORT or 8080
+        const apiBase = process.env.API_URL || `http://localhost:${process.env.PORT || 8080}`;
+        // Remove any trailing slash to avoid double slashes
+        const base = apiBase.endsWith('/') ? apiBase.slice(0, -1) : apiBase;
+        return `${base}/${chemin}`;
     },
 
     getFileSizeInMB: (taille) => {
