@@ -215,7 +215,7 @@ export default function SignalementDetail() {
                 <h3 className="font-semibold mb-3">Preuves jointes</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {signal.fichiers.map((f, i) => {
-                    const builtUrl = f.url
+                    const fileUrl = f.url
                       ? `${API_BASE}${f.url.startsWith('/') ? f.url : `/${f.url}`}`
                       : `${API_BASE}/${(f.chemin || `uploads/signalements/${f.id}`).replace(/^\/+/, '')}`
                     const isImage = f.type === 'image' || f.mime_type?.startsWith('image/')
