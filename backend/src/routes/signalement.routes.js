@@ -4,6 +4,8 @@ const db = require('../config/database');
 const jwt = require('jsonwebtoken');
 const { uploadMultiple } = require('../middlewares/upload');
 const { v4: uuidv4 } = require('uuid');
+const fs = require('fs');
+const path = require('path');
 
 // Middleware d'authentification
 const authMiddleware = (req, res, next) => {
@@ -19,6 +21,26 @@ const authMiddleware = (req, res, next) => {
         return res.status(401).json({ error: 'Token invalide', details: err.message });
     }
 };
+
+const signalementFileUrl = (fileId, chemin) => {
+    if (fileId) return `/api/signalements/fichiers/${fileId}`;
+    if (!chemin) return null;
+    const normalized = chemin.replace(/^[\/]+/, '');
+    return normalized;
+};
+
+const mapFileRecord = (f) => ({
+    id: f.id,
+    signalementId: f.signalement_id,
+    nom_fichier: f.nom_fichier,
+    chemin: f.chemin,
+    type: f.type,
+    taille: f.taille,
+    mime_type: f.mime_type,
+    description: f.description,
+    created_at: f.created_at,
+    url: signalementFileUrl(f.id, f.chemin)
+});
 
 // Middleware d'authentification optionnelle
 const optionalAuthMiddleware = (req, res, next) => {
@@ -48,6 +70,7 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
     }
 
     try {
+        await db.query('BEGIN');
         const result = await db.query(
             `INSERT INTO signal_moi.signalements (user_id, titre, description, type, localisation, latitude, longitude)
              VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -79,34 +102,111 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
 
         // Gérer les fichiers uploadés (s'il y en a)
         if (req.files && req.files.length > 0) {
-            const insertFiles = req.files.map(f => {
+            for (const f of req.files) {
                 const fileType = f.mimetype.startsWith('image') ? 'image' : f.mimetype.startsWith('video') ? 'video' : f.mimetype.startsWith('audio') ? 'audio' : 'document';
                 const fileId = uuidv4();
-                // Normaliser le chemin pour éviter les chemins absolus ou mal formés
                 let chemin = f.path || `uploads/signalements/${f.filename}`;
-                // Si le chemin contient des séparateurs Windows, les remplacer par /
                 chemin = chemin.replace(/\\/g, '/');
-                // Si le chemin commence par /, le nettoyer pour avoir un chemin relatif
-                if (chemin.startsWith('/')) {
-                    chemin = chemin.substring(1);
+                if (chemin.startsWith('/')) chemin = chemin.substring(1);
+                if (!chemin.startsWith('uploads/')) chemin = `uploads/signalements/${f.filename}`;
+
+                let fileData = null;
+                try {
+                    fileData = await fs.promises.readFile(f.path);
+                } catch (readErr) {
+                    console.error('[POST /signalements] Impossible de lire le fichier uploadé:', readErr);
+                    throw readErr;
                 }
-                // S'assurer que le chemin commence par 'uploads/'
-                if (!chemin.startsWith('uploads/')) {
-                    chemin = `uploads/signalements/${f.filename}`;
-                }
-                return db.query(
-                    `INSERT INTO signal_moi.fichiers (id, signalement_id, nom_fichier, chemin, type, taille, mime_type, uploaded_by, created_at, updated_at)
-                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())`,
-                    [fileId, signalementId, f.originalname, chemin, fileType, f.size || 0, f.mimetype, user_id]
+
+                await db.query(
+                    `INSERT INTO signal_moi.fichiers (id, signalement_id, nom_fichier, chemin, type, taille, mime_type, description, is_verified, uploaded_by, file_data, created_at, updated_at)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())`,
+                    [fileId, signalementId, f.originalname, chemin, fileType, f.size || 0, f.mimetype, null, false, user_id, fileData]
                 );
-            });
-            await Promise.all(insertFiles);
+
+                await fs.promises.unlink(f.path).catch(() => {});
+            }
         }
 
+        await db.query('COMMIT');
         console.log('Signalement créé:', signalement);
         res.status(201).json(signalement);
     } catch (err) {
+        await db.query('ROLLBACK').catch(() => {});
+        if (req.files && req.files.length > 0) {
+            for (const file of req.files) {
+                if (file.path) {
+                    await fs.promises.unlink(file.path).catch(() => {});
+                }
+            }
+        }
         console.error('Erreur SQL :', err);
+        res.status(500).json({ error: 'Erreur serveur', details: err.message });
+    }
+});
+
+// GET un fichier de signalement par id
+router.get('/fichiers/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await db.query('SELECT id, nom_fichier, mime_type, taille, file_data, chemin FROM signal_moi.fichiers WHERE id = $1', [id]);
+        const file = result.rows[0];
+        if (!file) {
+            return res.status(404).json({ error: 'Fichier introuvable' });
+        }
+
+        if (file.file_data) {
+            res.setHeader('Content-Type', file.mime_type || 'application/octet-stream');
+            res.setHeader('Content-Length', file.taille || 0);
+            res.setHeader('Content-Disposition', `inline; filename="${file.nom_fichier}"`);
+            return res.send(file.file_data);
+        }
+
+        if (file.chemin) {
+            const localPath = path.resolve(__dirname, '..', '..', file.chemin);
+            return res.sendFile(localPath, err => {
+                if (err) {
+                    console.error('[GET /fichiers/:id] Erreur envoi fichier local:', err);
+                    res.status(404).json({ error: 'Fichier introuvable sur le serveur' });
+                }
+            });
+        }
+
+        res.status(404).json({ error: 'Fichier non disponible' });
+    } catch (err) {
+        console.error('[GET /fichiers/:id] Erreur:', err);
+        res.status(500).json({ error: 'Erreur serveur', details: err.message });
+    }
+});
+
+// DELETE /api/signalements/:id - Supprimer un signalement par son auteur ou admin
+router.delete('/:id', authMiddleware, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const signalementResult = await db.query('SELECT id, user_id FROM signal_moi.signalements WHERE id = $1', [id]);
+        const signalement = signalementResult.rows[0];
+        if (!signalement) {
+            return res.status(404).json({ error: 'Signalement introuvable' });
+        }
+
+        if (req.user.role !== 'admin' && req.user.id !== signalement.user_id) {
+            return res.status(403).json({ error: 'Accès refusé' });
+        }
+
+        const filesResult = await db.query('SELECT chemin FROM signal_moi.fichiers WHERE signalement_id = $1', [id]);
+        for (const f of filesResult.rows) {
+            if (f.chemin) {
+                const localPath = path.resolve(__dirname, '..', '..', f.chemin);
+                await fs.promises.unlink(localPath).catch(() => {});
+            }
+        }
+
+        await db.query('DELETE FROM signal_moi.fichiers WHERE signalement_id = $1', [id]);
+        await db.query('DELETE FROM signal_moi.signalements WHERE id = $1', [id]);
+
+        res.json({ success: true, message: 'Signalement supprimé' });
+    } catch (err) {
+        console.error('[DELETE /:id] Erreur suppression signalement:', err);
         res.status(500).json({ error: 'Erreur serveur', details: err.message });
     }
 });
@@ -369,7 +469,8 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
                     taille: f.taille,
                     mime_type: f.mime_type,
                     description: f.description,
-                    created_at: f.created_at
+                    created_at: f.created_at,
+                    url: signalementFileUrl(f.id, f.chemin)
                 }));
 
                 // Construire la réponse en fonction du rôle

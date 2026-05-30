@@ -14,12 +14,30 @@ export default function SignalementDetail() {
   const [signingPetition, setSigningPetition] = useState(false)
   const [petitions, setPetitions] = useState([])
   const [signedPetitionIds, setSignedPetitionIds] = useState([])
+  const [currentUser, setCurrentUser] = useState(null)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     if (!id) return
+    fetchCurrentUser()
     fetchSignal()
     fetchPetitions()
   }, [id])
+
+  const fetchCurrentUser = async () => {
+    const token = localStorage.getItem('token')
+    if (!token) return
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!res.ok) return
+      const data = await res.json()
+      setCurrentUser(data.user || null)
+    } catch (e) {
+      console.error('Impossible de récupérer l\'utilisateur connecté', e)
+    }
+  }
 
   const fetchSignal = async () => {
     setLoading(true)
@@ -105,6 +123,38 @@ export default function SignalementDetail() {
     }
   }
 
+  const handleDelete = async () => {
+    if (!signal) return
+    if (!confirm('Voulez-vous vraiment supprimer ce signalement ?')) return
+
+    setDeleting(true)
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        alert('Vous devez être connecté pour supprimer ce signalement')
+        return
+      }
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/signalements/${signal.id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => null)
+        throw new Error(err?.error || 'Erreur suppression')
+      }
+
+      alert('Signalement supprimé avec succès')
+      router.push('/citizen/dashboard')
+    } catch (e) {
+      console.error(e)
+      alert('Impossible de supprimer le signalement : ' + (e.message || 'Erreur'))
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   const handleSignPetition = async (petitionId) => {
     const token = localStorage.getItem('token')
     if (!token) {
@@ -165,10 +215,9 @@ export default function SignalementDetail() {
                 <h3 className="font-semibold mb-3">Preuves jointes</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {signal.fichiers.map((f, i) => {
-                    // Construire l'URL correctement à partir du chemin
-                    let normalizedPath = f.chemin || `uploads/signalements/${f.id}`
-                    if (normalizedPath.startsWith('/')) normalizedPath = normalizedPath.substring(1)
-                    const fileUrl = `${API_BASE}/${normalizedPath}`
+                    const builtUrl = f.url
+                      ? `${API_BASE}${f.url.startsWith('/') ? f.url : `/${f.url}`}`
+                      : `${API_BASE}/${(f.chemin || `uploads/signalements/${f.id}`).replace(/^\/+/, '')}`
                     const isImage = f.type === 'image' || f.mime_type?.startsWith('image/')
                     
                     return (
@@ -246,9 +295,18 @@ export default function SignalementDetail() {
               <button onClick={() => handleSms(signal.telephone)} className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Message</button>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 flex-wrap">
               <button onClick={handleAlert} disabled={alerting} className="flex-1 bg-red-600 text-white py-2 rounded hover:bg-red-700">{alerting ? 'Envoi...' : 'Lancer alerte'}</button>
               <Link href="/citizen/dashboard"><button className="flex-1 border border-gray-300 py-2 rounded hover:bg-gray-50">Retour au tableau</button></Link>
+              {currentUser && signal.user && currentUser.id === signal.user.id && (
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="flex-1 bg-gray-800 text-white py-2 rounded hover:bg-gray-900"
+                >
+                  {deleting ? 'Suppression...' : 'Supprimer le signalement'}
+                </button>
+              )}
             </div>
           </div>
 

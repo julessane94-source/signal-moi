@@ -113,7 +113,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Ensure uploads directories exist at startup to avoid missing-folder issues
 const fs = require('fs');
 const uploadsRoot = path.join(__dirname, '..', 'uploads');
-const requiredDirs = ['signalements', 'profiles', 'temp'];
+const requiredDirs = ['signalements', 'profiles', 'temp', 'campagnes'];
 try {
     if (!fs.existsSync(uploadsRoot)) {
         fs.mkdirSync(uploadsRoot, { recursive: true });
@@ -129,6 +129,19 @@ try {
 } catch (err) {
     console.error('❌ Failed to ensure uploads directories exist:', err.message);
 }
+
+const ensureDbSchema = async () => {
+    try {
+        await db.query(`
+            ALTER TABLE signal_moi.fichiers
+            ADD COLUMN IF NOT EXISTS file_data BYTEA
+        `);
+        console.log('✅ Colonne signal_moi.fichiers.file_data vérifiée ou créée');
+    } catch (err) {
+        console.warn('⚠️ Impossible de garantir la colonne file_data:', err.message);
+    }
+};
+ensureDbSchema();
 
 // 404 Handler
 app.use((req, res) => {

@@ -76,6 +76,7 @@ CREATE TABLE IF NOT EXISTS fichiers (
   description VARCHAR(255),
   is_verified BOOLEAN DEFAULT false,
   uploaded_by UUID,
+  file_data BYTEA,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
