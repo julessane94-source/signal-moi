@@ -9,7 +9,7 @@ export default function NewCampagne() {
   const router = useRouter()
   const [titre, setTitre] = useState('')
   const [description, setDescription] = useState('')
-  const [type, setType] = useState('atelier')
+  const [type, setType] = useState('formation')
   const [dateDebut, setDateDebut] = useState('')
   const [dateFin, setDateFin] = useState('')
   const [lieu, setLieu] = useState('')
@@ -48,6 +48,9 @@ export default function NewCampagne() {
     const nextErrors = {}
     if (!titre || titre.trim().length < 3) nextErrors.titre = 'Le titre doit contenir au moins 3 caractères.'
     if (!type) nextErrors.type = 'Le type est requis.'
+    if (!lieu || !lieu.trim()) nextErrors.lieu = 'Le lieu est requis.'
+    if (!dateDebut) nextErrors.dateDebut = 'La date de début est requise.'
+    if (!dateFin) nextErrors.dateFin = 'La date de fin est requise.'
     if (dateDebut && dateFin && new Date(dateDebut) > new Date(dateFin)) nextErrors.dateFin = 'La date de fin doit être après la date de début.'
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors)
@@ -80,7 +83,7 @@ export default function NewCampagne() {
         const data = await res.json()
         toast.success('✅ Campagne créée')
         if (data && data.id) {
-          router.push(`/campagne/${data.id}`)
+          router.push(`/campagnes/${data.id}`)
         } else {
           router.push('/collaborator/dashboard')
         }
@@ -148,21 +151,26 @@ export default function NewCampagne() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Type</label>
                   <select value={type} onChange={(e) => setType(e.target.value)} className="mt-1 block w-full border rounded-md p-2">
-                    <option value="atelier">Atelier</option>
-                    <option value="publication">Publication</option>
-                    <option value="action_terrain">Action terrain</option>
+                    <option value="formation">Formation</option>
+                    <option value="activite">Activité</option>
+                    <option value="sensibilisation">Sensibilisation</option>
+                    <option value="marche">Marche</option>
+                    <option value="conference">Conférence</option>
+                    <option value="autre">Autre</option>
                   </select>
                   {errors.type && <p className="text-red-600 text-sm mt-1">{errors.type}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Lieu</label>
                   <input value={lieu} onChange={(e) => setLieu(e.target.value)} className="mt-1 block w-full border rounded-md p-2" />
+                  {errors.lieu && <p className="text-red-600 text-sm mt-1">{errors.lieu}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Date début</label>
                   <input type="date" value={dateDebut} onChange={(e) => setDateDebut(e.target.value)} className="mt-1 block w-full border rounded-md p-2" />
+                  {errors.dateDebut && <p className="text-red-600 text-sm mt-1">{errors.dateDebut}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Date fin</label>
