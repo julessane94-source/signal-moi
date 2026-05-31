@@ -5,6 +5,11 @@ import Navbar from '../../components/common/Navbar'
 import Footer from '../../components/common/Footer'
 import { motion } from 'framer-motion'
 
+const getImageUrl = (url) => {
+  if (!url) return null
+  return url.startsWith('http://') || url.startsWith('https://') ? url : `${process.env.NEXT_PUBLIC_API_URL}${url}`
+}
+
 export default function DetailCampagne() {
   const router = useRouter()
   const { id } = router.query
@@ -225,12 +230,27 @@ export default function DetailCampagne() {
         {/* Contenu principal */}
         <section className="max-w-4xl mx-auto px-4 py-12">
           <div className="grid md:grid-cols-3 gap-8">
-            {/* Description */}
+            {/* Image et Description */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="md:col-span-2"
             >
+              {/* Image de la campagne */}
+              {campagne.image_url && (
+                <div className="mb-6 bg-white rounded-xl shadow-md overflow-hidden">
+                  <img 
+                    src={getImageUrl(campagne.image_url)} 
+                    alt={campagne.titre}
+                    className="w-full h-64 object-cover"
+                    onError={(e) => {
+                      console.error('Erreur chargement image:', campagne.image_url);
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
+              
               <div className="bg-white rounded-xl shadow-md p-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">À propos</h2>
                 <p className="text-gray-600 leading-relaxed mb-6">

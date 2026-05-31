@@ -7,6 +7,11 @@ import { API_BASE } from '../config/api'
 import Navbar from '../components/common/Navbar'
 import Footer from '../components/common/Footer'
 
+const getImageUrl = (url) => {
+  if (!url) return null
+  return url.startsWith('http://') || url.startsWith('https://') ? url : `${API_BASE}${url}`
+}
+
 export default function Home() {
   const { user } = useAuth()
   const [deferredPrompt, setDeferredPrompt] = useState(null)
@@ -246,7 +251,7 @@ export default function Home() {
                 {collaboratorCampaigns.map(c => (
                   <div key={c.id} className="rounded-lg shadow-lg overflow-hidden bg-white">
                     {c.image_url ? (
-                      <img src={c.image_url} alt={c.titre} className="w-full h-48 object-cover" />
+                      <img src={getImageUrl(c.image_url)} alt={c.titre} className="w-full h-48 object-cover" />
                     ) : (
                       <div className="w-full h-48 bg-gray-100 flex items-center justify-center text-gray-400">Pas d'image</div>
                     )}

@@ -3,6 +3,12 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import Navbar from './src/components/common/Navbar'
+import { API_BASE } from './src/config/api'
+
+const getImageUrl = (url) => {
+  if (!url) return null
+  return url.startsWith('http://') || url.startsWith('https://') ? url : `${API_BASE}${url}`
+}
 
 export default function Campagnes() {
   const [campagnes, setCampagnes] = useState([])
@@ -15,7 +21,7 @@ export default function Campagnes() {
 
   const fetchCampagnes = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/campagnes`)
+      const response = await fetch(`${API_BASE}/api/campagnes`)
       const data = await response.json()
       if (Array.isArray(data)) {
         setCampagnes(data)
@@ -136,21 +142,29 @@ export default function Campagnes() {
                           {getTypeIcon(campagne.type)} {getTypeLabel(campagne.type)}
                         </span>
                         <span className={`px-2 py-1 rounded-full text-xs ${
-                          new Date(campagne.dateDebut) > new Date() 
+                          new Date(campagne.date_debut) > new Date() 
                             ? 'bg-blue-100 text-blue-700' 
                             : 'bg-gray-100 text-gray-600'
                         }`}>
-                          {new Date(campagne.dateDebut) > new Date() ? '⏳ À venir' : '✅ Terminé'}
+                          {new Date(campagne.date_debut) > new Date() ? '⏳ À venir' : '✅ Terminé'}
                         </span>
                       </div>
-                      
+                      {campagne.image_url && (
+                        <div className="mb-4 overflow-hidden rounded-lg">
+                          <img
+                            src={getImageUrl(campagne.image_url)}
+                            alt={campagne.titre}
+                            className="w-full h-48 object-cover"
+                          />
+                        </div>
+                      )}
                       <h3 className="text-xl font-bold text-gray-900 mb-2">{campagne.titre}</h3>
                       <p className="text-gray-600 mb-4">{campagne.description}</p>
                       
                       <div className="space-y-2 text-sm text-gray-500 mb-4">
                         <div className="flex items-center gap-2">
                           <span>📅</span>
-                          <span>{new Date(campagne.dateDebut).toLocaleDateString('fr-FR')} - {new Date(campagne.dateFin).toLocaleDateString('fr-FR')}</span>
+                          <span>{campagne.date_debut ? new Date(campagne.date_debut).toLocaleDateString('fr-FR') : 'N/A'} - {campagne.date_fin ? new Date(campagne.date_fin).toLocaleDateString('fr-FR') : 'N/A'}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <span>📍</span>
@@ -158,7 +172,7 @@ export default function Campagnes() {
                         </div>
                         <div className="flex items-center gap-2">
                           <span>👥</span>
-                          <span>Capacité: {campagne.capaciteMax} personnes</span>
+                          <span>Capacité: {campagne.capacite_max ?? 'N/A'} personnes</span>
                         </div>
                       </div>
                       

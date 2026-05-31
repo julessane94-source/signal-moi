@@ -78,7 +78,13 @@ export default function CampagneInscrits() {
       i.user?.nom || '',
       i.user?.email || '',
       i.user?.telephone || '',
-      new Date(i.dateInscription).toLocaleDateString('fr-FR')
+      i.dateInscription ? new Date(i.dateInscription).toLocaleDateString('fr-FR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      }) : 'N/A'
     ])
 
     const csv = [

@@ -36,11 +36,54 @@ const authMiddleware = (req, res, next) => {
 
 router.get('/', async (req, res) => {
   try {
-    const result = await db.query('SELECT * FROM signal_moi.plaidoyers ORDER BY created_at DESC');
-    res.json(result.rows);
+    const result = await db.query(`
+      SELECT 
+        p.*,
+        (SELECT COUNT(*) FROM signal_moi.signatures_plaidoyers WHERE plaidoyer_id = p.id) as nombre_signatures_auth,
+        (SELECT COUNT(*) FROM signal_moi.signatures_plaidoyers_anonymes WHERE plaidoyer_id = p.id) as nombre_signatures_anonymes
+      FROM signal_moi.plaidoyers p
+      ORDER BY p.created_at DESC
+    `);
+    
+    const plaidoyers = result.rows.map(p => ({
+      ...p,
+      nombre_signatures_total: (parseInt(p.nombre_signatures_auth) || 0) + (parseInt(p.nombre_signatures_anonymes) || 0)
+    }));
+    
+    res.json(plaidoyers);
   } catch (err) {
     console.error(err);
     res.status(500).json([]);
+  }
+});
+
+// GET /api/plaidoyers/:id - Détail d'un plaidoyer avec stats
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await db.query(`
+      SELECT 
+        p.*,
+        (SELECT COUNT(*) FROM signal_moi.signatures_plaidoyers WHERE plaidoyer_id = p.id) as nombre_signatures_auth,
+        (SELECT COUNT(*) FROM signal_moi.signatures_plaidoyers_anonymes WHERE plaidoyer_id = p.id) as nombre_signatures_anonymes
+      FROM signal_moi.plaidoyers p
+      WHERE p.id = $1
+    `, [id]);
+    
+    if (!result.rows || result.rows.length === 0) {
+      return res.status(404).json({ error: 'Plaidoyer non trouvé' });
+    }
+    
+    const plaidoyer = result.rows[0];
+    const response = {
+      ...plaidoyer,
+      nombre_signatures_total: (parseInt(plaidoyer.nombre_signatures_auth) || 0) + (parseInt(plaidoyer.nombre_signatures_anonymes) || 0)
+    };
+    
+    res.json(response);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
   }
 });
 

@@ -3,15 +3,37 @@ const router = express.Router();
 const db = require('../config/database');
 const jwt = require('jsonwebtoken');
 
-// ? Middleware d'authentification
-const authMiddleware = (req, res, next) => {
+// ? Middleware d'authentification amélioré
+const authMiddleware = async (req, res, next) => {
     try {
         const token = req.headers.authorization?.replace('Bearer ', '');
         if (!token) {
             return res.status(401).json({ error: 'Token d\'authentification manquant' });
         }
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret-key');
-        req.user = decoded;
+        
+        // Vérifier que l'user_id existe
+        if (!decoded.id) {
+            return res.status(401).json({ error: 'Token invalide - ID manquant' });
+        }
+        
+        // Récupérer les infos complètes de l'utilisateur depuis la BD
+        const userResult = await db.query(
+            'SELECT id, email, role, prenom, nom FROM signal_moi.users WHERE id = $1',
+            [decoded.id]
+        );
+        
+        if (!userResult.rows || userResult.rows.length === 0) {
+            return res.status(401).json({ error: 'Utilisateur non trouvé' });
+        }
+        
+        req.user = {
+            id: userResult.rows[0].id,
+            email: userResult.rows[0].email,
+            role: userResult.rows[0].role || decoded.role, // Fallback au token si BD ne contient pas
+            prenom: userResult.rows[0].prenom,
+            nom: userResult.rows[0].nom
+        };
         next();
     } catch (err) {
         return res.status(401).json({ error: 'Token invalide', details: err.message });
@@ -177,15 +199,16 @@ router.get('/:id/inscrits', authMiddleware, async (req, res) => {
     const inscrits = result.rows.map(r => ({
       id: r.id,
       userId: r.user_id,
-      dateInscription: r.date_inscription,
+      dateInscription: r.date_inscription ? new Date(r.date_inscription).toISOString() : null,
       user: {
-        prenom: r.prenom,
-        nom: r.nom,
-        email: r.email,
-        telephone: r.telephone
+        prenom: r.prenom || 'Anonyme',
+        nom: r.nom || '',
+        email: r.email || '',
+        telephone: r.telephone || ''
       }
     }));
     
+    // Retourner dans le format attendu par le frontend
     res.json(inscrits);
   } catch (err) {
     console.error('Erreur GET /:id/inscrits:', err);

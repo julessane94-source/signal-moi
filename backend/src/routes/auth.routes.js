@@ -116,7 +116,7 @@ router.post('/register', async (req, res) => {
     );
 
     const newUserId = insertResult.rows[0].id;
-    const token = jwt.sign({ id: newUserId }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: newUserId, role: 'citoyen' }, process.env.JWT_SECRET, { expiresIn: '7d' });
     res.status(201).json({
       success: true,
       token,

@@ -4,6 +4,11 @@ import Navbar from '../../components/common/Navbar'
 import Link from 'next/link'
 import { API_BASE } from '../../config/api'
 
+const getImageUrl = (url) => {
+  if (!url) return null
+  return url.startsWith('http://') || url.startsWith('https://') ? url : `${API_BASE}${url}`
+}
+
 export default function CampagneDetail() {
   const router = useRouter()
   const { id } = router.query
@@ -133,7 +138,7 @@ export default function CampagneDetail() {
             {campagne.image_url && (
               <div className="w-full h-96 overflow-hidden bg-gray-200">
                 <img
-                  src={campagne.image_url}
+                  src={getImageUrl(campagne.image_url)}
                   alt={campagne.titre}
                   className="w-full h-full object-cover"
                 />
