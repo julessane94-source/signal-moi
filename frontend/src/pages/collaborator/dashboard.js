@@ -155,11 +155,13 @@ export default function CollaboratorDashboard() {
           <h1 className="text-4xl font-bold text-gray-900">Espace Collaborateur</h1>
           <p className="text-gray-600 mt-2">Bienvenue {user?.prenom}! Dashboard collaborateur.</p>
 
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-6 gap-4">
             <button onClick={() => exportCases('pdf')} className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700">📄 Export PDF</button>
             <button onClick={() => exportCases('excel')} className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700">📊 Export Excel</button>
             <button onClick={() => router.push('/collaborator/campagne/new')} className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">🎯 Créer campagne</button>
+            <button onClick={() => router.push('/collaborator/campagne/mes-campagnes')} className="bg-gray-800 text-white px-6 py-3 rounded-lg hover:bg-gray-900">📋 Mes campagnes</button>
             <button onClick={() => router.push('/collaborator/plaidoyer/new')} className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700">✍️ Créer plaidoyer</button>
+            <button onClick={() => router.push('/collaborator/plaidoyer/mes-plaidoyers')} className="bg-yellow-600 text-white px-6 py-3 rounded-lg hover:bg-yellow-700">📝 Mes plaidoyers</button>
             <button onClick={() => toast.info('Statistiques non implémentées dans cette vue')} className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700">📈 Statistiques</button>
           </div>
 
