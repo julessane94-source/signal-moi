@@ -85,176 +85,110 @@ export default function Home() {
         <link rel="manifest" href="/manifest.json" />
       </Head>
 
-      <main className="min-h-screen pt-16">
-        {/* Hero Section */}
-        <section className="bg-gradient-to-br from-indigo-50 to-white py-20">
-          <div className="max-w-7xl mx-auto px-4 text-center">
-            <h1 className="text-5xl font-bold text-gray-900 mb-4">
-              {config.home_page?.title || 'Signalez les incidents'}
-            </h1>
-            <h2 className="text-4xl font-bold text-indigo-600 mb-6">
-              {config.home_page?.heroText || 'dans votre quartier'}
-            </h2>
-            {config.home_page?.content && config.home_page.content.includes('<') ? (
-              <div 
-                className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto"
-                dangerouslySetInnerHTML={{ __html: sanitizedHomeContent }}
-              />
-            ) : (
-              <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
-                {config.home_page?.content || 'Une plateforme citoyenne pour signaler et suivre les problemes de votre communaute.'}
-              </p>
-            )}
-            
-            {/* Bouton d'installation PWA */}
-            {showInstallButton && (
-              <div className="mb-6">
-                <button
-                  onClick={handleInstall}
-                  className="bg-green-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-700 transition shadow-lg inline-flex items-center gap-2"
-                >
-                  📱 Télécharger l'application mobile
-                </button>
-                <p className="text-sm text-gray-500 mt-2">Installez l'application sur votre telephone</p>
-              </div>
-            )}
+      <main className="min-h-screen pt-16 bg-white">
+        {/* Hero */}
+        <section className="relative overflow-hidden">
+          <div className="absolute -inset-1 blur-3xl opacity-30 bg-gradient-to-r from-indigo-400 via-teal-300 to-emerald-200 transform rotate-6" />
+          <div className="relative max-w-7xl mx-auto px-6 py-20">
+            <div className="flex flex-col md:flex-row items-center gap-10">
+              <div className="md:w-1/2 text-center md:text-left">
+                <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">{config.home_page?.title || 'Signalez les incidents'}</h1>
+                <p className="mt-4 text-xl text-gray-700 max-w-2xl">{config.home_page?.heroText || 'dans votre quartier'}</p>
 
-            <Link href={user ? "/citizen/signalement" : "/login"}>
-              <Button
-                size="lg"
-                variant="danger"
-                className="w-full md:w-auto mt-4"
-              >
-                🚨 Faire un signalement
-              </Button>
-            </Link>
-          </div>
-        </section>
-        {/* Carte libre intégrée */}
-        <section className="py-12 bg-white">
-          <div className="max-w-7xl mx-auto px-4">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">Carte des signalements (aperçu)</h2>
-            <div className="rounded-xl overflow-hidden shadow-lg">
-              <iframe
-                title="Carte Signal-Moi"
-                src="https://www.openstreetmap.org/export/embed.html?bbox=2.2137%2C46.2276%2C2.2137%2C46.2276&layer=mapnik&marker=46.2276%2C2.2137"
-                className="w-full h-96"
-                style={{ border: 0 }}
-              />
+                {config.home_page?.content && config.home_page.content.includes('<') ? (
+                  <div className="mt-6 text-gray-700 max-w-xl" dangerouslySetInnerHTML={{ __html: sanitizedHomeContent }} />
+                ) : (
+                  <p className="mt-6 text-gray-600 max-w-xl">{config.home_page?.content || 'Une plateforme citoyenne pour signaler et suivre les problemes de votre communaute.'}</p>
+                )}
+
+                <div className="mt-8 flex flex-col sm:flex-row items-center gap-4">
+                  <Link href={user ? "/citizen/signalement" : "/login"}>
+                    <Button size="lg" variant="danger" className="px-8 py-3 shadow-lg">🚨 Faire un signalement</Button>
+                  </Link>
+
+                  <Link href={user ? "/citizen/dashboard" : "/register"}>
+                    <button className="px-6 py-3 rounded-lg bg-white border border-gray-200 text-gray-800 hover:shadow transition font-semibold">{user ? '✓ Mon dashboard' : '👥 Rejoindre'}</button>
+                  </Link>
+                </div>
+
+                {showInstallButton && (
+                  <div className="mt-4 text-sm text-gray-600">
+                    <button onClick={handleInstall} className="underline text-indigo-600">Installer l'application mobile</button>
+                  </div>
+                )}
+              </div>
+
+              <div className="md:w-1/2">
+                <div className="bg-white rounded-2xl shadow-2xl p-6">
+                  <div className="w-full h-64 rounded-xl overflow-hidden">
+                    <iframe title="Carte aperçu" src="https://www.openstreetmap.org/export/embed.html?bbox=2.2137%2C46.2276%2C2.2137%2C46.2276&layer=mapnik&marker=46.2276%2C2.2137" className="w-full h-full" style={{ border: 0 }} />
+                  </div>
+                  <div className="mt-4 text-sm text-gray-500">Aperçu interactif — zoomer et cliquer pour ouvrir la carte complète.</div>
+                </div>
+              </div>
             </div>
-            <p className="text-sm text-gray-500 mt-3 text-center">La carte est un aperçu libre; cliquez pour ouvrir OpenStreetMap et localiser précisément.</p>
           </div>
         </section>
 
-        {/* Comment ça marche */}
-        <section className="py-16 bg-indigo-50">
-          <div className="max-w-7xl mx-auto px-4">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">Comment ça marche ?</h2>
-            <p className="text-lg text-gray-600 text-center mb-12 max-w-2xl mx-auto">
-              5 étapes simples pour améliorer votre quartier
-            </p>
-            
-            <div className="grid md:grid-cols-5 gap-6">
-              {/* Etape 1 */}
-              <div className="text-center">
-                <div className="bg-indigo-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-4">1</div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Créer un compte</h3>
-                <p className="text-gray-600 text-sm">Inscrivez-vous gratuitement ou connectez-vous avec vos identifiants</p>
-              </div>
+        {/* How it works */}
+        <section className="py-16">
+          <div className="max-w-6xl mx-auto px-4 text-center">
+            <h2 className="text-3xl font-bold text-gray-900">Comment ça marche</h2>
+            <p className="text-gray-600 mt-3">5 étapes simples pour signaler et suivre un problème dans votre quartier</p>
 
-              {/* Etape 2 */}
-              <div className="text-center">
-                <div className="bg-indigo-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-4">2</div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Décrire le problème</h3>
-                <p className="text-gray-600 text-sm">Expliquez l'incident et choisissez un type (nid-de-poule, vol, vandalisme...)</p>
-              </div>
-
-              {/* Etape 3 */}
-              <div className="text-center">
-                <div className="bg-indigo-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-4">📷</div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Ajouter des preuves</h3>
-                <p className="text-gray-600 text-sm">Joignez des photos, vidéos ou audios pour plus de clarté</p>
-              </div>
-
-              {/* Etape 4 */}
-              <div className="text-center">
-                <div className="bg-indigo-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-4">📍</div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Localiser</h3>
-                <p className="text-gray-600 text-sm">Indiquez le quartier ou la localisation précise du problème</p>
-              </div>
-
-              {/* Etape 5 */}
-              <div className="text-center">
-                <div className="bg-indigo-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-4">5</div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Suivre la résolution</h3>
-                <p className="text-gray-600 text-sm">Recevez des mises à jour en temps réel sur le traitement</p>
-              </div>
+            <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6">
+              {[
+                { icon: '1', title: 'Créer un compte', text: 'Inscrivez-vous ou connectez-vous' },
+                { icon: '2', title: 'Décrire', text: 'Expliquez l’incident et choisissez un type' },
+                { icon: '📷', title: 'Preuves', text: 'Joignez photos/vidéos pour étayer' },
+                { icon: '📍', title: 'Localiser', text: 'Précisez l’adresse ou le quartier' },
+                { icon: '5', title: 'Suivre', text: 'Recevez des mises à jour' }
+              ].map((step, i) => (
+                <div key={i} className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition text-center">
+                  <div className="w-14 h-14 rounded-full bg-indigo-600 text-white mx-auto flex items-center justify-center text-xl font-bold mb-4">{step.icon}</div>
+                  <h3 className="font-semibold text-gray-900 mb-2">{step.title}</h3>
+                  <p className="text-sm text-gray-600">{step.text}</p>
+                </div>
+              ))}
             </div>
 
-            <div className="mt-12 text-center">
+            <div className="mt-10">
               <Link href={user ? "/citizen/signalement" : "/login"}>
-                <Button className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition" size="md">
-                  Commencer maintenant →
-                </Button>
+                <Button className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition" size="md">Commencer maintenant →</Button>
               </Link>
             </div>
           </div>
         </section>
 
-        {/* Images et Vidéos de la page d'accueil */}
+        {/* Gallery */}
         {(config.home_page?.images?.length > 0 || config.home_page?.videos?.length > 0) && (
-          <section className="py-16 bg-gray-50">
+          <section className="py-12 bg-gray-50">
             <div className="max-w-7xl mx-auto px-4">
-              {config.home_page?.images?.length > 0 && (
-                <div className="mb-12">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Galerie</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {config.home_page.images.map((img, idx) => (
-                      <img
-                        key={idx}
-                        src={img}
-                        alt="Galerie"
-                        className="w-full h-64 object-cover rounded-lg shadow-md hover:shadow-lg transition"
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-              {config.home_page?.videos?.length > 0 && (
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Vidéos</h2>
-                  <div className="grid grid-cols-1 gap-6">
-                    {config.home_page.videos.map((vid, idx) => (
-                      <iframe
-                        key={idx}
-                        width="100%"
-                        height="400"
-                        src={vid}
-                        frameBorder="0"
-                        allowFullScreen
-                        className="rounded-lg"
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
+              <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Galerie</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {config.home_page?.images?.map((img, idx) => (
+                  <img key={idx} src={img} alt={`Galerie ${idx}`} className="w-full h-52 object-cover rounded-lg shadow" />
+                ))}
+                {config.home_page?.videos?.map((vid, idx) => (
+                  <iframe key={`v-${idx}`} src={vid} className="w-full h-52 rounded-lg" />
+                ))}
+              </div>
             </div>
           </section>
         )}
 
-        {/* Features et reste de la page... */}
-        {/* Campagnes des collaborateurs */}
+        {/* Collaborator campaigns */}
         {collaboratorCampaigns.length > 0 && (
-          <section className="py-12 bg-white">
+          <section className="py-12">
             <div className="max-w-7xl mx-auto px-4">
               <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Campagnes des collaborateurs</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {collaboratorCampaigns.map(c => (
-                  <div key={c.id} className="rounded-lg shadow-lg overflow-hidden bg-white">
+                  <div key={c.id} className="rounded-xl shadow overflow-hidden bg-white">
                     {c.image_url ? (
-                      <img src={getImageUrl(c.image_url)} alt={c.titre} className="w-full h-48 object-cover" />
+                      <img src={getImageUrl(c.image_url)} alt={c.titre} className="w-full h-44 object-cover" />
                     ) : (
-                      <div className="w-full h-48 bg-gray-100 flex items-center justify-center text-gray-400">Pas d'image</div>
+                      <div className="w-full h-44 bg-gray-100 flex items-center justify-center text-gray-400">Pas d'image</div>
                     )}
                     <div className="p-4">
                       <h3 className="text-lg font-semibold mb-2">{c.titre}</h3>
@@ -270,43 +204,18 @@ export default function Home() {
           </section>
         )}
 
-        {/* Rejoindre la communauté */}
+        {/* Community CTA */}
         <section className="py-16 bg-gradient-to-r from-green-500 to-teal-600 text-white">
           <div className="max-w-4xl mx-auto px-4 text-center">
             <h2 className="text-3xl font-bold mb-4">Rejoignez notre communauté</h2>
-            <p className="text-xl text-green-50 mb-8 max-w-2xl mx-auto">
-              Des milliers de citoyens engagés améliorent déjà leur quartier ensemble. 
-              Chaque signalement compte et contribue à un changement positif.
-            </p>
-            
-            <div className="grid md:grid-cols-3 gap-6 mb-10">
-              <div className="bg-white bg-opacity-20 rounded-lg p-6 backdrop-blur">
-                <div className="text-4xl mb-3">🤝</div>
-                <h3 className="text-xl font-semibold mb-2">Collaborer</h3>
-                <p className="text-green-50">Travaillez avec des ONGs et autorités locales</p>
-              </div>
-              <div className="bg-white bg-opacity-20 rounded-lg p-6 backdrop-blur">
-                <div className="text-4xl mb-3">📢</div>
-                <h3 className="text-xl font-semibold mb-2">Influencer</h3>
-                <p className="text-green-50">Vos signalements créent un impact réel</p>
-              </div>
-              <div className="bg-white bg-opacity-20 rounded-lg p-6 backdrop-blur">
-                <div className="text-4xl mb-3">🏆</div>
-                <h3 className="text-xl font-semibold mb-2">Progresser</h3>
-                <p className="text-green-50">Quartiers plus sûrs et mieux entretenus</p>
-              </div>
-            </div>
+            <p className="text-xl text-green-50 mb-8 max-w-2xl mx-auto">Des milliers de citoyens engagés améliorent déjà leur quartier ensemble.</p>
 
             <div className="flex flex-col md:flex-row gap-4 justify-center">
               <Link href={user ? "/citizen/dashboard" : "/register"}>
-                <button className="bg-white text-teal-600 px-8 py-3 rounded-xl font-semibold hover:bg-gray-100 transition">
-                  {user ? "✓ Aller au dashboard" : "👥 Rejoindre maintenant"}
-                </button>
+                <button className="bg-white text-teal-600 px-8 py-3 rounded-xl font-semibold hover:bg-gray-100 transition">{user ? "✓ Aller au dashboard" : "👥 Rejoindre maintenant"}</button>
               </Link>
               <Link href="/signalements">
-                <button className="bg-teal-700 text-white px-8 py-3 rounded-xl font-semibold hover:bg-teal-800 transition border-2 border-white">
-                  📊 Voir les signalements
-                </button>
+                <button className="bg-teal-700 text-white px-8 py-3 rounded-xl font-semibold hover:bg-teal-800 transition border-2 border-white">📊 Voir les signalements</button>
               </Link>
             </div>
           </div>
