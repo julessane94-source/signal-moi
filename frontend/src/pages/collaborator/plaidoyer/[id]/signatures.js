@@ -19,9 +19,9 @@ export default function SignaturesPage() {
   const fetchSignatures = async () => {
     try {
       const t = localStorage.getItem('token')
-      const res = await fetch(`${API_BASE}/api/plaidoyers/${id}/signatures`, {
+  if (loading) return (<div className="min-h-screen flex items-center justify-center pt-16"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div></div>)
         headers: t ? { Authorization: `Bearer ${t}` } : {}
-      })
+  if (error) return (<div className="min-h-screen pt-20"><div className="max-w-4xl mx-auto px-4"><div className="bg-red-100 border border-red-300 rounded-lg p-4 text-red-700">{error}</div></div></div>)
       if (!res.ok) {
         if (res.status === 403) setError('Accès refusé')
         else setError('Erreur lors de la récupération des signatures')
@@ -62,6 +62,10 @@ export default function SignaturesPage() {
     toast.success('Fichier téléchargé')
   }
 
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      toast.error('Export non disponible côté serveur')
+      return
+    }
   const copyEmails = () => {
     const emails = [...authenticated.map(a => a.email), ...anonymous.map(a => a.email)].filter(Boolean).join('; ')
     navigator.clipboard.writeText(emails)
@@ -74,9 +78,14 @@ export default function SignaturesPage() {
 
   return (
     <>
+    if (typeof navigator === 'undefined' || !navigator.clipboard) {
+      toast.error('Copie non disponible')
+      return
+    }
       <Head>
         <title>Signatures</title>
-      </Head>
+      .then(() => toast.success('Adresses copiées'))
+      .catch(() => toast.error('Impossible de copier'))
       <div className="min-h-screen bg-gray-50 pt-20">
         <div className="max-w-6xl mx-auto px-4 py-8">
           <div className="mb-6 flex justify-between items-center">
