@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
 
 // ? Middleware d'authentification amélioré
 const authMiddleware = async (req, res, next) => {
@@ -131,12 +132,14 @@ router.post('/:id/inscrire', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Campagne complète' });
     }
     
+    const inscriptionId = uuidv4();
+
     // Ajouter l'inscription
     const insertResult = await db.query(
-      `INSERT INTO signal_moi.inscriptions_campagnes (campagne_id, user_id, date_inscription)
-       VALUES ($1, $2, NOW())
+      `INSERT INTO signal_moi.inscriptions_campagnes (id, campagne_id, user_id, date_inscription)
+       VALUES ($1, $2, $3, NOW())
        RETURNING *`,
-      [id, user_id]
+      [inscriptionId, id, user_id]
     );
     
     console.log(`✅ [POST /:id/inscrire] Inscription réussie pour user ${user_id} à campagne ${id}`);
