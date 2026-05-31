@@ -266,9 +266,9 @@ router.post('/campaigns', authMiddleware, upload.single('image'), async (req, re
       const chemin = `uploads/campagnes/${req.file.filename}`.replace(/\\/g, '/');
       const fileData = await fs.promises.readFile(req.file.path);
       await db.query(
-        `INSERT INTO signal_moi.fichiers (id, nom_fichier, chemin, type, taille, mime_type, description, is_verified, uploaded_by, file_data, created_at, updated_at)
+        `INSERT INTO signal_moi.fichiers (id, campagne_id, nom_fichier, chemin, type, taille, mime_type, description, is_verified, uploaded_by, file_data, created_at, updated_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())`,
-        [fileId, req.file.originalname, chemin, 'image', req.file.size || 0, req.file.mimetype, null, false, userId, fileData]
+        [fileId, campaign.id, req.file.originalname, chemin, 'image', req.file.size || 0, req.file.mimetype, null, false, userId, fileData]
       );
     }
 

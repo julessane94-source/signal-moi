@@ -158,9 +158,20 @@ const ensureDbSchema = async () => {
             ALTER TABLE signal_moi.fichiers
             ADD COLUMN IF NOT EXISTS file_data BYTEA
         `);
-        console.log('✅ Colonne signal_moi.fichiers.file_data vérifiée ou créée');
+        await db.query(`
+            ALTER TABLE signal_moi.fichiers
+            ADD COLUMN IF NOT EXISTS campagne_id UUID
+        `);
+        await db.query(`
+            ALTER TABLE signal_moi.fichiers
+            ALTER COLUMN signalement_id DROP NOT NULL
+        `);
+        await db.query(`
+            CREATE INDEX IF NOT EXISTS idx_fichiers_campagne ON signal_moi.fichiers(campagne_id)
+        `);
+        console.log('✅ Schéma signal_moi.fichiers vérifié ou ajusté');
     } catch (err) {
-        console.warn('⚠️ Impossible de garantir la colonne file_data:', err.message);
+        console.warn('⚠️ Impossible de garantir le schéma signal_moi.fichiers:', err.message);
     }
 };
 ensureDbSchema();
