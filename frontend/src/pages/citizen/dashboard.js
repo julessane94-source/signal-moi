@@ -273,7 +273,9 @@ export default function CitizenDashboard() {
                                 <span>📎 {s.fichiers?.length || 0} pièce(s)</span>
                               </div>
                             </div>
-                            <span className="text-sm font-semibold text-indigo-600">Voir l'état</span>
+                            <span className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-sm font-semibold text-indigo-700 shadow-sm">
+                              Voir l'état
+                            </span>
                           </div>
                         </Link>
                       </Card>
@@ -311,7 +313,7 @@ export default function CitizenDashboard() {
                           <div>📅 {new Date(c.dateDebut).toLocaleDateString()}</div>
                           <div>📍 {c.lieu}</div>
                         </div>
-                        <Button variant="success" className="mt-4 w-full">
+                        <Button variant="success" className="mt-4 w-full rounded-full px-5 py-3 shadow-lg hover:shadow-xl transition">
                           Participer à cette campagne
                         </Button>
                       </Card>
@@ -352,17 +354,17 @@ export default function CitizenDashboard() {
                             <span className="text-sm text-gray-600">
                               📊 {p.signatures || 0}/{p.objectif_signatures || '?'} signatures
                             </span>
-                            <button
+                            <Button
                               onClick={() => handleSignPetition(p.id)}
                               disabled={signingPetition === p.id || isSigned}
-                              className={`px-4 py-2 rounded font-medium ${
+                              className={`w-full rounded-full font-semibold ${
                                 isSigned
                                   ? 'bg-gray-200 text-gray-600 cursor-not-allowed'
                                   : 'bg-indigo-600 text-white hover:bg-indigo-700'
                               }`}
                             >
                               {isSigned ? '✓ Déjà signé' : signingPetition === p.id ? 'Signature en cours...' : 'Signer ce plaidoyer'}
-                            </button>
+                            </Button>
                           </div>
                         </Card>
                       </motion.div>

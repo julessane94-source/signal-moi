@@ -329,7 +329,7 @@ export default function SignalementDetail() {
                       <button
                         onClick={() => handleSignPetition(p.id)}
                         disabled={signingPetition || isSigned}
-                        className={`px-4 py-2 rounded font-medium whitespace-nowrap ${
+                        className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap ${
                           isSigned
                             ? 'bg-gray-200 text-gray-600 cursor-not-allowed'
                             : 'bg-indigo-600 text-white hover:bg-indigo-700'
