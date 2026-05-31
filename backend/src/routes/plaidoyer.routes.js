@@ -40,8 +40,8 @@ router.get('/', async (req, res) => {
       SELECT 
         p.*,
         (SELECT COUNT(*) FROM signal_moi.signatures_plaidoyers WHERE plaidoyer_id = p.id) as nombre_signatures_auth,
-        (SELECT COUNT(*) FROM signal_moi.signatures_plaidoyers_anonymes WHERE plaidoyer_id = p.id) as nombre_signatures_anonymes
-      FROM signal_moi.plaidoyers p
+                (SELECT COUNT(*) FROM signal_moi.signatures_plaidoyers_anonymes WHERE plaidoyer_id = p.id) as nombre_signatures_anonymes
+            FROM signal_moi.plaidoyers p
       ORDER BY p.created_at DESC
     `);
     
@@ -52,8 +52,29 @@ router.get('/', async (req, res) => {
     
     res.json(plaidoyers);
   } catch (err) {
-    console.error(err);
-    res.status(500).json([]);
+        console.error(err);
+        // Si la table des signatures anonymes n'existe pas, retenter sans la requêter
+        if (err.message && err.message.includes('signatures_plaidoyers_anonymes')) {
+            try {
+                const result2 = await db.query(`
+                    SELECT 
+                        p.*,
+                        (SELECT COUNT(*) FROM signal_moi.signatures_plaidoyers WHERE plaidoyer_id = p.id) as nombre_signatures_auth,
+                        0 as nombre_signatures_anonymes
+                    FROM signal_moi.plaidoyers p
+                    ORDER BY p.created_at DESC
+                `);
+                const plaidoyers = result2.rows.map(p => ({
+                    ...p,
+                    nombre_signatures_total: (parseInt(p.nombre_signatures_auth) || 0) + (parseInt(p.nombre_signatures_anonymes) || 0)
+                }));
+                return res.json(plaidoyers);
+            } catch (err2) {
+                console.error('Fallback query failed:', err2);
+                return res.status(500).json([]);
+            }
+        }
+        res.status(500).json([]);
   }
 });
 
@@ -82,8 +103,35 @@ router.get('/:id', async (req, res) => {
     
     res.json(response);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erreur serveur', details: err.message });
+        console.error(err);
+        // Fallback si table anonymes manquante
+        if (err.message && err.message.includes('signatures_plaidoyers_anonymes')) {
+            try {
+                const result2 = await db.query(`
+                    SELECT 
+                        p.*,
+                        (SELECT COUNT(*) FROM signal_moi.signatures_plaidoyers WHERE plaidoyer_id = p.id) as nombre_signatures_auth,
+                        0 as nombre_signatures_anonymes
+                    FROM signal_moi.plaidoyers p
+                    WHERE p.id = $1
+                `, [id]);
+
+                if (!result2.rows || result2.rows.length === 0) {
+                    return res.status(404).json({ error: 'Plaidoyer non trouvé' });
+                }
+
+                const plaidoyer = result2.rows[0];
+                const response = {
+                    ...plaidoyer,
+                    nombre_signatures_total: (parseInt(plaidoyer.nombre_signatures_auth) || 0) + (parseInt(plaidoyer.nombre_signatures_anonymes) || 0)
+                };
+                return res.json(response);
+            } catch (err2) {
+                console.error('Fallback detail query failed:', err2);
+                return res.status(500).json({ error: 'Erreur serveur', details: err2.message });
+            }
+        }
+        res.status(500).json({ error: 'Erreur serveur', details: err.message });
   }
 });
 
