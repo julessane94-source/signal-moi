@@ -111,7 +111,10 @@ router.get('/config', async (req, res) => {
       siteName: config.siteName || 'Signal-Moi',
       contactEmail: config.contactEmail || 'contact@signal-moi.fr',
       contactPhone: config.contactPhone || '',
-      address: config.address || ''
+      address: config.address || '',
+      // Numéros d'urgence (facultatifs)
+      emergencyPolice: config.emergency_police || null,
+      emergencyFire: config.emergency_fire || null
     };
     
     console.log('[PUBLIC GET /pages/config] ✅ Config publique retournée');

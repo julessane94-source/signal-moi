@@ -5,6 +5,7 @@ import { SocketProvider } from '../context/SocketContext'
 import { ToastContainer } from 'react-toastify'
 import { useRouter } from 'next/router'
 import Navbar from '../components/common/Navbar'
+import EmergencyButtons from '../components/common/EmergencyButtons'
 import Footer from '../components/common/Footer'
 import Head from 'next/head'
 import '../styles/globals.css'
@@ -35,6 +36,7 @@ function MyApp({ Component, pageProps }) {
       <AuthProvider>
         <SocketProvider>
           {!hideNavbar && <Navbar />}
+          {!hideNavbar && <EmergencyButtons />}
           <Component {...pageProps} />
           {!hideFooter && <Footer />}
           <ToastContainer position="bottom-right" autoClose={5000} />

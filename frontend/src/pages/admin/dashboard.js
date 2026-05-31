@@ -66,6 +66,9 @@ export default function AdminDashboard() {
       twitter: '',
       instagram: ''
     }
+    ,
+    emergencyPolice: '',
+    emergencyFire: ''
   })
   
   const [stats, setStats] = useState({
@@ -119,6 +122,8 @@ export default function AdminDashboard() {
           contactPage: data.contact_page || data.contactPage || prev.contactPage,
           aboutPage: data.about_page || data.aboutPage || prev.aboutPage,
           homePage: data.home_page || data.homePage || prev.homePage
+          emergencyPolice: data.emergency_police || data.emergencyPolice || prev.emergencyPolice,
+          emergencyFire: data.emergency_fire || data.emergencyFire || prev.emergencyFire
         }))
       }
     } catch (error) {
@@ -695,6 +700,23 @@ export default function AdminDashboard() {
                     </FormField>
                   </div>
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                    <FormField label="Numéro Police">
+                      <Input
+                        value={siteConfig.emergencyPolice}
+                        onChange={e => setSiteConfig({...siteConfig, emergencyPolice: e.target.value})}
+                        placeholder="Ex: +237 6XXXXXXXX"
+                      />
+                    </FormField>
+                    <FormField label="Numéro Sapeurs‑pompiers">
+                      <Input
+                        value={siteConfig.emergencyFire}
+                        onChange={e => setSiteConfig({...siteConfig, emergencyFire: e.target.value})}
+                        placeholder="Ex: +237 6XXXXXXXX"
+                      />
+                    </FormField>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField label="Téléphone">
                       <Input
@@ -816,6 +838,9 @@ export default function AdminDashboard() {
                             twitter: '',
                             instagram: ''
                           }
+                          // include emergency numbers
+                          if (siteConfig.emergencyPolice) payload.emergencyPolice = siteConfig.emergencyPolice
+                          if (siteConfig.emergencyFire) payload.emergencyFire = siteConfig.emergencyFire
                         }
                         setSiteConfig(prev => ({ ...prev, ...imported }))
                       }}>

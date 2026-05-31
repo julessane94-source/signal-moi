@@ -312,7 +312,8 @@ router.get('/campagnes', authMiddleware, async (req, res) => {
 
 router.post('/site-config', authMiddleware, async (req, res) => {
   try {
-    const { siteName, contactEmail, contactPhone, address, contactPage, aboutPage, homePage, socialLinks } = req.body;
+    const { siteName, contactEmail, contactPhone, address, contactPage, aboutPage, homePage, socialLinks, emergencyPolice, emergencyFire } = req.body;
+
     if (!siteName || !contactEmail || !contactPhone || !address) {
       return res.status(400).json({ error: 'Les champs de base (siteName, contactEmail, contactPhone, address) sont requis' });
     }
@@ -323,6 +324,9 @@ router.post('/site-config', authMiddleware, async (req, res) => {
       SiteConfig.set('contactPhone', contactPhone),
       SiteConfig.set('address', address)
     ];
+
+    if (emergencyPolice !== undefined) tasks.push(SiteConfig.set('emergency_police', emergencyPolice));
+    if (emergencyFire !== undefined) tasks.push(SiteConfig.set('emergency_fire', emergencyFire));
 
     if (contactPage !== undefined) tasks.push(SiteConfig.set('contact_page', JSON.stringify(contactPage)));
     if (aboutPage !== undefined) tasks.push(SiteConfig.set('about_page', JSON.stringify(aboutPage)));
