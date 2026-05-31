@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import Navbar from '../../components/common/Navbar'
 import { Button, Card, FormField, Input, Modal, DataTable, StatBox, Badge } from '../../components/ui'
 import { motion } from 'framer-motion'
 import { toast } from 'react-toastify'
@@ -420,7 +419,6 @@ export default function AdminDashboard() {
 
   return (
     <>
-      <Navbar />
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 pt-20 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Page Header */}

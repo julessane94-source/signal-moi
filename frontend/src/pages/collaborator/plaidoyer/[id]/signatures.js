@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
-import Navbar from '../../../../components/common/Navbar'
 import { API_BASE } from '../../../../config/api'
 import { toast } from 'react-toastify'
 
@@ -78,7 +77,6 @@ export default function SignaturesPage() {
       <Head>
         <title>Signatures</title>
       </Head>
-      <Navbar />
       <div className="min-h-screen bg-gray-50 pt-20">
         <div className="max-w-6xl mx-auto px-4 py-8">
           <div className="mb-6 flex justify-between items-center">

@@ -25,7 +25,7 @@ export default function Card({
   return (
     <motion.div
       whileHover={hover ? { y: -2 } : {}}
-      className={`bg-white ${roundedSizes[rounded]} ${shadows[shadow]} overflow-hidden transition-all duration-200 ${
+      className={`bg-white/95 backdrop-blur-sm border border-gray-200/80 ${roundedSizes[rounded]} ${shadows[shadow]} overflow-hidden transition-all duration-200 ${
         onClick ? 'cursor-pointer' : ''
       } ${className}`}
       onClick={onClick}

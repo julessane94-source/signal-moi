@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-import Navbar from '../../../components/common/Navbar'
+
 import { API_BASE } from '../../../config/api'
 import { toast } from 'react-toastify'
 
@@ -74,7 +74,6 @@ export default function NewPlaidoyer() {
 
   return (
     <>
-      <Navbar />
       <div className="min-h-screen pt-20 bg-gray-50">
         <div className="max-w-3xl mx-auto px-4 py-10">
           <div className="bg-white rounded-xl shadow p-8">

@@ -9,13 +9,13 @@ export default function FormField({
   return (
     <div className={className}>
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-semibold text-slate-700 mb-2">
           {label} {required && <span className="text-red-500">*</span>}
         </label>
       )}
       {children}
-      {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
-      {helperText && <p className="text-sm text-gray-500 mt-1">{helperText}</p>}
+      {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
+      {helperText && <p className="text-sm text-slate-500 mt-2">{helperText}</p>}
     </div>
   )
 }

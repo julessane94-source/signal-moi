@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
-import Navbar from '../../../components/common/Navbar'
 import { API_BASE } from '../../../config/api'
 import { motion } from 'framer-motion'
 
@@ -73,7 +72,6 @@ export default function MesCampagnes() {
   if (loading) {
     return (
       <>
-        <Navbar />
         <div className="min-h-screen flex items-center justify-center pt-16">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
         </div>
@@ -86,8 +84,6 @@ export default function MesCampagnes() {
       <Head>
         <title>Mes Campagnes - Signal-Moi</title>
       </Head>
-
-      <Navbar />
 
       <div className="min-h-screen bg-gray-50 pt-20">
         <div className="max-w-6xl mx-auto px-4 py-8">

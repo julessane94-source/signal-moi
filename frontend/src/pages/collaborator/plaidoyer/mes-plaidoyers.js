@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
-import Navbar from '../../../components/common/Navbar'
 import { API_BASE } from '../../../config/api'
 import { useAuth } from '../../../context/AuthContext'
 
@@ -44,7 +43,6 @@ export default function MesPlaidoyers() {
       <Head>
         <title>Mes plaidoyers</title>
       </Head>
-      <Navbar />
       <div className="min-h-screen bg-gray-50 pt-20">
         <div className="max-w-5xl mx-auto px-4 py-8">
           <div className="mb-6">

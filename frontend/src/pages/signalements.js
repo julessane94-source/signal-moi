@@ -1,7 +1,6 @@
 ﻿import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
-import Navbar from '../components/common/Navbar'
 
 export default function SignalementsPublic() {
   const [signalements, setSignalements] = useState([])
@@ -57,7 +56,6 @@ export default function SignalementsPublic() {
   if (loading) {
     return (
       <>
-        <Navbar />
         <div className="min-h-screen flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
         </div>
@@ -70,8 +68,6 @@ export default function SignalementsPublic() {
       <Head>
         <title>Signalements - Signal-Moi</title>
       </Head>
-
-      <Navbar />
 
       <main className="min-h-screen bg-gray-50 pt-16">
         <section className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-16">

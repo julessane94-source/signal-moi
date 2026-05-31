@@ -1,4 +1,5 @@
 ﻿import { useState } from 'react'
+import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { useAuth } from '../../context/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -16,6 +17,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 export default function Navbar() {
+  const router = useRouter()
   const { user, logout } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
@@ -25,6 +27,7 @@ export default function Navbar() {
     { name: 'À propos', href: '/about', icon: InformationCircleIcon },
     { name: 'Signalements', href: '/signalements', icon: DocumentTextIcon },
     { name: 'Campagnes', href: '/campagnes', icon: UserGroupIcon },
+    { name: 'Plaidoyers', href: '/plaidoyers', icon: DocumentTextIcon },
     { name: 'Contact', href: '/contact', icon: EnvelopeIcon },
   ]
 
@@ -36,19 +39,22 @@ export default function Navbar() {
           <motion.div whileHover={{ scale: 1.05 }}>
             <Link href="/" className="flex items-center space-x-2">
               <span className="text-2xl">🚨</span>
-              <span className="text-xl font-bold text-white">Signal-Moi</span>
+              <span className="text-xl font-bold bg-gradient-to-r from-red-300 to-orange-400 bg-clip-text text-transparent">
+                Signal-Moi
+              </span>
             </Link>
           </motion.div>
 
           {/* Navigation Desktop */}
-          <div className="hidden md:flex items-center space-x-1">
-            {!user && navigation.map((item) => {
+          <div className="hidden md:flex items-center space-x-3">
+            {navigation.map((item) => {
               const Icon = item.icon
+              const isActive = router.pathname === item.href
               return (
                 <Link key={item.name} href={item.href}>
                   <motion.div
                     whileHover={{ scale: 1.05 }}
-                    className="text-white hover:text-indigo-100 px-3 py-2 rounded-lg transition-colors flex items-center gap-2 cursor-pointer group relative"
+                    className={`text-white transition-colors px-3 py-2 rounded-full flex items-center gap-2 cursor-pointer group relative ${isActive ? 'bg-white/15 shadow-sm' : 'hover:text-indigo-100 hover:bg-white/10'}`}
                   >
                     <Icon className="h-5 w-5" />
                     <span>{item.name}</span>
@@ -169,7 +175,7 @@ export default function Navbar() {
             className="md:hidden bg-indigo-700 border-t border-indigo-500"
           >
             <div className="px-4 py-4 space-y-2">
-              {!user && navigation.map((item) => {
+              {navigation.map((item) => {
                 const Icon = item.icon
                 return (
                   <Link

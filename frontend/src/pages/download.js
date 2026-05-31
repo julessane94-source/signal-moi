@@ -1,6 +1,5 @@
 ﻿import Head from 'next/head'
 import Link from 'next/link'
-import Navbar from '../components/common/Navbar'
 import { useState, useEffect } from 'react'
 
 export default function DownloadApp() {
@@ -30,8 +29,6 @@ export default function DownloadApp() {
       <Head>
         <title>Télécharger l'application - Signal-Moi</title>
       </Head>
-
-      <Navbar />
 
       <div className="min-h-screen bg-gray-50 pt-16">
         <div className="max-w-4xl mx-auto px-4 py-12">

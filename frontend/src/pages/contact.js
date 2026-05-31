@@ -2,8 +2,6 @@
 import Head from 'next/head'
 import { useState, useEffect } from 'react'
 import ErrorBoundary from '../components/common/ErrorBoundary'
-import Navbar from '../components/common/Navbar'
-import Footer from '../components/common/Footer'
 import { motion } from 'framer-motion'
 import { toast } from 'react-toastify'
 import { API_BASE } from '../config/api'
@@ -144,12 +142,9 @@ export default function Contact() {
 
   if (loading) {
     return (
-      <>
-        <Navbar />
-        <div className="min-h-screen pt-16 flex items-center justify-center bg-gray-50">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-        </div>
-      </>
+      <div className="min-h-screen pt-16 flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
     )
   }
 
@@ -159,7 +154,6 @@ export default function Contact() {
         <title>Contact - Signal-Moi</title>
         <meta name="description" content="Contactez-nous pour toute question ou suggestion" />
       </Head>
-      <Navbar />
       <ErrorBoundary>
       <main className="min-h-screen bg-gray-50 pt-16">
         {/* Hero Section */}
@@ -452,8 +446,6 @@ export default function Contact() {
         </section>
       </main>
       </ErrorBoundary>
-
-      <Footer />
     </>
   )
 }

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
-import Navbar from '../../../components/common/Navbar'
 import { API_BASE } from '../../../config/api'
 import { toast } from 'react-toastify'
 
@@ -118,7 +117,6 @@ export default function CampagneInscrits() {
   if (loading) {
     return (
       <>
-        <Navbar />
         <div className="min-h-screen flex items-center justify-center pt-16">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
         </div>
@@ -129,7 +127,6 @@ export default function CampagneInscrits() {
   if (!campagne) {
     return (
       <>
-        <Navbar />
         <div className="min-h-screen pt-20">
           <div className="max-w-6xl mx-auto px-4">
             <div className="bg-red-100 border border-red-300 rounded-lg p-4 text-red-700">
@@ -146,8 +143,6 @@ export default function CampagneInscrits() {
       <Head>
         <title>Inscrits - {campagne.titre}</title>
       </Head>
-
-      <Navbar />
 
       <div className="min-h-screen bg-gray-50 pt-20">
         <div className="max-w-6xl mx-auto px-4 py-8">

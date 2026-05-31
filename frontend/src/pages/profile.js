@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
-import Navbar from '../components/common/Navbar'
 import { Button, Card, FormField, Input } from '../components/ui'
 import { motion } from 'framer-motion'
 import {
@@ -112,7 +111,6 @@ export default function Profile() {
 
   return (
     <>
-      <Navbar />
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 pt-20 pb-12">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Profile Header */}

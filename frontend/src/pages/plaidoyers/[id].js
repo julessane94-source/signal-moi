@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
-import Navbar from '../../components/common/Navbar'
 import { API_BASE } from '../../config/api'
 
 export default function PlaidoyerDetail() {
@@ -38,7 +37,6 @@ export default function PlaidoyerDetail() {
   if (loading) {
     return (
       <>
-        <Navbar />
         <div className="min-h-screen pt-20 flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
         </div>
@@ -49,7 +47,6 @@ export default function PlaidoyerDetail() {
   if (error || !plaidoyer) {
     return (
       <>
-        <Navbar />
         <div className="min-h-screen pt-20 flex items-center justify-center px-4">
           <div className="bg-white rounded-xl shadow-md p-8 text-center max-w-md w-full">
             <h1 className="text-2xl font-bold mb-4">⚠️ {error || 'Plaidoyer introuvable'}</h1>
@@ -66,7 +63,6 @@ export default function PlaidoyerDetail() {
 
   return (
     <>
-      <Navbar />
       <main className="min-h-screen bg-gray-50 pt-20">
         <div className="max-w-4xl mx-auto px-4 py-10">
           <div className="mb-6">

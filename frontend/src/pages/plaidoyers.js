@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
-import Navbar from '../components/common/Navbar'
 import { API_BASE } from '../config/api'
 
 export default function PlaidoyersPage() {
@@ -36,8 +35,6 @@ export default function PlaidoyersPage() {
       <Head>
         <title>Plaidoyers - Signal-Moi</title>
       </Head>
-
-      <Navbar />
 
       <div className="min-h-screen bg-gray-50 pt-20">
         <div className="max-w-6xl mx-auto px-4 py-8">

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
-import Navbar from '../../../components/common/Navbar'
+
 import { Button, Card } from '../../../components/ui'
 import { toast } from 'react-toastify'
 import { API_BASE } from '../../../config/api'
@@ -110,7 +110,6 @@ export default function NewCampagne() {
 
   return (
     <>
-      <Navbar />
       <div className="min-h-screen pt-20 bg-gray-50">
         <div className="max-w-3xl mx-auto px-4">
           <Card className="p-8 mt-8">

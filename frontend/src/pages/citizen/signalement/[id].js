@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-import Navbar from '../../../components/common/Navbar'
+
 import Link from 'next/link'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL
@@ -185,12 +185,11 @@ export default function SignalementDetail() {
     }
   }
 
-  if (loading) return (<><Navbar /><div className="min-h-screen pt-16 flex items-center justify-center">Chargement...</div></>)
-  if (!signal) return (<><Navbar /><div className="min-h-screen pt-16 flex items-center justify-center">Signalement introuvable</div></>)
+  if (loading) return (<><div className="min-h-screen pt-16 flex items-center justify-center">Chargement...</div></>)
+  if (!signal) return (<><div className="min-h-screen pt-16 flex items-center justify-center">Signalement introuvable</div></>)
 
   return (
     <>
-      <Navbar />
       <main className="min-h-screen bg-gray-50 pt-16">
         <div className="max-w-3xl mx-auto px-4 py-8">
           <div className="flex items-center justify-between mb-4">

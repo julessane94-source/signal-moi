@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-import Navbar from '../../components/common/Navbar'
 import Link from 'next/link'
 import { API_BASE } from '../../config/api'
 
@@ -92,7 +91,6 @@ export default function CampagneDetail() {
   if (loading) {
     return (
       <>
-        <Navbar />
         <div className="min-h-screen pt-20 flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
         </div>
@@ -103,7 +101,6 @@ export default function CampagneDetail() {
   if (error || !campagne) {
     return (
       <>
-        <Navbar />
         <div className="min-h-screen pt-20 flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">⚠️ {error || 'Campagne non trouvée'}</h1>
@@ -120,7 +117,6 @@ export default function CampagneDetail() {
 
   return (
     <>
-      <Navbar />
       <main className="min-h-screen bg-gray-50 pt-20">
         <div className="max-w-4xl mx-auto px-4 py-12">
           {/* En-tête */}

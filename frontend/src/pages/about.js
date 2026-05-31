@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import Head from 'next/head'
-import Navbar from '../components/common/Navbar'
 import { motion } from 'framer-motion'
 import { API_BASE } from '../config/api'
 
@@ -122,8 +121,6 @@ export default function About() {
         <title>A propos - Signal-Moi</title>
         <meta name="description" content="Decouvrez notre mission et notre equipe" />
       </Head>
-
-      <Navbar />
 
       <main className="min-h-screen bg-gray-50 pt-16">
         {/* Hero Section */}

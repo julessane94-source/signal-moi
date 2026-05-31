@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE } from '../../config/api'
-import Navbar from '../../components/common/Navbar'
 import { toast } from 'react-toastify'
 import dynamic from 'next/dynamic'
 
@@ -148,7 +147,6 @@ export default function NewSignalement() {
 
   return (
     <>
-      <Navbar />
       <div className="min-h-screen bg-gray-50 pt-16">
         <div className="max-w-3xl mx-auto px-4 py-8">
           <div className="bg-white rounded-xl shadow-md p-6">

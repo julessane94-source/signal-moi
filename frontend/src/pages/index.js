@@ -4,8 +4,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE } from '../config/api'
-import Navbar from '../components/common/Navbar'
-import Footer from '../components/common/Footer'
+import { Button } from '../components/ui'
 
 const getImageUrl = (url) => {
   if (!url) return null
@@ -86,8 +85,6 @@ export default function Home() {
         <link rel="manifest" href="/manifest.json" />
       </Head>
 
-      <Navbar />
-
       <main className="min-h-screen pt-16">
         {/* Hero Section */}
         <section className="bg-gradient-to-br from-indigo-50 to-white py-20">
@@ -123,9 +120,13 @@ export default function Home() {
             )}
 
             <Link href={user ? "/citizen/signalement" : "/login"}>
-              <button className="bg-red-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-red-700 transition shadow-lg">
+              <Button
+                size="lg"
+                variant="danger"
+                className="w-full md:w-auto mt-4"
+              >
                 🚨 Faire un signalement
-              </button>
+              </Button>
             </Link>
           </div>
         </section>
@@ -192,9 +193,9 @@ export default function Home() {
 
             <div className="mt-12 text-center">
               <Link href={user ? "/citizen/signalement" : "/login"}>
-                <button className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition">
+                <Button className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition" size="md">
                   Commencer maintenant →
-                </button>
+                </Button>
               </Link>
             </div>
           </div>
@@ -311,8 +312,6 @@ export default function Home() {
           </div>
         </section>
       </main>
-
-      <Footer />
     </>
   )
 }

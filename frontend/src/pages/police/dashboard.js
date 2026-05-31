@@ -1,6 +1,5 @@
 ﻿import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import Navbar from '../../components/common/Navbar'
 import { useSocket } from '../../context/SocketContext'
 import { Button, Card, Badge, Modal, StatBox } from '../../components/ui'
 import { toast } from 'react-toastify'
@@ -188,7 +187,6 @@ export default function PoliceDashboard() {
   if (loading) {
     return (
       <>
-        <Navbar />
         <div className="min-h-screen pt-16 flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
         </div>
@@ -198,7 +196,6 @@ export default function PoliceDashboard() {
 
   return (
     <>
-      <Navbar />
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 pt-20 pb-12">
         {/* Alert bar pour signalement prioritaire */}
         {topSignal && (

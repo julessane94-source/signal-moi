@@ -1,7 +1,6 @@
 ﻿import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '../../context/AuthContext'
-import Navbar from '../../components/common/Navbar'
 import { API_BASE } from '../../config/api'
 import { toast } from 'react-toastify'
 import { io as socketIOClient } from 'socket.io-client'
@@ -193,7 +192,6 @@ export default function CollaboratorDashboard() {
 
   return (
     <>
-      <Navbar />
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 pt-20 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl font-bold text-gray-900">Espace Collaborateur</h1>

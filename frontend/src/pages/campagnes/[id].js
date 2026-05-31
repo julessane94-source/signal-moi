@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
-import Navbar from '../../components/common/Navbar'
-import Footer from '../../components/common/Footer'
 import { motion } from 'framer-motion'
 import { API_BASE } from '../../config/api'
 
@@ -152,7 +150,6 @@ export default function DetailCampagne() {
   if (loading) {
     return (
       <>
-        <Navbar />
         <div className="min-h-screen flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
         </div>
@@ -163,7 +160,6 @@ export default function DetailCampagne() {
   if (!campagne) {
     return (
       <>
-        <Navbar />
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <p className="text-red-600">Campagne non trouvée</p>
@@ -183,8 +179,6 @@ export default function DetailCampagne() {
         <title>{campagne.titre} - Signal-Moi</title>
         <meta name="description" content={campagne.description} />
       </Head>
-
-      <Navbar />
 
       <main className="min-h-screen bg-gray-50 pt-20">
         {/* Messages */}
@@ -363,8 +357,6 @@ export default function DetailCampagne() {
           </div>
         </section>
       </main>
-
-      <Footer />
     </>
   )
 }
