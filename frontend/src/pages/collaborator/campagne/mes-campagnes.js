@@ -21,11 +21,24 @@ export default function MesCampagnes() {
   const fetchCampagnes = async () => {
     try {
       const t = localStorage.getItem('token')
-      const res = await fetch(`${API_BASE}/api/campagnes`, {
+      const res = await fetch(`${API_BASE}/api/collaborator/campaigns`, {
         headers: t ? { Authorization: `Bearer ${t}` } : {}
       })
       const data = await res.json()
-      setCampagnes(Array.isArray(data) ? data : [])
+      // Adapter les champs pour l'affichage
+      const list = Array.isArray(data) ? data.map(c => ({
+        id: c.id,
+        titre: c.titre,
+        description: c.description,
+        type: c.type,
+        date_debut: c.dateDebut || c.date_debut,
+        date_fin: c.dateFin || c.date_fin,
+        lieu: c.lieu,
+        nombre_inscrits: c.nombre_inscrits || 0,
+        capacite_max: c.capacite_max || c.capaciteMax || 100,
+        created_at: c.createdAt || c.created_at
+      })) : []
+      setCampagnes(list)
     } catch (err) {
       console.error('Erreur:', err)
     } finally {

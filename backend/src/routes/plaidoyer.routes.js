@@ -227,4 +227,50 @@ router.post('/:id/sign', optionalAuthMiddleware, async (req, res) => {
     }
 });
 
+// GET /api/plaidoyers/:id/signatures - Liste des signatures (protégé)
+router.get('/:id/signatures', authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Vérifier que le plaidoyer existe
+        const pRes = await db.query('SELECT * FROM signal_moi.plaidoyers WHERE id = $1', [id]);
+        if (!pRes.rows || pRes.rows.length === 0) return res.status(404).json({ error: 'Plaidoyer non trouvé' });
+        const plaidoyer = pRes.rows[0];
+
+        // Autorisation: seul l'auteur, un collaborateur ou un admin peut voir les signatures
+        if (!req.user) return res.status(401).json({ error: 'Authentification requise' });
+        if (req.user.role !== 'admin' && req.user.role !== 'collaborateur' && req.user.id !== plaidoyer.auteur_id) {
+            return res.status(403).json({ error: 'Accès refusé' });
+        }
+
+        // Signatures authentifiées
+        const authRes = await db.query(
+            `SELECT sp.id, sp.date_signature, u.id as user_id, u.prenom, u.nom, u.email
+             FROM signal_moi.signatures_plaidoyers sp
+             LEFT JOIN signal_moi.users u ON u.id = sp.user_id
+             WHERE sp.plaidoyer_id = $1
+             ORDER BY sp.date_signature DESC`,
+            [id]
+        );
+
+        // Signatures anonymes (si la table existe)
+        let anonResRows = [];
+        try {
+            const anonRes = await db.query(
+                `SELECT id, nom, email, date_signature FROM signal_moi.signatures_plaidoyers_anonymes WHERE plaidoyer_id = $1 ORDER BY date_signature DESC`,
+                [id]
+            );
+            anonResRows = anonRes.rows || [];
+        } catch (e) {
+            // table manquante -> ignorer
+            anonResRows = [];
+        }
+
+        res.json({ authenticated: authRes.rows || [], anonymous: anonResRows });
+    } catch (err) {
+        console.error('Erreur GET /:id/signatures:', err);
+        res.status(500).json({ error: 'Erreur serveur', details: err.message });
+    }
+});
+
 module.exports = router;
