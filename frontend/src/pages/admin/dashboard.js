@@ -17,6 +17,11 @@ import {
   UserIcon
 } from '@heroicons/react/24/outline'
 
+const getImageUrl = (url) => {
+  if (!url) return null
+  return url.startsWith('http://') || url.startsWith('https://') ? url : `${API_BASE}${url}`
+}
+
 export default function AdminDashboard() {
   const { user, loading } = useAuth()
   const [users, setUsers] = useState([])
@@ -644,8 +649,8 @@ export default function AdminDashboard() {
                             </div>
                           </div>
                           <div className="flex flex-col items-end gap-2">
-                            {c.image && (
-                              <img src={c.image} alt="aperçu" className="w-20 h-20 object-cover rounded-lg" />
+                            {getImageUrl(c.image_url || c.image) && (
+                              <img src={getImageUrl(c.image_url || c.image)} alt="aperçu" className="w-20 h-20 object-cover rounded-lg" />
                             )}
                             <motion.button
                               whileHover={{ scale: 1.05 }}

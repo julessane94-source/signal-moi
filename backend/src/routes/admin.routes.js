@@ -290,6 +290,7 @@ router.get('/campagnes', authMiddleware, async (req, res) => {
       capacite_max: c.capacite_max,
       est_actif: c.est_actif,
       image_url: c.image_url,
+      image: c.image_url,
       created_at: c.created_at,
       updated_at: c.updated_at,
       creator: {
