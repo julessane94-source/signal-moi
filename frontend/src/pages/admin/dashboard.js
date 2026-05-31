@@ -121,7 +121,7 @@ export default function AdminDashboard() {
           address: data.address || prev.address,
           contactPage: data.contact_page || data.contactPage || prev.contactPage,
           aboutPage: data.about_page || data.aboutPage || prev.aboutPage,
-          homePage: data.home_page || data.homePage || prev.homePage
+          homePage: data.home_page || data.homePage || prev.homePage,
           emergencyPolice: data.emergency_police || data.emergencyPolice || prev.emergencyPolice,
           emergencyFire: data.emergency_fire || data.emergencyFire || prev.emergencyFire
         }))
@@ -837,10 +837,9 @@ export default function AdminDashboard() {
                             whatsapp: '+221778851691',
                             twitter: '',
                             instagram: ''
-                          }
-                          // include emergency numbers
-                          if (siteConfig.emergencyPolice) payload.emergencyPolice = siteConfig.emergencyPolice
-                          if (siteConfig.emergencyFire) payload.emergencyFire = siteConfig.emergencyFire
+                          },
+                          emergencyPolice: siteConfig.emergencyPolice || '',
+                          emergencyFire: siteConfig.emergencyFire || ''
                         }
                         setSiteConfig(prev => ({ ...prev, ...imported }))
                       }}>

@@ -14,18 +14,22 @@ export default function SignaturesPage() {
 
   useEffect(() => {
     if (id) fetchSignatures()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
   const fetchSignatures = async () => {
+    setLoading(true)
+    setError('')
     try {
-      const t = localStorage.getItem('token')
-  if (loading) return (<div className="min-h-screen flex items-center justify-center pt-16"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div></div>)
-        headers: t ? { Authorization: `Bearer ${t}` } : {}
-  if (error) return (<div className="min-h-screen pt-20"><div className="max-w-4xl mx-auto px-4"><div className="bg-red-100 border border-red-300 rounded-lg p-4 text-red-700">{error}</div></div></div>)
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+      const headers = token ? { Authorization: `Bearer ${token}` } : {}
+      const res = await fetch(`${API_BASE}/api/plaidoyers/${id}/signatures`, { headers })
       if (!res.ok) {
         if (res.status === 403) setError('Accès refusé')
+        else if (res.status === 401) setError('Authentification requise')
         else setError('Erreur lors de la récupération des signatures')
-        setLoading(false)
+        setAuthenticated([])
+        setAnonymous([])
         return
       }
       const data = await res.json()
@@ -34,12 +38,19 @@ export default function SignaturesPage() {
     } catch (err) {
       console.error(err)
       setError('Erreur lors du chargement')
+      setAuthenticated([])
+      setAnonymous([])
     } finally {
       setLoading(false)
     }
   }
 
   const exportCSV = () => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      toast.error('Export non disponible côté serveur')
+      return
+    }
+
     const headers = ['Type', 'Prénom', 'Nom', 'Email', 'Date']
     const rows = []
     authenticated.forEach(a => {
@@ -62,30 +73,25 @@ export default function SignaturesPage() {
     toast.success('Fichier téléchargé')
   }
 
-    if (typeof window === 'undefined' || typeof document === 'undefined') {
-      toast.error('Export non disponible côté serveur')
-      return
-    }
   const copyEmails = () => {
-    const emails = [...authenticated.map(a => a.email), ...anonymous.map(a => a.email)].filter(Boolean).join('; ')
-    navigator.clipboard.writeText(emails)
-    toast.success('Adresses copiées')
-  }
-
-  if (loading) return (<><Navbar /><div className="min-h-screen flex items-center justify-center pt-16"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div></div></>)
-
-  if (error) return (<><Navbar /><div className="min-h-screen pt-20"><div className="max-w-4xl mx-auto px-4"><div className="bg-red-100 border border-red-300 rounded-lg p-4 text-red-700">{error}</div></div></div></>)
-
-  return (
-    <>
     if (typeof navigator === 'undefined' || !navigator.clipboard) {
       toast.error('Copie non disponible')
       return
     }
-      <Head>
-        <title>Signatures</title>
+    const emails = [...authenticated.map(a => a.email), ...anonymous.map(a => a.email)].filter(Boolean).join('; ')
+    navigator.clipboard.writeText(emails)
       .then(() => toast.success('Adresses copiées'))
       .catch(() => toast.error('Impossible de copier'))
+  }
+
+  if (loading) return (<div className="min-h-screen flex items-center justify-center pt-16"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div></div>)
+  if (error) return (<div className="min-h-screen pt-20"><div className="max-w-4xl mx-auto px-4"><div className="bg-red-100 border border-red-300 rounded-lg p-4 text-red-700">{error}</div></div></div>)
+
+  return (
+    <>
+      <Head>
+        <title>Signatures</title>
+      </Head>
       <div className="min-h-screen bg-gray-50 pt-20">
         <div className="max-w-6xl mx-auto px-4 py-8">
           <div className="mb-6 flex justify-between items-center">
