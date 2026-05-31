@@ -15,6 +15,9 @@ export default function CollaboratorDashboard() {
   const [loadingSignals, setLoadingSignals] = useState(true)
   const [followed, setFollowed] = useState([])
   const [followedList, setFollowedList] = useState([])
+  const [stats, setStats] = useState({ totalSignalements: 0, totalCampaigns: 0, pendingNotifications: 0 })
+  const [recentCampaigns, setRecentCampaigns] = useState([])
+  const [recentPlaidoyers, setRecentPlaidoyers] = useState([])
   const socketRef = useRef(null)
 
   // TOUS les useEffect doivent être appelés AVANT les conditional returns
@@ -50,6 +53,47 @@ export default function CollaboratorDashboard() {
       }
     }
     fetchSignals()
+    // fetch dashboard stats (counts)
+    const fetchDashboard = async () => {
+      try {
+        const token = localStorage.getItem('token')
+        const r = await fetch(`${API_BASE}/api/collaborator/dashboard`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+        if (r.ok) {
+          const d = await r.json()
+          setStats(d.stats || {})
+        }
+      } catch (e) {
+        console.warn('fetchDashboard failed', e)
+      }
+    }
+    fetchDashboard()
+
+    // fetch recent campaigns created by this collaborator
+    const fetchMyCampaigns = async () => {
+      try {
+        const token = localStorage.getItem('token')
+        const r = await fetch(`${API_BASE}/api/collaborator/campaigns`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+        if (r.ok) {
+          const d = await r.json()
+          setRecentCampaigns(d.slice(0,4) || [])
+        }
+      } catch (e) { console.warn('fetchMyCampaigns failed', e) }
+    }
+    fetchMyCampaigns()
+
+    // fetch recent plaidoyers authored by this user
+    const fetchMyPlaidoyers = async () => {
+      try {
+        const token = localStorage.getItem('token')
+        const r = await fetch(`${API_BASE}/api/plaidoyers`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+        if (r.ok) {
+          const list = await r.json()
+          const mine = Array.isArray(list) ? list.filter(p => p.auteur_id === user.id).slice(0,4) : []
+          setRecentPlaidoyers(mine)
+        }
+      } catch (e) { console.warn('fetchMyPlaidoyers failed', e) }
+    }
+    fetchMyPlaidoyers()
     // fetch followed list from server
     const fetchFollowed = async () => {
       try {
@@ -163,6 +207,61 @@ export default function CollaboratorDashboard() {
             <button onClick={() => router.push('/collaborator/plaidoyer/new')} className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700">✍️ Créer plaidoyer</button>
             <button onClick={() => router.push('/collaborator/plaidoyer/mes-plaidoyers')} className="bg-yellow-600 text-white px-6 py-3 rounded-lg hover:bg-yellow-700">📝 Mes plaidoyers</button>
             <button onClick={() => toast.info('Statistiques non implémentées dans cette vue')} className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700">📈 Statistiques</button>
+          </div>
+
+          {/* Stat cards */}
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="text-sm text-gray-500">Signalements assignés</div>
+              <div className="text-2xl font-bold">{stats.totalSignalements || 0}</div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="text-sm text-gray-500">Mes campagnes</div>
+              <div className="text-2xl font-bold">{stats.totalCampaigns || 0}</div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="text-sm text-gray-500">Notifications en attente</div>
+              <div className="text-2xl font-bold">{stats.pendingNotifications || 0}</div>
+            </div>
+          </div>
+
+          {/* Quick lists: recent campaigns & plaidoyers */}
+          <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold">Mes campagnes récentes</h3>
+                <a href="/collaborator/campagne/mes-campagnes" className="text-sm text-indigo-600 hover:underline">Voir tout</a>
+              </div>
+              <div className="mt-3 space-y-3">
+                {recentCampaigns.length === 0 ? <div className="text-gray-500">Aucune campagne</div> : recentCampaigns.map(c => (
+                  <div key={c.id} className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">{c.titre}</div>
+                      <div className="text-sm text-gray-500">{new Date(c.date_debut).toLocaleDateString()}</div>
+                    </div>
+                    <a href={`/campagnes/${c.id}`} className="text-sm text-indigo-600 hover:underline">Détails</a>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold">Mes plaidoyers récents</h3>
+                <a href="/collaborator/plaidoyer/mes-plaidoyers" className="text-sm text-indigo-600 hover:underline">Voir tout</a>
+              </div>
+              <div className="mt-3 space-y-3">
+                {recentPlaidoyers.length === 0 ? <div className="text-gray-500">Aucun plaidoyer</div> : recentPlaidoyers.map(p => (
+                  <div key={p.id} className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">{p.titre}</div>
+                      <div className="text-sm text-gray-500">{p.categorie || ''} — {p.nombre_signatures_total || 0} signatures</div>
+                    </div>
+                    <a href={`/plaidoyers/${p.id}`} className="text-sm text-indigo-600 hover:underline">Détails</a>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
             <div className="mt-10">
