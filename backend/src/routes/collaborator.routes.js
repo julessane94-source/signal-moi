@@ -83,7 +83,7 @@ router.get('/dashboard', authMiddleware, async (req, res) => {
     const [signalementCount, campaignCount, notificationCount] = await Promise.all([
       db.query('SELECT COUNT(*) as count FROM signal_moi.signalements WHERE user_id = $1', [userId]),
       db.query('SELECT COUNT(*) as count FROM signal_moi.campagnes WHERE created_by = $1', [userId]),
-      db.query('SELECT COUNT(*) as count FROM signal_moi.notifications WHERE user_id = $1 AND is_read = false', [userId])
+      db.query('SELECT COUNT(*) as count FROM signal_moi.notifications WHERE user_id = $1 AND est_lu = false', [userId])
     ]);
 
     const dashboard = {
