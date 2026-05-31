@@ -38,8 +38,8 @@ const InscriptionCampagne = {
     create: async (data) => {
         const { id, userId, campagneId, statut, dateInscription, datePresence, codeQr, commentaire } = data;
         const res = await db.query(
-            `INSERT INTO inscriptions_campagnes (id, user_id, campagne_id, statut, date_inscription, date_presence, code_qr, commentaire)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+            `INSERT INTO inscriptions_campagnes (id, user_id, campagne_id, statut, date_inscription, date_presence, code_qr, commentaire, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW()) RETURNING *`,
             [id, userId, campagneId, statut || 'inscrit', dateInscription || new Date(), datePresence || null, codeQr || null, commentaire || null]
         );
         return res.rows[0];

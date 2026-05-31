@@ -136,8 +136,8 @@ router.post('/:id/inscrire', authMiddleware, async (req, res) => {
 
     // Ajouter l'inscription
     const insertResult = await db.query(
-      `INSERT INTO signal_moi.inscriptions_campagnes (id, campagne_id, user_id, date_inscription)
-       VALUES ($1, $2, $3, NOW())
+      `INSERT INTO signal_moi.inscriptions_campagnes (id, campagne_id, user_id, date_inscription, created_at, updated_at)
+       VALUES ($1, $2, $3, NOW(), NOW(), NOW())
        RETURNING *`,
       [inscriptionId, id, user_id]
     );
