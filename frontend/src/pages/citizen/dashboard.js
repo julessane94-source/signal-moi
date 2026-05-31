@@ -195,7 +195,7 @@ export default function CitizenDashboard() {
           >
             <Link href="/citizen/signalement">
               <Button size="lg" icon={PlusIcon} className="w-full md:w-auto bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg">
-                🚨 Faire un signalement
+                🚨 Signaler un incident
               </Button>
             </Link>
           </motion.div>
@@ -273,7 +273,7 @@ export default function CitizenDashboard() {
                                 <span>📎 {s.fichiers?.length || 0} pièce(s)</span>
                               </div>
                             </div>
-                            <div className="text-2xl">→</div>
+                            <span className="text-sm font-semibold text-indigo-600">Voir l'état</span>
                           </div>
                         </Link>
                       </Card>
@@ -312,7 +312,7 @@ export default function CitizenDashboard() {
                           <div>📍 {c.lieu}</div>
                         </div>
                         <Button variant="success" className="mt-4 w-full">
-                          S'inscrire
+                          Participer à cette campagne
                         </Button>
                       </Card>
                     </motion.div>
@@ -361,7 +361,7 @@ export default function CitizenDashboard() {
                                   : 'bg-indigo-600 text-white hover:bg-indigo-700'
                               }`}
                             >
-                              {isSigned ? '✓ Signe' : signingPetition === p.id ? '...' : '✍️ Signer'}
+                              {isSigned ? '✓ Déjà signé' : signingPetition === p.id ? 'Signature en cours...' : 'Signer ce plaidoyer'}
                             </button>
                           </div>
                         </Card>

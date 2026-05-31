@@ -335,7 +335,7 @@ export default function SignalementDetail() {
                             : 'bg-indigo-600 text-white hover:bg-indigo-700'
                         }`}
                       >
-                        {isSigned ? '✓ Signe' : signingPetition ? 'Signature...' : '✍️ Signer'}
+                        {isSigned ? '✓ Déjà signé' : signingPetition ? 'Signature en cours...' : 'Signer ce plaidoyer'}
                       </button>
                     </div>
                   )
