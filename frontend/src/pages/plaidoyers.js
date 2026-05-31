@@ -58,13 +58,24 @@ export default function PlaidoyersPage() {
                 <div className="bg-white rounded-xl shadow-md p-8 text-center">Aucun plaidoyer pour le moment</div>
               ) : (
                 plaidoyers.map(p => (
-                  <div key={p.id} className="bg-white rounded-xl shadow p-4">
-                    <h3 className="font-semibold text-lg">{p.titre}</h3>
-                    <p className="text-sm text-gray-600">{p.description}</p>
-                    <div className="mt-3 flex gap-2">
-                      <Link href={`/plaidoyers/${p.id}`}>
-                        <a className="text-sm bg-gray-200 px-3 py-2 rounded">Voir</a>
-                      </Link>
+                  <div key={p.id} className="bg-white rounded-xl shadow p-6">
+                    <div className="flex flex-col gap-4">
+                      <div>
+                        <h3 className="font-semibold text-xl text-gray-900">{p.titre}</h3>
+                        <p className="text-sm text-gray-500">{p.categorie || 'Sans catégorie'}</p>
+                      </div>
+                      <p className="text-sm text-gray-700 overflow-hidden">{p.description}</p>
+                      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-gray-600">
+                        <span>🖊️ {p.nombre_signatures_total || 0} signatures</span>
+                        <span>🎯 Objectif&nbsp;: {p.objectif_signatures || '—'}</span>
+                      </div>
+                      <div className="mt-2">
+                        <Link href={`/plaidoyers/${p.id}`}>
+                          <a className="inline-flex items-center justify-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">
+                            Voir le plaidoyer
+                          </a>
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 ))
