@@ -74,6 +74,28 @@ const authMiddleware = async (req, res, next) => {
     }
 };
 
+const getPendingNotificationCount = async (userId) => {
+  const pendingNotificationQueries = [
+    'SELECT COUNT(*) as count FROM signal_moi.notifications WHERE user_id = $1 AND est_lu = false',
+    'SELECT COUNT(*) as count FROM signal_moi.notifications WHERE user_id = $1 AND is_read = false'
+  ];
+
+  for (const sql of pendingNotificationQueries) {
+    try {
+      return await db.query(sql, [userId]);
+    } catch (err) {
+      const errorCode = err.code || err.parent?.code;
+      const errorMessage = err.message || '';
+      if (errorCode === '42703' || errorMessage.includes('does not exist')) {
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  return { rows: [{ count: '0' }] };
+};
+
 // GET /api/collaborator/dashboard - Vue d'ensemble du tableau de bord
 router.get('/dashboard', authMiddleware, async (req, res) => {
   try {
@@ -83,7 +105,7 @@ router.get('/dashboard', authMiddleware, async (req, res) => {
     const [signalementCount, campaignCount, notificationCount] = await Promise.all([
       db.query('SELECT COUNT(*) as count FROM signal_moi.signalements WHERE user_id = $1', [userId]),
       db.query('SELECT COUNT(*) as count FROM signal_moi.campagnes WHERE created_by = $1', [userId]),
-      db.query('SELECT COUNT(*) as count FROM signal_moi.notifications WHERE user_id = $1 AND est_lu = false', [userId])
+      getPendingNotificationCount(userId)
     ]);
 
     const dashboard = {
