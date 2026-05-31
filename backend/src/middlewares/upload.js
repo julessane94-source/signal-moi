@@ -27,7 +27,8 @@ if (USE_S3 && s3 && multerS3) {
   storage = multerS3({
     s3: s3client,
     bucket: process.env.S3_BUCKET,
-    acl: 'private',
+    // ACL configurable via env (defaults to public-read for direct access to images)
+    acl: process.env.S3_ACL || 'public-read',
     contentType: multerS3.AUTO_CONTENT_TYPE,
     key: (req, file, cb) => {
       const uniqueName = `${uuidv4()}${path.extname(file.originalname)}`;
