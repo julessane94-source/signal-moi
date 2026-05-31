@@ -88,12 +88,20 @@ export default function Campagnes() {
 
       <main className="min-h-screen bg-gray-50 pt-16">
         {/* Hero */}
-        <section className="bg-gradient-to-r from-green-600 to-teal-600 text-white py-16">
+        <section className="bg-gradient-to-r from-green-600 via-emerald-500 to-teal-600 text-white py-24">
           <div className="max-w-6xl mx-auto px-4 text-center">
-            <h1 className="text-4xl font-bold mb-4">Campagnes citoyennes</h1>
-            <p className="text-xl text-green-100">
-              Participez à des actions concrètes pour améliorer votre quartier
+            <h1 className="text-4xl md:text-5xl font-extrabold mb-6 tracking-tight">Campagnes citoyennes</h1>
+            <p className="text-lg md:text-xl text-green-100 max-w-3xl mx-auto mb-8 leading-relaxed">
+              Participez à des actions concrètes pour améliorer votre quartier — rejoignez, signalez, et partagez le changement.
             </p>
+            <div className="flex justify-center gap-4 flex-wrap">
+              <button className="btn-success inline-flex items-center gap-2">
+                ✨ Découvrir
+              </button>
+              <a href="/contact" className="btn-primary inline-flex items-center gap-2">
+                📩 Contact
+              </a>
+            </div>
           </div>
         </section>
 
