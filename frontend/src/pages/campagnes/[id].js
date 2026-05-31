@@ -4,6 +4,7 @@ import Head from 'next/head'
 import Navbar from '../../components/common/Navbar'
 import Footer from '../../components/common/Footer'
 import { motion } from 'framer-motion'
+import { API_BASE } from '../../config/api'
 
 const getImageUrl = (url) => {
   if (!url) return null
@@ -24,11 +25,12 @@ export default function DetailCampagne() {
   useEffect(() => {
     const token = localStorage.getItem('token')
     setAuthToken(token)
-    
+
     if (id) {
       fetchCampagne()
+      // call checkInscription after ensuring we read token directly
       if (token) {
-        checkInscription()
+        checkInscription(token)
       }
     }
   }, [id])
@@ -36,7 +38,7 @@ export default function DetailCampagne() {
   const fetchCampagne = async () => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/campagnes/${id}`
+        `${API_BASE}/api/campagnes/${id}`
       )
       const data = await response.json()
       if (response.ok) {
@@ -53,15 +55,12 @@ export default function DetailCampagne() {
   }
 
   const checkInscription = async () => {
-    if (!authToken) return
+    const token = authToken || localStorage.getItem('token')
+    if (!token) return
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/campagnes/${id}/inscrit`,
-        {
-          headers: {
-            'Authorization': `Bearer ${authToken}`
-          }
-        }
+        `${API_BASE}/api/campagnes/${id}/inscrit`,
+        { headers: { Authorization: `Bearer ${token}` } }
       )
       if (response.ok) {
         const data = await response.json()
@@ -73,22 +72,17 @@ export default function DetailCampagne() {
   }
 
   const handleInscrire = async () => {
-    if (!authToken) {
+    const token = authToken || localStorage.getItem('token')
+    if (!token) {
       router.push('/login')
       return
     }
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/campagnes/${id}/inscrire`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${authToken}`
-          }
-        }
-      )
+      const response = await fetch(`${API_BASE}/api/campagnes/${id}/inscrire`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+      })
 
       if (response.ok) {
         setMessage('✅ Inscription réussie!')
@@ -107,19 +101,14 @@ export default function DetailCampagne() {
   }
 
   const handleDesinscrire = async () => {
-    if (!authToken) return
+    const token = authToken || localStorage.getItem('token')
+    if (!token) return
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/campagnes/${id}/inscrire`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${authToken}`
-          }
-        }
-      )
+      const response = await fetch(`${API_BASE}/api/campagnes/${id}/inscrire`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+      })
 
       if (response.ok) {
         setMessage('✅ Désinscription réussie')
