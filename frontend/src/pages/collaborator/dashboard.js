@@ -197,14 +197,28 @@ export default function CollaboratorDashboard() {
           <h1 className="text-4xl font-bold text-gray-900">Espace Collaborateur</h1>
           <p className="text-gray-600 mt-2">Bienvenue {user?.prenom}! Dashboard collaborateur.</p>
 
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-6 gap-4">
-            <button onClick={() => exportCases('pdf')} className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700">📄 Export PDF</button>
-            <button onClick={() => exportCases('excel')} className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700">📊 Export Excel</button>
-            <button onClick={() => router.push('/collaborator/campagne/new')} className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">🎯 Créer campagne</button>
-            <button onClick={() => router.push('/collaborator/campagne/mes-campagnes')} className="bg-gray-800 text-white px-6 py-3 rounded-lg hover:bg-gray-900">📋 Mes campagnes</button>
-            <button onClick={() => router.push('/collaborator/plaidoyer/new')} className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700">✍️ Créer plaidoyer</button>
-            <button onClick={() => router.push('/collaborator/plaidoyer/mes-plaidoyers')} className="bg-yellow-600 text-white px-6 py-3 rounded-lg hover:bg-yellow-700">📝 Mes plaidoyers</button>
-            <button onClick={() => toast.info('Statistiques non implémentées dans cette vue')} className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700">📈 Statistiques</button>
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+            <button onClick={() => exportCases('pdf')} className="bg-indigo-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-indigo-700 transition hover:-translate-y-0.5">
+              📄 Exporter en PDF
+            </button>
+            <button onClick={() => exportCases('excel')} className="bg-emerald-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-emerald-700 transition hover:-translate-y-0.5">
+              📊 Exporter en Excel
+            </button>
+            <button onClick={() => router.push('/collaborator/campagne/new')} className="bg-blue-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-blue-700 transition hover:-translate-y-0.5">
+              🎯 Créer une campagne
+            </button>
+            <button onClick={() => router.push('/collaborator/campagne/mes-campagnes')} className="bg-slate-900 text-white px-6 py-3 rounded-full shadow-lg hover:bg-slate-800 transition hover:-translate-y-0.5">
+              📋 Voir mes campagnes
+            </button>
+            <button onClick={() => router.push('/collaborator/plaidoyer/new')} className="bg-teal-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-teal-700 transition hover:-translate-y-0.5">
+              ✍️ Créer un plaidoyer
+            </button>
+            <button onClick={() => router.push('/collaborator/plaidoyer/mes-plaidoyers')} className="bg-amber-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-amber-700 transition hover:-translate-y-0.5">
+              📝 Voir mes plaidoyers
+            </button>
+            <button onClick={() => toast.info('Statistiques non implémentées dans cette vue')} className="bg-violet-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-violet-700 transition hover:-translate-y-0.5">
+              📈 Voir statistiques
+            </button>
           </div>
 
           {/* Stat cards */}
@@ -277,17 +291,17 @@ export default function CollaboratorDashboard() {
                       <span className="text-xs text-gray-500">{new Date(s.createdAt).toLocaleDateString()}</span>
                     </div>
                     <p className="text-sm text-gray-600 flex-1 mt-2 line-clamp-3">{s.description}</p>
-                      <div className="mt-4 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <button onClick={() => contact(s.author?.email)} className="text-sm bg-indigo-50 text-indigo-700 px-3 py-1 rounded">Contacter la victime</button>
-                        <a href={`/citizen/signalement/${s.id}`} className="text-sm text-indigo-600 hover:underline">Détails</a>
-                      </div>
-                      <div>
-                        <button onClick={() => toggleFollow(s.id)} className={`px-3 py-1 rounded text-sm ${followed.includes(s.id) ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700'}`}>
-                          {followed.includes(s.id) ? 'Suivi' : 'Suivre dossier'}
+                      <div className="mt-4 flex flex-col gap-3 sm:flex-row items-center justify-between">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <button onClick={() => contact(s.author?.email)} className="text-sm rounded-full px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition">
+                            Contacter
+                          </button>
+                          <a href={`/citizen/signalement/${s.id}`} className="text-sm text-indigo-600 hover:underline">Voir les détails</a>
+                        </div>
+                        <button onClick={() => toggleFollow(s.id)} className={`text-sm rounded-full px-4 py-2 font-semibold transition ${followed.includes(s.id) ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                          {followed.includes(s.id) ? 'Suivi' : 'Suivre ce dossier'}
                         </button>
                       </div>
-                    </div>
                   </div>
                 ))}
               </div>
