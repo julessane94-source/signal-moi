@@ -38,9 +38,24 @@ export default function PlaidoyersPage() {
 
       <div className="min-h-screen bg-gray-50 pt-20">
         <div className="max-w-6xl mx-auto px-4 py-8">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold">Plaidoyers</h1>
-            <p className="text-sm text-gray-600">Liste des plaidoyers publics</p>
+          <div className="mb-8 rounded-3xl bg-gradient-to-r from-purple-700 via-fuchsia-600 to-indigo-700 p-10 text-white shadow-2xl shadow-fuchsia-500/20">
+            <p className="text-sm uppercase tracking-[0.3em] text-cyan-200 mb-3">Plaidoyers</p>
+            <h1 className="text-4xl md:text-5xl font-extrabold mb-4">Plaidoyers en action</h1>
+            <p className="text-base md:text-lg text-slate-100 max-w-3xl leading-relaxed mb-8">
+              Explorez les plaidoyers publics qui récoltent des signatures et mobilisent la communauté pour faire bouger les choses.
+            </p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 gap-3">
+              <Link href="/contact">
+                <a className="inline-flex items-center justify-center rounded-full bg-white/10 border border-white/20 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20">
+                  📩 Nous contacter
+                </a>
+              </Link>
+              <Link href="/signalements">
+                <a className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100">
+                  📢 Voir les signalements
+                </a>
+              </Link>
+            </div>
           </div>
 
           {loading ? (

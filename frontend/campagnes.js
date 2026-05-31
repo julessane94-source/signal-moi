@@ -88,17 +88,18 @@ export default function Campagnes() {
 
       <main className="min-h-screen bg-gray-50 pt-16">
         {/* Hero */}
-        <section className="bg-gradient-to-r from-green-600 via-emerald-500 to-teal-600 text-white py-24">
+        <section className="bg-gradient-to-r from-slate-900 via-indigo-700 to-purple-700 text-white py-24">
           <div className="max-w-6xl mx-auto px-4 text-center">
-            <h1 className="text-4xl md:text-5xl font-extrabold mb-6 tracking-tight">Campagnes citoyennes</h1>
-            <p className="text-lg md:text-xl text-green-100 max-w-3xl mx-auto mb-8 leading-relaxed">
-              Participez à des actions concrètes pour améliorer votre quartier — rejoignez, signalez, et partagez le changement.
+            <p className="text-sm uppercase tracking-[0.32em] text-cyan-200 mb-4">Mobilisation citoyenne</p>
+            <h1 className="text-4xl md:text-5xl font-extrabold mb-6 tracking-tight">Campagnes engagées pour votre quartier</h1>
+            <p className="mx-auto max-w-3xl text-lg md:text-xl text-slate-200 leading-relaxed mb-10">
+              Découvrez les campagnes locales, rejoignez les actions de terrain et suivez l'impact de vos initiatives sur la communauté.
             </p>
-            <div className="flex justify-center gap-4 flex-wrap">
-              <button className="btn-success inline-flex items-center gap-2">
+            <div className="flex flex-wrap justify-center gap-4">
+              <button className="rounded-full bg-cyan-500 px-6 py-3 text-base font-semibold text-white shadow-xl shadow-cyan-500/20 transition hover:bg-cyan-400">
                 ✨ Découvrir
               </button>
-              <a href="/contact" className="btn-primary inline-flex items-center gap-2">
+              <a href="/contact" className="rounded-full bg-white px-6 py-3 text-base font-semibold text-slate-900 shadow-lg shadow-slate-900/10 transition hover:bg-slate-100">
                 📩 Contact
               </a>
             </div>

@@ -70,10 +70,36 @@ export default function SignalementsPublic() {
       </Head>
 
       <main className="min-h-screen bg-gray-50 pt-16">
-        <section className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-16">
+        <section className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-700 to-purple-700 text-white py-20">
+          <div className="pointer-events-none absolute inset-0 opacity-25 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.22),_transparent_25%),radial-gradient(circle_at_bottom_right,_rgba(59,130,246,0.22),_transparent_25%)]" />
+          <div className="relative max-w-6xl mx-auto px-4 text-center">
+            <span className="inline-flex rounded-full bg-white/10 px-4 py-2 text-xs uppercase tracking-[0.35em] text-slate-200 mb-6">Signalements publics</span>
+            <h1 className="text-4xl md:text-5xl font-extrabold mb-4">Transparence locale, action citoyenne</h1>
+            <p className="text-lg md:text-xl text-slate-200 max-w-3xl mx-auto leading-relaxed">
+              Explorez les incidents signalés par votre communauté, suivez les évolutions et encouragez le changement là où il est le plus nécessaire.
+            </p>
+            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link href="/contact">
+                <a className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20">
+                  📩 Nous contacter
+                </a>
+              </Link>
+              <Link href="/">
+                <a className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100">
+                  ↩️ Retour à l'accueil
+                </a>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-slate-900 text-white py-12">
           <div className="max-w-6xl mx-auto px-4 text-center">
-            <h1 className="text-4xl font-bold mb-4">Signalements citoyens</h1>
-            <p className="text-xl text-indigo-100">Decouvrez les incidents signales dans votre region</p>
+            <p className="text-sm uppercase tracking-[0.32em] text-cyan-300 mb-3">Transparence et sécurité</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Voir les signalements, suivre l’évolution</h2>
+            <p className="mx-auto max-w-3xl text-slate-300 leading-relaxed">
+              Explorez les signalements locaux, filtrez par catégorie et visualisez les incidents qui comptent pour votre quartier.
+            </p>
           </div>
         </section>
 
@@ -115,7 +141,7 @@ export default function SignalementsPublic() {
                           {new Date(s.createdAt).toLocaleDateString('fr-FR')}
                         </span>
                       </div>
-                      <h3 className="font-semibold text-gray-900 mb-2">{s.titre}</h3>
+                      <h3 className="font-semibold text-xl text-slate-900 mb-3">{s.titre}</h3>
                       <p className="text-gray-600 text-sm mb-3">{s.description}</p>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-400">📍 {s.localisation}</span>
@@ -126,6 +152,16 @@ export default function SignalementsPublic() {
                         }`}>
                           {s.statut === 'traite' ? 'Resolu' :
                            s.statut === 'en_cours' ? 'En cours' : 'Nouveau'}
+                        </span>
+                      </div>
+                      <div className="mt-5 flex items-center justify-between gap-3">
+                        <Link href="/citizen/signalement">
+                          <a className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition">
+                            Voir le signalement
+                          </a>
+                        </Link>
+                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                          {s.signatures ? `${s.signatures} signatures` : 'Pas de signature'}
                         </span>
                       </div>
                     </div>
