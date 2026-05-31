@@ -8,6 +8,7 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
 const FollowedCase = require('../models/FollowedCase');
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
@@ -243,6 +244,8 @@ router.post('/campaigns', authMiddleware, upload.single('image'), async (req, re
   }
 
   try {
+    await db.query('BEGIN');
+
     // Construire l'URL de l'image
     let imageUrl = null;
     if (req.file) {
@@ -257,9 +260,23 @@ router.post('/campaigns', authMiddleware, upload.single('image'), async (req, re
     `, [titre, description || '', type, dateDebut, dateFin, lieu || '', capaciteMax || 100, userId, true, imageUrl]);
 
     const campaign = result.rows[0];
+
+    if (req.file) {
+      const fileId = uuidv4();
+      const chemin = `uploads/campagnes/${req.file.filename}`.replace(/\\/g, '/');
+      const fileData = await fs.promises.readFile(req.file.path);
+      await db.query(
+        `INSERT INTO signal_moi.fichiers (id, nom_fichier, chemin, type, taille, mime_type, description, is_verified, uploaded_by, file_data, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())`,
+        [fileId, req.file.originalname, chemin, 'image', req.file.size || 0, req.file.mimetype, null, false, userId, fileData]
+      );
+    }
+
+    await db.query('COMMIT');
     console.log(`[COLLABORATOR POST /campaigns] Campagne créée: ${campaign.id}`);
     res.status(201).json(campaign);
   } catch (err) {
+    await db.query('ROLLBACK').catch(() => {});
     if (req.file) {
       try {
         fs.unlinkSync(req.file.path);

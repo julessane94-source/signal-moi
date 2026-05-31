@@ -110,6 +110,28 @@ app.head('/', (req, res) => {
 const path = require('path');
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// Fallback: si le fichier n'existe pas dans le dossier local, servir depuis la base de données
+app.get('/uploads/*', async (req, res, next) => {
+    try {
+        const filePath = req.path.replace(/^\/+/, '');
+        const result = await db.query(
+            'SELECT mime_type, file_data FROM signal_moi.fichiers WHERE chemin = $1 LIMIT 1',
+            [filePath]
+        );
+        const file = result.rows[0];
+        if (!file || !file.file_data) {
+            return next();
+        }
+        if (file.mime_type) {
+            res.type(file.mime_type);
+        }
+        return res.send(file.file_data);
+    } catch (err) {
+        console.error('[UPLOAD FALLBACK] Erreur de récupération du fichier depuis la base de données:', err);
+        next(err);
+    }
+});
+
 // Ensure uploads directories exist at startup to avoid missing-folder issues
 const fs = require('fs');
 const uploadsRoot = path.join(__dirname, '..', 'uploads');
