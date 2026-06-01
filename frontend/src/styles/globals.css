@@ -4,37 +4,80 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
+:root {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 html {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  scroll-behavior: smooth;
+  min-height: 100%;
+  background-color: #f8fafc;
+  background-image: radial-gradient(circle at top left, rgba(99,102,241,0.12), transparent 28%), radial-gradient(circle at bottom right, rgba(16,185,129,0.10), transparent 22%);
 }
 
 body {
-  @apply bg-gray-50 text-gray-900;
+  @apply min-h-screen bg-slate-50 text-slate-900 antialiased;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
+img,
+iframe,
+video,
+svg {
+  @apply max-w-full h-auto;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(99,102,241,0.18);
+  color: #111827;
+}
+
+.section-card {
+  @apply bg-white/95 border border-slate-200/80 shadow-soft rounded-[2rem] backdrop-blur-xl;
+}
+
+.hero-card {
+  @apply bg-white/95 border border-slate-200/80 shadow-glow rounded-[2rem] backdrop-blur-xl;
+}
+
+.section-title {
+  @apply text-slate-900 font-semibold tracking-tight;
+}
+
 .btn-primary {
-  @apply bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition duration-200;
+  @apply bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 transition duration-200 shadow-sm;
 }
 
 .btn-danger {
-  @apply bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition duration-200;
+  @apply bg-danger-600 text-white px-4 py-2 rounded-xl hover:bg-danger-700 transition duration-200 shadow-sm;
 }
 
 .btn-success {
-  @apply bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200;
+  @apply bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 transition duration-200 shadow-sm;
 }
 
 .input {
-  @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent;
+  @apply w-full px-4 py-3 border border-slate-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200;
 }
 
 .card {
-  @apply bg-white rounded-lg shadow-md p-6;
+  @apply bg-white rounded-3xl shadow-soft p-6;
 }
 
 .badge {
-  @apply px-2 py-1 text-xs font-semibold rounded-full;
+  @apply px-3 py-1 text-xs font-semibold rounded-full;
 }
 
 .badge-success {
@@ -46,12 +89,14 @@ body {
 }
 
 .badge-danger {
-  @apply bg-red-100 text-red-800;
+  @apply bg-danger-100 text-danger-800;
 }
 
 .badge-info {
   @apply bg-blue-100 text-blue-800;
-}/* Couleurs personnalisées - orange doux au lieu de rouge */
+}
+
+/* Couleurs personnalisées - orange doux au lieu de rouge */
 .bg-red-500, .bg-red-600, .bg-red-700 {
   background-color: #f97316 !important;
 }

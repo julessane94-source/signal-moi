@@ -88,7 +88,8 @@ export default function Campagnes() {
 
       <main className="min-h-screen bg-gray-50 pt-16">
         {/* Hero */}
-        <section className="bg-gradient-to-r from-slate-900 via-indigo-700 to-purple-700 text-white py-24">
+        <section className="relative overflow-hidden bg-slate-950 text-white py-24">
+          <div className="pointer-events-none absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.25),_transparent_25%),radial-gradient(circle_at_bottom_right,_rgba(139,92,246,0.25),_transparent_25%)]" />
           <div className="max-w-6xl mx-auto px-4 text-center">
             <p className="text-sm uppercase tracking-[0.32em] text-cyan-200 mb-4">Mobilisation citoyenne</p>
             <h1 className="text-4xl md:text-5xl font-extrabold mb-6 tracking-tight">Campagnes engagées pour votre quartier</h1>
@@ -96,7 +97,7 @@ export default function Campagnes() {
               Découvrez les campagnes locales, rejoignez les actions de terrain et suivez l'impact de vos initiatives sur la communauté.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <button className="rounded-full bg-cyan-500 px-6 py-3 text-base font-semibold text-white shadow-xl shadow-cyan-500/20 transition hover:bg-cyan-400">
+              <button className="btn-primary rounded-full px-6 py-3 text-base font-semibold shadow-xl shadow-cyan-500/20">
                 ✨ Découvrir
               </button>
               <a href="/contact" className="rounded-full bg-white px-6 py-3 text-base font-semibold text-slate-900 shadow-lg shadow-slate-900/10 transition hover:bg-slate-100">
@@ -116,8 +117,8 @@ export default function Campagnes() {
                   onClick={() => setFilter(type)}
                   className={`px-4 py-2 rounded-full transition ${
                     filter === type 
-                      ? 'bg-green-600 text-white' 
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        ? 'bg-indigo-600 text-white shadow-soft' 
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
                   {type === 'all' ? '🔎 Toutes' : `${getTypeIcon(type)} ${getTypeLabel(type)}`}
@@ -143,7 +144,7 @@ export default function Campagnes() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition"
+                      className="section-card overflow-hidden hover:shadow-xl transition"
                   >
                     <div className="p-6">
                       <div className="flex items-center justify-between mb-3">

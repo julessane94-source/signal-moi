@@ -87,13 +87,13 @@ export default function Home() {
 
       <main className="min-h-screen pt-16 bg-white">
         {/* Hero */}
-        <section className="relative overflow-hidden">
-          <div className="absolute -inset-1 blur-3xl opacity-30 bg-gradient-to-r from-indigo-400 via-teal-300 to-emerald-200 transform rotate-6" />
+        <section className="relative overflow-hidden bg-hero-light">
+          <div className="absolute -inset-1 blur-3xl opacity-40 bg-gradient-to-r from-indigo-400 via-teal-300 to-emerald-200 transform rotate-6" />
           <div className="relative max-w-7xl mx-auto px-6 py-20">
             <div className="flex flex-col md:flex-row items-center gap-10">
               <div className="md:w-1/2 text-center md:text-left">
-                <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">{config.home_page?.title || 'Signalez les incidents'}</h1>
-                <p className="mt-4 text-xl text-gray-700 max-w-2xl">{config.home_page?.heroText || 'dans votre quartier'}</p>
+                <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight">{config.home_page?.title || 'Signalez les incidents'}</h1>
+                <p className="mt-4 text-xl text-slate-700 max-w-2xl">{config.home_page?.heroText || 'dans votre quartier'}</p>
 
                 {config.home_page?.content && config.home_page.content.includes('<') ? (
                   <div className="mt-6 text-gray-700 max-w-xl" dangerouslySetInnerHTML={{ __html: sanitizedHomeContent }} />
@@ -119,11 +119,11 @@ export default function Home() {
               </div>
 
               <div className="md:w-1/2">
-                <div className="bg-white rounded-2xl shadow-2xl p-6">
-                  <div className="w-full h-64 rounded-xl overflow-hidden">
+                <div className="hero-card p-6">
+                  <div className="w-full h-64 rounded-3xl overflow-hidden border border-slate-200 shadow-soft">
                     <iframe title="Carte aperçu" src="https://www.openstreetmap.org/export/embed.html?bbox=2.2137%2C46.2276%2C2.2137%2C46.2276&layer=mapnik&marker=46.2276%2C2.2137" className="w-full h-full" style={{ border: 0 }} />
                   </div>
-                  <div className="mt-4 text-sm text-gray-500">Aperçu interactif — zoomer et cliquer pour ouvrir la carte complète.</div>
+                  <div className="mt-4 text-sm text-slate-500">Aperçu interactif — zoomer et cliquer pour ouvrir la carte complète.</div>
                 </div>
               </div>
             </div>

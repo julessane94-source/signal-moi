@@ -121,6 +121,11 @@ export default function Login() {
             <p className="mt-2 text-gray-600">Connectez-vous à votre compte Signal-Moi</p>
           </div>
 
+          <div className="mb-6 rounded-3xl bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white shadow-lg shadow-indigo-500/20">
+            <p className="text-sm uppercase tracking-[0.35em] text-cyan-100">Accès sécurisé</p>
+            <p className="mt-3 text-lg leading-7">Entrez vos identifiants pour gérer vos signalements et suivre l'activité locale.</p>
+          </div>
+
           <form className="space-y-5" onSubmit={handleSubmit}>
             <FormField label="Email" error={errors.email} required>
               <Input

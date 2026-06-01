@@ -151,13 +151,13 @@ export default function About() {
               {stats.map((stat, index) => (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, scale: 0.9 }}
+                  initial={{ opacity: 0, scale: 0.96 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: index * 0.1 }}
-                  className="text-center"
+                  className="section-card p-8 text-center"
                 >
                   <div className="text-3xl md:text-4xl font-bold text-indigo-600">{stat.value}</div>
-                  <div className="text-gray-600 mt-2">{stat.label}</div>
+                  <div className="text-slate-600 mt-2">{stat.label}</div>
                 </motion.div>
               ))}
             </div>
@@ -165,15 +165,17 @@ export default function About() {
         </section>
 
         {/* Notre histoire */}
-        <section className="py-16 bg-gray-50">
+        <section className="py-16 bg-slate-50">
           <div className="max-w-4xl mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">{config.about_page?.title || 'Notre histoire'}</h2>
-            <div className="space-y-6 text-gray-600 text-lg">
-              {config.about_page?.content && config.about_page.content.includes('<') ? (
-                <div dangerouslySetInnerHTML={{ __html: config.about_page.content }} />
-              ) : (
-                config.about_page?.content && <p>{config.about_page.content}</p>
-              )}
+            <div className="section-card p-12">
+              <h2 className="text-3xl font-bold text-center text-slate-900 mb-8">{config.about_page?.title || 'Notre histoire'}</h2>
+              <div className="space-y-6 text-slate-600 text-lg leading-8">
+                {config.about_page?.content && config.about_page.content.includes('<') ? (
+                  <div dangerouslySetInnerHTML={{ __html: config.about_page.content }} />
+                ) : (
+                  config.about_page?.content && <p>{config.about_page.content}</p>
+                )}
+              </div>
             </div>
             {config.about_page?.images && config.about_page.images.length > 0 && (
               <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -195,22 +197,22 @@ export default function About() {
         {/* Nos valeurs */}
         <section className="py-16 bg-white">
           <div className="max-w-4xl mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">Nos valeurs</h2>
+            <h2 className="text-3xl font-bold text-center text-slate-900 mb-8">Nos valeurs</h2>
             <div className="grid md:grid-cols-3 gap-8">
-              <div className="text-center p-6">
+              <div className="section-card p-8 text-center">
                 <div className="text-5xl mb-4">🔒</div>
                 <h3 className="text-xl font-semibold mb-2">Confidentialite</h3>
-                <p className="text-gray-600">Vos donnees sont protegees. Signalez anonymement si vous le souhaitez.</p>
+                <p className="text-slate-600">Vos donnees sont protegees. Signalez anonymement si vous le souhaitez.</p>
               </div>
-              <div className="text-center p-6">
+              <div className="section-card p-8 text-center">
                 <div className="text-5xl mb-4">⚡</div>
                 <h3 className="text-xl font-semibold mb-2">Rapidite</h3>
-                <p className="text-gray-600">Notifications en temps reel pour une intervention rapide.</p>
+                <p className="text-slate-600">Notifications en temps reel pour une intervention rapide.</p>
               </div>
-              <div className="text-center p-6">
+              <div className="section-card p-8 text-center">
                 <div className="text-5xl mb-4">🤝</div>
                 <h3 className="text-xl font-semibold mb-2">Transparence</h3>
-                <p className="text-gray-600">Suivez l'evolution de vos signalements a chaque etape.</p>
+                <p className="text-slate-600">Suivez l'evolution de vos signalements a chaque etape.</p>
               </div>
             </div>
           </div>
@@ -258,11 +260,13 @@ export default function About() {
         {/* Partenaires Police */}
         <section className="py-16 bg-gradient-to-r from-green-50 to-green-100">
           <div className="max-w-6xl mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">Nos Partenaires Autorites</h2>
-            <p className="text-center text-gray-600 mb-8 max-w-2xl mx-auto">
-              Les services de police et de gendarmerie qui traitent et resolvent 
-              les problemes signales par notre communaute.
-            </p>
+            <div className="section-card p-10 mb-10 text-center">
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">Nos Partenaires Autorites</h2>
+              <p className="text-slate-600 max-w-3xl mx-auto">
+                Les services de police et de gendarmerie qui traitent et resolvent 
+                les problemes signales par notre communaute.
+              </p>
+            </div>
             
             {loadingPartners ? (
               <div className="text-center py-8">
@@ -280,13 +284,13 @@ export default function About() {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: idx * 0.05 }}
-                    className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition"
+                    className="section-card p-6 text-center"
                   >
                     <div className="text-4xl mb-3">👮</div>
-                    <h3 className="font-semibold text-lg text-gray-900">{agent.prenom} {agent.nom}</h3>
-                    <p className="text-sm text-gray-600 mt-1">{agent.email}</p>
-                    {agent.telephone && <p className="text-sm text-gray-600">📞 {agent.telephone}</p>}
-                    {agent.ville && <p className="text-sm text-gray-600">📍 {agent.ville}</p>}
+                    <h3 className="font-semibold text-lg text-slate-900">{agent.prenom} {agent.nom}</h3>
+                    <p className="text-sm text-slate-600 mt-1">{agent.email}</p>
+                    {agent.telephone && <p className="text-sm text-slate-600">📞 {agent.telephone}</p>}
+                    {agent.ville && <p className="text-sm text-slate-600">📍 {agent.ville}</p>}
                   </motion.div>
                 ))}
               </div>
@@ -295,7 +299,7 @@ export default function About() {
         </section>
         <section className="py-16 bg-gray-50">
           <div className="max-w-6xl mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">Notre equipe</h2>
+            <h2 className="text-3xl font-bold text-center text-slate-900 mb-12">Notre equipe</h2>
             <div className="grid md:grid-cols-3 gap-8">
               {team.map((member, index) => (
                 <motion.div
@@ -303,12 +307,12 @@ export default function About() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-white rounded-xl shadow-md p-6 text-center"
+                  className="section-card p-8 text-center"
                 >
                   <div className="text-6xl mb-4">{member.image}</div>
-                  <h3 className="text-xl font-semibold text-gray-900">{member.name}</h3>
+                  <h3 className="text-xl font-semibold text-slate-900">{member.name}</h3>
                   <p className="text-indigo-600 mb-2">{member.role}</p>
-                  <p className="text-gray-600 text-sm">{member.description}</p>
+                  <p className="text-slate-600 text-sm">{member.description}</p>
                 </motion.div>
               ))}
             </div>

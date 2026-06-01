@@ -155,10 +155,11 @@ export default function Contact() {
         <meta name="description" content="Contactez-nous pour toute question ou suggestion" />
       </Head>
       <ErrorBoundary>
-      <main className="min-h-screen bg-gray-50 pt-16">
+      <main className="min-h-screen bg-slate-50 pt-16">
         {/* Hero Section */}
-        <section className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white py-20">
-          <div className="max-w-4xl mx-auto text-center px-4">
+        <section className="relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white py-20">
+          <div className="pointer-events-none absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.22),_transparent_25%),radial-gradient(circle_at_bottom_right,_rgba(148,163,184,0.18),_transparent_25%)]" />
+          <div className="relative max-w-4xl mx-auto text-center px-4">
             <motion.h1 
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -186,7 +187,7 @@ export default function Contact() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all p-8 text-center border-t-4 border-indigo-600"
+                className="section-card p-8 text-center border-t-4 border-indigo-600"
               >
                 <div className="text-5xl mb-4">✉️</div>
                 <h3 className="text-xl font-semibold mb-3 text-gray-900">Email</h3>
@@ -204,7 +205,7 @@ export default function Contact() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all p-8 text-center border-t-4 border-purple-600"
+                className="section-card p-8 text-center border-t-4 border-purple-600"
               >
                 <div className="text-5xl mb-4">📱</div>
                 <h3 className="text-xl font-semibold mb-3 text-gray-900">Téléphone</h3>
@@ -229,7 +230,7 @@ export default function Contact() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all p-8 text-center border-t-4 border-pink-600"
+                className="section-card p-8 text-center border-t-4 border-pink-600"
               >
                 <div className="text-5xl mb-4">📍</div>
                 <h3 className="text-xl font-semibold mb-3 text-gray-900">Adresse</h3>
@@ -249,10 +250,10 @@ export default function Contact() {
                 initial={{ opacity: 0, x: -30 }}
                 whileInView={{ opacity: 1, x: 0 }}
               >
-                <h2 className="text-3xl font-bold text-gray-900 mb-8">Envoyez-nous un message</h2>
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <h2 className="text-3xl font-bold text-slate-900 mb-8">Envoyez-nous un message</h2>
+                <form onSubmit={handleSubmit} className="space-y-6 section-card p-10">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
                       Nom complet <span className="text-red-500">*</span>
                     </label>
                     <input 

@@ -13,10 +13,10 @@ export default function Button({
   const baseStyles = 'inline-flex items-center justify-center font-medium rounded-2xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white disabled:opacity-50 disabled:cursor-not-allowed'
 
   const variants = {
-    primary: 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500 shadow-sm hover:shadow-md',
-    secondary: 'bg-white text-gray-900 border border-gray-200 hover:bg-gray-100 focus:ring-gray-300 shadow-sm',
-    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-sm hover:shadow-md',
-    success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 shadow-sm hover:shadow-md',
+    primary: 'bg-gradient-to-r from-indigo-600 to-sky-600 text-white hover:from-indigo-700 hover:to-sky-700 focus:ring-indigo-500 shadow-sm hover:shadow-md',
+    secondary: 'bg-white text-slate-900 border border-slate-200 hover:bg-slate-100 focus:ring-slate-300 shadow-sm',
+    danger: 'bg-danger-600 text-white hover:bg-danger-700 focus:ring-danger-500 shadow-sm hover:shadow-md',
+    success: 'bg-success-600 text-white hover:bg-success-700 focus:ring-success-500 shadow-sm hover:shadow-md',
     outline: 'border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 focus:ring-indigo-500',
     ghost: 'text-indigo-600 hover:bg-indigo-50 focus:ring-indigo-500',
   }

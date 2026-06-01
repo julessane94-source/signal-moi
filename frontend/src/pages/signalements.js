@@ -69,9 +69,9 @@ export default function SignalementsPublic() {
         <title>Signalements - Signal-Moi</title>
       </Head>
 
-      <main className="min-h-screen bg-gray-50 pt-16">
+      <main className="min-h-screen bg-slate-50 pt-16">
         <section className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-700 to-purple-700 text-white py-20">
-          <div className="pointer-events-none absolute inset-0 opacity-25 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.22),_transparent_25%),radial-gradient(circle_at_bottom_right,_rgba(59,130,246,0.22),_transparent_25%)]" />
+          <div className="pointer-events-none absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.22),_transparent_25%),radial-gradient(circle_at_bottom_right,_rgba(59,130,246,0.22),_transparent_25%)]" />
           <div className="relative max-w-6xl mx-auto px-4 text-center">
             <span className="inline-flex rounded-full bg-white/10 px-4 py-2 text-xs uppercase tracking-[0.35em] text-slate-200 mb-6">Signalements publics</span>
             <h1 className="text-4xl md:text-5xl font-extrabold mb-4">Transparence locale, action citoyenne</h1>
@@ -111,7 +111,7 @@ export default function SignalementsPublic() {
                   key={type}
                   onClick={() => setFilter(type)}
                   className={`px-4 py-2 rounded-full transition ${
-                    filter === type ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    filter === type ? 'bg-indigo-600 text-white shadow-soft' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
                   {type === 'all' ? 'Tous' : `${getTypeIcon(type)} ${getTypeLabel(type)}`}
@@ -131,7 +131,7 @@ export default function SignalementsPublic() {
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredSignalements.map((s, i) => (
-                  <div key={s.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition">
+                  <div key={s.id} className="section-card overflow-hidden hover:shadow-xl transition">
                     <div className="p-5">
                       <div className="flex items-center justify-between mb-3">
                         <span className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-sm">
@@ -174,13 +174,15 @@ export default function SignalementsPublic() {
 
         <section className="py-16 bg-indigo-600">
           <div className="max-w-4xl mx-auto text-center px-4">
-            <h2 className="text-3xl font-bold text-white mb-4">Vous avez vu un incident ?</h2>
-            <p className="text-indigo-100 mb-6">Signalement rapide, simple et anonyme</p>
-            <Link href="/citizen/signalement">
-              <button className="bg-white text-indigo-600 px-8 py-3 rounded-xl font-semibold hover:bg-indigo-50 transition">
-                🚨 Faire un signalement
-              </button>
-            </Link>
+            <div className="section-card bg-white p-10 text-slate-900">
+              <h2 className="text-3xl font-bold mb-4">Vous avez vu un incident ?</h2>
+              <p className="text-slate-600 mb-6">Signalement rapide, simple et anonyme</p>
+              <Link href="/citizen/signalement">
+                <button className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition">
+                  🚨 Faire un signalement
+                </button>
+              </Link>
+            </div>
           </div>
         </section>
       </main>

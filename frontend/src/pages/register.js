@@ -119,6 +119,10 @@ export default function Register() {
               ))}
             </div>
           </div>
+          <div className="mb-6 rounded-3xl bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white shadow-lg shadow-indigo-500/20">
+            <p className="text-sm uppercase tracking-[0.35em] text-cyan-100">Inscription</p>
+            <p className="mt-3 text-lg leading-7">Créez un compte sécurisé pour participer aux signalements et aux campagnes citoyennes.</p>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Step 1: Informations personnelles */}
