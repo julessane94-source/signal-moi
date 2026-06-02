@@ -106,7 +106,7 @@ export default function Home() {
             <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
               <div className="text-center lg:text-left">
                 <span className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-cyan-100 shadow-lg">
-                  <img src="/icons/icon.svg" alt="Logo Signal-Moi" className="h-6 w-6 rounded-md object-contain" />
+                  <img src="/uploads/IMG-20221117-WA0001.jpg" alt="Logo Signal-Moi" className="h-6 w-6 rounded-md object-cover ring-1 ring-white/10" />
                   Signal-Moi
                 </span>
                 <h1 className="mt-6 text-4xl md:text-5xl lg:text-6xl font-black leading-tight text-white">{config.home_page?.title || 'Signalez les incidents'}</h1>
