@@ -7,6 +7,14 @@ import dynamic from 'next/dynamic'
 
 const LeafletMap = dynamic(() => import('../../components/Map/LeafletMap'), { ssr: false })
 
+const QUICK_TYPES = [
+  { value: 'probleme_eclairage', label: 'Éclairage', icon: '💡', hint: 'Lampadaires, éclairage public' },
+  { value: 'nid_de_poule', label: 'Nid-de-poule', icon: '🕳️', hint: 'Routes, chaussées, trous' },
+  { value: 'vol', label: 'Vol', icon: '💰', hint: 'Vol, cambriolage, objet volé' },
+  { value: 'violence', label: 'Violence', icon: '⚠️', hint: 'Conflit, intimidation, agression' },
+  { value: 'autre', label: 'Autre', icon: '📌', hint: 'Autre incident à préciser' }
+]
+
 export default function NewSignalement() {
   const { user } = useAuth()
   const router = useRouter()
@@ -89,6 +97,14 @@ export default function NewSignalement() {
     }))
   }
 
+  const handleQuickType = (type, label) => {
+    setFormData(prev => ({
+      ...prev,
+      type,
+      titre: prev.titre || `Signalement : ${label}`
+    }))
+  }
+
   const handleFileChange = (e) => {
     setFiles(prev => [...prev, ...Array.from(e.target.files)])
   }
@@ -114,6 +130,7 @@ export default function NewSignalement() {
       fd.append('description', formData.description)
       fd.append('type', formData.type)
       fd.append('localisation', formData.localisation)
+      fd.append('estAnonyme', String(formData.estAnonyme === true))
       // append coordinates if available (from geolocation or map)
       if (latitude !== null) fd.append('latitude', latitude)
       if (longitude !== null) fd.append('longitude', longitude)
@@ -158,12 +175,25 @@ export default function NewSignalement() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Type d'incident *</label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
+                  {QUICK_TYPES.map((item) => (
+                    <button
+                      key={item.value}
+                      type="button"
+                      onClick={() => handleQuickType(item.value, item.label)}
+                      className={`rounded-xl border p-3 text-left transition ${formData.type === item.value ? 'border-red-500 bg-red-50 shadow-sm' : 'border-gray-200 bg-white hover:border-red-300 hover:bg-red-50/50'}`}
+                    >
+                      <div className="text-lg">{item.icon}</div>
+                      <div className="font-semibold text-sm text-gray-900">{item.label}</div>
+                      <div className="text-xs text-gray-500 mt-1">{item.hint}</div>
+                    </button>
+                  ))}
+                </div>
                 <select name="type" required value={formData.type} onChange={handleChange} className="w-full border rounded px-3 py-2">
                   <option value="violence">Violence</option>
                   <option value="vol">Vol</option>
                   <option value="probleme_eclairage">Problème éclairage</option>
                   <option value="nid_de_poule">Nid-de-poule</option>
-                  <option value="citoyenne">Citoyenne</option>
                   <option value="autre">Autre</option>
                 </select>
               </div>

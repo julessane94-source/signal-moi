@@ -62,6 +62,7 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
     console.log('Utilisateur connecté :', req.user);
 
     const { titre, description, type, localisation, latitude, longitude } = req.body;
+    const estAnonyme = req.body.estAnonyme === true || req.body.estAnonyme === 'true' || req.body.est_anonyme === true || req.body.est_anonyme === 'true';
     const user_id = req.user.id;
 
     // Vérifier les champs obligatoires
@@ -72,10 +73,10 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
     try {
         await db.query('BEGIN');
         const result = await db.query(
-            `INSERT INTO signal_moi.signalements (user_id, titre, description, type, localisation, latitude, longitude)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)
+            `INSERT INTO signal_moi.signalements (user_id, titre, description, type, localisation, latitude, longitude, est_anonyme)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
              RETURNING *`,
-            [user_id, titre, description, type, localisation, latitude || null, longitude || null]
+            [user_id, titre, description, type, localisation, latitude || null, longitude || null, estAnonyme]
         );
         
         console.log('[POST /signalements] Résultat complet de db.query:', JSON.stringify(result, null, 2));
