@@ -36,7 +36,7 @@ export default function Navbar() {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         <motion.div whileHover={{ scale: 1.03 }}>
           <Link href="/" className="flex items-center gap-3 rounded-2xl bg-slate-900 px-4 py-2 text-white shadow-sm shadow-slate-200/20 transition hover:bg-slate-800">
-            <span className="text-2xl">🚨</span>
+            <img src="/icons/icon.svg" alt="Logo Signal-Moi" className="h-8 w-8 rounded-xl object-contain" />
             <span className="text-lg font-semibold tracking-tight">Signal-Moi</span>
           </Link>
         </motion.div>

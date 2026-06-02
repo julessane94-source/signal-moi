@@ -26,6 +26,18 @@ export default function Home() {
   })
   const [collaboratorCampaigns, setCollaboratorCampaigns] = useState([])
 
+  const stats = [
+    { label: 'Incidents suivis', value: '100% transparent', icon: '📍' },
+    { label: 'Mises à jour', value: 'Suivi en temps réel', icon: '⚡' },
+    { label: 'Citoyens engagés', value: 'Communauté locale active', icon: '🤝' },
+  ]
+
+  const features = [
+    { title: 'Signalement simple', text: 'Décrivez l’incident, joignez vos preuves et envoyez en quelques clics.', icon: '🚨' },
+    { title: 'Suivi clair', text: 'Recevez des mises à jour et gardez une vue complète des dossiers ouverts.', icon: '📊' },
+    { title: 'Impact local', text: 'Aidez votre quartier à agir plus vite grâce à une communauté mobilisée.', icon: '🌍' },
+  ]
+
   useEffect(() => {
     // PWA Installation
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -87,72 +99,97 @@ export default function Home() {
 
       <main className="min-h-screen pt-16 bg-white">
         {/* Hero */}
-        <section className="relative overflow-hidden bg-hero-light">
-          <div className="absolute -inset-1 blur-3xl opacity-40 bg-gradient-to-r from-indigo-400 via-teal-300 to-emerald-200 transform rotate-6" />
-          <div className="relative max-w-7xl mx-auto px-6 py-20">
-            <div className="flex flex-col md:flex-row items-center gap-10">
-              <div className="md:w-1/2 text-center md:text-left">
-                <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight">{config.home_page?.title || 'Signalez les incidents'}</h1>
-                <p className="mt-4 text-xl text-slate-700 max-w-2xl">{config.home_page?.heroText || 'dans votre quartier'}</p>
+        <section className="relative overflow-hidden bg-[linear-gradient(135deg,#0f172a_0%,#1e293b_45%,#2563eb_100%)] text-white">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(129,140,248,0.25),_transparent_20%),radial-gradient(circle_at_bottom_right,_rgba(45,212,191,0.18),_transparent_25%)]" />
+          <div className="absolute -top-24 right-0 h-64 w-64 rounded-full bg-cyan-400/10 blur-3xl" />
+          <div className="relative max-w-7xl mx-auto px-6 py-20 lg:py-24">
+            <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
+              <div className="text-center lg:text-left">
+                <span className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-cyan-100 shadow-lg">
+                  <img src="/icons/icon.svg" alt="Logo Signal-Moi" className="h-6 w-6 rounded-md object-contain" />
+                  Signal-Moi
+                </span>
+                <h1 className="mt-6 text-4xl md:text-5xl lg:text-6xl font-black leading-tight text-white">{config.home_page?.title || 'Signalez les incidents'}</h1>
+                <p className="mt-4 text-xl md:text-2xl text-slate-100 max-w-2xl">{config.home_page?.heroText || 'dans votre quartier'}</p>
 
                 {config.home_page?.content && config.home_page.content.includes('<') ? (
-                  <div className="mt-6 text-gray-700 max-w-xl" dangerouslySetInnerHTML={{ __html: sanitizedHomeContent }} />
+                  <div className="mt-6 text-slate-200 max-w-xl" dangerouslySetInnerHTML={{ __html: sanitizedHomeContent }} />
                 ) : (
-                  <p className="mt-6 text-gray-600 max-w-xl">{config.home_page?.content || 'Une plateforme citoyenne pour signaler et suivre les problemes de votre communaute.'}</p>
+                  <p className="mt-6 text-slate-200 max-w-xl">{config.home_page?.content || 'Une plateforme citoyenne pour signaler et suivre les problemes de votre communaute.'}</p>
                 )}
 
-                <div className="mt-8 flex flex-col sm:flex-row items-center gap-4">
+                <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 lg:justify-start justify-center">
                   <Link href={user ? "/citizen/signalement" : "/login"}>
-                    <Button size="lg" variant="danger" className="px-8 py-3 shadow-lg">🚨 Faire un signalement</Button>
+                    <Button size="lg" variant="danger" className="px-8 py-3 shadow-xl">🚨 Faire un signalement</Button>
                   </Link>
-
                   <Link href={user ? "/citizen/dashboard" : "/register"}>
-                    <button className="px-6 py-3 rounded-lg bg-white border border-gray-200 text-gray-800 hover:shadow transition font-semibold">{user ? '✓ Mon dashboard' : '👥 Rejoindre'}</button>
+                    <button className="px-6 py-3 rounded-xl bg-white/10 border border-white/20 text-white hover:bg-white/20 transition font-semibold shadow-lg">{user ? '✓ Mon dashboard' : '👥 Rejoindre'}</button>
                   </Link>
                 </div>
 
+                <div className="mt-8 grid gap-4 sm:grid-cols-3">{stats.map((item) => (
+                  <div key={item.label} className="rounded-2xl border border-white/10 bg-white/10 p-4 shadow-lg backdrop-blur-md">
+                    <div className="text-2xl mb-2">{item.icon}</div>
+                    <p className="text-xs uppercase tracking-[0.25em] text-slate-200">{item.label}</p>
+                    <p className="mt-1 text-lg font-semibold text-white">{item.value}</p>
+                  </div>
+                ))}</div>
+
                 {showInstallButton && (
-                  <div className="mt-4 text-sm text-gray-600">
-                    <button onClick={handleInstall} className="underline text-indigo-600">Installer l'application mobile</button>
+                  <div className="mt-5 text-sm text-slate-100">
+                    <button onClick={handleInstall} className="underline decoration-cyan-200 underline-offset-4">Installer l'application mobile</button>
                   </div>
                 )}
               </div>
 
-              <div className="md:w-1/2">
-                <div className="hero-card p-6">
-                  <div className="w-full h-64 rounded-3xl overflow-hidden border border-slate-200 shadow-soft">
-                    <iframe title="Carte aperçu" src="https://www.openstreetmap.org/export/embed.html?bbox=2.2137%2C46.2276%2C2.2137%2C46.2276&layer=mapnik&marker=46.2276%2C2.2137" className="w-full h-full" style={{ border: 0 }} />
+              <div>
+                <div className="rounded-3xl border border-white/10 bg-white/10 p-4 shadow-2xl backdrop-blur-xl">
+                  <div className="rounded-3xl overflow-hidden border border-white/10 shadow-soft">
+                    <iframe title="Carte aperçu" src="https://www.openstreetmap.org/export/embed.html?bbox=2.2137%2C46.2276%2C2.2137%2C46.2276&layer=mapnik&marker=46.2276%2C2.2137" className="w-full h-72" style={{ border: 0 }} />
                   </div>
-                  <div className="mt-4 text-sm text-slate-500">Aperçu interactif — zoomer et cliquer pour ouvrir la carte complète.</div>
+                  <div className="mt-4 rounded-2xl bg-slate-950/30 p-4 text-sm text-slate-100">Aperçu interactif — la carte complète vous aide à situer l’incident rapidement.</div>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* How it works */}
-        <section className="py-16">
-          <div className="max-w-6xl mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold text-gray-900">Comment ça marche</h2>
-            <p className="text-gray-600 mt-3">5 étapes simples pour signaler et suivre un problème dans votre quartier</p>
+        <section className="py-14 bg-slate-50">
+          <div className="max-w-7xl mx-auto px-4 grid gap-6 md:grid-cols-3">
+            {features.map((feature) => (
+              <article key={feature.title} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:-translate-y-1 hover:shadow-xl transition">
+                <div className="text-3xl mb-3">{feature.icon}</div>
+                <h3 className="text-xl font-semibold text-slate-900 mb-2">{feature.title}</h3>
+                <p className="text-slate-600">{feature.text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
 
-            <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6">
+        {/* How it works */}
+        <section className="py-16 bg-white">
+          <div className="max-w-6xl mx-auto px-4 text-center">
+            <p className="text-sm uppercase tracking-[0.35em] text-indigo-600 font-semibold">Comment ça marche</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-3">5 étapes simples pour agir rapidement</h2>
+            <p className="text-gray-600 mt-3 max-w-3xl mx-auto">Une expérience pensée pour que chaque citoyen puisse signaler, suivre et faire évoluer les problèmes de son quartier en un instant.</p>
+
+            <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
               {[
-                { icon: '1', title: 'Créer un compte', text: 'Inscrivez-vous ou connectez-vous' },
-                { icon: '2', title: 'Décrire', text: 'Expliquez l’incident et choisissez un type' },
-                { icon: '📷', title: 'Preuves', text: 'Joignez photos/vidéos pour étayer' },
-                { icon: '📍', title: 'Localiser', text: 'Précisez l’adresse ou le quartier' },
-                { icon: '5', title: 'Suivre', text: 'Recevez des mises à jour' }
+                { icon: '1', title: 'Créer un compte', text: 'Inscrivez-vous ou connectez-vous rapidement.' },
+                { icon: '2', title: 'Décrire', text: 'Expliquez l’incident et choisissez sa catégorie.' },
+                { icon: '📷', title: 'Preuves', text: 'Joignez photos, vidéos ou documents utiles.' },
+                { icon: '📍', title: 'Localiser', text: 'Précisez l’adresse ou le quartier concerné.' },
+                { icon: '5', title: 'Suivre', text: 'Recevez des mises à jour et suivez l’avancement.' }
               ].map((step, i) => (
-                <div key={i} className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition text-center">
-                  <div className="w-14 h-14 rounded-full bg-indigo-600 text-white mx-auto flex items-center justify-center text-xl font-bold mb-4">{step.icon}</div>
+                <article key={i} className="rounded-3xl border border-slate-200 bg-gradient-to-b from-white to-indigo-50 p-6 shadow-sm hover:shadow-xl transition text-center">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-600 to-cyan-500 text-white mx-auto flex items-center justify-center text-xl font-bold mb-4 shadow-lg">{step.icon}</div>
                   <h3 className="font-semibold text-gray-900 mb-2">{step.title}</h3>
                   <p className="text-sm text-gray-600">{step.text}</p>
-                </div>
+                </article>
               ))}
             </div>
 
-            <div className="mt-10">
+            <div className="mt-10 flex justify-center">
               <Link href={user ? "/citizen/signalement" : "/login"}>
                 <Button className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition" size="md">Commencer maintenant →</Button>
               </Link>
