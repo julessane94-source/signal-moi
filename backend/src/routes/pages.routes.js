@@ -109,6 +109,7 @@ router.get('/config', async (req, res) => {
     // Retourner seulement les infos publiques
     const publicConfig = {
       siteName: config.siteName || 'Signal-Moi',
+      logoUrl: config.logoUrl || config.logo_url || '/icons/icon-192x192.png',
       contactEmail: config.contactEmail || 'contact@signal-moi.fr',
       contactPhone: config.contactPhone || '',
       address: config.address || '',

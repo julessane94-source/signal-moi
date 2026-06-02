@@ -7,8 +7,9 @@ import { API_BASE } from '../config/api'
 import { Button } from '../components/ui'
 
 const getImageUrl = (url) => {
-  if (!url) return null
-  return url.startsWith('http://') || url.startsWith('https://') ? url : `${API_BASE}${url}`
+  if (!url) return '/icons/icon-192x192.png'
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/')) return url
+  return `${API_BASE}${url}`
 }
 
 export default function Home() {
@@ -54,11 +55,13 @@ export default function Home() {
       const res = await fetch(`${API_BASE}/api/auth/site-config`)
       if (res.ok) {
         const data = await res.json()
-        if (data.home_page) {
-          const homePage = typeof data.home_page === 'string' ? JSON.parse(data.home_page) : data.home_page
-          setConfig({ home_page: homePage })
-          if (Array.isArray(data.collaboratorCampaigns)) setCollaboratorCampaigns(data.collaboratorCampaigns)
-        }
+        const homePage = typeof data.home_page === 'string' ? JSON.parse(data.home_page) : (data.home_page || config.home_page)
+        setConfig({
+          ...data,
+          logoUrl: data.logoUrl || data.logo_url || '/icons/icon-192x192.png',
+          home_page: homePage
+        })
+        if (Array.isArray(data.collaboratorCampaigns)) setCollaboratorCampaigns(data.collaboratorCampaigns)
       }
     } catch (err) {
       console.error('Erreur fetchConfig:', err)
@@ -106,7 +109,7 @@ export default function Home() {
             <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
               <div className="text-center lg:text-left">
                 <span className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-cyan-100 shadow-lg">
-                  <img src="/uploads/IMG-20221117-WA0001.jpg" alt="Logo Signal-Moi" className="h-6 w-6 rounded-md object-cover ring-1 ring-white/10" />
+                  <img src={getImageUrl(config.logoUrl)} alt="Logo Signal-Moi" className="h-6 w-6 rounded-md object-cover ring-1 ring-white/10" />
                   Signal-Moi
                 </span>
                 <h1 className="mt-6 text-4xl md:text-5xl lg:text-6xl font-black leading-tight text-white">{config.home_page?.title || 'Signalez les incidents'}</h1>

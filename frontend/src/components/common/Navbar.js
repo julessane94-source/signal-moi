@@ -1,7 +1,8 @@
-﻿import { useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { useAuth } from '../../context/AuthContext'
+import { API_BASE } from '../../config/api'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '../ui'
 import {
@@ -21,6 +22,28 @@ export default function Navbar() {
   const { user, logout } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
+  const [logoUrl, setLogoUrl] = useState('/icons/icon-192x192.png')
+
+  useEffect(() => {
+    const fetchLogo = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/auth/site-config`)
+        if (!res.ok) return
+        const data = await res.json()
+        setLogoUrl(data.logoUrl || data.logo_url || '/icons/icon-192x192.png')
+      } catch (err) {
+        console.error('Erreur chargement logo navbar:', err)
+      }
+    }
+
+    fetchLogo()
+  }, [])
+
+  const getImageUrl = (url) => {
+    if (!url) return '/icons/icon-192x192.png'
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/')) return url
+    return `${API_BASE}${url}`
+  }
 
   const navigation = [
     { name: 'Accueil', href: '/', icon: HomeIcon },
@@ -36,7 +59,7 @@ export default function Navbar() {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         <motion.div whileHover={{ scale: 1.03 }}>
           <Link href="/" className="flex items-center gap-3 rounded-2xl bg-slate-900 px-4 py-2 text-white shadow-sm shadow-slate-200/20 transition hover:bg-slate-800">
-            <img src="/uploads/IMG-20221117-WA0001.jpg" alt="Logo Signal-Moi" className="h-8 w-8 rounded-xl object-cover ring-1 ring-white/10" />
+            <img src={getImageUrl(logoUrl)} alt="Logo Signal-Moi" className="h-8 w-8 rounded-xl object-cover ring-1 ring-white/10" />
             <span className="text-lg font-semibold tracking-tight">Signal-Moi</span>
           </Link>
         </motion.div>

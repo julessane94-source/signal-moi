@@ -13,6 +13,7 @@ router.get('/site-config', async (req, res) => {
     // Coerce certains champs pour éviter les erreurs côté client
     const safeConfig = {
       ...config,
+      logoUrl: config.logoUrl || config.logo_url || '/icons/icon-192x192.png',
       contactEmail: config.contactEmail != null ? String(config.contactEmail) : '',
       contactPhone: config.contactPhone != null ? String(config.contactPhone) : '',
       address: config.address != null ? String(config.address) : '',
