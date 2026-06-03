@@ -87,214 +87,300 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse animation-delay-2000"></div>
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="max-w-2xl mx-auto"
+        transition={{ duration: 0.6 }}
+        className="relative z-10 max-w-2xl mx-auto"
       >
-        <Card className="p-8">
-          <div className="text-center mb-8">
-            <motion.div
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="text-5xl mb-4 inline-block"
-            >
-              🚨
-            </motion.div>
-            <h2 className="text-3xl font-bold text-gray-900 mt-4">Créer un compte</h2>
-            <p className="mt-2 text-gray-600">Rejoignez la communauté Signal-Moi</p>
-            
-            {/* Progress indicator */}
-            <div className="flex justify-center gap-2 mt-6">
-              {[1, 2, 3].map(num => (
-                <motion.div
-                  key={num}
-                  className={`h-2 rounded-full transition-all ${
-                    num <= step ? 'bg-indigo-600 w-8' : 'bg-gray-300 w-2'
-                  }`}
-                  animate={{ width: num <= step ? 32 : 8 }}
-                />
-              ))}
-            </div>
-          </div>
-          <div className="mb-6 rounded-3xl bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white shadow-lg shadow-indigo-500/20">
-            <p className="text-sm uppercase tracking-[0.35em] text-cyan-100">Inscription</p>
-            <p className="mt-3 text-lg leading-7">Créez un compte sécurisé pour participer aux signalements et aux campagnes citoyennes.</p>
-          </div>
+        {/* Header */}
+        <div className="text-center mb-12">
+          <motion.div
+            animate={{ scale: [1, 1.05, 1] }}
+            transition={{ duration: 3, repeat: Infinity }}
+            className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl mb-6 shadow-2xl"
+          >
+            <span className="text-3xl">✨</span>
+          </motion.div>
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">Rejoignez-nous</h1>
+          <p className="text-purple-200">Créez un compte pour participer à la communauté Signal-Moi</p>
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Step 1: Informations personnelles */}
+        {/* Progress Indicator */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="flex justify-center gap-2 mb-8"
+        >
+          {[1, 2, 3].map(num => (
+            <motion.div
+              key={num}
+              className={`h-2 rounded-full transition-all ${
+                num <= step 
+                  ? 'bg-gradient-to-r from-purple-500 to-pink-500' 
+                  : 'bg-gray-600/50'
+              }`}
+              animate={{ width: num <= step ? 32 : 8 }}
+              transition={{ duration: 0.3 }}
+            />
+          ))}
+        </motion.div>
+
+        {/* Main Card */}
+        <motion.div
+          whileHover={{ scale: 1.01 }}
+          className="relative bg-gradient-to-br from-gray-800/80 via-gray-800/80 to-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden p-8 md:p-12"
+        >
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Step 1: Personal Information */}
             {step === 1 && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="space-y-5"
+                transition={{ duration: 0.3 }}
+                className="space-y-6"
               >
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Informations personnelles</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField label="Prénom" error={errors.prenom} required>
-                    <Input
-                      name="prenom"
-                      placeholder="Jean"
-                      value={formData.prenom}
-                      onChange={handleChange}
-                      icon={UserIcon}
-                      error={!!errors.prenom}
-                    />
-                  </FormField>
-                  <FormField label="Nom" error={errors.nom} required>
-                    <Input
-                      name="nom"
-                      placeholder="Dupont"
-                      value={formData.nom}
-                      onChange={handleChange}
-                      icon={UserIcon}
-                      error={!!errors.nom}
-                    />
-                  </FormField>
+                <div>
+                  <h3 className="text-2xl font-bold text-white mb-2">Informations personnelles</h3>
+                  <p className="text-gray-400">Commençons par vos informations de base</p>
                 </div>
-                <FormField label="Email" error={errors.email} required>
-                  <Input
-                    type="email"
-                    name="email"
-                    placeholder="exemple@email.com"
-                    value={formData.email}
-                    onChange={handleChange}
-                    icon={EnvelopeIcon}
-                    error={!!errors.email}
-                  />
-                </FormField>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+                    <FormField label="Prénom" error={errors.prenom} required>
+                      <Input
+                        name="prenom"
+                        placeholder="Jean"
+                        value={formData.prenom}
+                        onChange={handleChange}
+                        icon={UserIcon}
+                        error={!!errors.prenom}
+                        className="bg-gray-700/50 border-gray-600/50 text-white placeholder-gray-400 focus:bg-gray-700 focus:border-purple-500/50"
+                      />
+                    </FormField>
+                  </motion.div>
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                    <FormField label="Nom" error={errors.nom} required>
+                      <Input
+                        name="nom"
+                        placeholder="Dupont"
+                        value={formData.nom}
+                        onChange={handleChange}
+                        icon={UserIcon}
+                        error={!!errors.nom}
+                        className="bg-gray-700/50 border-gray-600/50 text-white placeholder-gray-400 focus:bg-gray-700 focus:border-purple-500/50"
+                      />
+                    </FormField>
+                  </motion.div>
+                </div>
+
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                  <FormField label="Adresse Email" error={errors.email} required>
+                    <Input
+                      type="email"
+                      name="email"
+                      placeholder="vous@exemple.com"
+                      value={formData.email}
+                      onChange={handleChange}
+                      icon={EnvelopeIcon}
+                      error={!!errors.email}
+                      className="bg-gray-700/50 border-gray-600/50 text-white placeholder-gray-400 focus:bg-gray-700 focus:border-purple-500/50"
+                    />
+                  </FormField>
+                </motion.div>
               </motion.div>
             )}
 
-            {/* Step 2: Mot de passe et sécurité */}
+            {/* Step 2: Security */}
             {step === 2 && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="space-y-5"
+                transition={{ duration: 0.3 }}
+                className="space-y-6"
               >
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Sécurité du compte</h3>
-                <FormField label="Mot de passe" error={errors.password} required helperText="Minimum 8 caractères">
-                  <Input
-                    type="password"
-                    name="password"
-                    placeholder="••••••••"
-                    value={formData.password}
-                    onChange={handleChange}
-                    icon={LockClosedIcon}
-                    error={!!errors.password}
-                  />
-                </FormField>
-                <FormField label="Confirmer le mot de passe" error={errors.confirmPassword} required>
-                  <Input
-                    type="password"
-                    name="confirmPassword"
-                    placeholder="••••••••"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    icon={LockClosedIcon}
-                    error={!!errors.confirmPassword}
-                  />
-                </FormField>
+                <div>
+                  <h3 className="text-2xl font-bold text-white mb-2">Sécurité du compte</h3>
+                  <p className="text-gray-400">Créez un mot de passe fort et sécurisé</p>
+                </div>
+
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+                  <FormField label="Mot de Passe" error={errors.password} required helperText="Minimum 8 caractères">
+                    <Input
+                      type="password"
+                      name="password"
+                      placeholder="••••••••"
+                      value={formData.password}
+                      onChange={handleChange}
+                      icon={LockClosedIcon}
+                      error={!!errors.password}
+                      className="bg-gray-700/50 border-gray-600/50 text-white placeholder-gray-400 focus:bg-gray-700 focus:border-purple-500/50"
+                    />
+                  </FormField>
+                </motion.div>
+
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                  <FormField label="Confirmer le Mot de Passe" error={errors.confirmPassword} required>
+                    <Input
+                      type="password"
+                      name="confirmPassword"
+                      placeholder="••••••••"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      icon={LockClosedIcon}
+                      error={!!errors.confirmPassword}
+                      className="bg-gray-700/50 border-gray-600/50 text-white placeholder-gray-400 focus:bg-gray-700 focus:border-purple-500/50"
+                    />
+                  </FormField>
+                </motion.div>
+
+                {/* Password strength indicator */}
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="p-4 bg-gray-700/50 border border-gray-600/50 rounded-lg">
+                  <p className="text-sm text-gray-300 mb-3">Critères de sécurité :</p>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className={formData.password.length >= 8 ? "text-green-500" : "text-gray-500"}>✓</span>
+                      <span className="text-sm text-gray-400">Au moins 8 caractères</span>
+                    </div>
+                  </div>
+                </motion.div>
               </motion.div>
             )}
 
-            {/* Step 3: Localisation */}
+            {/* Step 3: Location */}
             {step === 3 && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="space-y-5"
+                transition={{ duration: 0.3 }}
+                className="space-y-6"
               >
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Localisation</h3>
-                <FormField label="Téléphone" error={errors.telephone} required>
-                  <Input
-                    type="tel"
-                    name="telephone"
-                    placeholder="+237 6xx xxx xxx"
-                    value={formData.telephone}
-                    onChange={handleChange}
-                    icon={PhoneIcon}
-                    error={!!errors.telephone}
-                  />
-                </FormField>
+                <div>
+                  <h3 className="text-2xl font-bold text-white mb-2">Localisation</h3>
+                  <p className="text-gray-400">Où êtes-vous basé?</p>
+                </div>
+
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+                  <FormField label="Numéro de Téléphone" error={errors.telephone} required>
+                    <Input
+                      type="tel"
+                      name="telephone"
+                      placeholder="+221 7XX XXX XXX"
+                      value={formData.telephone}
+                      onChange={handleChange}
+                      icon={PhoneIcon}
+                      error={!!errors.telephone}
+                      className="bg-gray-700/50 border-gray-600/50 text-white placeholder-gray-400 focus:bg-gray-700 focus:border-purple-500/50"
+                    />
+                  </FormField>
+                </motion.div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField label="Ville" error={errors.ville} required>
-                    <Input
-                      name="ville"
-                      placeholder="Yaoundé"
-                      value={formData.ville}
-                      onChange={handleChange}
-                      icon={MapPinIcon}
-                      error={!!errors.ville}
-                    />
-                  </FormField>
-                  <FormField label="Quartier" error={errors.quartier} required>
-                    <Input
-                      name="quartier"
-                      placeholder="Centre-ville"
-                      value={formData.quartier}
-                      onChange={handleChange}
-                      icon={MapPinIcon}
-                      error={!!errors.quartier}
-                    />
-                  </FormField>
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                    <FormField label="Ville" error={errors.ville} required>
+                      <Input
+                        name="ville"
+                        placeholder="Dakar"
+                        value={formData.ville}
+                        onChange={handleChange}
+                        icon={MapPinIcon}
+                        error={!!errors.ville}
+                        className="bg-gray-700/50 border-gray-600/50 text-white placeholder-gray-400 focus:bg-gray-700 focus:border-purple-500/50"
+                      />
+                    </FormField>
+                  </motion.div>
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                    <FormField label="Quartier" error={errors.quartier} required>
+                      <Input
+                        name="quartier"
+                        placeholder="Centre-ville"
+                        value={formData.quartier}
+                        onChange={handleChange}
+                        icon={MapPinIcon}
+                        error={!!errors.quartier}
+                        className="bg-gray-700/50 border-gray-600/50 text-white placeholder-gray-400 focus:bg-gray-700 focus:border-purple-500/50"
+                      />
+                    </FormField>
+                  </motion.div>
                 </div>
               </motion.div>
             )}
 
-            {/* Navigation buttons */}
-            <div className="flex gap-3 pt-6">
+            {/* Navigation Buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="flex gap-3 pt-6"
+            >
               {step > 1 && (
                 <Button
                   type="button"
                   variant="secondary"
-                  className="flex-1"
+                  className="flex-1 bg-gray-700/50 hover:bg-gray-700 text-white border-gray-600/50"
                   onClick={handlePrevStep}
                 >
-                  Précédent
+                  ← Précédent
                 </Button>
               )}
               {step < 3 ? (
                 <Button
                   type="button"
-                  className="flex-1"
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 rounded-lg"
                   onClick={handleNextStep}
                 >
-                  Suivant
+                  Suivant →
                 </Button>
               ) : (
                 <Button
                   type="submit"
                   loading={loading}
-                  className="flex-1"
+                  className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 rounded-lg"
                 >
-                  S'inscrire
+                  {loading ? 'Inscription...' : 'Créer mon compte'}
                 </Button>
               )}
-            </div>
+            </motion.div>
           </form>
+        </motion.div>
 
-          <div className="text-center pt-4">
-            <p className="text-gray-700">
-              Vous avez déjà un compte?{' '}
-              <Link href="/login" className="font-semibold text-indigo-600 hover:text-indigo-700 transition">
+        {/* Sign In Link */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7 }}
+          className="text-center mt-8"
+        >
+          <p className="text-gray-300">
+            Vous avez déjà un compte?{' '}
+            <Link href="/login">
+              <a className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-300 hover:to-pink-300 transition">
                 Connectez-vous
-              </Link>
-            </p>
-          </div>
-        </Card>
+              </a>
+            </Link>
+          </p>
+        </motion.div>
 
-        <p className="text-xs text-center text-gray-500 mt-4">
+        {/* Footer */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          className="text-xs text-center text-gray-500 mt-8"
+        >
           © 2026 Signal-Moi. Tous les droits réservés.
-        </p>
+        </motion.p>
       </motion.div>
-    </div>
   )
 }
