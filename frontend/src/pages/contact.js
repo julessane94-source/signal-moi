@@ -5,12 +5,12 @@ import { motion } from 'framer-motion'
 import { toast } from 'react-toastify'
 import { API_BASE } from '../config/api'
 import { 
-  EnvelopeIcon, 
-  PhoneIcon, 
-  MapPinIcon,
-  ArrowLeftIcon,
-  SparklesIcon,
-  CheckCircleIcon
+  Envelope, 
+  Phone, 
+  MapPin,
+  ArrowLeft,
+  Sparkles,
+  CheckCircle
 } from '@heroicons/react/24/outline'
 
 export default function Contact() {
@@ -232,7 +232,7 @@ export default function Contact() {
                 className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all hover:-translate-y-2 border border-gray-100"
               >
                 <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center mb-4">
-                  <EnvelopeIcon className="h-7 w-7 text-white" />
+                  <Envelope className="h-7 w-7 text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Email</h3>
                 <a 
@@ -242,7 +242,7 @@ export default function Contact() {
                   {siteConfig.contactEmail}
                 </a>
                 <p className="text-gray-600 text-sm flex items-center gap-2">
-                  <CheckCircleIcon className="h-4 w-4 text-green-500" />
+                  <CheckCircle className="h-4 w-4 text-green-500" />
                   Réponse dans 24h
                 </p>
               </motion.div>
@@ -256,7 +256,7 @@ export default function Contact() {
                 className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all hover:-translate-y-2 border border-gray-100"
               >
                 <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-4">
-                  <PhoneIcon className="h-7 w-7 text-white" />
+                  <Phone className="h-7 w-7 text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Téléphone</h3>
                 {(() => {
@@ -273,7 +273,7 @@ export default function Contact() {
                   )
                 })()}
                 <p className="text-gray-600 text-sm flex items-center gap-2">
-                  <CheckCircleIcon className="h-4 w-4 text-green-500" />
+                  <CheckCircle className="h-4 w-4 text-green-500" />
                   Lun-Ven: 09:00-18:00
                 </p>
               </motion.div>
@@ -287,12 +287,12 @@ export default function Contact() {
                 className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all hover:-translate-y-2 border border-gray-100"
               >
                 <div className="w-14 h-14 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center mb-4">
-                  <MapPinIcon className="h-7 w-7 text-white" />
+                  <MapPin className="h-7 w-7 text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Adresse</h3>
                 <p className="text-gray-600 font-medium mb-3">{siteConfig.address}</p>
                 <p className="text-gray-600 text-sm flex items-center gap-2">
-                  <CheckCircleIcon className="h-4 w-4 text-green-500" />
+                  <CheckCircle className="h-4 w-4 text-green-500" />
                   Bureau principal
                 </p>
               </motion.div>
@@ -422,15 +422,15 @@ export default function Contact() {
                   <h3 className="text-lg font-bold text-gray-900 mb-4">Temps de réponse</h3>
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center gap-2">
-                      <CheckCircleIcon className="h-5 w-5 text-green-500" />
+                      <CheckCircle className="h-5 w-5 text-green-500" />
                       <span className="text-gray-700">Email: <strong>24h</strong></span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <CheckCircleIcon className="h-5 w-5 text-green-500" />
+                      <CheckCircle className="h-5 w-5 text-green-500" />
                       <span className="text-gray-700">Téléphone: <strong>Immédiat</strong></span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <CheckCircleIcon className="h-5 w-5 text-green-500" />
+                      <CheckCircle className="h-5 w-5 text-green-500" />
                       <span className="text-gray-700">Formulaire: <strong>48h</strong></span>
                     </div>
                   </div>

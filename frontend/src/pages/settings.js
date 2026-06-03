@@ -6,12 +6,12 @@ import { useRouter } from 'next/router'
 import { toast } from 'react-toastify'
 import { motion } from 'framer-motion'
 import { 
-  CogIcon,
-  TrashIcon,
-  LogoutIcon,
-  UserIcon,
-  ShieldCheckIcon,
-  ArrowLeftIcon
+  Cog,
+  Trash,
+  ArrowRightOnRectangle,
+  User,
+  ShieldCheck,
+  ArrowLeft
 } from '@heroicons/react/24/outline'
 
 export default function Settings() {
@@ -52,11 +52,11 @@ export default function Settings() {
               onClick={() => router.back()}
               className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
             >
-              <ArrowLeftIcon className="h-5 w-5" />
+              <ArrowLeft className="h-5 w-5" />
               Retour
             </button>
             <h1 className="text-4xl font-bold text-gray-900 flex items-center gap-3">
-              <CogIcon className="h-10 w-10 text-indigo-600" />
+              <Cog className="h-10 w-10 text-indigo-600" />
               Paramètres
             </h1>
             <p className="text-gray-600 mt-2">Gérez votre compte et vos préférences</p>
@@ -100,7 +100,7 @@ export default function Settings() {
               className="bg-white rounded-lg shadow-sm p-6 border border-gray-200"
             >
               <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <UserIcon className="h-5 w-5 text-indigo-600" />
+                <User className="h-5 w-5 text-indigo-600" />
                 Compte
               </h3>
               <div className="space-y-4">
@@ -129,7 +129,7 @@ export default function Settings() {
               className="bg-white rounded-lg shadow-sm p-6 border border-gray-200"
             >
               <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <ShieldCheckIcon className="h-5 w-5 text-green-600" />
+                <ShieldCheck className="h-5 w-5 text-green-600" />
                 Sécurité
               </h3>
               <div className="space-y-4">
@@ -155,7 +155,7 @@ export default function Settings() {
                 }}
                 className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-3 rounded-lg hover:shadow-lg transition"
               >
-                <LogoutIcon className="h-5 w-5" />
+                <ArrowRightOnRectangle className="h-5 w-5" />
                 Me déconnecter
               </button>
 
@@ -166,7 +166,7 @@ export default function Settings() {
                   whileTap={{ scale: 0.98 }}
                   className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold py-3 rounded-lg hover:shadow-lg transition"
                 >
-                  <TrashIcon className="h-5 w-5" />
+                  <Trash className="h-5 w-5" />
                   Supprimer mon compte
                 </motion.button>
               </Link>

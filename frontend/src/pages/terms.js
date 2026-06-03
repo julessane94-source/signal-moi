@@ -1,7 +1,7 @@
 import Head from 'next/head'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ArrowLeftIcon } from '@heroicons/react/24/outline'
+import { ArrowLeft } from '@heroicons/react/24/outline'
 import { useRouter } from 'next/router'
 
 export default function Terms() {
@@ -26,7 +26,7 @@ export default function Terms() {
               onClick={() => router.back()}
               className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
             >
-              <ArrowLeftIcon className="h-5 w-5" />
+              <ArrowLeft className="h-5 w-5" />
               Retour
             </button>
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
