@@ -272,7 +272,9 @@ export default function CollaboratorDashboard() {
                 bgColor: 'bg-amber-50',
                 textColor: 'text-amber-600'
               }
-            ].map((stat, idx) => (
+            ].map((stat, idx) => {
+              const IconComponent = stat.icon;
+              return (
               <motion.div
                 key={idx}
                 initial={{ opacity: 0, y: 20 }}
@@ -286,11 +288,12 @@ export default function CollaboratorDashboard() {
                     <p className={`text-4xl font-bold ${stat.textColor}`}>{stat.value}</p>
                   </div>
                   <div className={`p-4 rounded-xl bg-gradient-to-br ${stat.gradient} text-white`}>
-                    <stat.icon className="h-8 w-8" />
+                    <IconComponent className="h-8 w-8" />
                   </div>
                 </div>
               </motion.div>
-            ))}
+              );
+            })}
           </motion.div>
 
           {/* === ACTIONS RAPIDES === */}
