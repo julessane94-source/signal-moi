@@ -6,6 +6,46 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const SiteConfig = require('../models/SiteConfig');
 const { sendEmail } = require('../services/email.service');
+const multer = require('multer');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
+const fs = require('fs');
+
+// Configuration multer pour le logo
+const logoStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(__dirname, '..', '..', 'uploads', 'logos');
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = `logo-${uuidv4()}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  }
+});
+
+const logoFilter = (req, file, cb) => {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Type de fichier non supporté. Accepte: JPEG, PNG, WebP, GIF'), false);
+  }
+};
+
+const uploadLogo = multer({
+  storage: logoStorage,
+  fileFilter: logoFilter,
+  limits: {
+    fileSize: 5242880 // 5MB
+  }
+});
+const multer = require('multer');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
+const fs = require('fs');
 
 // ? Middleware d'authentification admin
 const authMiddleware = async (req, res, next) => {
@@ -346,6 +386,34 @@ router.post('/site-config', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('[ADMIN POST /site-config] Erreur:', err);
     res.status(500).json({ error: 'Erreur lors de la sauvegarde', details: err.message });
+  }
+});
+
+// PUT /api/admin/site-config/logo - Upload et changement du logo
+router.put('/site-config/logo', authMiddleware, uploadLogo.single('logo'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Aucun fichier n\'a été téléchargé' });
+    }
+
+    // Construire le chemin relatif du fichier
+    const logoUrl = `/uploads/logos/${req.file.filename}`;
+
+    // Sauvegarder dans la base de données
+    await SiteConfig.set('logoUrl', logoUrl);
+
+    res.json({
+      success: true,
+      message: 'Logo changé avec succès',
+      logoUrl: logoUrl
+    });
+  } catch (err) {
+    console.error('[ADMIN PUT /site-config/logo] Erreur:', err);
+    // Supprimer le fichier uploadé en cas d'erreur
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    res.status(500).json({ error: 'Erreur lors du changement du logo', details: err.message });
   }
 });
 

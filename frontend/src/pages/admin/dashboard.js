@@ -13,7 +13,8 @@ import {
   PencilIcon,
   TrashIcon,
   KeyIcon,
-  UserIcon
+  UserIcon,
+  ArrowUpTrayIcon
 } from '@heroicons/react/24/outline'
 
 const getImageUrl = (url) => {
@@ -36,6 +37,8 @@ export default function AdminDashboard() {
   const [deleteReason, setDeleteReason] = useState('')
   const [itemToDelete, setItemToDelete] = useState(null)
   const [deleteType, setDeleteType] = useState(null) // 'signalement' ou 'campagne'
+  const [logoUrl, setLogoUrl] = useState('/icons/icon-192x192.png')
+  const [uploadingLogo, setUploadingLogo] = useState(false)
   const [siteConfig, setSiteConfig] = useState({
     siteName: 'Signal-Moi',
     contactEmail: 'contact@signal-moi.com',
@@ -125,6 +128,8 @@ export default function AdminDashboard() {
           emergencyPolice: data.emergency_police || data.emergencyPolice || prev.emergencyPolice,
           emergencyFire: data.emergency_fire || data.emergencyFire || prev.emergencyFire
         }))
+        // Charger le logo aussi
+        setLogoUrl(data.logoUrl || data.logo_url || '/icons/icon-192x192.png')
       }
     } catch (error) {
       console.error('Erreur fetchSiteConfig:', error)
@@ -393,6 +398,53 @@ export default function AdminDashboard() {
     }
   }
 
+  // Fonction pour uploader le logo
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Vérifier le type de fichier
+    if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
+      toast.error('❌ Type de fichier non supporté. Accepte: JPEG, PNG, WebP, GIF')
+      return
+    }
+
+    // Vérifier la taille (5MB max)
+    if (file.size > 5242880) {
+      toast.error('❌ Fichier trop volumineux. Maximum 5MB.')
+      return
+    }
+
+    setUploadingLogo(true)
+    try {
+      const token = localStorage.getItem('token')
+      const base = API_BASE
+      const formData = new FormData()
+      formData.append('logo', file)
+
+      const res = await fetch(`${base}/api/admin/site-config/logo`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      })
+
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || 'Erreur lors du changement du logo')
+      }
+
+      const data = await res.json()
+      setLogoUrl(data.logoUrl)
+      toast.success('✅ ' + (data.message || 'Logo changé avec succès'))
+    } catch (error) {
+      toast.error('❌ ' + (error.message || 'Erreur'))
+    } finally {
+      setUploadingLogo(false)
+      // Réinitialiser l'input
+      if (e.target) e.target.value = ''
+    }
+  }
+
   const statsData = {
     totalUsers: users.length,
     totalSignalements: stats.totalSignalements,
@@ -446,7 +498,8 @@ export default function AdminDashboard() {
               { id: 'users', label: 'Utilisateurs', icon: UserGroupIcon },
               { id: 'signalements', label: 'Signalements', icon: DocumentTextIcon },
               { id: 'campagnes', label: 'Campagnes', icon: ChartBarIcon },
-              { id: 'config', label: 'Configuration', icon: CogIcon }
+              { id: 'config', label: 'Configuration', icon: CogIcon },
+              { id: 'settings', label: 'Paramètres', icon: CogIcon }
             ].map((tab) => (
               <motion.button
                 key={tab.id}
@@ -928,6 +981,88 @@ export default function AdminDashboard() {
                       <Button onClick={() => saveConfig()} variant="primary">
                         Sauvegarder la configuration
                       </Button>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+          )}
+
+          {/* Settings Tab - Logo Management */}
+          {activeTab === 'settings' && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-6"
+            >
+              <Card className="p-8">
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Gestion du Logo</h2>
+                    <p className="text-gray-600">Changez le logo du site qui apparaît dans la barre de navigation</p>
+                  </div>
+
+                  {/* Logo Preview */}
+                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-gray-50">
+                    <div className="mb-4 flex justify-center">
+                      {logoUrl && logoUrl !== '/icons/icon-192x192.png' ? (
+                        <img
+                          src={logoUrl.startsWith('http') || logoUrl.startsWith('/') ? logoUrl : `${API_BASE}${logoUrl}`}
+                          alt="Logo actuel"
+                          className="h-32 w-32 object-cover rounded-lg shadow-md"
+                        />
+                      ) : (
+                        <div className="h-32 w-32 bg-gray-200 rounded-lg flex items-center justify-center">
+                          <span className="text-gray-500">Pas de logo</span>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-600 mb-4">Logo actuel</p>
+                  </div>
+
+                  {/* Upload Area */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Télécharger un nouveau logo</label>
+                    <div className="border-2 border-dashed border-indigo-300 rounded-lg p-8 text-center bg-indigo-50 hover:bg-indigo-100 transition cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        onChange={handleLogoUpload}
+                        disabled={uploadingLogo}
+                        className="hidden"
+                        id="logo-upload"
+                      />
+                      <label htmlFor="logo-upload" className="cursor-pointer block">
+                        <ArrowUpTrayIcon className="h-12 w-12 text-indigo-600 mx-auto mb-3" />
+                        <p className="text-lg font-semibold text-gray-900">
+                          {uploadingLogo ? '⏳ Téléchargement...' : 'Cliquez pour télécharger un logo'}
+                        </p>
+                        <p className="text-sm text-gray-600 mt-2">
+                          Format accepté: JPEG, PNG, WebP, GIF (Max 5MB)
+                        </p>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Additional Settings */}
+                  <div className="pt-6 border-t border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Paramètres additionnels</h3>
+                    <div className="space-y-4">
+                      <FormField label="Nom du site">
+                        <Input
+                          value={siteConfig.siteName}
+                          onChange={e => setSiteConfig({...siteConfig, siteName: e.target.value})}
+                          placeholder="Signal-Moi"
+                        />
+                      </FormField>
+                      <div className="flex gap-4">
+                        <Button
+                          variant="secondary"
+                          onClick={() => fetchSiteConfig()}
+                        >
+                          Réinitialiser
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>

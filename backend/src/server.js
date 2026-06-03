@@ -135,7 +135,7 @@ app.get('/uploads/*', async (req, res, next) => {
 // Ensure uploads directories exist at startup to avoid missing-folder issues
 const fs = require('fs');
 const uploadsRoot = path.join(__dirname, '..', 'uploads');
-const requiredDirs = ['signalements', 'profiles', 'temp', 'campagnes'];
+const requiredDirs = ['signalements', 'profiles', 'temp', 'campagnes', 'logos'];
 try {
     if (!fs.existsSync(uploadsRoot)) {
         fs.mkdirSync(uploadsRoot, { recursive: true });
