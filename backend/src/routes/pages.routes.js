@@ -132,8 +132,8 @@ router.get('/logo', async (req, res) => {
     const logoBinary = await SiteConfig.getLogoBinary();
     
     if (!logoBinary || !logoBinary.logo_data) {
-      console.log('[PUBLIC GET /pages/logo] ❌ Aucun logo trouvé, retour par défaut');
-      return res.status(404).json({ error: 'Logo non trouvé', logoUrl: '/icons/icon-192x192.png' });
+      console.log('[PUBLIC GET /pages/logo] ℹ️  Aucun logo trouvé, retour du fallback');
+      return res.json({ logoUrl: '/icons/icon-192x192.png' });
     }
 
     // Convertir le buffer en base64
@@ -159,8 +159,10 @@ router.get('/logo', async (req, res) => {
     console.log('[PUBLIC GET /pages/logo] ✅ Logo retourné depuis la BD (base64)');
     res.json({ logoUrl, filename: logoBinary.logo_filename });
   } catch (err) {
-    console.error('[PUBLIC GET /pages/logo] Erreur:', err);
-    res.status(500).json({ error: 'Erreur serveur', details: err.message });
+    console.error('[PUBLIC GET /pages/logo] Erreur:', err.message);
+    // Si la colonne logo_data n'existe pas, retourner le fallback au lieu de crasher
+    console.warn('⚠️  Fallback à l\'icône par défaut (migration non exécutée?)');
+    res.json({ logoUrl: '/icons/icon-192x192.png' });
   }
 });
 

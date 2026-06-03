@@ -5,6 +5,7 @@ const http = require('http');
 const socketIO = require('socket.io');
 const db = require('./config/database');
 const { setupSocket } = require('./socket/socket.handler');
+const { initializeDatabase } = require('./config/database-init');
 
 // ✅ Vérifier les variables d'environnement essentielles
 console.log('🔍 Vérification des variables d\'environnement...');
@@ -222,11 +223,23 @@ setupSocket(io);
 // Rendre l'objet io accessible depuis les routes via global.io
 global.io = io;
 
-// Démarrer le serveur
-server.listen(PORT, '0.0.0.0', () => {
-    console.log(`\n✅ Serveur démarré sur le port ${PORT}`);
-    console.log(`📡 Frontend URL configurée: ${process.env.FRONTEND_URL || 'non défini'}`);
-    console.log(`🌍 Environnement: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🔌 Socket.io initialisé`);
-    console.log(`📊 Timestamp démarrage: ${new Date().toISOString()}\n`);
-});
+// Initialiser la base de données puis démarrer le serveur
+const startServer = async () => {
+    try {
+        await initializeDatabase();
+        
+        // Démarrer le serveur
+        server.listen(PORT, '0.0.0.0', () => {
+            console.log(`\n✅ Serveur démarré sur le port ${PORT}`);
+            console.log(`📡 Frontend URL configurée: ${process.env.FRONTEND_URL || 'non défini'}`);
+            console.log(`🌍 Environnement: ${process.env.NODE_ENV || 'development'}`);
+            console.log(`🔌 Socket.io initialisé`);
+            console.log(`📊 Timestamp démarrage: ${new Date().toISOString()}\n`);
+        });
+    } catch (err) {
+        console.error('❌ Erreur au démarrage du serveur :', err);
+        process.exit(1);
+    }
+};
+
+startServer();
