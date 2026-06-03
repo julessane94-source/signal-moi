@@ -86,7 +86,7 @@ export default function Campagnes() {
 
       <Navbar />
 
-      <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef4ff_45%,#f8fafc_100%)] pt-16">
+      <main className="min-h-screen bg-gradient-to-b from-slate-900 via-indigo-900 to-slate-800 pt-16">
         {/* Hero */}
         <section className="relative overflow-hidden bg-slate-950 text-white py-24">
           <div className="pointer-events-none absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.18),_transparent_18%),radial-gradient(circle_at_top_right,_rgba(168,85,247,0.18),_transparent_20%),radial-gradient(circle_at_bottom,_rgba(14,165,233,0.14),_transparent_22%)]" />
