@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import { Button, Card, FormField, Input, Modal, DataTable, StatBox, Badge } from '../../components/ui'
+import { Button, Card, FormField, Input, Modal, DataTable, StatBox, Badge, LoadingSkeleton, EmptyState, StatCardModern, StatusBadge } from '../../components/ui'
 import { motion } from 'framer-motion'
 import { toast } from 'react-toastify'
 import { API_BASE } from '../../config/api'
@@ -14,7 +14,8 @@ import {
   TrashIcon,
   KeyIcon,
   UserIcon,
-  ArrowUpTrayIcon
+  ArrowUpTrayIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline'
 
 const getImageUrl = (url) => {
@@ -466,8 +467,10 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 pt-20 pb-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <LoadingSkeleton count={4} type="card" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" />
+        </div>
       </div>
     )
   }
@@ -525,29 +528,37 @@ export default function AdminDashboard() {
               className="space-y-6"
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatBox
+                <StatCardModern
                   title="Total utilisateurs"
                   value={statsData.totalUsers}
-                  color="indigo"
                   icon={UserGroupIcon}
+                  gradient={true}
+                  trend="up"
+                  change={12}
                 />
-                <StatBox
+                <StatCardModern
                   title="Signalements"
                   value={statsData.totalSignalements}
-                  color="red"
                   icon={DocumentTextIcon}
+                  gradient={true}
+                  trend="up"
+                  change={8}
                 />
-                <StatBox
+                <StatCardModern
                   title="Campagnes actives"
                   value={statsData.totalCampagnes}
-                  color="blue"
                   icon={ChartBarIcon}
+                  gradient={true}
+                  trend="up"
+                  change={5}
                 />
-                <StatBox
+                <StatCardModern
                   title="Utilisateurs actifs"
                   value={statsData.activeUsers}
-                  color="green"
-                  icon={UserGroupIcon}
+                  icon={SparklesIcon}
+                  gradient={true}
+                  trend="up"
+                  change={3}
                 />
               </div>
             </motion.div>
@@ -579,7 +590,7 @@ export default function AdminDashboard() {
                         <motion.button
                           whileHover={{ scale: 1.1 }}
                           onClick={() => openModal(user)}
-                          className="p-2 hover:bg-indigo-50 rounded-lg transition"
+                          className="p-2 hover:bg-indigo-100 rounded-lg transition-all shadow-soft hover:shadow-md"
                           title="Modifier"
                         >
                           <PencilIcon className="h-4 w-4 text-indigo-600" />
@@ -587,7 +598,7 @@ export default function AdminDashboard() {
                         <motion.button
                           whileHover={{ scale: 1.1 }}
                           onClick={() => resetPassword(user.id)}
-                          className="p-2 hover:bg-yellow-50 rounded-lg transition"
+                          className="p-2 hover:bg-yellow-100 rounded-lg transition-all shadow-soft hover:shadow-md"
                           title="Réinitialiser mot de passe"
                         >
                           <KeyIcon className="h-4 w-4 text-yellow-600" />
@@ -595,7 +606,7 @@ export default function AdminDashboard() {
                         <motion.button
                           whileHover={{ scale: 1.1 }}
                           onClick={() => deleteUser(user.id)}
-                          className="p-2 hover:bg-red-50 rounded-lg transition"
+                          className="p-2 hover:bg-red-100 rounded-lg transition-all shadow-soft hover:shadow-md"
                           title="Désactiver"
                         >
                           <TrashIcon className="h-4 w-4 text-red-600" />
@@ -618,10 +629,11 @@ export default function AdminDashboard() {
               className="space-y-4"
             >
               {signalements.length === 0 ? (
-                <Card className="p-12 text-center">
-                  <div className="text-6xl mb-4">📭</div>
-                  <p className="text-gray-500">Aucun signalement disponible</p>
-                </Card>
+                <EmptyState 
+                  icon="📭" 
+                  title="Aucun signalement"
+                  description="Il n'y a actuellement aucun signalement à afficher"
+                />
               ) : (
                 <div className="grid grid-cols-1 gap-4">
                   {signalements.map((s, idx) => (
@@ -631,7 +643,7 @@ export default function AdminDashboard() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
                     >
-                      <Card className="p-6 hover:shadow-lg transition">
+                      <Card className="p-6 glass-card hover:shadow-lg transition">
                         <div className="flex justify-between items-start gap-4">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
@@ -655,7 +667,7 @@ export default function AdminDashboard() {
                                 setDeleteType('signalement')
                                 setDeleteReason('')
                               }}
-                              className="p-2 hover:bg-red-50 rounded-lg transition"
+                              className="p-2 hover:bg-red-100 rounded-lg transition-all shadow-soft hover:shadow-md"
                               title="Supprimer ce signalement"
                             >
                               <TrashIcon className="h-5 w-5 text-red-600" />
@@ -678,10 +690,11 @@ export default function AdminDashboard() {
               className="space-y-4"
             >
               {campagnes.length === 0 ? (
-                <Card className="p-12 text-center">
-                  <div className="text-6xl mb-4">📭</div>
-                  <p className="text-gray-500">Aucune campagne disponible</p>
-                </Card>
+                <EmptyState 
+                  icon="📭" 
+                  title="Aucune campagne"
+                  description="Il n'y a actuellement aucune campagne à afficher"
+                />
               ) : (
                 <div className="grid grid-cols-1 gap-4">
                   {campagnes.map((c, idx) => (
@@ -691,12 +704,12 @@ export default function AdminDashboard() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
                     >
-                      <Card className="p-6 hover:shadow-lg transition">
+                      <Card className="p-6 glass-card hover:shadow-lg transition">
                         <div className="flex justify-between items-start gap-4">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
                               <h3 className="font-semibold text-lg">{c.titre}</h3>
-                              <Badge variant="info">{c.statut || 'active'}</Badge>
+                              <StatusBadge status={c.statut === 'active' ? 'progress' : 'archived'} />
                             </div>
                             <p className="text-gray-600 mb-3">{c.description}</p>
                             <div className="flex items-center gap-4 text-sm text-gray-600">
@@ -715,7 +728,7 @@ export default function AdminDashboard() {
                                 setDeleteType('campagne')
                                 setDeleteReason('')
                               }}
-                              className="p-2 hover:bg-red-50 rounded-lg transition"
+                              className="p-2 hover:bg-red-100 rounded-lg transition-all shadow-soft hover:shadow-md"
                               title="Supprimer cette campagne"
                             >
                               <TrashIcon className="h-5 w-5 text-red-600" />
