@@ -45,9 +45,7 @@ export default function Privacy() {
             <section>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">1. Introduction</h2>
               <p className="text-gray-700 leading-relaxed">
-                Signal-Moi (« nous », « notre » ou « nos ») s'engage à protéger votre vie privée. 
-                Cette Politique de Confidentialité explique comment nous collectons, utilisons, partageons 
-                et protégeons vos informations personnelles lorsque vous utilisez notre plateforme.
+                Signal-Moi s'engage à protéger votre vie privée. Cette Politique de Confidentialité explique comment nous collectons, utilisons, partageons et protégeons vos informations personnelles lorsque vous utilisez notre plateforme.
               </p>
             </section>
 
