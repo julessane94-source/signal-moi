@@ -559,6 +559,5 @@ export default function Contact() {
       </main>
       </ErrorBoundary>
     </>
-  )
-              </motion.div>
-
+  );
+}
