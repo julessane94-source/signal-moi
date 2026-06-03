@@ -263,6 +263,28 @@ export default function Footer() {
           </motion.div>
         </div>
 
+        {/* Donation Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          className="my-12 p-8 rounded-2xl bg-gradient-to-r from-red-600 via-red-500 to-pink-600 text-white shadow-2xl"
+        >
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex-1">
+              <h3 className="text-2xl font-bold mb-2">Soutenez Signal-Moi</h3>
+              <p className="text-red-50">
+                Contribuez au développement de cette plateforme citoyenne qui change les communautés.
+              </p>
+            </div>
+            <Link href="/donate">
+              <a className="inline-flex items-center gap-2 px-6 py-3 bg-white text-red-600 font-bold rounded-lg hover:bg-red-50 transition-all transform hover:scale-105 whitespace-nowrap">
+                <span>❤️</span>
+                Faire un don
+              </a>
+            </Link>
+          </div>
+        </motion.div>
+
         {/* Divider */}
         <div className="border-t border-gray-700 pt-8"></div>
 
