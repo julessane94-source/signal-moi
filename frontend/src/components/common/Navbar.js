@@ -67,24 +67,26 @@ export default function Navbar() {
           </Link>
         </motion.div>
 
-        <div className="hidden md:flex items-center gap-2">
-          {navigation.map((item) => {
-            const Icon = item.icon
-            const isActive = item.href === '/' ? router.pathname === item.href : router.pathname.startsWith(item.href)
-            return (
-              <Link key={item.name} href={item.href}>
-                <motion.a
-                  whileHover={{ y: -1 }}
-                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${isActive ? 'bg-slate-900 text-white shadow-sm shadow-slate-900/10' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'}`}
-                  aria-current={isActive ? 'page' : undefined}
-                >
-                  <Icon className="h-4 w-4" />
-                  {item.name}
-                </motion.a>
-              </Link>
-            )
-          })}
-        </div>
+        {!user && (
+          <div className="hidden md:flex items-center gap-2">
+            {navigation.map((item) => {
+              const Icon = item.icon
+              const isActive = item.href === '/' ? router.pathname === item.href : router.pathname.startsWith(item.href)
+              return (
+                <Link key={item.name} href={item.href}>
+                  <motion.a
+                    whileHover={{ y: -1 }}
+                    className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${isActive ? 'bg-slate-900 text-white shadow-sm shadow-slate-900/10' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'}`}
+                    aria-current={isActive ? 'page' : undefined}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {item.name}
+                  </motion.a>
+                </Link>
+              )
+            })}
+          </div>
+        )}
 
         <div className="hidden md:flex items-center gap-3">
           <Link href="/donate">
@@ -186,25 +188,27 @@ export default function Navbar() {
               <span className="text-sm font-semibold text-slate-900">Menu</span>
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">{user ? `Bonjour, ${user.prenom}` : 'Visiteur'}</span>
             </div>
+            {!user && (
+              <div className="px-4 py-4 space-y-2">
+                {navigation.map((item) => {
+                  const Icon = item.icon
+                  const isActive = item.href === '/' ? router.pathname === item.href : router.pathname.startsWith(item.href)
+                  return (
+                    <Link key={item.name} href={item.href} onClick={() => setMobileMenuOpen(false)}>
+                      <motion.a
+                        whileHover={{ x: 4 }}
+                        className="flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-700 transition hover:bg-slate-100"
+                        style={isActive ? { backgroundColor: '#f8fafc' } : undefined}
+                      >
+                        <Icon className="h-5 w-5" />
+                        {item.name}
+                      </motion.a>
+                    </Link>
+                  )
+                })}
+              </div>
+            )}
             <div className="px-4 py-4 space-y-2">
-              {navigation.map((item) => {
-                const Icon = item.icon
-                const isActive = item.href === '/' ? router.pathname === item.href : router.pathname.startsWith(item.href)
-                return (
-                  <Link key={item.name} href={item.href} onClick={() => setMobileMenuOpen(false)}>
-                    <motion.a
-                      whileHover={{ x: 4 }}
-                      className="flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-700 transition hover:bg-slate-100"
-                      style={isActive ? { backgroundColor: '#f8fafc' } : undefined}
-                    >
-                      <Icon className="h-5 w-5" />
-                      {item.name}
-                    </motion.a>
-                  </Link>
-                )
-              })}
-
-              {/* Donation Button for Mobile */}
               <Link href="/donate" onClick={() => setMobileMenuOpen(false)}>
                 <motion.a className="flex items-center justify-center gap-2 w-full rounded-full px-4 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white font-semibold hover:from-red-700 hover:to-pink-700 transition-all">
                   <HeartIcon className="h-5 w-5" />
