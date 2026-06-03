@@ -115,3 +115,170 @@ select {
 .to-red-600, .to-red-700 {
   --tw-gradient-to: #ea580c !important;
 }
+
+/* ===== Modern 2026 Enhancements ===== */
+
+/* Smooth page transitions */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Glass morphism cards */
+.glass-card {
+  @apply bg-white/80 backdrop-blur-xl border border-white/20 shadow-xl rounded-2xl;
+}
+
+/* Gradient text */
+.gradient-text {
+  @apply bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent;
+}
+
+/* Enhanced shadows */
+.shadow-hover {
+  @apply shadow-md hover:shadow-card-hover transition-shadow duration-300;
+}
+
+.shadow-glow-lg {
+  @apply shadow-xl-glow;
+}
+
+/* Smooth transitions */
+.transition-smooth {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+/* Page animations */
+.fade-in {
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+.slide-up {
+  animation: slideUp 0.5s ease-out;
+}
+
+/* Enhanced form inputs */
+.input-enhanced {
+  @apply w-full px-4 py-3 bg-white/60 border border-slate-300/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all duration-200 shadow-sm hover:shadow-md;
+}
+
+/* Modern button styles */
+.btn-modern {
+  @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:shadow-lg hover:scale-105 active:scale-95;
+}
+
+.btn-modern-primary {
+  @apply btn-modern bg-gradient-to-r from-indigo-600 to-indigo-700 text-white hover:from-indigo-700 hover:to-indigo-800;
+}
+
+.btn-modern-secondary {
+  @apply btn-modern bg-slate-100 text-slate-900 hover:bg-slate-200;
+}
+
+/* Status indicators with pulse */
+.status-pulse {
+  @apply relative;
+}
+
+.status-pulse::before {
+  content: '';
+  @apply absolute inset-0 rounded-full bg-green-400 animate-pulse;
+}
+
+/* Modern table styles */
+.table-modern {
+  @apply w-full border-collapse;
+}
+
+.table-modern thead {
+  @apply bg-gradient-1 text-slate-900 font-semibold;
+}
+
+.table-modern tbody tr {
+  @apply border-b border-slate-200 hover:bg-slate-50 transition-colors;
+}
+
+.table-modern td {
+  @apply px-4 py-3;
+}
+
+/* Data visualization improvements */
+.chart-container {
+  @apply rounded-2xl bg-white/80 p-6 shadow-soft border border-slate-200/50 backdrop-blur-sm;
+}
+
+/* Modal enhancements */
+.modal-enhanced {
+  @apply rounded-3xl shadow-xl-glow;
+}
+
+.modal-header {
+  @apply bg-gradient-to-r from-indigo-600/10 to-cyan-500/10 border-b border-slate-200/50 rounded-t-3xl;
+}
+
+/* Loading spinner enhancement */
+.spinner-modern {
+  @apply w-8 h-8 border-2 border-slate-200 border-t-indigo-600 rounded-full animate-spin;
+}
+
+/* Success animation */
+@keyframes checkmark {
+  0% { stroke-dashoffset: 100; }
+  100% { stroke-dashoffset: 0; }
+}
+
+.checkmark-animation {
+  animation: checkmark 0.5s ease-in-out;
+  stroke-dasharray: 100;
+}
+
+/* Hover effects for cards */
+.card-hover-lift {
+  @apply transition-all duration-300 hover:-translate-y-2 hover:shadow-card-hover;
+}
+
+/* Badge animations */
+.badge-animated {
+  @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium transition-all;
+}
+
+.badge-animated-pulse {
+  @apply badge-animated animate-pulse;
+}
+
+/* Text gradients */
+.text-gradient-primary {
+  @apply bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 bg-clip-text text-transparent;
+}
+
+/* Link hover effects */
+.link-enhanced {
+  @apply relative font-medium text-indigo-600 transition-colors hover:text-indigo-700;
+}
+
+.link-enhanced::after {
+  content: '';
+  @apply absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 transition-all duration-300 hover:w-full;
+}
+
+/* Focus states */
+:focus-visible {
+  @apply outline-none ring-2 ring-indigo-500 ring-offset-2;
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

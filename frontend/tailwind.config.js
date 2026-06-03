@@ -47,13 +47,35 @@ module.exports = {
       boxShadow: {
         soft: '0 24px 80px rgba(15, 23, 42, 0.08)',
         glow: '0 20px 60px rgba(99, 102, 241, 0.14)',
+        'card-hover': '0 32px 120px rgba(99, 102, 241, 0.2)',
+        'xl-glow': '0 40px 200px rgba(99, 102, 241, 0.25)',
       },
       backgroundImage: {
         'hero-light': 'radial-gradient(circle at top left, rgba(99, 102, 241, 0.18), transparent 30%), radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.14), transparent 28%)',
+        'glass': 'rgba(255, 255, 255, 0.7)',
+        'gradient-1': 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)',
+        'gradient-2': 'linear-gradient(135deg, rgba(249, 115, 22, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%)',
       },
       animation: {
         'bounce-slow': 'bounce 2s infinite',
         'pulse-slow': 'pulse 3s infinite',
+        'fade-in': 'fadeIn 0.6s ease-in-out',
+        'slide-up': 'slideUp 0.5s ease-out',
+        'shimmer': 'shimmer 2s infinite',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideUp: {
+          '0%': { opacity: '0', transform: 'translateY(20px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '-1000px 0' },
+          '100%': { backgroundPosition: '1000px 0' },
+        },
       },
     },
   },
