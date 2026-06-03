@@ -15,7 +15,8 @@ import {
   EnvelopeIcon,
   UserCircleIcon,
   ArrowRightOnRectangleIcon,
-  CogIcon
+  CogIcon,
+  HeartIcon
 } from '@heroicons/react/24/outline'
 
 export default function Navbar() {
@@ -30,7 +31,6 @@ export default function Navbar() {
       try {
         // Récupérer le logo depuis la base de données (base64)
         const res = await fetch(`${API_BASE}/api/pages/logo`)
-        if (!res.ok) throw new Error('Logo endpoint failed')
         const data = await res.json()
         setLogoUrl(data.logoUrl || '/icons/icon-192x192.png')
       } catch (err) {
@@ -87,6 +87,12 @@ export default function Navbar() {
         </div>
 
         <div className="hidden md:flex items-center gap-3">
+          <Link href="/donate">
+            <motion.a whileHover={{ scale: 1.05 }} className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-600 to-pink-600 text-white font-semibold rounded-full hover:from-red-700 hover:to-pink-700 transition-all">
+              <HeartIcon className="h-5 w-5" />
+              Donner
+            </motion.a>
+          </Link>
           {!user ? (
             <>
               <Link href="/login">
@@ -197,6 +203,14 @@ export default function Navbar() {
                   </Link>
                 )
               })}
+
+              {/* Donation Button for Mobile */}
+              <Link href="/donate" onClick={() => setMobileMenuOpen(false)}>
+                <motion.a className="flex items-center justify-center gap-2 w-full rounded-full px-4 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white font-semibold hover:from-red-700 hover:to-pink-700 transition-all">
+                  <HeartIcon className="h-5 w-5" />
+                  Soutenir
+                </motion.a>
+              </Link>
 
               {!user ? (
                 <>
