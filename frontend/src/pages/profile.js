@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { useAuth } from '../context/AuthContext'
-import { API_BASE } from '../config/api'
-import { Button, Card, FormField, Input } from '../components/ui'
+import { useAuth } from '../../context/AuthContext'
+import { API_BASE } from '../../config/api'
+import { Button, Card, FormField, Input } from '../../components/ui'
 import { motion } from 'framer-motion'
 import Head from 'next/head'
 import {
