@@ -46,6 +46,29 @@ const SiteConfig = {
             ['logoUrl']
         );
         return res.rows[0] || null;
+    },
+    getLogoBase64: async () => {
+        const res = await db.query(
+            'SELECT logo_data, logo_filename FROM signal_moi.site_config WHERE cle = $1 AND logo_data IS NOT NULL',
+            ['logoUrl']
+        );
+        if (!res.rows[0]?.logo_data) return null;
+        const logoBuffer = res.rows[0].logo_data;
+        const filename = res.rows[0].logo_filename || 'logo.png';
+        // Déterminer le MIME type
+        let mimeType = 'image/png';
+        const lower = filename.toLowerCase();
+        if (lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.jfif') || lower.endsWith('.jpe')) {
+            mimeType = 'image/jpeg';
+        } else if (lower.endsWith('.gif')) {
+            mimeType = 'image/gif';
+        } else if (lower.endsWith('.webp')) {
+            mimeType = 'image/webp';
+        } else if (lower.endsWith('.svg')) {
+            mimeType = 'image/svg+xml';
+        }
+        const base64 = logoBuffer.toString('base64');
+        return `data:${mimeType};base64,${base64}`;
     }
 };
 

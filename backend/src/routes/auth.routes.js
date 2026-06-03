@@ -10,10 +10,18 @@ const SiteConfig = require('../models/SiteConfig');
 router.get('/site-config', async (req, res) => {
   try {
     const config = await SiteConfig.getAll();
+    
+    // Récupérer le logo en base64 s'il existe
+    let logoUrl = config.logoUrl || config.logo_url || '/icons/icon-192x192.png';
+    const logoBase64 = await SiteConfig.getLogoBase64();
+    if (logoBase64) {
+      logoUrl = logoBase64;
+    }
+    
     // Coerce certains champs pour éviter les erreurs côté client
     const safeConfig = {
       ...config,
-      logoUrl: config.logoUrl || config.logo_url || '/icons/icon-192x192.png',
+      logoUrl: logoUrl,
       contactEmail: config.contactEmail != null ? String(config.contactEmail) : '',
       contactPhone: config.contactPhone != null ? String(config.contactPhone) : '',
       address: config.address != null ? String(config.address) : '',
@@ -51,7 +59,7 @@ router.get('/site-config', async (req, res) => {
       res.json({ ...safeConfig, collaboratorCampaigns });
     } catch (err) {
       console.error('[GET /site-config] Erreur campagnes:', err);
-      res.json(config);
+      res.json(safeConfig);
     }
   } catch (err) {
     console.error('[GET /site-config] Erreur:', err);
