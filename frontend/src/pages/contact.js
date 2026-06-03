@@ -157,13 +157,13 @@ export default function Contact() {
       <ErrorBoundary>
       <main className="min-h-screen bg-slate-50 pt-16">
         {/* Hero Section */}
-        <section className="relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white py-20">
+        <section className="relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white py-12 sm:py-16">
           <div className="pointer-events-none absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.22),_transparent_25%),radial-gradient(circle_at_bottom_right,_rgba(148,163,184,0.18),_transparent_25%)]" />
-          <div className="relative max-w-4xl mx-auto text-center px-4">
+          <div className="relative max-w-4xl mx-auto text-center px-4 sm:px-6">
             <motion.h1 
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-4xl md:text-5xl font-bold mb-6"
+              className="text-3xl md:text-4xl font-bold mb-4"
             >
               {siteConfig.contactPage?.title || 'Contactez-nous'}
             </motion.h1>
@@ -171,7 +171,7 @@ export default function Contact() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-lg md:text-xl text-indigo-100 max-w-2xl mx-auto"
+              className="text-base md:text-lg text-indigo-100 max-w-2xl mx-auto"
             >
               {siteConfig.contactPage?.content || 'Pour toute question, nous sommes la pour vous aider'}
             </motion.p>
@@ -179,25 +179,25 @@ export default function Contact() {
         </section>
 
         {/* Contact Information Cards */}
-        <section className="py-16">
-          <div className="max-w-6xl mx-auto px-4">
-            <div className="grid md:grid-cols-3 gap-8">
+        <section className="py-10">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className="grid md:grid-cols-3 gap-4">
               {/* Email Card */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="section-card p-8 text-center border-t-4 border-indigo-600"
+                className="section-card p-5 text-center border-t-4 border-indigo-600"
               >
-                <div className="text-5xl mb-4">✉️</div>
-                <h3 className="text-xl font-semibold mb-3 text-gray-900">Email</h3>
+                <div className="text-4xl mb-3">✉️</div>
+                <h3 className="text-lg font-semibold mb-2 text-gray-900">Email</h3>
                 <a 
                   href={`mailto:${siteConfig.contactEmail}`}
-                  className="text-indigo-600 hover:text-indigo-700 font-medium break-all hover:underline"
+                  className="text-indigo-600 hover:text-indigo-700 font-medium break-all hover:underline text-sm"
                 >
                   {siteConfig.contactEmail}
                 </a>
-                <p className="text-gray-600 text-sm mt-3">Réponse sous 24h</p>
+                <p className="text-gray-600 text-xs mt-2">Réponse sous 24h</p>
               </motion.div>
 
               {/* Phone Card */}
@@ -205,10 +205,10 @@ export default function Contact() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="section-card p-8 text-center border-t-4 border-purple-600"
+                className="section-card p-5 text-center border-t-4 border-purple-600"
               >
-                <div className="text-5xl mb-4">📱</div>
-                <h3 className="text-xl font-semibold mb-3 text-gray-900">Téléphone</h3>
+                <div className="text-4xl mb-3">📱</div>
+                <h3 className="text-lg font-semibold mb-2 text-gray-900">Téléphone</h3>
                 {(() => {
                   const rawPhone = siteConfig.contactPhone
                   const phoneStr = typeof rawPhone === 'string' ? rawPhone : (rawPhone && (rawPhone.number || rawPhone.value)) ? (rawPhone.number || rawPhone.value) : String(rawPhone || '')
@@ -216,13 +216,13 @@ export default function Contact() {
                   return (
                     <a 
                       href={`tel:${hrefPhone}`}
-                      className="text-purple-600 hover:text-purple-700 font-medium hover:underline"
+                      className="text-purple-600 hover:text-purple-700 font-medium hover:underline text-sm"
                     >
                       {phoneStr}
                     </a>
                   )
                 })()}
-                <p className="text-gray-600 text-sm mt-3">Lun-Ven: 09:00-18:00</p>
+                <p className="text-gray-600 text-xs mt-2">Lun-Ven: 09:00-18:00</p>
               </motion.div>
 
               {/* Location Card */}
@@ -230,30 +230,30 @@ export default function Contact() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="section-card p-8 text-center border-t-4 border-pink-600"
+                className="section-card p-5 text-center border-t-4 border-pink-600"
               >
-                <div className="text-5xl mb-4">📍</div>
-                <h3 className="text-xl font-semibold mb-3 text-gray-900">Adresse</h3>
-                <p className="text-gray-600 font-medium">{siteConfig.address}</p>
-                <p className="text-gray-500 text-sm mt-3">Bureau principal</p>
+                <div className="text-4xl mb-3">📍</div>
+                <h3 className="text-lg font-semibold mb-2 text-gray-900">Adresse</h3>
+                <p className="text-gray-600 font-medium text-sm">{siteConfig.address}</p>
+                <p className="text-gray-500 text-xs mt-2">Bureau principal</p>
               </motion.div>
             </div>
           </div>
         </section>
 
         {/* Main Contact Section */}
-        <section className="py-16 bg-white">
-          <div className="max-w-6xl mx-auto px-4">
-            <div className="grid md:grid-cols-2 gap-12">
+        <section className="py-10 bg-white">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className="grid md:grid-cols-2 gap-8">
               {/* Contact Form */}
               <motion.div
                 initial={{ opacity: 0, x: -30 }}
                 whileInView={{ opacity: 1, x: 0 }}
               >
-                <h2 className="text-3xl font-bold text-slate-900 mb-8">Envoyez-nous un message</h2>
-                <form onSubmit={handleSubmit} className="space-y-6 section-card p-10">
+                <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6">Envoyez-nous un message</h2>
+                <form onSubmit={handleSubmit} className="space-y-4 section-card p-6">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
                       Nom complet <span className="text-red-500">*</span>
                     </label>
                     <input 
@@ -262,13 +262,13 @@ export default function Contact() {
                       value={formData.name}
                       onChange={handleInputChange}
                       placeholder="Votre nom"
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Email <span className="text-red-500">*</span>
                     </label>
                     <input 
@@ -277,13 +277,13 @@ export default function Contact() {
                       value={formData.email}
                       onChange={handleInputChange}
                       placeholder="votre@email.com"
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Sujet <span className="text-red-500">*</span>
                     </label>
                     <input 
@@ -292,13 +292,13 @@ export default function Contact() {
                       value={formData.subject}
                       onChange={handleInputChange}
                       placeholder="Sujet de votre message"
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Message <span className="text-red-500">*</span>
                     </label>
                     <textarea 
@@ -306,8 +306,8 @@ export default function Contact() {
                       value={formData.message}
                       onChange={handleInputChange}
                       placeholder="Décrivez votre demande en détail..."
-                      rows="7"
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition resize-none"
+                      rows="5"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition resize-none"
                       required
                     />
                   </div>
@@ -317,7 +317,7 @@ export default function Contact() {
                     disabled={submitting}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold py-3 rounded-lg hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold py-2 rounded-lg hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                   >
                     {submitting ? '📤 Envoi en cours...' : '📤 Envoyer le message'}
                   </motion.button>
@@ -328,39 +328,39 @@ export default function Contact() {
               <motion.div
                 initial={{ opacity: 0, x: 30 }}
                 whileInView={{ opacity: 1, x: 0 }}
-                className="space-y-8"
+                className="space-y-6"
               >
-                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-8 border border-indigo-200">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4">Horaires d'ouverture</h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
+                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-6 border border-indigo-200">
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">Horaires d'ouverture</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
                       <span className="font-medium text-gray-700">Lundi - Vendredi</span>
                       <span className="text-indigo-600 font-semibold">09:00 - 18:00</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between text-sm">
                       <span className="font-medium text-gray-700">Samedi</span>
                       <span className="text-purple-600 font-semibold">10:00 - 16:00</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between text-sm">
                       <span className="font-medium text-gray-700">Dimanche</span>
                       <span className="text-pink-600 font-semibold">Fermé</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-8 border border-blue-200">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4">Temps de réponse</h3>
-                  <div className="space-y-2 text-gray-600">
+                <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-200">
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">Temps de réponse</h3>
+                  <div className="space-y-1.5 text-sm text-gray-600">
                     <p>✅ Email: Réponse sous 24h</p>
                     <p>✅ Téléphone: Réponse immédiate</p>
                     <p>✅ Formulaire: Réponse sous 48h</p>
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-8 border border-yellow-200">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4">Questions fréquentes</h3>
-                  <p className="text-gray-600 mb-4">Consultez notre section FAQ pour des réponses rapides à vos questions les plus courantes.</p>
-                  <a href="/faq" className="text-orange-600 hover:text-orange-700 font-semibold hover:underline">
+                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-6 border border-yellow-200">
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">Questions fréquentes</h3>
+                  <p className="text-sm text-gray-600 mb-3">Consultez notre section FAQ pour des réponses rapides.</p>
+                  <a href="/faq" className="text-orange-600 hover:text-orange-700 font-semibold hover:underline text-sm">
                     Accéder aux FAQ →
                   </a>
                 </div>
@@ -371,12 +371,12 @@ export default function Contact() {
 
         {/* Media Gallery Section */}
         {(siteConfig.contactPage?.images?.length > 0 || siteConfig.contactPage?.videos?.length > 0) && (
-          <section className="py-16 bg-gray-50">
-            <div className="max-w-6xl mx-auto px-4">
+          <section className="py-10 bg-gray-50">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6">
               {siteConfig.contactPage?.images?.length > 0 && (
-                <div className="mb-16">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-10 text-center">Galerie Photo</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="mb-10">
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 text-center">Galerie Photo</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {siteConfig.contactPage.images.map((img, idx) => (
                       <motion.div
                         key={idx}
@@ -388,7 +388,7 @@ export default function Contact() {
                         <img
                           src={img}
                           alt={`Photo ${idx + 1}`}
-                          className="w-full h-64 object-cover hover:scale-110 transition-transform duration-300"
+                          className="w-full h-48 object-cover hover:scale-110 transition-transform duration-300"
                         />
                       </motion.div>
                     ))}

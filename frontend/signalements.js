@@ -86,22 +86,22 @@ export default function SignalementsPublic() {
 
       <main className="min-h-screen bg-gray-50 pt-16">
         {/* Hero */}
-        <section className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-16">
-          <div className="max-w-6xl mx-auto px-4 text-center">
-            <h1 className="text-4xl font-bold mb-4">Signalements citoyens</h1>
-            <p className="text-xl text-indigo-100">
+        <section className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-10">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 text-center">
+            <h1 className="text-3xl md:text-4xl font-bold mb-3">Signalements citoyens</h1>
+            <p className="text-lg text-indigo-100">
               D?couvrez les incidents signal?s dans votre r?gion
             </p>
           </div>
         </section>
 
         {/* Stats */}
-        <section className="py-8 bg-white border-b">
-          <div className="max-w-6xl mx-auto px-4">
-            <div className="flex flex-wrap gap-4 justify-center">
+        <section className="py-6 bg-white border-b">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className="flex flex-wrap gap-2 justify-center">
               <button
                 onClick={() => setFilter('all')}
-                className={`px-4 py-2 rounded-full transition ${
+                className={`px-3 py-1.5 rounded-full text-sm transition ${
                   filter === 'all' 
                     ? 'bg-indigo-600 text-white' 
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -113,7 +113,7 @@ export default function SignalementsPublic() {
                 <button
                   key={type}
                   onClick={() => setFilter(type)}
-                  className={`px-4 py-2 rounded-full transition flex items-center gap-2 ${
+                  className={`px-3 py-1.5 rounded-full text-sm transition flex items-center gap-1 ${
                     filter === type 
                       ? 'bg-indigo-600 text-white' 
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -128,15 +128,15 @@ export default function SignalementsPublic() {
         </section>
 
         {/* Liste des signalements */}
-        <section className="py-12">
-          <div className="max-w-6xl mx-auto px-4">
+        <section className="py-8">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
             {filteredSignalements.length === 0 ? (
-              <div className="text-center py-12 bg-white rounded-xl">
-                <div className="text-6xl mb-4">??</div>
+              <div className="text-center py-8 bg-white rounded-xl">
+                <div className="text-5xl mb-3">??</div>
                 <p className="text-gray-500">Aucun signalement dans cette cat?gorie</p>
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredSignalements.map((signalement, index) => (
                   <motion.div
                     key={signalement.id}
@@ -145,9 +145,9 @@ export default function SignalementsPublic() {
                     transition={{ delay: index * 0.05 }}
                     className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition"
                   >
-                    <div className="p-5">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-sm">
+                    <div className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs">
                           {getTypeIcon(signalement.type)} {getTypeLabel(signalement.type)}
                         </span>
                         <span className="text-xs text-gray-400">
