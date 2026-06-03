@@ -29,6 +29,7 @@ const contactRoutes = require('./routes/contact.routes');
 const collaboratorRoutes = require('./routes/collaborator.routes');
 const lawEnforcementRoutes = require('./routes/law-enforcement.routes');
 const statisticsRoutes = require('./routes/statistics');
+const accountRoutes = require('./routes/account');
 
 const app = express();
 
@@ -66,6 +67,7 @@ app.use((req, res, next) => {
 
 // Routes protégées et publiques
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', accountRoutes); // Routes de compte (suppression, etc.)
 app.use('/api/admin', adminRoutes);
 app.use('/api/campagnes', campagneRoutes);
 app.use('/api/signalements', signalementRoutes);
