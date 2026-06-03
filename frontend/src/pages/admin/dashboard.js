@@ -20,7 +20,10 @@ import {
 
 const getImageUrl = (url) => {
   if (!url) return null
-  return url.startsWith('http://') || url.startsWith('https://') ? url : `${API_BASE}${url}`
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url
+  // Seules les URLs /uploads/ doivent utiliser API_BASE, les autres restent locales
+  if (url.startsWith('/uploads/')) return `${API_BASE}${url}`
+  return url
 }
 
 export default function AdminDashboard() {
