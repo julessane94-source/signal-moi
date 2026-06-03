@@ -18,16 +18,16 @@ export default function About() {
   const [config, setConfig] = useState({
     about_page: {
       title: 'Notre histoire',
-      content: 'Signal-Moi est ne d\'un constat simple : les citoyens manquent souvent de canaux efficaces pour signaler les incidents dans leur quartier.',
+      content: 'Signal-Moi est né d’un constat simple : les citoyens ont besoin d’un canal fiable, rapide et humain pour signaler les incidents dans leur quartier, suivre les réponses et agir ensemble pour un environnement plus sûr.',
       images: [],
       videos: []
     }
   })
 
   const team = [
-    { name: 'Jean Dupont', role: 'Fondateur & CEO', image: '👨‍💼', description: 'Expert en securite citoyenne' },
-    { name: 'Marie Camara', role: 'Directrice Technique', image: '👩‍💻', description: 'Architecte logiciel' },
-    { name: 'Pierre Martin', role: 'Coordinateur', image: '👨‍📋', description: 'Liaison avec les autorites' },
+    { name: 'Souleymane Sane', role: 'Président', image: '👨‍💼', description: 'Pilote la vision stratégique et la gouvernance de l’organisation.' },
+    { name: 'Dansa Sane', role: 'Directeur Exécutif', image: '👩‍💼', description: 'Coordonne l’exécution opérationnelle et l’impact sur le terrain.' },
+    { name: 'Matar Diedhiou', role: 'Secrétaire Général (SG)', image: '👨‍📋', description: 'Assure la coordination institutionnelle et la liaison avec les parties prenantes.' },
   ]
 
   useEffect(() => {
@@ -118,28 +118,36 @@ export default function About() {
   return (
     <>
       <Head>
-        <title>A propos - Signal-Moi</title>
-        <meta name="description" content="Decouvrez notre mission et notre equipe" />
+        <title>À propos - Signal-Moi</title>
+        <meta name="description" content="Découvrez notre mission, nos valeurs et l’équipe qui porte Signal-Moi." />
       </Head>
 
       <main className="min-h-screen bg-gray-50 pt-16">
         {/* Hero Section */}
-        <section className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-20">
-          <div className="max-w-4xl mx-auto text-center px-4">
-            <motion.h1 
+        <section className="bg-gradient-to-r from-indigo-700 via-violet-700 to-purple-700 text-white py-20 shadow-xl">
+          <div className="max-w-5xl mx-auto px-4 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium tracking-wide text-indigo-100 shadow-sm"
+            >
+              Plateforme citoyenne • Sécurité • Transparence
+            </motion.div>
+            <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-4xl md:text-5xl font-bold mb-4"
+              transition={{ delay: 0.06 }}
+              className="mt-6 text-4xl md:text-5xl font-bold tracking-tight"
             >
-              Notre mission
+              Notre mission, racontée avec clarté et impact
             </motion.h1>
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-xl text-indigo-100"
+              transition={{ delay: 0.14 }}
+              className="mx-auto mt-5 max-w-3xl text-lg md:text-xl text-indigo-100"
             >
-              Rendre chaque quartier plus sur grace a la participation citoyenne
+              Signal-Moi donne à chaque citoyen un espace simple et digne pour signaler, suivre et faire avancer les actions de sécurité et de développement dans son quartier.
             </motion.p>
           </div>
         </section>
@@ -167,14 +175,30 @@ export default function About() {
         {/* Notre histoire */}
         <section className="py-16 bg-slate-50">
           <div className="max-w-4xl mx-auto px-4">
-            <div className="section-card p-12">
-              <h2 className="text-3xl font-bold text-center text-slate-900 mb-8">{config.about_page?.title || 'Notre histoire'}</h2>
-              <div className="space-y-6 text-slate-600 text-lg leading-8">
-                {config.about_page?.content && config.about_page.content.includes('<') ? (
-                  <div dangerouslySetInnerHTML={{ __html: config.about_page.content }} />
-                ) : (
-                  config.about_page?.content && <p>{config.about_page.content}</p>
-                )}
+            <div className="section-card overflow-hidden p-8 md:p-12">
+              <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm uppercase tracking-[0.25em] text-indigo-600">Pourquoi nous existons</p>
+                  <h2 className="mt-2 text-3xl font-bold text-slate-900">{config.about_page?.title || 'Notre histoire'}</h2>
+                </div>
+                <span className="rounded-full bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700">Engagement citoyen</span>
+              </div>
+              <div className="grid gap-8 md:grid-cols-[1.1fr_0.9fr]">
+                <div className="space-y-5 text-slate-600 text-lg leading-8">
+                  {config.about_page?.content && config.about_page.content.includes('<') ? (
+                    <div dangerouslySetInnerHTML={{ __html: config.about_page.content }} />
+                  ) : (
+                    config.about_page?.content && <p>{config.about_page.content}</p>
+                  )}
+                </div>
+                <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-violet-50 p-6 shadow-sm">
+                  <h3 className="text-xl font-semibold text-slate-900">Notre promesse</h3>
+                  <ul className="mt-4 space-y-3 text-slate-700">
+                    <li>• Un accès simple pour signaler et suivre un problème.</li>
+                    <li>• Une collaboration plus fluide avec les autorités et les partenaires.</li>
+                    <li>• Une approche humaine, sécurisée et respectueuse de la vie privée.</li>
+                  </ul>
+                </div>
               </div>
             </div>
             {config.about_page?.images && config.about_page.images.length > 0 && (
@@ -299,20 +323,24 @@ export default function About() {
         </section>
         <section className="py-16 bg-gray-50">
           <div className="max-w-6xl mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center text-slate-900 mb-12">Notre equipe</h2>
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="mx-auto mb-10 max-w-2xl text-center">
+              <p className="text-sm uppercase tracking-[0.25em] text-indigo-600">Notre équipe</p>
+              <h2 className="mt-3 text-3xl font-bold text-slate-900">Les personnes qui portent la vision de Signal-Moi</h2>
+              <p className="mt-3 text-slate-600">Une équipe engagée, humaine et orientée impact pour renforcer la confiance entre citoyens, institutions et partenaires.</p>
+            </div>
+            <div className="grid gap-8 md:grid-cols-3">
               {team.map((member, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="section-card p-8 text-center"
+                  className="section-card rounded-3xl p-8 text-center shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
                 >
-                  <div className="text-6xl mb-4">{member.image}</div>
-                  <h3 className="text-xl font-semibold text-slate-900">{member.name}</h3>
-                  <p className="text-indigo-600 mb-2">{member.role}</p>
-                  <p className="text-slate-600 text-sm">{member.description}</p>
+                  <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-100 to-violet-100 text-4xl shadow-inner">{member.image}</div>
+                  <h3 className="mt-5 text-xl font-semibold text-slate-900">{member.name}</h3>
+                  <p className="mt-1 text-indigo-600 font-semibold">{member.role}</p>
+                  <p className="mt-3 text-slate-600 text-sm leading-6">{member.description}</p>
                 </motion.div>
               ))}
             </div>
