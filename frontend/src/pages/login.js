@@ -101,42 +101,33 @@ export default function Login() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse animation-delay-2000"></div>
-      </div>
-
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative z-10 min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"
+        className="max-w-md mx-auto flex items-center justify-center min-h-screen"
       >
-        <div className="w-full max-w-md">
+        <div className="w-full">
           {/* Header */}
           <div className="text-center mb-12">
             <motion.div
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 3, repeat: Infinity }}
-              className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-red-500 to-pink-600 rounded-2xl mb-6 shadow-2xl"
+              className="inline-flex items-center justify-center w-16 h-16 bg-gray-200 rounded-2xl mb-6"
             >
               <span className="text-3xl">🔐</span>
             </motion.div>
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">Connexion</h1>
-            <p className="text-purple-200">Accédez à votre compte Signal-Moi</p>
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">Connexion</h1>
+            <p className="text-gray-600">Accédez à votre compte Signal-Moi</p>
           </div>
 
           {/* Main Card */}
           <motion.div
             whileHover={{ scale: 1.02 }}
-            className="relative bg-gradient-to-br from-gray-800/80 via-gray-800/80 to-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden p-8"
+            className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden p-8"
           >
-            {/* Gradient border effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-purple-600/20 rounded-2xl opacity-0 group-hover:opacity-100 transition duration-300"></div>
-
-            <form className="relative z-10 space-y-6" onSubmit={handleSubmit}>
+            <form className="space-y-6" onSubmit={handleSubmit}>
               {/* Email Field */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -153,7 +144,7 @@ export default function Login() {
                       onChange={handleChange}
                       icon={EnvelopeIcon}
                       error={!!errors.email}
-                      className="bg-gray-700/50 border-gray-600/50 text-white placeholder-gray-400 focus:bg-gray-700 focus:border-purple-500/50"
+                      className="bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-indigo-500"
                     />
                   </div>
                 </FormField>
@@ -174,7 +165,7 @@ export default function Login() {
                     onChange={handleChange}
                     icon={LockClosedIcon}
                     error={!!errors.password}
-                    className="bg-gray-700/50 border-gray-600/50 text-white placeholder-gray-400 focus:bg-gray-700 focus:border-purple-500/50"
+                    className="bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-indigo-500"
                   />
                 </FormField>
               </motion.div>
@@ -211,7 +202,7 @@ export default function Login() {
                 <Button 
                   type="submit" 
                   loading={loading} 
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 rounded-lg transition transform hover:scale-105"
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition"
                 >
                   Se connecter
                 </Button>
@@ -226,10 +217,10 @@ export default function Login() {
               className="relative my-8"
             >
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-600/50"></div>
+                <div className="w-full border-t border-gray-200"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-3 bg-gray-800/80 text-gray-400">Ou continuez avec</span>
+                <span className="px-3 bg-white text-gray-500">Ou continuez avec</span>
               </div>
             </motion.div>
 
@@ -250,10 +241,10 @@ export default function Login() {
             transition={{ delay: 0.7 }}
             className="text-center mt-8"
           >
-            <p className="text-gray-300">
+            <p className="text-gray-600">
               Vous n'avez pas de compte?{' '}
               <Link href="/register">
-                <a className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-300 hover:to-pink-300 transition">
+                <a className="font-bold text-indigo-600 hover:text-indigo-700 transition">
                   S'inscrire
                 </a>
               </Link>

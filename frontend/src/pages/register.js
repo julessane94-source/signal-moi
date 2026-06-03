@@ -87,30 +87,24 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse animation-delay-2000"></div>
-      </div>
-
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative z-10 max-w-2xl mx-auto"
+        className="max-w-2xl mx-auto"
       >
         {/* Header */}
         <div className="text-center mb-12">
           <motion.div
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ duration: 3, repeat: Infinity }}
-            className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl mb-6 shadow-2xl"
+            className="inline-flex items-center justify-center w-16 h-16 bg-gray-200 rounded-2xl mb-6"
           >
             <span className="text-3xl">✨</span>
           </motion.div>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">Rejoignez-nous</h1>
-          <p className="text-purple-200">Créez un compte pour participer à la communauté Signal-Moi</p>
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">Rejoignez-nous</h1>
+          <p className="text-gray-600">Créez un compte pour participer à la communauté Signal-Moi</p>
         </div>
 
         {/* Progress Indicator */}
@@ -125,8 +119,8 @@ export default function Register() {
               key={num}
               className={`h-2 rounded-full transition-all ${
                 num <= step 
-                  ? 'bg-gradient-to-r from-purple-500 to-pink-500' 
-                  : 'bg-gray-600/50'
+                  ? 'bg-indigo-600' 
+                  : 'bg-gray-300'
               }`}
               animate={{ width: num <= step ? 32 : 8 }}
               transition={{ duration: 0.3 }}
@@ -137,7 +131,7 @@ export default function Register() {
         {/* Main Card */}
         <motion.div
           whileHover={{ scale: 1.01 }}
-          className="relative bg-gradient-to-br from-gray-800/80 via-gray-800/80 to-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden p-8 md:p-12"
+          className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden p-8 md:p-12"
         >
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Step 1: Personal Information */}
@@ -150,8 +144,8 @@ export default function Register() {
                 className="space-y-6"
               >
                 <div>
-                  <h3 className="text-2xl font-bold text-white mb-2">Informations personnelles</h3>
-                  <p className="text-gray-400">Commençons par vos informations de base</p>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Informations personnelles</h3>
+                  <p className="text-gray-600">Commençons par vos informations de base</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -164,7 +158,7 @@ export default function Register() {
                         onChange={handleChange}
                         icon={UserIcon}
                         error={!!errors.prenom}
-                        className="bg-gray-700/50 border-gray-600/50 text-white placeholder-gray-400 focus:bg-gray-700 focus:border-purple-500/50"
+                        className="bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-indigo-500"
                       />
                     </FormField>
                   </motion.div>
@@ -177,7 +171,7 @@ export default function Register() {
                         onChange={handleChange}
                         icon={UserIcon}
                         error={!!errors.nom}
-                        className="bg-gray-700/50 border-gray-600/50 text-white placeholder-gray-400 focus:bg-gray-700 focus:border-purple-500/50"
+                        className="bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-indigo-500"
                       />
                     </FormField>
                   </motion.div>
@@ -193,7 +187,7 @@ export default function Register() {
                       onChange={handleChange}
                       icon={EnvelopeIcon}
                       error={!!errors.email}
-                      className="bg-gray-700/50 border-gray-600/50 text-white placeholder-gray-400 focus:bg-gray-700 focus:border-purple-500/50"
+                      className="bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-indigo-500"
                     />
                   </FormField>
                 </motion.div>
@@ -210,8 +204,8 @@ export default function Register() {
                 className="space-y-6"
               >
                 <div>
-                  <h3 className="text-2xl font-bold text-white mb-2">Sécurité du compte</h3>
-                  <p className="text-gray-400">Créez un mot de passe fort et sécurisé</p>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Sécurité du compte</h3>
+                  <p className="text-gray-600">Créez un mot de passe fort et sécurisé</p>
                 </div>
 
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
@@ -224,7 +218,7 @@ export default function Register() {
                       onChange={handleChange}
                       icon={LockClosedIcon}
                       error={!!errors.password}
-                      className="bg-gray-700/50 border-gray-600/50 text-white placeholder-gray-400 focus:bg-gray-700 focus:border-purple-500/50"
+                      className="bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-indigo-500"
                     />
                   </FormField>
                 </motion.div>
@@ -239,14 +233,14 @@ export default function Register() {
                       onChange={handleChange}
                       icon={LockClosedIcon}
                       error={!!errors.confirmPassword}
-                      className="bg-gray-700/50 border-gray-600/50 text-white placeholder-gray-400 focus:bg-gray-700 focus:border-purple-500/50"
+                      className="bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-indigo-500"
                     />
                   </FormField>
                 </motion.div>
 
                 {/* Password strength indicator */}
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="p-4 bg-gray-700/50 border border-gray-600/50 rounded-lg">
-                  <p className="text-sm text-gray-300 mb-3">Critères de sécurité :</p>
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="p-4 bg-gray-100 border border-gray-300 rounded-lg">
+                  <p className="text-sm text-gray-700 mb-3">Critères de sécurité :</p>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <span className={formData.password.length >= 8 ? "text-green-500" : "text-gray-500"}>✓</span>
@@ -267,8 +261,8 @@ export default function Register() {
                 className="space-y-6"
               >
                 <div>
-                  <h3 className="text-2xl font-bold text-white mb-2">Localisation</h3>
-                  <p className="text-gray-400">Où êtes-vous basé?</p>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Localisation</h3>
+                  <p className="text-gray-600">Où êtes-vous basé?</p>
                 </div>
 
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
@@ -281,7 +275,7 @@ export default function Register() {
                       onChange={handleChange}
                       icon={PhoneIcon}
                       error={!!errors.telephone}
-                      className="bg-gray-700/50 border-gray-600/50 text-white placeholder-gray-400 focus:bg-gray-700 focus:border-purple-500/50"
+                      className="bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-indigo-500"
                     />
                   </FormField>
                 </motion.div>
@@ -296,7 +290,7 @@ export default function Register() {
                         onChange={handleChange}
                         icon={MapPinIcon}
                         error={!!errors.ville}
-                        className="bg-gray-700/50 border-gray-600/50 text-white placeholder-gray-400 focus:bg-gray-700 focus:border-purple-500/50"
+                        className="bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-indigo-500"
                       />
                     </FormField>
                   </motion.div>
@@ -309,7 +303,7 @@ export default function Register() {
                         onChange={handleChange}
                         icon={MapPinIcon}
                         error={!!errors.quartier}
-                        className="bg-gray-700/50 border-gray-600/50 text-white placeholder-gray-400 focus:bg-gray-700 focus:border-purple-500/50"
+                        className="bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-indigo-500"
                       />
                     </FormField>
                   </motion.div>
@@ -328,7 +322,7 @@ export default function Register() {
                 <Button
                   type="button"
                   variant="secondary"
-                  className="flex-1 bg-gray-700/50 hover:bg-gray-700 text-white border-gray-600/50"
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-900 border-gray-300"
                   onClick={handlePrevStep}
                 >
                   ← Précédent
@@ -337,7 +331,7 @@ export default function Register() {
               {step < 3 ? (
                 <Button
                   type="button"
-                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 rounded-lg"
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg"
                   onClick={handleNextStep}
                 >
                   Suivant →
@@ -346,7 +340,7 @@ export default function Register() {
                 <Button
                   type="submit"
                   loading={loading}
-                  className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 rounded-lg"
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg"
                 >
                   {loading ? 'Inscription...' : 'Créer mon compte'}
                 </Button>
