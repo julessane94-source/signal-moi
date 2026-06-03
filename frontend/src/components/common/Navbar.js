@@ -16,7 +16,8 @@ import {
   UserCircleIcon,
   ArrowRightOnRectangleIcon,
   CogIcon,
-  HeartIcon
+  HeartIcon,
+  BellIcon
 } from '@heroicons/react/24/outline'
 
 export default function Navbar() {
@@ -25,6 +26,7 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
   const [logoUrl, setLogoUrl] = useState('/icons/icon-192x192.png')
+  const [notificationCount, setNotificationCount] = useState(0)
 
   useEffect(() => {
     const fetchLogo = async () => {
@@ -41,6 +43,32 @@ export default function Navbar() {
 
     fetchLogo()
   }, [])
+
+  // Charger le compteur de notifications quand l'utilisateur se connecte
+  useEffect(() => {
+    if (!user) {
+      setNotificationCount(0)
+      return
+    }
+
+    const fetchNotificationCount = async () => {
+      try {
+        const token = localStorage.getItem('token')
+        const res = await fetch(`${API_BASE}/api/citizen/notifications/count`, {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        })
+        const data = await res.json()
+        setNotificationCount(data.unreadCount || 0)
+      } catch (err) {
+        console.warn('⚠️  Impossible de charger le compteur de notifications:', err.message)
+      }
+    }
+
+    fetchNotificationCount()
+    // Rafraîchir le compteur toutes les 30 secondes
+    const interval = setInterval(fetchNotificationCount, 30000)
+    return () => clearInterval(interval)
+  }, [user])
 
   const getImageUrl = (url) => {
     if (!url) return '/icons/icon-192x192.png'
@@ -119,10 +147,19 @@ export default function Navbar() {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                  className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-slate-900 transition hover:bg-slate-200"
+                  className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-slate-900 transition hover:bg-slate-200 relative"
                 >
                   <UserCircleIcon className="h-5 w-5" />
                   <span className="text-sm font-medium">{user?.prenom}</span>
+                  {notificationCount > 0 && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-2 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center"
+                    >
+                      {notificationCount > 99 ? '99+' : notificationCount}
+                    </motion.div>
+                  )}
                 </motion.button>
                 <AnimatePresence>
                   {profileDropdownOpen && (
@@ -145,6 +182,17 @@ export default function Navbar() {
                       <Link href="/settings">
                         <motion.a whileHover={{ backgroundColor: '#f8fafc' }} className="flex items-center gap-2 px-4 py-3 text-sm text-slate-700 hover:text-slate-900">
                           <CogIcon className="h-4 w-4" /> Paramètres
+                        </motion.a>
+                      </Link>
+                      <Link href="/notifications">
+                        <motion.a whileHover={{ backgroundColor: '#f8fafc' }} className="flex items-center gap-2 px-4 py-3 text-sm text-slate-700 hover:text-slate-900 relative">
+                          <BellIcon className="h-4 w-4" />
+                          Notifications
+                          {notificationCount > 0 && (
+                            <span className="ml-auto bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                              {notificationCount > 99 ? '99+' : notificationCount}
+                            </span>
+                          )}
                         </motion.a>
                       </Link>
                       <motion.button

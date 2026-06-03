@@ -133,4 +133,51 @@ router.get('/inscriptions', protect, async (req, res) => {
   }
 });
 
+// GET /api/citizen/notifications/count - Nombre de notifications non lues
+router.get('/notifications/count', protect, async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT COUNT(*)::int as unread_count 
+       FROM signal_moi.notifications 
+       WHERE user_id = $1 AND est_lu = false`,
+      [req.user.id]
+    );
+    const unreadCount = result.rows[0]?.unread_count || 0;
+    res.json({
+      success: true,
+      unreadCount: unreadCount
+    });
+  } catch (error) {
+    console.error('[CITIZEN NOTIFICATIONS COUNT] Erreur:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur serveur'
+    });
+  }
+});
+
+// GET /api/citizen/notifications - Toutes les notifications
+router.get('/notifications', protect, async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT id, type, titre, message, reference_id, est_lu, created_at
+       FROM signal_moi.notifications 
+       WHERE user_id = $1
+       ORDER BY created_at DESC 
+       LIMIT 50`,
+      [req.user.id]
+    );
+    res.json({
+      success: true,
+      notifications: result.rows || []
+    });
+  } catch (error) {
+    console.error('[CITIZEN NOTIFICATIONS] Erreur:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur serveur'
+    });
+  }
+});
+
 module.exports = router;
