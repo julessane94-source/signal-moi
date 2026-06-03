@@ -142,13 +142,14 @@ router.get('/logo', async (req, res) => {
     // Déterminer le MIME type en fonction du filename
     let mimeType = 'image/png'; // défaut
     if (logoBinary.logo_filename) {
-      if (logoBinary.logo_filename.endsWith('.jpg') || logoBinary.logo_filename.endsWith('.jpeg')) {
+      const filename = logoBinary.logo_filename.toLowerCase();
+      if (filename.endsWith('.jpg') || filename.endsWith('.jpeg') || filename.endsWith('.jfif') || filename.endsWith('.jpe')) {
         mimeType = 'image/jpeg';
-      } else if (logoBinary.logo_filename.endsWith('.gif')) {
+      } else if (filename.endsWith('.gif')) {
         mimeType = 'image/gif';
-      } else if (logoBinary.logo_filename.endsWith('.webp')) {
+      } else if (filename.endsWith('.webp')) {
         mimeType = 'image/webp';
-      } else if (logoBinary.logo_filename.endsWith('.svg')) {
+      } else if (filename.endsWith('.svg')) {
         mimeType = 'image/svg+xml';
       }
     }
