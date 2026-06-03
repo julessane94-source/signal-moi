@@ -275,8 +275,20 @@ export default function Footer() {
           <p className="text-gray-400 text-sm">
             &copy; 2026 Signal-Moi. Tous droits réservés.
           </p>
-          <div className="flex items-center gap-1 text-gray-400 text-sm">
+          <div className="flex flex-col md:flex-row items-center gap-4 text-gray-400 text-sm">
             <span>Conçu avec ❤️ pour la communauté</span>
+            <span className="hidden md:block">|</span>
+            <span>
+              Plateforme conçue par{' '}
+              <a 
+                href="https://attidiany.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-red-400 hover:text-red-300 transition-colors font-semibold"
+              >
+                Souleymane Sane (AT-TIDIANY)
+              </a>
+            </span>
           </div>
         </motion.div>
       </div>
