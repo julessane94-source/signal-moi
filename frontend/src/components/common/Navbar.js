@@ -28,12 +28,14 @@ export default function Navbar() {
   useEffect(() => {
     const fetchLogo = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/auth/site-config`)
-        if (!res.ok) return
+        // Récupérer le logo depuis la base de données (base64)
+        const res = await fetch(`${API_BASE}/api/pages/logo`)
+        if (!res.ok) throw new Error('Logo endpoint failed')
         const data = await res.json()
-        setLogoUrl(data.logoUrl || data.logo_url || '/icons/icon-192x192.png')
+        setLogoUrl(data.logoUrl || '/icons/icon-192x192.png')
       } catch (err) {
-        console.error('Erreur chargement logo navbar:', err)
+        console.warn('⚠️  Impossible de charger le logo depuis BD, utilisation du fallback:', err.message)
+        setLogoUrl('/icons/icon-192x192.png')
       }
     }
 

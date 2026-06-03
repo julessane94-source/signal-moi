@@ -385,29 +385,43 @@ router.post('/site-config', authMiddleware, async (req, res) => {
   }
 });
 
-// PUT /api/admin/site-config/logo - Upload et changement du logo
+// PUT /api/admin/site-config/logo - Upload et changement du logo (stocké en BD pour éviter perte au redéploiement)
 router.put('/site-config/logo', authMiddleware, uploadLogo.single('logo'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Aucun fichier n\'a été téléchargé' });
     }
 
-    // Construire le chemin relatif du fichier
-    const logoUrl = `/uploads/logos/${req.file.filename}`;
+    // Lire le fichier en tant que buffer
+    const logoBuffer = fs.readFileSync(req.file.path);
+    const filename = req.file.filename;
 
-    // Sauvegarder dans la base de données
-    await SiteConfig.set('logoUrl', logoUrl);
+    // Sauvegarder le logo en tant que données binaires dans la base de données
+    await SiteConfig.setLogoBinary(logoBuffer, filename);
+
+    // Supprimer le fichier local après sauvegarde en BD
+    try {
+      if (fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+    } catch (e) {
+      console.warn('⚠️  Impossible de supprimer le fichier local:', e.message);
+    }
 
     res.json({
       success: true,
       message: 'Logo changé avec succès',
-      logoUrl: logoUrl
+      logoUrl: '/uploads/logo' // URL virtuelle pour récupérer depuis BD
     });
   } catch (err) {
     console.error('[ADMIN PUT /site-config/logo] Erreur:', err);
     // Supprimer le fichier uploadé en cas d'erreur
-    if (req.file && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
+    try {
+      if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+    } catch (e) {
+      console.warn('⚠️  Impossible de nettoyer le fichier temporaire:', e.message);
     }
     res.status(500).json({ error: 'Erreur lors du changement du logo', details: err.message });
   }

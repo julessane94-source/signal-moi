@@ -126,4 +126,42 @@ router.get('/config', async (req, res) => {
   }
 });
 
+// GET /api/pages/logo - Récupère le logo depuis la base de données (en base64)
+router.get('/logo', async (req, res) => {
+  try {
+    const logoBinary = await SiteConfig.getLogoBinary();
+    
+    if (!logoBinary || !logoBinary.logo_data) {
+      console.log('[PUBLIC GET /pages/logo] ❌ Aucun logo trouvé, retour par défaut');
+      return res.status(404).json({ error: 'Logo non trouvé', logoUrl: '/icons/icon-192x192.png' });
+    }
+
+    // Convertir le buffer en base64
+    const base64Logo = logoBinary.logo_data.toString('base64');
+    
+    // Déterminer le MIME type en fonction du filename
+    let mimeType = 'image/png'; // défaut
+    if (logoBinary.logo_filename) {
+      if (logoBinary.logo_filename.endsWith('.jpg') || logoBinary.logo_filename.endsWith('.jpeg')) {
+        mimeType = 'image/jpeg';
+      } else if (logoBinary.logo_filename.endsWith('.gif')) {
+        mimeType = 'image/gif';
+      } else if (logoBinary.logo_filename.endsWith('.webp')) {
+        mimeType = 'image/webp';
+      } else if (logoBinary.logo_filename.endsWith('.svg')) {
+        mimeType = 'image/svg+xml';
+      }
+    }
+
+    // Retourner le logo en base64 avec le MIME type
+    const logoUrl = `data:${mimeType};base64,${base64Logo}`;
+    
+    console.log('[PUBLIC GET /pages/logo] ✅ Logo retourné depuis la BD (base64)');
+    res.json({ logoUrl, filename: logoBinary.logo_filename });
+  } catch (err) {
+    console.error('[PUBLIC GET /pages/logo] Erreur:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
+  }
+});
+
 module.exports = router;
