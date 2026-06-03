@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeftIcon, HeartIcon } from '@heroicons/react/24/outline';
+import { ArrowLeft, Heart } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 
 export default function Donate() {
@@ -89,12 +89,12 @@ export default function Donate() {
         >
           <Link href="/">
             <a className="inline-flex items-center text-white hover:text-red-100 transition mb-6">
-              <ArrowLeftIcon className="w-5 h-5 mr-2" />
+              <ArrowLeft className="w-5 h-5 mr-2" />
               Retour
             </a>
           </Link>
           <div className="flex items-center gap-3 mb-4">
-            <HeartIcon className="w-12 h-12 text-white animate-pulse" />
+            <Heart className="w-12 h-12 text-white animate-pulse" />
             <h1 className="text-4xl md:text-5xl font-bold text-white">
               Soutenir Signal-Moi
             </h1>

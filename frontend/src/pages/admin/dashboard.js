@@ -6,16 +6,16 @@ import { motion } from 'framer-motion'
 import { toast } from 'react-toastify'
 import { API_BASE } from '../../config/api'
 import {
-  UserGroupIcon,
-  DocumentTextIcon,
-  CogIcon,
-  ChartBarIcon,
-  PlusIcon,
-  PencilIcon,
-  TrashIcon,
-  KeyIcon,
-  UserIcon,
-  ArrowUpTrayIcon
+  UsersIcon,
+  DocumentText,
+  Cog,
+  BarChart,
+  Plus,
+  PencilSquare,
+  Trash,
+  Key,
+  User,
+  ArrowUpTray
 } from '@heroicons/react/24/outline'
 
 const getImageUrl = (url) => {
@@ -489,7 +489,7 @@ export default function AdminDashboard() {
             className="mb-8"
           >
             <h1 className="text-4xl font-bold text-gray-900 flex items-center gap-3">
-              <ChartBarIcon className="h-10 w-10 text-indigo-600" />
+              <BarChart className="h-10 w-10 text-indigo-600" />
               Tableau de bord administrateur
             </h1>
             <p className="text-gray-600 mt-2">Gérez les utilisateurs, les signalements et la configuration du site</p>
@@ -498,12 +498,12 @@ export default function AdminDashboard() {
           {/* Tabs Navigation */}
           <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
             {[
-              { id: 'dashboard', label: 'Tableau de bord', icon: ChartBarIcon },
-              { id: 'users', label: 'Utilisateurs', icon: UserGroupIcon },
-              { id: 'signalements', label: 'Signalements', icon: DocumentTextIcon },
-              { id: 'campagnes', label: 'Campagnes', icon: ChartBarIcon },
-              { id: 'config', label: 'Configuration', icon: CogIcon },
-              { id: 'settings', label: 'Paramètres', icon: CogIcon }
+              { id: 'dashboard', label: 'Tableau de bord', icon: BarChart },
+              { id: 'users', label: 'Utilisateurs', icon: UsersIcon },
+              { id: 'signalements', label: 'Signalements', icon: DocumentText },
+              { id: 'campagnes', label: 'Campagnes', icon: BarChart },
+              { id: 'config', label: 'Configuration', icon: Cog },
+              { id: 'settings', label: 'Paramètres', icon: Cog }
             ].map((tab) => (
               <motion.button
                 key={tab.id}
@@ -532,7 +532,7 @@ export default function AdminDashboard() {
                 <StatCardModern
                   title="Total utilisateurs"
                   value={stats.totalUsers}
-                  icon={UserGroupIcon}
+                  icon={UsersIcon}
                   gradient={true}
                   trend="up"
                   change={12}
@@ -540,7 +540,7 @@ export default function AdminDashboard() {
                 <StatCardModern
                   title="Signalements"
                   value={stats.totalSignalements}
-                  icon={DocumentTextIcon}
+                  icon={DocumentText}
                   gradient={true}
                   trend="up"
                   change={8}
@@ -548,7 +548,7 @@ export default function AdminDashboard() {
                 <StatCardModern
                   title="Campagnes actives"
                   value={stats.totalCampagnes}
-                  icon={ChartBarIcon}
+                  icon={BarChart}
                   gradient={true}
                   trend="down"
                   change={-3}
@@ -556,7 +556,7 @@ export default function AdminDashboard() {
                 <StatCardModern
                   title="Utilisateurs actifs"
                   value={stats.activeUsers}
-                  icon={UserGroupIcon}
+                  icon={UsersIcon}
                   gradient={true}
                   trend="up"
                   change={15}
@@ -596,7 +596,7 @@ export default function AdminDashboard() {
               className="space-y-6"
             >
               <div className="flex justify-end">
-                <Button icon={PlusIcon} onClick={() => openModal()}>
+                <Button icon={Plus} onClick={() => openModal()}>
                   Ajouter un utilisateur
                 </Button>
               </div>
@@ -617,7 +617,7 @@ export default function AdminDashboard() {
                           className="p-2 hover:bg-indigo-50 rounded-lg transition"
                           title="Modifier"
                         >
-                          <PencilIcon className="h-4 w-4 text-indigo-600" />
+                          <PencilSquare className="h-4 w-4 text-indigo-600" />
                         </motion.button>
                         <motion.button
                           whileHover={{ scale: 1.1 }}
@@ -625,7 +625,7 @@ export default function AdminDashboard() {
                           className="p-2 hover:bg-yellow-50 rounded-lg transition"
                           title="Réinitialiser mot de passe"
                         >
-                          <KeyIcon className="h-4 w-4 text-yellow-600" />
+                          <Key className="h-4 w-4 text-yellow-600" />
                         </motion.button>
                         <motion.button
                           whileHover={{ scale: 1.1 }}
@@ -633,7 +633,7 @@ export default function AdminDashboard() {
                           className="p-2 hover:bg-red-50 rounded-lg transition"
                           title="Désactiver"
                         >
-                          <TrashIcon className="h-4 w-4 text-red-600" />
+                          <Trash className="h-4 w-4 text-red-600" />
                         </motion.button>
                       </div>
                     )
@@ -694,7 +694,7 @@ export default function AdminDashboard() {
                               className="p-2 hover:bg-red-50 rounded-lg transition"
                               title="Supprimer ce signalement"
                             >
-                              <TrashIcon className="h-5 w-5 text-red-600" />
+                              <Trash className="h-5 w-5 text-red-600" />
                             </motion.button>
                           </div>
                         </div>
@@ -755,7 +755,7 @@ export default function AdminDashboard() {
                               className="p-2 hover:bg-red-50 rounded-lg transition"
                               title="Supprimer cette campagne"
                             >
-                              <TrashIcon className="h-5 w-5 text-red-600" />
+                              <Trash className="h-5 w-5 text-red-600" />
                             </motion.button>
                           </div>
                         </div>
@@ -1070,7 +1070,7 @@ export default function AdminDashboard() {
                         id="logo-upload"
                       />
                       <label htmlFor="logo-upload" className="cursor-pointer block">
-                        <ArrowUpTrayIcon className="h-12 w-12 text-indigo-600 mx-auto mb-3" />
+                        <ArrowUpTray className="h-12 w-12 text-indigo-600 mx-auto mb-3" />
                         <p className="text-lg font-semibold text-gray-900">
                           {uploadingLogo ? '⏳ Téléchargement...' : 'Cliquez pour télécharger un logo'}
                         </p>

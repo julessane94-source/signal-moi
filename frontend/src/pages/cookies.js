@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { ArrowLeft } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 
 export default function CookiesPolicy() {
@@ -41,7 +41,7 @@ export default function CookiesPolicy() {
         >
           <Link href="/">
             <a className="inline-flex items-center text-white hover:text-indigo-100 transition mb-6">
-              <ArrowLeftIcon className="w-5 h-5 mr-2" />
+              <ArrowLeft className="w-5 h-5 mr-2" />
               Retour
             </a>
           </Link>

@@ -1,7 +1,7 @@
 import Head from 'next/head'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ArrowLeftIcon, CalendarIcon, UserIcon } from '@heroicons/react/24/outline'
+import { ArrowLeft, Calendar, User } from '@heroicons/react/24/outline'
 import { useRouter } from 'next/router'
 
 export default function Blog() {
@@ -85,7 +85,7 @@ export default function Blog() {
               onClick={() => router.back()}
               className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
             >
-              <ArrowLeftIcon className="h-5 w-5" />
+              <ArrowLeft className="h-5 w-5" />
               Retour
             </button>
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
@@ -151,11 +151,11 @@ export default function Blog() {
                   {/* Meta */}
                   <div className="space-y-2 pt-4 border-t border-gray-200">
                     <div className="flex items-center gap-2 text-gray-600 text-sm">
-                      <CalendarIcon className="h-4 w-4" />
+                      <Calendar className="h-4 w-4" />
                       {new Date(post.date).toLocaleDateString('fr-FR')}
                     </div>
                     <div className="flex items-center gap-2 text-gray-600 text-sm">
-                      <UserIcon className="h-4 w-4" />
+                      <User className="h-4 w-4" />
                       {post.author}
                     </div>
                   </div>
