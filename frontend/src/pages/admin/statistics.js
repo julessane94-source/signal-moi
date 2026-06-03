@@ -55,7 +55,7 @@ export default function Statistics() {
       }
       
       // Récupérer les infos de la compagnie
-      const configRes = await fetch(`${API_BASE}/api/pages/config`)
+      const configRes = await fetch(`${API_BASE}/api/auth/site-config`)
       if (configRes.ok) {
         const config = await configRes.json()
         setCompany({

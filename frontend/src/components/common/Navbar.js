@@ -32,7 +32,7 @@ export default function Navbar() {
     const fetchLogo = async () => {
       try {
         // Récupérer le logo depuis la base de données (base64)
-        const res = await fetch(`${API_BASE}/api/pages/logo`)
+        const res = await fetch(`${API_BASE}/api/auth/site-config`)
         const data = await res.json()
         setLogoUrl(data.logoUrl || '/icons/icon-192x192.png')
       } catch (err) {
@@ -72,7 +72,7 @@ export default function Navbar() {
 
   const getImageUrl = (url) => {
     if (!url) return '/icons/icon-192x192.png'
-    if (url.startsWith('http://') || url.startsWith('https://')) return url
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url
     return `${API_BASE}${url}`
   }
 

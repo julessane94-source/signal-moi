@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { PhoneIcon } from '@heroicons/react/24/outline'
+import { API_BASE } from '../../config/api'
 
 export default function EmergencyButtons() {
   const [config, setConfig] = useState(null)
 
   useEffect(() => {
     let mounted = true
-    fetch('/api/pages/config')
+    fetch(`${API_BASE}/api/auth/site-config`)
       .then(res => res.json())
       .then(data => {
         if (mounted) setConfig(data)

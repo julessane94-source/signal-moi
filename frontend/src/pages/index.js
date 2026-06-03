@@ -8,7 +8,7 @@ import { Button } from '../components/ui'
 
 const getImageUrl = (url) => {
   if (!url) return '/icons/icon-192x192.png'
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/')) return url
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/') || url.startsWith('data:')) return url
   return `${API_BASE}${url}`
 }
 
