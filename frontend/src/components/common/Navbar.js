@@ -14,7 +14,8 @@ import {
   UserGroupIcon,
   EnvelopeIcon,
   UserCircleIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  CogIcon
 } from '@heroicons/react/24/outline'
 
 export default function Navbar() {
@@ -131,6 +132,11 @@ export default function Navbar() {
                           <UserCircleIcon className="h-4 w-4" /> Mon profil
                         </motion.a>
                       </Link>
+                      <Link href="/settings">
+                        <motion.a whileHover={{ backgroundColor: '#f8fafc' }} className="flex items-center gap-2 px-4 py-3 text-sm text-slate-700 hover:text-slate-900">
+                          <CogIcon className="h-4 w-4" /> Paramètres
+                        </motion.a>
+                      </Link>
                       <motion.button
                         whileHover={{ backgroundColor: '#fef2f2' }}
                         onClick={() => {
@@ -214,6 +220,12 @@ export default function Navbar() {
                     <motion.a className="flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-700 transition hover:bg-slate-100">
                       <UserCircleIcon className="h-5 w-5" />
                       {user?.prenom}
+                    </motion.a>
+                  </Link>
+                  <Link href="/settings" onClick={() => setMobileMenuOpen(false)}>
+                    <motion.a className="flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-700 transition hover:bg-slate-100">
+                      <CogIcon className="h-5 w-5" />
+                      Paramètres
                     </motion.a>
                   </Link>
                   <motion.button
