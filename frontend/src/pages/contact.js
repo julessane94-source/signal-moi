@@ -15,8 +15,8 @@ import {
 
 export default function Contact() {
   const [siteConfig, setSiteConfig] = useState({
-    contactEmail: 'contact@signal-moi.com',
-    contactPhone: '+221 77 88516 91',
+    contactEmail: 'julessane94@gmail.com',
+    contactPhone: '+221778851691',
     address: 'Dakar, Sénégal',
     country: 'SN',
     contactPage: { 
@@ -63,20 +63,20 @@ export default function Contact() {
       // Configurer les infos selon le pays détecté
       const countryConfigs = {
         SN: {
-          contactEmail: 'contact@signal-moi.com',
-          contactPhone: '+221 77 88516 91',
+          contactEmail: 'julessane94@gmail.com',
+          contactPhone: '+221778851691',
           address: 'Dakar, Sénégal',
           country: 'SN'
         },
         CM: {
-          contactEmail: 'contact@signal-moi.com',
-          contactPhone: '+237 77 88516 91',
+          contactEmail: 'julessane94@gmail.com',
+          contactPhone: '+221778851691',
           address: 'Yaoundé, Cameroun',
           country: 'CM'
         },
         CI: {
-          contactEmail: 'contact@signal-moi.com',
-          contactPhone: '+225 77 88516 91',
+          contactEmail: 'julessane94@gmail.com',
+          contactPhone: '+221778851691',
           address: 'Abidjan, Côte d\'Ivoire',
           country: 'CI'
         }

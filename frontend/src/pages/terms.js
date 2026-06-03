@@ -186,8 +186,8 @@ export default function Terms() {
                 Si vous avez des questions concernant ces Conditions Générales d'Utilisation, veuillez nous contacter :
               </p>
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <p className="text-gray-700"><strong>Email :</strong> support@signal-moi.app</p>
-                <p className="text-gray-700 mt-2"><strong>Téléphone :</strong> +237 xxx xxx xxx</p>
+                <p className="text-gray-700"><strong>Email :</strong> julessane94@gmail.com</p>
+                <p className="text-gray-700 mt-2"><strong>Téléphone :</strong> +221778851691</p>
                 <p className="text-gray-700 mt-2">
                   <strong>Formulaire de contact :</strong> <Link href="/contact" className="text-indigo-600 hover:underline">Cliquez ici</Link>
                 </p>

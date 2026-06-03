@@ -190,8 +190,8 @@ export default function Privacy() {
                 Pour toute question concernant cette Politique de Confidentialité ou vos droits, contactez-nous :
               </p>
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <p className="text-gray-700"><strong>Email :</strong> privacy@signal-moi.app</p>
-                <p className="text-gray-700 mt-2"><strong>Téléphone :</strong> +237 xxx xxx xxx</p>
+                <p className="text-gray-700"><strong>Email :</strong> julessane94@gmail.com</p>
+                <p className="text-gray-700 mt-2"><strong>Téléphone :</strong> +221778851691</p>
                 <p className="text-gray-700 mt-2">
                   <strong>Formulaire de contact :</strong> <Link href="/contact" className="text-indigo-600 hover:underline">Cliquez ici</Link>
                 </p>
