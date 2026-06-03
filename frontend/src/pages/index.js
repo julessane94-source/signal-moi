@@ -105,7 +105,7 @@ export default function Home() {
         <section className="relative overflow-hidden bg-[linear-gradient(135deg,#0f172a_0%,#1e293b_45%,#2563eb_100%)] text-white">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(129,140,248,0.25),_transparent_20%),radial-gradient(circle_at_bottom_right,_rgba(45,212,191,0.18),_transparent_25%)]" />
           <div className="absolute -top-24 right-0 h-64 w-64 rounded-full bg-cyan-400/10 blur-3xl" />
-          <div className="relative max-w-7xl mx-auto px-6 py-20 lg:py-24">
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 lg:py-16">
             <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
               <div className="text-center lg:text-left">
                 <span className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-cyan-100 shadow-lg">
@@ -157,10 +157,10 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="py-14 bg-slate-50">
-          <div className="max-w-7xl mx-auto px-4 grid gap-6 md:grid-cols-3">
+        <section className="py-8 bg-slate-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 grid gap-4 md:grid-cols-3">
             {features.map((feature) => (
-              <article key={feature.title} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:-translate-y-1 hover:shadow-xl transition">
+              <article key={feature.title} className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm hover:-translate-y-1 hover:shadow-xl transition">
                 <div className="text-3xl mb-3">{feature.icon}</div>
                 <h3 className="text-xl font-semibold text-slate-900 mb-2">{feature.title}</h3>
                 <p className="text-slate-600">{feature.text}</p>
@@ -170,13 +170,13 @@ export default function Home() {
         </section>
 
         {/* How it works */}
-        <section className="py-16 bg-white">
-          <div className="max-w-6xl mx-auto px-4 text-center">
+        <section className="py-10 bg-white">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 text-center">
             <p className="text-sm uppercase tracking-[0.35em] text-indigo-600 font-semibold">Comment ça marche</p>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-3">5 étapes simples pour agir rapidement</h2>
             <p className="text-gray-600 mt-3 max-w-3xl mx-auto">Une expérience pensée pour que chaque citoyen puisse signaler, suivre et faire évoluer les problèmes de son quartier en un instant.</p>
 
-            <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
               {[
                 { icon: '1', title: 'Créer un compte', text: 'Inscrivez-vous ou connectez-vous rapidement.' },
                 { icon: '2', title: 'Décrire', text: 'Expliquez l’incident et choisissez sa catégorie.' },
@@ -184,15 +184,15 @@ export default function Home() {
                 { icon: '📍', title: 'Localiser', text: 'Précisez l’adresse ou le quartier concerné.' },
                 { icon: '5', title: 'Suivre', text: 'Recevez des mises à jour et suivez l’avancement.' }
               ].map((step, i) => (
-                <article key={i} className="rounded-3xl border border-slate-200 bg-gradient-to-b from-white to-indigo-50 p-6 shadow-sm hover:shadow-xl transition text-center">
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-600 to-cyan-500 text-white mx-auto flex items-center justify-center text-xl font-bold mb-4 shadow-lg">{step.icon}</div>
-                  <h3 className="font-semibold text-gray-900 mb-2">{step.title}</h3>
-                  <p className="text-sm text-gray-600">{step.text}</p>
+                <article key={i} className="rounded-3xl border border-slate-200 bg-gradient-to-b from-white to-indigo-50 p-4 shadow-sm hover:shadow-xl transition text-center">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-600 to-cyan-500 text-white mx-auto flex items-center justify-center text-lg font-bold mb-2 shadow-lg">{step.icon}</div>
+                  <h3 className="font-semibold text-gray-900 mb-1 text-sm">{step.title}</h3>
+                  <p className="text-xs text-gray-600">{step.text}</p>
                 </article>
               ))}
             </div>
 
-            <div className="mt-10 flex justify-center">
+            <div className="mt-8 flex justify-center">
               <Link href={user ? "/citizen/signalement" : "/login"}>
                 <Button className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition" size="md">Commencer maintenant →</Button>
               </Link>
@@ -202,10 +202,10 @@ export default function Home() {
 
         {/* Gallery */}
         {(config.home_page?.images?.length > 0 || config.home_page?.videos?.length > 0) && (
-          <section className="py-12 bg-gray-50">
-            <div className="max-w-7xl mx-auto px-4">
-              <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Galerie</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <section className="py-8 bg-gray-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Galerie</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {config.home_page?.images?.map((img, idx) => (
                   <img key={idx} src={img} alt={`Galerie ${idx}`} className="w-full h-52 object-cover rounded-lg shadow" />
                 ))}
@@ -219,10 +219,10 @@ export default function Home() {
 
         {/* Collaborator campaigns */}
         {collaboratorCampaigns.length > 0 && (
-          <section className="py-12">
-            <div className="max-w-7xl mx-auto px-4">
+          <section className="py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Campagnes des collaborateurs</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {collaboratorCampaigns.map(c => (
                   <div key={c.id} className="rounded-xl shadow overflow-hidden bg-white">
                     {c.image_url ? (
@@ -245,8 +245,8 @@ export default function Home() {
         )}
 
         {/* Community CTA */}
-        <section className="py-16 bg-gradient-to-r from-green-500 to-teal-600 text-white">
-          <div className="max-w-4xl mx-auto px-4 text-center">
+        <section className="py-10 bg-gradient-to-r from-green-500 to-teal-600 text-white">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
             <h2 className="text-3xl font-bold mb-4">Rejoignez notre communauté</h2>
             <p className="text-xl text-green-50 mb-8 max-w-2xl mx-auto">Des milliers de citoyens engagés améliorent déjà leur quartier ensemble.</p>
 
