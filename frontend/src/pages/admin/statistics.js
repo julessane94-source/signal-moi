@@ -93,13 +93,13 @@ export default function Statistics() {
       ])
 
       setData({
-        overview: overview.data,
+        overview: overview,
         byType: byType.data || [],
         byMonth: byMonth.data || [],
         byGender: byGender.data || [],
         byAge: byAge.data || []
       })
-      setExportData(exportDat.data)
+      setExportData(exportDat.stats)
     } catch (error) {
       console.error('Erreur:', error)
       toast.error('❌ Erreur lors du chargement des statistiques')
