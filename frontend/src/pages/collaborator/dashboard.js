@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState, useRef } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE } from '../../config/api'
@@ -216,9 +217,11 @@ export default function CollaboratorDashboard() {
             <button onClick={() => router.push('/collaborator/plaidoyer/mes-plaidoyers')} className="bg-amber-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-amber-700 transition hover:-translate-y-0.5">
               📝 Voir mes plaidoyers
             </button>
-            <button onClick={() => toast.info('Statistiques non implémentées dans cette vue')} className="bg-violet-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-violet-700 transition hover:-translate-y-0.5">
-              📈 Voir statistiques
-            </button>
+            <Link href="/collaborator/statistics">
+              <button className="bg-violet-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-violet-700 transition hover:-translate-y-0.5">
+                📈 Voir mes statistiques
+              </button>
+            </Link>
           </div>
 
           {/* Stat cards */}

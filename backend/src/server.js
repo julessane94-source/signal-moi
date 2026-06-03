@@ -28,6 +28,7 @@ const pagesRoutes = require('./routes/pages.routes');
 const contactRoutes = require('./routes/contact.routes');
 const collaboratorRoutes = require('./routes/collaborator.routes');
 const lawEnforcementRoutes = require('./routes/law-enforcement.routes');
+const statisticsRoutes = require('./routes/statistics');
 
 const app = express();
 
@@ -75,6 +76,7 @@ app.use('/api/pages', pagesRoutes); // Routes PUBLIQUES pour les pages du site
 app.use('/api/contact', contactRoutes); // Formulaire de contact PUBLIQUE
 app.use('/api/collaborator', collaboratorRoutes); // Dashboard collaborateur (ONG/Association)
 app.use('/api/law-enforcement', lawEnforcementRoutes); // Dashboard police/gendarmerie
+app.use('/api/statistics', statisticsRoutes); // Statistiques pour admin et collaborateur
 
 // Debug routes (dev only)
 const debugRoutes = require('./routes/debug.routes');

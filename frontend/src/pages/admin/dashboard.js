@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useAuth } from '../../context/AuthContext'
 import { Button, Card, FormField, Input, Modal, DataTable, StatBox, Badge, EmptyState, LoadingSkeleton, DataTableModern, StatCardModern } from '../../components/ui'
 import { motion } from 'framer-motion'
@@ -558,6 +559,29 @@ export default function AdminDashboard() {
                   change={15}
                 />
               </div>
+
+              {/* Statistiques PDF */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg p-6 shadow-lg"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-2xl font-bold mb-2">📊 Rapport de Statistiques</h3>
+                    <p className="text-indigo-100">Accédez aux statistiques complètes des signalements avec graphiques et export PDF</p>
+                  </div>
+                  <Link href="/admin/statistics">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="bg-white text-indigo-600 font-bold px-6 py-3 rounded-lg hover:shadow-lg transition"
+                    >
+                      Voir les statistiques →
+                    </motion.button>
+                  </Link>
+                </div>
+              </motion.div>
             </motion.div>
           )}
 
