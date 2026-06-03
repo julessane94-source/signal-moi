@@ -42,10 +42,6 @@ const uploadLogo = multer({
     fileSize: 5242880 // 5MB
   }
 });
-const multer = require('multer');
-const path = require('path');
-const { v4: uuidv4 } = require('uuid');
-const fs = require('fs');
 
 // ? Middleware d'authentification admin
 const authMiddleware = async (req, res, next) => {
