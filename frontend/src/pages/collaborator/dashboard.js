@@ -8,15 +8,15 @@ import { io as socketIOClient } from 'socket.io-client'
 import { motion } from 'framer-motion'
 import Head from 'next/head'
 import {
-  DocumentTextIcon,
-  CheckCircleIcon,
-  CogIcon,
-  ExclamationIcon,
-  HandThumbUpIcon,
-  UserGroupIcon,
-  ArrowRightIcon,
-  BookmarkIcon,
-  SparklesIcon
+  DocumentText,
+  CheckCircle,
+  Cog,
+  ExclamationTriangle,
+  HandThumbsUp,
+  Users,
+  ArrowRight,
+  Bookmark,
+  Sparkles
 } from '@heroicons/react/24/outline'
 
 export default function CollaboratorDashboard() {
@@ -251,7 +251,7 @@ export default function CollaboratorDashboard() {
               {
                 label: 'Signalements assignés',
                 value: stats.totalSignalements || 0,
-                icon: DocumentTextIcon,
+                icon: DocumentText,
                 gradient: 'from-blue-500 to-blue-600',
                 bgColor: 'bg-blue-50',
                 textColor: 'text-blue-600'
@@ -259,7 +259,7 @@ export default function CollaboratorDashboard() {
               {
                 label: 'Mes campagnes',
                 value: stats.totalCampaigns || 0,
-                icon: SparklesIcon,
+                icon: Sparkles,
                 gradient: 'from-emerald-500 to-emerald-600',
                 bgColor: 'bg-emerald-50',
                 textColor: 'text-emerald-600'
@@ -267,7 +267,7 @@ export default function CollaboratorDashboard() {
               {
                 label: 'Notifications en attente',
                 value: stats.pendingNotifications || 0,
-                icon: ExclamationIcon,
+                icon: ExclamationTriangle,
                 gradient: 'from-amber-500 to-amber-600',
                 bgColor: 'bg-amber-50',
                 textColor: 'text-amber-600'
@@ -301,7 +301,7 @@ export default function CollaboratorDashboard() {
             className="mb-12"
           >
             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <CogIcon className="h-7 w-7" /> Actions rapides
+              <Cog className="h-7 w-7" /> Actions rapides
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {[
@@ -391,7 +391,7 @@ export default function CollaboratorDashboard() {
                 <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4 text-white">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-bold flex items-center gap-2">
-                      <SparklesIcon className="h-6 w-6" /> Mes campagnes récentes
+                      <Sparkles className="h-6 w-6" /> Mes campagnes récentes
                     </h3>
                     <Link href="/collaborator/campagne/mes-campagnes">
                       <a className="text-sm font-semibold bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full transition">
@@ -403,7 +403,7 @@ export default function CollaboratorDashboard() {
                 <div className="p-6">
                   {recentCampaigns.length === 0 ? (
                     <div className="text-center py-8">
-                      <SparklesIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                      <Sparkles className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                       <p className="text-gray-500">Aucune campagne créée</p>
                       <Link href="/collaborator/campagne/new">
                         <a className="inline-block mt-3 text-blue-600 font-semibold hover:underline">
@@ -429,7 +429,7 @@ export default function CollaboratorDashboard() {
                           </div>
                           <Link href={`/campagnes/${c.id}`}>
                             <a className="text-blue-600 hover:text-blue-700 font-semibold ml-4 flex items-center gap-1">
-                              Voir <ArrowRightIcon className="h-4 w-4" />
+                              Voir <ArrowRight className="h-4 w-4" />
                             </a>
                           </Link>
                         </motion.div>
@@ -449,7 +449,7 @@ export default function CollaboratorDashboard() {
                 <div className="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-4 text-white">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-bold flex items-center gap-2">
-                      <HandThumbUpIcon className="h-6 w-6" /> Mes plaidoyers récents
+                      <HandThumbsUp className="h-6 w-6" /> Mes plaidoyers récents
                     </h3>
                     <Link href="/collaborator/plaidoyer/mes-plaidoyers">
                       <a className="text-sm font-semibold bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full transition">
@@ -461,7 +461,7 @@ export default function CollaboratorDashboard() {
                 <div className="p-6">
                   {recentPlaidoyers.length === 0 ? (
                     <div className="text-center py-8">
-                      <HandThumbUpIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                      <HandThumbsUp className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                       <p className="text-gray-500">Aucun plaidoyer créé</p>
                       <Link href="/collaborator/plaidoyer/new">
                         <a className="inline-block mt-3 text-amber-600 font-semibold hover:underline">
@@ -487,7 +487,7 @@ export default function CollaboratorDashboard() {
                           </div>
                           <Link href={`/plaidoyers/${p.id}`}>
                             <a className="text-amber-600 hover:text-amber-700 font-semibold ml-4 flex items-center gap-1">
-                              Voir <ArrowRightIcon className="h-4 w-4" />
+                              Voir <ArrowRight className="h-4 w-4" />
                             </a>
                           </Link>
                         </motion.div>
@@ -508,13 +508,13 @@ export default function CollaboratorDashboard() {
             >
               <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 text-white">
                 <h3 className="text-lg font-bold flex items-center gap-2">
-                  <BookmarkIcon className="h-6 w-6" /> Dossiers suivis
+                  <Bookmark className="h-6 w-6" /> Dossiers suivis
                 </h3>
               </div>
               <div className="p-6">
                 {followedList.length === 0 ? (
                   <div className="text-center py-8">
-                    <BookmarkIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                    <Bookmark className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                     <p className="text-gray-500 mb-4">Vous ne suivez aucun dossier</p>
                     <p className="text-sm text-gray-400">Les dossiers que vous suivez apparaîtront ici</p>
                   </div>
@@ -569,7 +569,7 @@ export default function CollaboratorDashboard() {
             className="mt-12"
           >
             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <DocumentTextIcon className="h-7 w-7" /> Signalements assignés
+              <DocumentText className="h-7 w-7" /> Signalements assignés
             </h2>
             
             {loadingSignals ? (
@@ -579,7 +579,7 @@ export default function CollaboratorDashboard() {
               </div>
             ) : signalements.length === 0 ? (
               <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
-                <DocumentTextIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <DocumentText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                 <p className="text-gray-600 text-lg">Aucun signalement assigné</p>
                 <p className="text-gray-500 mt-2">Les signalements vous seront assignés au fur et à mesure</p>
               </div>
