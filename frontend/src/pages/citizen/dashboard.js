@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE } from '../../config/api'
-import { Button, Card, Badge } from '../../components/ui'
+import { Button, Card, Badge, LoadingSkeleton, EmptyState, StatusBadge } from '../../components/ui'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { toast } from 'react-toastify'
@@ -10,7 +10,8 @@ import {
   CheckCircleIcon,
   PencilSquareIcon,
   UserGroupIcon,
-  PlusIcon
+  PlusIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline'
 
 export default function CitizenDashboard() {
@@ -143,8 +144,10 @@ export default function CitizenDashboard() {
   if (authLoading || loading) {
     return (
       <>
-        <div className="min-h-screen pt-16 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 pt-20 pb-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <LoadingSkeleton count={3} type="card" className="grid grid-cols-1 gap-4" />
+          </div>
         </div>
       </>
     )
@@ -238,15 +241,12 @@ export default function CitizenDashboard() {
               className="space-y-4"
             >
               {signalements.length === 0 ? (
-                <Card className="p-12 text-center">
-                  <div className="text-6xl mb-4">📭</div>
-                  <p className="text-gray-500 mb-4">Aucun signalement pour le moment</p>
-                  <Link href="/citizen/signalement">
-                    <Button variant="primary" icon={PlusIcon}>
-                      Créer mon premier signalement
-                    </Button>
-                  </Link>
-                </Card>
+                <EmptyState 
+                  icon="📝" 
+                  title="Aucun signalement"
+                  description="Vous n'avez pas encore créé de signalement"
+                  action={<Link href="/citizen/signalement"><Button variant="primary" icon={PlusIcon}>Créer mon premier signalement</Button></Link>}
+                />
               ) : (
                 <div className="grid grid-cols-1 gap-4">
                   {signalements.map((s, idx) => (
@@ -256,7 +256,7 @@ export default function CitizenDashboard() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
                     >
-                      <Card className="p-6 hover:shadow-lg transition cursor-pointer">
+                      <Card className="p-6 glass-card hover:shadow-lg transition cursor-pointer">
                         <Link href={`/citizen/signalement/${s.id}`}>
                           <div className="flex justify-between items-start gap-4">
                             <div className="flex-1">
@@ -293,10 +293,11 @@ export default function CitizenDashboard() {
               animate={{ opacity: 1, x: 0 }}
             >
               {campagnes.length === 0 ? (
-                <Card className="p-12 text-center">
-                  <div className="text-6xl mb-4">🎯</div>
-                  <p className="text-gray-500">Aucune campagne disponible</p>
-                </Card>
+                <EmptyState 
+                  icon="📭" 
+                  title="Aucune campagne"
+                  description="Il n'y a actuellement aucune campagne active"
+                />
               ) : (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {campagnes.map((c, idx) => (
@@ -306,7 +307,7 @@ export default function CitizenDashboard() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
                     >
-                      <Card className="h-full p-6 flex flex-col hover:shadow-lg transition">
+                      <Card className="h-full p-6 glass-card flex flex-col hover:shadow-lg transition">
                         <h3 className="font-semibold text-lg text-gray-900">{c.titre}</h3>
                         <p className="text-gray-600 mt-2 flex-1">{c.description}</p>
                         <div className="mt-4 pt-4 border-t border-gray-200 space-y-2 text-sm text-gray-600">
@@ -332,10 +333,11 @@ export default function CitizenDashboard() {
               className="space-y-4"
             >
               {plaidoyers.length === 0 ? (
-                <Card className="p-12 text-center">
-                  <div className="text-6xl mb-4">✍️</div>
-                  <p className="text-gray-500">Aucun plaidoyer disponible</p>
-                </Card>
+                <EmptyState 
+                  icon="📭" 
+                  title="Aucun plaidoyer"
+                  description="Il n'y a actuellement aucun plaidoyer à signer"
+                />
               ) : (
                 <div className="grid grid-cols-1 gap-4">
                   {plaidoyers.map((p, idx) => {
@@ -347,7 +349,7 @@ export default function CitizenDashboard() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.05 }}
                       >
-                        <Card className="p-6 hover:shadow-lg transition">
+                        <Card className="p-6 glass-card hover:shadow-lg transition">
                           <h3 className="font-semibold text-lg text-gray-900">{p.titre}</h3>
                           <p className="text-gray-600 mt-2">{p.description}</p>
                           <div className="mt-4 flex justify-between items-center">
