@@ -273,7 +273,7 @@ export default function Footer() {
           className="flex flex-col md:flex-row justify-between items-center gap-4"
         >
           <p className="text-gray-400 text-sm">
-            &copy; 2024 Signal-Moi. Tous droits réservés.
+            &copy; 2026 Signal-Moi. Tous droits réservés.
           </p>
           <div className="flex items-center gap-1 text-gray-400 text-sm">
             <span>Conçu avec ❤️ pour la communauté</span>

@@ -292,7 +292,7 @@ export default function Register() {
         </Card>
 
         <p className="text-xs text-center text-gray-500 mt-4">
-          © 2024 Signal-Moi. Tous les droits réservés.
+          © 2026 Signal-Moi. Tous les droits réservés.
         </p>
       </motion.div>
     </div>
