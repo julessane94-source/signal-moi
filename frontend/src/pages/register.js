@@ -382,5 +382,6 @@ export default function Register() {
           © 2026 Signal-Moi. Tous les droits réservés.
         </motion.p>
       </motion.div>
+    </div>
   )
 }
