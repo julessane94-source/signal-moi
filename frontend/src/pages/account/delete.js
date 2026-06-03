@@ -1,9 +1,9 @@
 'use client'
 import { useState } from 'react'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../../context/AuthContext'
 import { useRouter } from 'next/router'
 import { toast } from 'react-toastify'
-import { API_BASE } from '../config/api'
+import { API_BASE } from '../../config/api'
 import { motion } from 'framer-motion'
 import Head from 'next/head'
 import { 
