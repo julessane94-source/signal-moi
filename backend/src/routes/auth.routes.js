@@ -371,4 +371,131 @@ router.post('/google', async (req, res) => {
   }
 });
 
+// POST /api/auth/forgot-password - Demander un code de réinitialisation
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email requis' });
+    }
+
+    // Vérifier que l'utilisateur existe
+    const userResult = await db.query('SELECT id, email FROM signal_moi.users WHERE email = $1', [email]);
+    if (userResult.rows.length === 0) {
+      // Ne pas révéler si l'email existe ou non (sécurité)
+      return res.json({ success: true, message: 'Si cet email existe, un code a été envoyé' });
+    }
+
+    // Générer un code aléatoire
+    const crypto = require('crypto');
+    const code = crypto.randomInt(100000, 999999).toString();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    // Créer la table si elle n'existe pas (au premier appel)
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS signal_moi.password_reset_tokens (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        code VARCHAR(10) NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        used BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_reset_email ON signal_moi.password_reset_tokens(email);
+    `);
+
+    // Supprimer les anciens codes pour cet email
+    await db.query('DELETE FROM signal_moi.password_reset_tokens WHERE email = $1 AND used = false', [email]);
+
+    // Insérer le nouveau code
+    await db.query(
+      'INSERT INTO signal_moi.password_reset_tokens (user_id, email, code, expires_at) VALUES ($1, $2, $3, $4)',
+      [userResult.rows[0].id, email, code, expiresAt]
+    );
+
+    // Envoyer l'email avec le code (simulation - à intégrer avec Nodemailer)
+    console.log(`[FORGOT PASSWORD] Code pour ${email}: ${code}`);
+    
+    // Réponse sécurisée
+    res.json({ 
+      success: true, 
+      message: 'Si cet email existe, un code a été envoyé',
+      // DEBUG ONLY - À SUPPRIMER EN PRODUCTION
+      ...(process.env.NODE_ENV === 'development' && { code })
+    });
+
+  } catch (error) {
+    console.error('[AUTH FORGOT PASSWORD] Erreur:', error.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+});
+
+// POST /api/auth/verify-reset-code - Vérifier le code
+router.post('/verify-reset-code', async (req, res) => {
+  try {
+    const { email, code } = req.body;
+
+    if (!email || !code) {
+      return res.status(400).json({ success: false, message: 'Email et code requis' });
+    }
+
+    const result = await db.query(
+      'SELECT id FROM signal_moi.password_reset_tokens WHERE email = $1 AND code = $2 AND used = false AND expires_at > NOW()',
+      [email, code]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ success: false, message: 'Code invalide ou expiré' });
+    }
+
+    res.json({ success: true, message: 'Code valide' });
+
+  } catch (error) {
+    console.error('[AUTH VERIFY RESET CODE] Erreur:', error.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+});
+
+// POST /api/auth/reset-password - Réinitialiser le mot de passe
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { email, code, password } = req.body;
+
+    if (!email || !code || !password) {
+      return res.status(400).json({ success: false, message: 'Email, code et mot de passe requis' });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ success: false, message: 'Le mot de passe doit faire au moins 8 caractères' });
+    }
+
+    // Vérifier le code
+    const tokenResult = await db.query(
+      'SELECT user_id FROM signal_moi.password_reset_tokens WHERE email = $1 AND code = $2 AND used = false AND expires_at > NOW()',
+      [email, code]
+    );
+
+    if (tokenResult.rows.length === 0) {
+      return res.status(401).json({ success: false, message: 'Code invalide ou expiré' });
+    }
+
+    const userId = tokenResult.rows[0].user_id;
+
+    // Hasher et mettre à jour le mot de passe
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await db.query('UPDATE signal_moi.users SET password = $1 WHERE id = $2', [hashedPassword, userId]);
+
+    // Marquer le code comme utilisé
+    await db.query('UPDATE signal_moi.password_reset_tokens SET used = true WHERE email = $1 AND code = $2', [email, code]);
+
+    res.json({ success: true, message: 'Mot de passe réinitialisé avec succès' });
+
+  } catch (error) {
+    console.error('[AUTH RESET PASSWORD] Erreur:', error.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+});
+
 module.exports = router;

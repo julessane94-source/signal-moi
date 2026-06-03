@@ -182,12 +182,12 @@ export default function Login() {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 text-purple-600 bg-gray-700 border-gray-600 rounded cursor-pointer"
+                    className="h-4 w-4 text-indigo-600 bg-white border-gray-300 rounded cursor-pointer"
                   />
-                  <span className="text-sm text-gray-300 group-hover:text-white transition">Se souvenir de moi</span>
+                  <span className="text-sm text-gray-600 group-hover:text-gray-900 transition">Se souvenir de moi</span>
                 </label>
                 <Link href="/forgot-password">
-                  <a className="text-sm font-medium text-purple-400 hover:text-purple-300 transition">
+                  <a className="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition">
                     Mot de passe oublié?
                   </a>
                 </Link>
