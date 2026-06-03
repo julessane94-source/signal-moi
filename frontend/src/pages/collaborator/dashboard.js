@@ -5,6 +5,19 @@ import { useAuth } from '../../context/AuthContext'
 import { API_BASE } from '../../config/api'
 import { toast } from 'react-toastify'
 import { io as socketIOClient } from 'socket.io-client'
+import { motion } from 'framer-motion'
+import Head from 'next/head'
+import {
+  DocumentTextIcon,
+  CheckCircleIcon,
+  CogIcon,
+  ExclamationIcon,
+  HandThumbUpIcon,
+  UserGroupIcon,
+  ArrowRightIcon,
+  BookmarkIcon,
+  SparklesIcon
+} from '@heroicons/react/24/outline'
 
 export default function CollaboratorDashboard() {
   const router = useRouter()
@@ -193,145 +206,446 @@ export default function CollaboratorDashboard() {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 pt-20 pb-12">
+      <Head>
+        <title>Espace Collaborateur - Signal-Moi</title>
+      </Head>
+      
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 pt-24 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-bold text-gray-900">Espace Collaborateur</h1>
-          <p className="text-gray-600 mt-2">Bienvenue {user?.prenom}! Dashboard collaborateur.</p>
-
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-            <button onClick={() => exportCases('pdf')} className="bg-indigo-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-indigo-700 transition hover:-translate-y-0.5">
-              📄 Exporter en PDF
-            </button>
-            <button onClick={() => exportCases('excel')} className="bg-emerald-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-emerald-700 transition hover:-translate-y-0.5">
-              📊 Exporter en Excel
-            </button>
-            <button onClick={() => router.push('/collaborator/campagne/new')} className="bg-blue-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-blue-700 transition hover:-translate-y-0.5">
-              🎯 Créer une campagne
-            </button>
-            <button onClick={() => router.push('/collaborator/campagne/mes-campagnes')} className="bg-slate-900 text-white px-6 py-3 rounded-full shadow-lg hover:bg-slate-800 transition hover:-translate-y-0.5">
-              📋 Voir mes campagnes
-            </button>
-            <button onClick={() => router.push('/collaborator/plaidoyer/new')} className="bg-teal-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-teal-700 transition hover:-translate-y-0.5">
-              ✍️ Créer un plaidoyer
-            </button>
-            <button onClick={() => router.push('/collaborator/plaidoyer/mes-plaidoyers')} className="bg-amber-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-amber-700 transition hover:-translate-y-0.5">
-              📝 Voir mes plaidoyers
-            </button>
-            <Link href="/collaborator/statistics">
-              <button className="bg-violet-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-violet-700 transition hover:-translate-y-0.5">
-                📈 Voir mes statistiques
-              </button>
-            </Link>
-          </div>
-
-          {/* Stat cards */}
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="text-sm text-gray-500">Signalements assignés</div>
-              <div className="text-2xl font-bold">{stats.totalSignalements || 0}</div>
-            </div>
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="text-sm text-gray-500">Mes campagnes</div>
-              <div className="text-2xl font-bold">{stats.totalCampaigns || 0}</div>
-            </div>
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="text-sm text-gray-500">Notifications en attente</div>
-              <div className="text-2xl font-bold">{stats.pendingNotifications || 0}</div>
-            </div>
-          </div>
-
-          {/* Quick lists: recent campaigns & plaidoyers */}
-          <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold">Mes campagnes récentes</h3>
-                <a href="/collaborator/campagne/mes-campagnes" className="text-sm text-indigo-600 hover:underline">Voir tout</a>
+          
+          {/* === HEADER AVEC SALUTATION === */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-12"
+          >
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+              <div>
+                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
+                  Bienvenue, {user?.prenom}! 👋
+                </h1>
+                <p className="text-lg text-gray-600">
+                  Tableau de bord collaborateur — Gérez vos signalements et campagnes
+                </p>
               </div>
-              <div className="mt-3 space-y-3">
-                {recentCampaigns.length === 0 ? <div className="text-gray-500">Aucune campagne</div> : recentCampaigns.map(c => (
-                  <div key={c.id} className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">{c.titre}</div>
-                      <div className="text-sm text-gray-500">{new Date(c.date_debut).toLocaleDateString()}</div>
-                    </div>
-                    <a href={`/campagnes/${c.id}`} className="text-sm text-indigo-600 hover:underline">Détails</a>
+              <Link href="/profile">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="mt-4 md:mt-0 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full font-semibold shadow-lg hover:shadow-xl transition"
+                >
+                  ⚙️ Mon profil
+                </motion.button>
+              </Link>
+            </div>
+          </motion.div>
+
+          {/* === STATISTIQUES PRINCIPALES === */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ staggerChildren: 0.1 }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
+          >
+            {[
+              {
+                label: 'Signalements assignés',
+                value: stats.totalSignalements || 0,
+                icon: DocumentTextIcon,
+                gradient: 'from-blue-500 to-blue-600',
+                bgColor: 'bg-blue-50',
+                textColor: 'text-blue-600'
+              },
+              {
+                label: 'Mes campagnes',
+                value: stats.totalCampaigns || 0,
+                icon: SparklesIcon,
+                gradient: 'from-emerald-500 to-emerald-600',
+                bgColor: 'bg-emerald-50',
+                textColor: 'text-emerald-600'
+              },
+              {
+                label: 'Notifications en attente',
+                value: stats.pendingNotifications || 0,
+                icon: ExclamationIcon,
+                gradient: 'from-amber-500 to-amber-600',
+                bgColor: 'bg-amber-50',
+                textColor: 'text-amber-600'
+              }
+            ].map((stat, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                className={`${stat.bgColor} rounded-2xl p-6 shadow-sm hover:shadow-md transition border border-gray-100`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-2">{stat.label}</p>
+                    <p className={`text-4xl font-bold ${stat.textColor}`}>{stat.value}</p>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold">Mes plaidoyers récents</h3>
-                <a href="/collaborator/plaidoyer/mes-plaidoyers" className="text-sm text-indigo-600 hover:underline">Voir tout</a>
-              </div>
-              <div className="mt-3 space-y-3">
-                {recentPlaidoyers.length === 0 ? <div className="text-gray-500">Aucun plaidoyer</div> : recentPlaidoyers.map(p => (
-                  <div key={p.id} className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">{p.titre}</div>
-                      <div className="text-sm text-gray-500">{p.categorie || ''} — {p.nombre_signatures_total || 0} signatures</div>
-                    </div>
-                    <a href={`/plaidoyers/${p.id}`} className="text-sm text-indigo-600 hover:underline">Détails</a>
+                  <div className={`p-4 rounded-xl bg-gradient-to-br ${stat.gradient} text-white`}>
+                    <stat.icon className="h-8 w-8" />
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
 
-            <div className="mt-10">
-            <h2 className="text-2xl font-semibold mb-4">Signalements assignés</h2>
-            {loadingSignals ? (
-              <div className="pt-8">Chargement des signalements...</div>
-            ) : signalements.length === 0 ? (
-              <div className="pt-8 text-gray-600">Aucun signalement assigné.</div>
-            ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {signalements.map(s => (
-                  <div key={s.id} className="bg-white rounded-lg shadow p-4 flex flex-col h-full">
-                    <div className="flex justify-between items-start">
-                      <h3 className="font-semibold text-lg">{s.titre}</h3>
-                      <span className="text-xs text-gray-500">{new Date(s.createdAt).toLocaleDateString()}</span>
+          {/* === ACTIONS RAPIDES === */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="mb-12"
+          >
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <CogIcon className="h-7 w-7" /> Actions rapides
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                {
+                  icon: '🎯',
+                  label: 'Créer une campagne',
+                  href: '/collaborator/campagne/new',
+                  color: 'from-blue-600 to-blue-700',
+                  bg: 'from-blue-50 to-blue-100'
+                },
+                {
+                  icon: '📋',
+                  label: 'Mes campagnes',
+                  href: '/collaborator/campagne/mes-campagnes',
+                  color: 'from-slate-600 to-slate-700',
+                  bg: 'from-slate-50 to-slate-100'
+                },
+                {
+                  icon: '✍️',
+                  label: 'Créer un plaidoyer',
+                  href: '/collaborator/plaidoyer/new',
+                  color: 'from-teal-600 to-teal-700',
+                  bg: 'from-teal-50 to-teal-100'
+                },
+                {
+                  icon: '📝',
+                  label: 'Mes plaidoyers',
+                  href: '/collaborator/plaidoyer/mes-plaidoyers',
+                  color: 'from-amber-600 to-amber-700',
+                  bg: 'from-amber-50 to-amber-100'
+                }
+              ].map((action, idx) => (
+                <motion.div key={idx} whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }}>
+                  <Link href={action.href}>
+                    <button className={`w-full bg-gradient-to-br ${action.bg} border-2 border-transparent hover:border-gray-300 rounded-xl px-6 py-4 font-semibold transition shadow-sm hover:shadow-md`}>
+                      <div className="text-3xl mb-2">{action.icon}</div>
+                      {action.label}
+                    </button>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Boutons exports */}
+            <div className="mt-4 flex gap-4 flex-wrap">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => exportCases('pdf')}
+                className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition flex items-center gap-2"
+              >
+                📄 Exporter en PDF
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => exportCases('excel')}
+                className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition flex items-center gap-2"
+              >
+                📊 Exporter en Excel
+              </motion.button>
+              <Link href="/collaborator/statistics">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition flex items-center gap-2"
+                >
+                  📈 Statistiques avancées
+                </motion.button>
+              </Link>
+            </div>
+          </motion.div>
+
+          {/* === CONTENU PRINCIPAL === */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            {/* Colonne gauche: campagnes et plaidoyers */}
+            <div className="lg:col-span-2 space-y-8">
+              
+              {/* Campagnes récentes */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+              >
+                <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4 text-white">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold flex items-center gap-2">
+                      <SparklesIcon className="h-6 w-6" /> Mes campagnes récentes
+                    </h3>
+                    <Link href="/collaborator/campagne/mes-campagnes">
+                      <a className="text-sm font-semibold bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full transition">
+                        Voir tout
+                      </a>
+                    </Link>
+                  </div>
+                </div>
+                <div className="p-6">
+                  {recentCampaigns.length === 0 ? (
+                    <div className="text-center py-8">
+                      <SparklesIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-500">Aucune campagne créée</p>
+                      <Link href="/collaborator/campagne/new">
+                        <a className="inline-block mt-3 text-blue-600 font-semibold hover:underline">
+                          Créer la première →
+                        </a>
+                      </Link>
                     </div>
-                    <p className="text-sm text-gray-600 flex-1 mt-2 line-clamp-3">{s.description}</p>
-                      <div className="mt-4 flex flex-col gap-3 sm:flex-row items-center justify-between">
-                        <div className="flex flex-wrap items-center gap-3">
-                          <button onClick={() => contact(s.author?.email)} className="text-sm rounded-full px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition">
-                            Contacter
-                          </button>
-                          <a href={`/citizen/signalement/${s.id}`} className="text-sm text-indigo-600 hover:underline">Voir les détails</a>
+                  ) : (
+                    <div className="space-y-3">
+                      {recentCampaigns.map((c, idx) => (
+                        <motion.div
+                          key={c.id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: idx * 0.05 }}
+                          className="flex items-start justify-between p-4 bg-gradient-to-r from-blue-50 to-transparent rounded-xl border border-blue-100 hover:border-blue-300 transition"
+                        >
+                          <div className="flex-1">
+                            <p className="font-semibold text-gray-900">{c.titre}</p>
+                            <p className="text-sm text-gray-500 mt-1">
+                              Lancée le {new Date(c.date_debut).toLocaleDateString('fr-FR')}
+                            </p>
+                          </div>
+                          <Link href={`/campagnes/${c.id}`}>
+                            <a className="text-blue-600 hover:text-blue-700 font-semibold ml-4 flex items-center gap-1">
+                              Voir <ArrowRightIcon className="h-4 w-4" />
+                            </a>
+                          </Link>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+
+              {/* Plaidoyers récents */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+              >
+                <div className="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-4 text-white">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold flex items-center gap-2">
+                      <HandThumbUpIcon className="h-6 w-6" /> Mes plaidoyers récents
+                    </h3>
+                    <Link href="/collaborator/plaidoyer/mes-plaidoyers">
+                      <a className="text-sm font-semibold bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full transition">
+                        Voir tout
+                      </a>
+                    </Link>
+                  </div>
+                </div>
+                <div className="p-6">
+                  {recentPlaidoyers.length === 0 ? (
+                    <div className="text-center py-8">
+                      <HandThumbUpIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-500">Aucun plaidoyer créé</p>
+                      <Link href="/collaborator/plaidoyer/new">
+                        <a className="inline-block mt-3 text-amber-600 font-semibold hover:underline">
+                          Créer le premier →
+                        </a>
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {recentPlaidoyers.map((p, idx) => (
+                        <motion.div
+                          key={p.id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: idx * 0.05 }}
+                          className="flex items-start justify-between p-4 bg-gradient-to-r from-amber-50 to-transparent rounded-xl border border-amber-100 hover:border-amber-300 transition"
+                        >
+                          <div className="flex-1">
+                            <p className="font-semibold text-gray-900">{p.titre}</p>
+                            <p className="text-sm text-gray-500 mt-1">
+                              {p.categorie} • {p.nombre_signatures_total || 0} signatures
+                            </p>
+                          </div>
+                          <Link href={`/plaidoyers/${p.id}`}>
+                            <a className="text-amber-600 hover:text-amber-700 font-semibold ml-4 flex items-center gap-1">
+                              Voir <ArrowRightIcon className="h-4 w-4" />
+                            </a>
+                          </Link>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+
+            </div>
+
+            {/* Colonne droite: dossiers suivis */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden sticky top-24"
+            >
+              <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 text-white">
+                <h3 className="text-lg font-bold flex items-center gap-2">
+                  <BookmarkIcon className="h-6 w-6" /> Dossiers suivis
+                </h3>
+              </div>
+              <div className="p-6">
+                {followedList.length === 0 ? (
+                  <div className="text-center py-8">
+                    <BookmarkIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500 mb-4">Vous ne suivez aucun dossier</p>
+                    <p className="text-sm text-gray-400">Les dossiers que vous suivez apparaîtront ici</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {followedList.map((f) => (
+                      <motion.div
+                        key={f.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="p-4 bg-gradient-to-r from-green-50 to-transparent rounded-xl border border-green-100 hover:border-green-300 transition"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <p className="font-semibold text-gray-900 line-clamp-1">{f.titre}</p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                                f.statut === 'traite' ? 'bg-green-100 text-green-700' :
+                                f.statut === 'en_cours' ? 'bg-blue-100 text-blue-700' :
+                                'bg-gray-100 text-gray-700'
+                              }`}>
+                                {f.statut || 'N/A'}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <button onClick={() => toggleFollow(s.id)} className={`text-sm rounded-full px-4 py-2 font-semibold transition ${followed.includes(s.id) ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
-                          {followed.includes(s.id) ? 'Suivi' : 'Suivre ce dossier'}
-                        </button>
-                      </div>
+                        <div className="flex gap-2 mt-3">
+                          <Link href={`/citizen/signalement/${f.id}`}>
+                            <a className="text-xs text-green-600 hover:text-green-700 font-semibold">Voir</a>
+                          </Link>
+                          <button
+                            onClick={() => toggleFollow(f.id)}
+                            className="text-xs text-red-600 hover:text-red-700 font-semibold ml-auto"
+                          >
+                            Arrêter
+                          </button>
+                        </div>
+                      </motion.div>
+                    ))}
                   </div>
+                )}
+              </div>
+            </motion.div>
+
+          </div>
+
+          {/* === SIGNALEMENTS ASSIGNÉS === */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="mt-12"
+          >
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <DocumentTextIcon className="h-7 w-7" /> Signalements assignés
+            </h2>
+            
+            {loadingSignals ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+                <p className="text-gray-600 mt-4">Chargement des signalements...</p>
+              </div>
+            ) : signalements.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
+                <DocumentTextIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-600 text-lg">Aucun signalement assigné</p>
+                <p className="text-gray-500 mt-2">Les signalements vous seront assignés au fur et à mesure</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {signalements.map((s, idx) => (
+                  <motion.div
+                    key={s.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:border-indigo-200 transition overflow-hidden flex flex-col h-full"
+                  >
+                    <div className="bg-gradient-to-r from-indigo-500 to-purple-600 h-2"></div>
+                    <div className="p-6 flex flex-col h-full">
+                      <div className="flex justify-between items-start mb-3">
+                        <h3 className="font-bold text-lg text-gray-900 line-clamp-2 flex-1">{s.titre}</h3>
+                        <span className="text-xs font-semibold text-gray-500 ml-2 flex-shrink-0">
+                          {new Date(s.createdAt).toLocaleDateString('fr-FR')}
+                        </span>
+                      </div>
+                      
+                      <p className="text-sm text-gray-600 flex-1 line-clamp-3 mb-4">{s.description}</p>
+                      
+                      <div className="flex items-center gap-2 mb-4">
+                        {s.author && (
+                          <span className="inline-block text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full font-medium">
+                            👤 {s.author.prenom}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex flex-col gap-2 pt-4 border-t border-gray-100">
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => contact(s.author?.email)}
+                          className="w-full text-sm font-semibold py-2 bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 rounded-lg hover:from-indigo-100 hover:to-purple-100 transition border border-indigo-200"
+                        >
+                          📧 Contacter l'auteur
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => toggleFollow(s.id)}
+                          className={`w-full text-sm font-semibold py-2 rounded-lg transition ${
+                            followed.includes(s.id)
+                              ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                          }`}
+                        >
+                          {followed.includes(s.id) ? '✓ Suivi' : '+ Suivre ce dossier'}
+                        </motion.button>
+                        <Link href={`/citizen/signalement/${s.id}`}>
+                          <a className="w-full text-center text-sm font-semibold py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition border border-gray-300">
+                            Voir tous les détails →
+                          </a>
+                        </Link>
+                      </div>
+                    </div>
+                  </motion.div>
                 ))}
               </div>
             )}
-          </div>
+          </motion.div>
 
-            <div className="mt-10">
-              <h2 className="text-2xl font-semibold mb-4">Dossiers suivis</h2>
-              {followedList.length === 0 ? (
-                <div className="text-gray-600">Vous ne suivez aucun dossier.</div>
-              ) : (
-                <div className="space-y-3">
-                  {followedList.map(f => (
-                    <div key={f.id} className="bg-white rounded p-3 shadow flex items-center justify-between">
-                      <div>
-                        <div className="font-medium">{f.titre}</div>
-                        <div className="text-sm text-gray-500">{f.statut || 'N/A'}</div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <a href={`/citizen/signalement/${f.id}`} className="text-indigo-600 hover:underline">Voir</a>
-                        <button onClick={() => toggleFollow(f.id)} className="text-sm px-3 py-1 bg-red-50 rounded text-red-600">Ne plus suivre</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
         </div>
       </div>
     </>
