@@ -74,6 +74,28 @@ router.get('/site-config', async (req, res) => {
   }
 });
 
+// GET /api/pages/users - Récupère la liste des utilisateurs par rôle (PUBLIC - pour About page)
+router.get('/pages/users', async (req, res) => {
+  try {
+    const role = req.query.role || 'collaborateur';
+    const allowedRoles = ['collaborateur', 'police', 'admin'];
+    
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({ success: false, message: 'Role invalide' });
+    }
+    
+    const result = await db.query(
+      'SELECT id, prenom, nom, email, telephone, ville, quartier, role, is_active FROM signal_moi.users WHERE role = $1 AND is_active = true ORDER BY created_at DESC',
+      [role]
+    );
+    
+    res.json(result.rows);
+  } catch (err) {
+    console.error('[GET /pages/users] Erreur:', err);
+    res.json([]);
+  }
+});
+
 // Inscription
 router.post('/register', async (req, res) => {
   try {

@@ -39,19 +39,13 @@ export default function CollaboratorStatistics() {
 
   const fetchConfig = async () => {
     try {
-      // Récupérer le logo depuis la BD (base64)
-      const logoRes = await fetch(`${API_BASE}/api/pages/logo`)
-      if (logoRes.ok) {
-        const logoData = await logoRes.json()
-        if (logoData.logoUrl) {
-          setLogo(logoData.logoUrl) // Déjà en format data:image/...;base64,...
-        }
-      }
-      
-      // Récupérer les infos de la compagnie
+      // Récupérer le logo et config depuis la BD (logo déjà en format data:image/...;base64,...)
       const configRes = await fetch(`${API_BASE}/api/auth/site-config`)
       if (configRes.ok) {
         const config = await configRes.json()
+        if (config.logoUrl) {
+          setLogo(config.logoUrl) // Déjà en format data:image/...;base64,...
+        }
         setCompany({
           name: config.siteName || 'Signal-Moi',
           address: config.address || 'Dakar, Sénégal'

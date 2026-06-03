@@ -43,8 +43,8 @@ export default function About() {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {}
       
       const [collabRes, policeRes] = await Promise.all([
-        fetch(`${API_BASE}/api/admin/users?role=collaborateur`, { headers }),
-        fetch(`${API_BASE}/api/admin/users?role=police`, { headers })
+        fetch(`${API_BASE}/api/pages/users?role=collaborateur`, { headers }),
+        fetch(`${API_BASE}/api/pages/users?role=police`, { headers })
       ])
       
       if (collabRes.ok) {
