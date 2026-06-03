@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { EnvelopeIcon, PhoneIcon, MapPinIcon, HeartIcon } from '@heroicons/react/24/outline';
+import { Envelope, Phone, MapPin, Heart } from '@heroicons/react/24/outline';
 
 export default function Footer() {
   const footerVariants = {
@@ -31,7 +31,7 @@ export default function Footer() {
             <div className="mt-6">
               <Link href="/donate">
                 <a className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-600 to-pink-600 text-white text-sm font-semibold rounded-lg hover:from-red-700 hover:to-pink-700 transition-all transform hover:scale-105">
-                  <HeartIcon className="w-4 h-4" />
+                  <Heart className="w-4 h-4" />
                   Soutenir le projet
                 </a>
               </Link>
@@ -92,19 +92,19 @@ export default function Footer() {
             <h3 className="text-lg font-bold mb-4 text-white">Nous Contacter</h3>
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-2">
-                <EnvelopeIcon className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <Envelope className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                 <a href="mailto:julessane94@gmail.com" className="text-gray-400 hover:text-white transition">
                   julessane94@gmail.com
                 </a>
               </li>
               <li className="flex items-start gap-2">
-                <PhoneIcon className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <Phone className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                 <a href="tel:+221778851691" className="text-gray-400 hover:text-white transition">
                   +221 778 851 691
                 </a>
               </li>
               <li className="flex items-start gap-2">
-                <MapPinIcon className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <MapPin className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-400">Dakar, Sénégal</span>
               </li>
             </ul>
@@ -148,7 +148,7 @@ export default function Footer() {
           </p>
           <Link href="/donate">
             <a className="inline-flex items-center gap-2 px-6 py-2 bg-white text-red-600 font-bold rounded-lg hover:bg-gray-100 transition">
-              <HeartIcon className="w-5 h-5" />
+              <Heart className="w-5 h-5" />
               Faire un don maintenant
             </a>
           </Link>

@@ -3,12 +3,9 @@ import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { API_BASE } from '../../config/api'
 import {
-  EnvelopeIcon,
-  PhoneIcon,
-  MapPinIcon,
-  TwitterIcon,
-  FacebookIcon,
-  LinkedInIcon
+  Envelope,
+  Phone,
+  MapPin
 } from '@heroicons/react/24/outline'
 
 // Icons de réseaux sociaux (puisque Heroicons ne les a pas)
@@ -237,13 +234,13 @@ export default function Footer() {
             <h3 className="font-semibold text-white mb-4">Contact</h3>
             <ul className="space-y-3">
               <li className="flex items-center gap-2 text-gray-400 text-sm">
-                <EnvelopeIcon className="h-4 w-4 text-red-500" />
+                <Envelope className="h-4 w-4 text-red-500" />
                 <a href={`mailto:${contactInfo.contactEmail}`} className="hover:text-white transition-colors">
                   {contactInfo.contactEmail}
                 </a>
               </li>
               <li className="flex items-center gap-2 text-gray-400 text-sm">
-                <PhoneIcon className="h-4 w-4 text-red-500" />
+                <Phone className="h-4 w-4 text-red-500" />
                 {(() => {
                   const rawPhone = String(contactInfo.contactPhone || '')
                   const telHref = `tel:${rawPhone.replace(/[^0-9+]/g, '')}`
@@ -256,7 +253,7 @@ export default function Footer() {
                 })()}
               </li>
               <li className="flex items-start gap-2 text-gray-400 text-sm">
-                <MapPinIcon className="h-4 w-4 text-red-500 flex-shrink-0 mt-0.5" />
+                <MapPin className="h-4 w-4 text-red-500 flex-shrink-0 mt-0.5" />
                 <span>{contactInfo.address}</span>
               </li>
             </ul>

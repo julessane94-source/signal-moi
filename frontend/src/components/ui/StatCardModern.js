@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { ArrowTrendingUpIcon, ArrowTrendingDownIcon } from '@heroicons/react/24/outline'
+import { ArrowTrendingUp, ArrowTrendingDown } from '@heroicons/react/24/outline'
 
 export default function StatCard({ 
   title, 
@@ -67,9 +67,9 @@ export default function StatCard({
                   : 'bg-red-100 text-red-700'
             }`}>
               {isPositive ? (
-                <ArrowTrendingUpIcon className="w-4 h-4" />
+                <ArrowTrendingUp className="w-4 h-4" />
               ) : (
-                <ArrowTrendingDownIcon className="w-4 h-4" />
+                <ArrowTrendingDown className="w-4 h-4" />
               )}
               <span>{Math.abs(change)}%</span>
             </div>

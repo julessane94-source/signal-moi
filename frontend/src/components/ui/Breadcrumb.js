@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ChevronRightIcon } from '@heroicons/react/24/outline'
+import { ChevronRight } from '@heroicons/react/24/outline'
 
 export default function Breadcrumb({ items = [] }) {
   if (!items.length) return null
@@ -15,7 +15,7 @@ export default function Breadcrumb({ items = [] }) {
           ) : (
             <span className="text-gray-600">{item.label}</span>
           )}
-          {idx < items.length - 1 && <ChevronRightIcon className="w-4 h-4 text-gray-400" />}
+          {idx < items.length - 1 && <ChevronRight className="w-4 h-4 text-gray-400" />}
         </div>
       ))}
     </nav>

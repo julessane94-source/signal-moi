@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { ChevronUpDownIcon, CheckIcon } from '@heroicons/react/24/outline'
+import { ChevronsUpDown, Check } from '@heroicons/react/24/outline'
 import { useState } from 'react'
 
 export default function DataTableModern({ 
@@ -73,7 +73,7 @@ export default function DataTableModern({
               >
                 <div className="flex items-center gap-2">
                   {col.label}
-                  {onSort && <ChevronUpDownIcon className="w-4 h-4 opacity-50" />}
+                  {onSort && <ChevronsUpDown className="w-4 h-4 opacity-50" />}
                 </div>
               </th>
             ))}

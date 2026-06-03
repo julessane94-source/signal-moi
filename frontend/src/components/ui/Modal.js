@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { XMarkIcon } from '@heroicons/react/24/outline'
+import { XMark } from '@heroicons/react/24/outline'
 
 export default function Modal({
   isOpen,
@@ -44,7 +44,7 @@ export default function Modal({
                       onClick={onClose}
                       className="text-gray-400 hover:text-gray-600 transition-colors"
                     >
-                      <XMarkIcon className="h-6 w-6" />
+                      <XMark className="h-6 w-6" />
                     </button>
                   )}
                 </div>
