@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { Button, FormField, Input } from '../components/ui'
@@ -17,6 +17,73 @@ export default function ForgotPassword() {
     password: '',
     confirmPassword: ''
   })
+
+  // Initialize Google Sign-In
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.google) {
+      window.google.accounts.id.initialize({
+        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+        callback: async (response) => {
+          try {
+            const res = await fetch('/api/auth/google', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ token: response.credential })
+            })
+            if (res.ok) {
+              const body = await res.json()
+              const token = body.token
+              if (token) {
+                localStorage.setItem('token', token)
+                // Redirect to login or home since we're on forgot-password
+                router.push('/login')
+              }
+            }
+          } catch (err) {
+            console.error('Erreur Google sign-in:', err)
+            setError('Erreur lors de la connexion Google')
+          }
+        }
+      })
+      if (document.getElementById('google-signin')) {
+        window.google.accounts.id.renderButton(document.getElementById('google-signin'), { theme: 'outline', size: 'large' })
+      }
+    } else if (typeof window !== 'undefined') {
+      const script = document.createElement('script')
+      script.src = 'https://accounts.google.com/gsi/client'
+      script.async = true
+      script.onload = () => {
+        if (window.google) {
+          window.google.accounts.id.initialize({
+            client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+            callback: async (response) => {
+              try {
+                const res = await fetch('/api/auth/google', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ token: response.credential })
+                })
+                if (res.ok) {
+                  const body = await res.json()
+                  const token = body.token
+                  if (token) {
+                    localStorage.setItem('token', token)
+                    router.push('/login')
+                  }
+                }
+              } catch (err) {
+                console.error('Erreur Google sign-in:', err)
+                setError('Erreur lors de la connexion Google')
+              }
+            }
+          })
+          window.google.accounts.id.renderButton(document.getElementById('google-signin'), { theme: 'outline', size: 'large' })
+        }
+      }
+      document.body.appendChild(script)
+      return () => { document.body.removeChild(script) }
+    }
+  }, [])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -241,6 +308,30 @@ export default function ForgotPassword() {
                 >
                   Envoyer le code
                 </Button>
+              </motion.div>
+
+              {/* Divider */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="relative my-6"
+              >
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-3 bg-white text-gray-500">Ou continuez avec</span>
+                </div>
+              </motion.div>
+
+              {/* Google Sign-In Button */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <div id="google-signin"></div>
               </motion.div>
             </motion.form>
           )}
