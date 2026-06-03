@@ -1007,7 +1007,7 @@ export default function AdminDashboard() {
                     <div className="mb-4 flex justify-center">
                       {logoUrl && logoUrl !== '/icons/icon-192x192.png' ? (
                         <img
-                          src={logoUrl.startsWith('http') || logoUrl.startsWith('/') ? logoUrl : `${API_BASE}${logoUrl}`}
+                          src={logoUrl.startsWith('http') ? logoUrl : `${API_BASE}${logoUrl}`}
                           alt="Logo actuel"
                           className="h-32 w-32 object-cover rounded-lg shadow-md"
                         />
