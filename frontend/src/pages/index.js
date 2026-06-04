@@ -127,6 +127,9 @@ const getImageUrl = (url) => {
         <title>Signal-Moi - Plateforme de Signalement Citoyen</title>
         <meta name="description" content="Signalez les incidents dans votre quartier" />
         <link rel="manifest" href="/manifest.json" />
+        {config.home_page?.images && config.home_page.images.length > 0 && (
+          <link rel="preload" as="image" href={getImageUrl(config.home_page.images[0])} />
+        )}
       </Head>
 
       <main className="min-h-screen pt-16 bg-white">
