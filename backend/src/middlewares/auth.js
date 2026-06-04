@@ -3,20 +3,26 @@ const { User } = require('../models');
 
 const authMiddleware = async (req, res, next) => {
   try {
-    // Récupérer le token depuis l'en-tête Authorization
+    // Récupérer le token depuis l'en-tête Authorization, ou depuis un cookie 'token' en fallback
     const authHeader = req.header('Authorization');
-    if (!authHeader) {
-      return res.status(401).json({ 
-        error: 'Header Authorization manquant',
-        code: 'MISSING_AUTH_HEADER'
-      });
+    let token = null
+
+    if (authHeader) {
+      token = authHeader.replace('Bearer ', '').trim();
+    } else if (req.headers && req.headers.cookie) {
+      // simple cookie parsing to extract token=... (no dependency)
+      const cookies = req.headers.cookie.split(';').map(c => c.trim())
+      const tokenCookie = cookies.find(c => c.startsWith('token='))
+      if (tokenCookie) token = decodeURIComponent(tokenCookie.split('=')[1])
+    } else if (req.query && req.query.token) {
+      // fallback: token via query param (useful for one-off requests)
+      token = req.query.token
     }
 
-    const token = authHeader.replace('Bearer ', '').trim();
     if (!token) {
       return res.status(401).json({ 
-        error: 'Token manquant ou malformé',
-        code: 'INVALID_TOKEN_FORMAT'
+        error: 'Token manquant',
+        code: 'MISSING_TOKEN'
       });
     }
 

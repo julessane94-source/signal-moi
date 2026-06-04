@@ -7,6 +7,22 @@ const router = express.Router();
 const SiteConfig = require('../models/SiteConfig');
 const db = require('../config/database');
 
+const normalizeLogoUrl = (value) => {
+  if (!value || typeof value !== 'string') return '/icons/icon-192x192.png';
+  if (value.startsWith('data:')) return value;
+
+  if (/^https?:\/\//i.test(value)) {
+    try {
+      const parsed = new URL(value);
+      return parsed.pathname || '/icons/icon-192x192.png';
+    } catch (err) {
+      return '/icons/icon-192x192.png';
+    }
+  }
+
+  return value;
+};
+
 // GET /api/pages/all - Récupère TOUTES les pages (publiques)
 router.get('/all', async (req, res) => {
   try {
@@ -109,7 +125,7 @@ router.get('/config', async (req, res) => {
     // Retourner seulement les infos publiques
     const publicConfig = {
       siteName: config.siteName || 'Signal-Moi',
-      logoUrl: config.logoUrl || config.logo_url || '/icons/icon-192x192.png',
+      logoUrl: normalizeLogoUrl(config.logoUrl || config.logo_url || '/icons/icon-192x192.png'),
       contactEmail: config.contactEmail || 'contact@signal-moi.fr',
       contactPhone: config.contactPhone || '',
       address: config.address || '',

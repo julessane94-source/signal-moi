@@ -6,9 +6,19 @@ import { API_BASE } from '../../config/api'
 
 const getImageUrl = (url) => {
   if (!url) return null
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url
-  // Seules les URLs /uploads/ doivent utiliser NEXT_PUBLIC_API_URL, les autres restent locales
-  if (url.startsWith('/uploads/')) return `${process.env.NEXT_PUBLIC_API_URL}${url}`
+  if (url.startsWith('data:')) return url
+
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    try {
+      const parsed = new URL(url)
+      if (parsed.pathname.startsWith('/uploads/')) return `${process.env.NEXT_PUBLIC_API_URL || API_BASE}${parsed.pathname}`
+      return parsed.pathname || '/icons/icon-192x192.png'
+    } catch (err) {
+      return '/icons/icon-192x192.png'
+    }
+  }
+
+  if (url.startsWith('/uploads/')) return `${process.env.NEXT_PUBLIC_API_URL || API_BASE}${url}`
   return url
 }
 

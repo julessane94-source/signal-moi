@@ -42,7 +42,8 @@ app.use(cors({
         'http://localhost:3001',
         process.env.FRONTEND_URL || '*'
     ],
-    credentials: true
+    credentials: true,
+    allowedHeaders: ['Authorization', 'Content-Type', 'X-Refresh-Token']
 }));
 app.use(express.json());
 

@@ -6,13 +6,29 @@ const db = require('../config/database');
 const { protect } = require('../middleware/auth.middleware');
 const SiteConfig = require('../models/SiteConfig');
 
+const normalizeLogoUrl = (value) => {
+  if (!value || typeof value !== 'string') return '/icons/icon-192x192.png';
+  if (value.startsWith('data:')) return value;
+
+  if (/^https?:\/\//i.test(value)) {
+    try {
+      const parsed = new URL(value);
+      return parsed.pathname || '/icons/icon-192x192.png';
+    } catch (err) {
+      return '/icons/icon-192x192.png';
+    }
+  }
+
+  return value;
+};
+
 // GET /api/auth/site-config - Récupère la configuration du site (PUBLIC - sans auth)
 router.get('/site-config', async (req, res) => {
   try {
     const config = await SiteConfig.getAll();
     
     // Récupérer le logo en base64 s'il existe
-    let logoUrl = config.logoUrl || config.logo_url || '/icons/icon-192x192.png';
+    let logoUrl = normalizeLogoUrl(config.logoUrl || config.logo_url || '/icons/icon-192x192.png');
     const logoBase64 = await SiteConfig.getLogoBase64();
     if (logoBase64) {
       logoUrl = logoBase64;
