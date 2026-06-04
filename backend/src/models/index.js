@@ -6,6 +6,7 @@ const Campagne = require('./Campagne');
 const InscriptionCampagne = require('./InscriptionCampagne');
 const Message = require('./Message');
 const FollowedCase = require('./FollowedCase');
+const Post = require('./Post');
 
 // Définir les associations uniquement si les modèles sont des modèles Sequelize
 const isSequelizeModel = (m) => m && typeof m === 'function' && typeof m.associate === 'undefined' && (m.hasMany || m.belongsTo || m.belongsToMany || m.schema);
@@ -54,6 +55,11 @@ try {
       Signalement.belongsTo(User, { foreignKey: 'assignedTo', as: 'assignee' });
     }
   }
+
+    if (isSequelizeModel(User) && isSequelizeModel(Post)) {
+      User.hasMany(Post, { foreignKey: 'authorId', as: 'posts' });
+      Post.belongsTo(User, { foreignKey: 'authorId', as: 'author' });
+    }
 } catch (err) {
   console.warn('Warning setting up associations:', err.message);
 }
@@ -67,4 +73,5 @@ module.exports = {
   InscriptionCampagne,
   Message
   ,FollowedCase
+    ,Post
 };
