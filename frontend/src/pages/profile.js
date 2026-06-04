@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Button, Card, FormField, Input } from '../components/ui'
+import Chatbot from '../components/Chatbot'
 import { motion } from 'framer-motion'
 import {
   UserCircleIcon as UserCircle,
@@ -394,6 +395,7 @@ export default function Profile() {
           </motion.div>
         </div>
       </div>
+      <Chatbot />
     </>
   )
 }

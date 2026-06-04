@@ -16,6 +16,13 @@ const INTENTS = [
   { patterns: ['newsletter', 'abonne', 'abonnement'], reply: "Pour vous abonner, allez sur la page Newsletter et entrez votre adresse email." },
 ]
 
+const quickIntents = [
+  { label: 'Signalement', text: 'Comment signaler un incident ?' },
+  { label: 'Compte', text: 'Comment créer un compte ?' },
+  { label: 'Contact', text: 'Comment me contacter ?' },
+  { label: 'FAQ', text: 'Montrez-moi les réponses rapides.' },
+]
+
 export default function Chatbot() {
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')

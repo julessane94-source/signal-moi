@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import ErrorBoundary from '../components/common/ErrorBoundary'
 import { motion } from 'framer-motion'
 import { toast } from 'react-toastify'
+import Chatbot from '../components/Chatbot'
 import { API_BASE } from '../config/api'
 import { 
   EnvelopeIcon as Envelope,
@@ -557,6 +558,7 @@ export default function Contact() {
           </div>
         </section>
       </main>
+      <Chatbot />
       </ErrorBoundary>
     </>
   );

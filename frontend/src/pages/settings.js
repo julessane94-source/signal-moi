@@ -3,6 +3,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useAuth } from '../context/AuthContext'
 import { useRouter } from 'next/router'
+import Chatbot from '../components/Chatbot'
 import { toast } from 'react-toastify'
 import { motion } from 'framer-motion'
 import {
@@ -185,6 +186,7 @@ export default function Settings() {
           </div>
         </div>
       </div>
+      <Chatbot />
     </>
   )
 }
