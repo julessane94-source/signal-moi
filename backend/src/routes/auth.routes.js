@@ -72,9 +72,12 @@ router.get('/site-config', async (req, res) => {
         image_url: c.image_url,
         creator: { id: c.creator_id, prenom: c.prenom, nom: c.nom, role: c.role }
       }));
+      // Ensure clients don't serve a stale cached copy for site-config
+      res.set('Cache-Control', 'no-store, max-age=0');
       res.json({ ...safeConfig, collaboratorCampaigns });
     } catch (err) {
       console.error('[GET /site-config] Erreur campagnes:', err);
+      res.set('Cache-Control', 'no-store, max-age=0');
       res.json(safeConfig);
     }
   } catch (err) {
@@ -86,6 +89,7 @@ router.get('/site-config', async (req, res) => {
       theme: 'default',
       collaboratorCampaigns: []
     };
+    res.set('Cache-Control', 'no-store, max-age=0');
     res.json(defaultConfig);
   }
 });
