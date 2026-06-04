@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE } from '../config/api'
 import { Button } from '../components/ui'
+import BlogCard from '../components/BlogCard'
 
 export default function Home() {
 
@@ -25,6 +26,12 @@ export default function Home() {
   if (url.startsWith('/uploads/')) return `${API_BASE}${url}`
   return url
 }
+  const { user } = useAuth()
+
+  const [config, setConfig] = useState({ home_page: {} })
+  const [deferredPrompt, setDeferredPrompt] = useState(null)
+  const [showInstallButton, setShowInstallButton] = useState(false)
+
   const [collaboratorCampaigns, setCollaboratorCampaigns] = useState([])
 
   const stats = [
