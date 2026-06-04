@@ -1,7 +1,7 @@
 import Head from 'next/head'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ArrowLeft } from '@heroicons/react/24/outline'
+import { ArrowLeftIcon as ArrowLeft } from '@heroicons/react/24/outline'
 import { useRouter } from 'next/router'
 
 export default function Terms() {

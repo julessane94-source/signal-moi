@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Phone } from '@heroicons/react/24/outline'
+import { PhoneIcon as Phone } from '@heroicons/react/24/outline'
 import { API_BASE } from '../../config/api'
 
 export default function EmergencyButtons() {

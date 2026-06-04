@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { Button, FormField, Input } from '../components/ui'
-import { Envelope, CheckCircle, ArrowLeft } from '@heroicons/react/24/outline'
+import { EnvelopeIcon as Envelope, CheckCircleIcon as CheckCircle, ArrowLeftIcon as ArrowLeft } from '@heroicons/react/24/outline'
 import { motion } from 'framer-motion'
 
 export default function ForgotPassword() {

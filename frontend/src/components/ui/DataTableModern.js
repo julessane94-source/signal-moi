@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { ChevronsUpDown, Check } from '@heroicons/react/24/outline'
+import { ChevronsUpDownIcon as ChevronsUpDown, CheckIcon as Check } from '@heroicons/react/24/outline'
 import { useState } from 'react'
 
 export default function DataTableModern({ 

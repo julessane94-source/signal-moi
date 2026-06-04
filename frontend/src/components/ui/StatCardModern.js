@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { ArrowTrendingUp, ArrowTrendingDown } from '@heroicons/react/24/outline'
+import { ArrowTrendingUpIcon as ArrowTrendingUp, ArrowTrendingDownIcon as ArrowTrendingDown } from '@heroicons/react/24/outline'
 
 export default function StatCard({ 
   title, 

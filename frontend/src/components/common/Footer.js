@@ -3,9 +3,9 @@ import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { API_BASE } from '../../config/api'
 import {
-  Envelope,
-  Phone,
-  MapPin
+  EnvelopeIcon as Envelope,
+  PhoneIcon as Phone,
+  MapPinIcon as MapPin
 } from '@heroicons/react/24/outline'
 
 // Icons de réseaux sociaux (puisque Heroicons ne les a pas)

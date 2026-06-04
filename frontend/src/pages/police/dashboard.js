@@ -6,11 +6,11 @@ import { toast } from 'react-toastify'
 import { motion } from 'framer-motion'
 import { API_BASE } from '../../config/api'
 import {
-  MapPin,
-  Phone,
-  DocumentText,
-  ExclamationTriangle,
-  CheckCircle
+  MapPinIcon as MapPin,
+  PhoneIcon as Phone,
+  DocumentTextIcon as DocumentText,
+  ExclamationTriangleIcon as ExclamationTriangle,
+  CheckCircleIcon as CheckCircle
 } from '@heroicons/react/24/outline'
 
 export default function PoliceDashboard() {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon as ArrowLeft } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 
 export default function CookiesPolicy() {

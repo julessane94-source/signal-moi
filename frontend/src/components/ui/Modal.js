@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { XMark } from '@heroicons/react/24/outline'
+import { XMarkIcon as XMark } from '@heroicons/react/24/outline'
 
 export default function Modal({
   isOpen,

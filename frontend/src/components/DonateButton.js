@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Heart } from '@heroicons/react/24/outline';
+import { HeartIcon as Heart } from '@heroicons/react/24/outline';
 
 export default function DonateButton() {
   return (

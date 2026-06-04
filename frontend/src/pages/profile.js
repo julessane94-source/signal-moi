@@ -3,14 +3,14 @@ import { useAuth } from '../context/AuthContext'
 import { Button, Card, FormField, Input } from '../components/ui'
 import { motion } from 'framer-motion'
 import {
-  UserCircle,
-  Key,
-  Bell,
-  Envelope,
-  Phone,
-  MapPin,
-  Camera,
-  Check
+  UserCircleIcon as UserCircle,
+  KeyIcon as Key,
+  BellIcon as Bell,
+  EnvelopeIcon as Envelope,
+  PhoneIcon as Phone,
+  MapPinIcon as MapPin,
+  CameraIcon as Camera,
+  CheckIcon as Check
 } from '@heroicons/react/24/outline'
 
 export default function Profile() {

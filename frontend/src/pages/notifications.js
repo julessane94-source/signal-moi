@@ -6,13 +6,12 @@ import Head from 'next/head'
 import { motion } from 'framer-motion'
 import { Button, Card } from '../components/ui'
 import {
-  Bell,
-  Check,
-  XMark,
-  ArrowLeft,
-  Exclamation,
-  DocumentText,
-  Campaign
+  BellIcon as Bell,
+  CheckIcon as Check,
+  XMarkIcon as XMark,
+  ArrowLeftIcon as ArrowLeft,
+  ExclamationIcon as Exclamation,
+  DocumentTextIcon as DocumentText
 } from '@heroicons/react/24/outline'
 import { API_BASE } from '../config/api'
 
@@ -51,10 +50,10 @@ export default function NotificationsPage() {
 
   const getNotificationIcon = (type) => {
     switch (type) {
-      case 'new_signalement':
-        return DocumentText
-      case 'new_campaign':
-        return Campaign
+        case 'new_signalement':
+          return DocumentText
+        case 'new_campaign':
+          return DocumentText
       default:
         return Bell
     }

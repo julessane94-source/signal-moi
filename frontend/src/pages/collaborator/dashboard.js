@@ -8,15 +8,15 @@ import { io as socketIOClient } from 'socket.io-client'
 import { motion } from 'framer-motion'
 import Head from 'next/head'
 import {
-  DocumentText,
-  CheckCircle,
-  Cog,
-  ExclamationTriangle,
-  HandThumbsUp,
-  Users,
-  ArrowRight,
-  Bookmark,
-  Sparkles
+  DocumentTextIcon as DocumentText,
+  CheckCircleIcon as CheckCircle,
+  CogIcon as Cog,
+  ExclamationTriangleIcon as ExclamationTriangle,
+  HandThumbUpIcon as HandThumbsUp,
+  UsersIcon as Users,
+  ArrowRightIcon as ArrowRight,
+  BookmarkIcon as Bookmark,
+  SparklesIcon as Sparkles
 } from '@heroicons/react/24/outline'
 
 export default function CollaboratorDashboard() {

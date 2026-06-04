@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Envelope, Phone, MapPin, Heart } from '@heroicons/react/24/outline';
+import { EnvelopeIcon as Envelope, PhoneIcon as Phone, MapPinIcon as MapPin, HeartIcon as Heart } from '@heroicons/react/24/outline';
 
 export default function Footer() {
   const footerVariants = {

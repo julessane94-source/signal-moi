@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Heart } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon as ArrowLeft, HeartIcon as Heart } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 
 export default function Donate() {

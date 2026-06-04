@@ -6,11 +6,11 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { toast } from 'react-toastify'
 import {
-  DocumentText,
-  CheckCircle,
-  PencilSquare,
-  UserGroup,
-  Plus
+  DocumentTextIcon as DocumentText,
+  CheckCircleIcon as CheckCircle,
+  PencilSquareIcon as PencilSquare,
+  UserGroupIcon as UserGroup,
+  PlusIcon as Plus
 } from '@heroicons/react/24/outline'
 
 export default function CitizenDashboard() {

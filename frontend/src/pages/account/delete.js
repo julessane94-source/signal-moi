@@ -7,9 +7,9 @@ import { API_BASE } from '../../config/api'
 import { motion } from 'framer-motion'
 import Head from 'next/head'
 import { 
-  Trash, 
-  Exclamation,
-  ArrowLeft 
+  TrashIcon as Trash,
+  ExclamationTriangleIcon as Exclamation,
+  ArrowLeftIcon as ArrowLeft
 } from '@heroicons/react/24/outline'
 
 export default function DeleteAccount() {

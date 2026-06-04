@@ -6,16 +6,16 @@ import { motion } from 'framer-motion'
 import { toast } from 'react-toastify'
 import { API_BASE } from '../../config/api'
 import {
-  Users,
-  DocumentText,
-  Cog,
-  BarChart,
-  Plus,
-  PencilSquare,
-  Trash,
-  Key,
-  User,
-  ArrowUpTray
+  UsersIcon as Users,
+  DocumentTextIcon as DocumentText,
+  CogIcon as Cog,
+  ChartBarIcon as BarChart,
+  PlusIcon as Plus,
+  PencilSquareIcon as PencilSquare,
+  TrashIcon as Trash,
+  KeyIcon as Key,
+  UserIcon as User,
+  ArrowUpTrayIcon as ArrowUpTray
 } from '@heroicons/react/24/outline'
 
 const getImageUrl = (url) => {

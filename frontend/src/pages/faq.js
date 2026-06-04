@@ -1,7 +1,7 @@
 import Head from 'next/head'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, ChevronDown } from '@heroicons/react/24/outline'
+import { ArrowLeftIcon as ArrowLeft, ChevronDownIcon as ChevronDown } from '@heroicons/react/24/outline'
 import { useRouter } from 'next/router'
 
 export default function FAQ() {

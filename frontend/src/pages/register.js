@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { useAuth } from '../context/AuthContext'
 import { Button, Card, FormField, Input } from '../components/ui'
-import { User, Envelope, LockClosed, Phone, MapPin } from '@heroicons/react/24/outline'
+import { UserIcon as User, EnvelopeIcon as Envelope, LockClosedIcon as LockClosed, PhoneIcon as Phone, MapPinIcon as MapPin } from '@heroicons/react/24/outline'
 import { motion } from 'framer-motion'
 
 export default function Register() {

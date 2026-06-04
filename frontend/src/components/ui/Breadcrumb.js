@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ChevronRight } from '@heroicons/react/24/outline'
+import { ChevronRightIcon as ChevronRight } from '@heroicons/react/24/outline'
 
 export default function Breadcrumb({ items = [] }) {
   if (!items.length) return null

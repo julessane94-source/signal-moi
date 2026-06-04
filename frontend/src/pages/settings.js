@@ -5,13 +5,13 @@ import { useAuth } from '../context/AuthContext'
 import { useRouter } from 'next/router'
 import { toast } from 'react-toastify'
 import { motion } from 'framer-motion'
-import { 
-  Cog,
-  Trash,
-  ArrowRightOnRectangle,
-  User,
-  ShieldCheck,
-  ArrowLeft
+import {
+  CogIcon,
+  TrashIcon as Trash,
+  ArrowRightOnRectangleIcon as ArrowRightOnRectangle,
+  UserIcon,
+  ShieldCheckIcon,
+  ArrowLeftIcon
 } from '@heroicons/react/24/outline'
 
 export default function Settings() {
@@ -52,11 +52,11 @@ export default function Settings() {
               onClick={() => router.back()}
               className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeftIcon className="h-5 w-5" />
               Retour
             </button>
             <h1 className="text-4xl font-bold text-gray-900 flex items-center gap-3">
-              <Cog className="h-10 w-10 text-indigo-600" />
+                <CogIcon className="h-10 w-10 text-indigo-600" />
               Paramètres
             </h1>
             <p className="text-gray-600 mt-2">Gérez votre compte et vos préférences</p>
@@ -100,7 +100,7 @@ export default function Settings() {
               className="bg-white rounded-lg shadow-sm p-6 border border-gray-200"
             >
               <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <User className="h-5 w-5 text-indigo-600" />
+                <UserIcon className="h-5 w-5 text-indigo-600" />
                 Compte
               </h3>
               <div className="space-y-4">
@@ -129,7 +129,7 @@ export default function Settings() {
               className="bg-white rounded-lg shadow-sm p-6 border border-gray-200"
             >
               <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <ShieldCheck className="h-5 w-5 text-green-600" />
+                <ShieldCheckIcon className="h-5 w-5 text-green-600" />
                 Sécurité
               </h3>
               <div className="space-y-4">

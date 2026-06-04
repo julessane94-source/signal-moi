@@ -5,12 +5,12 @@ import { motion } from 'framer-motion'
 import { toast } from 'react-toastify'
 import { API_BASE } from '../config/api'
 import { 
-  Envelope, 
-  Phone, 
-  MapPin,
-  ArrowLeft,
-  Sparkles,
-  CheckCircle
+  EnvelopeIcon as Envelope,
+  PhoneIcon as Phone,
+  MapPinIcon as MapPin,
+  ArrowLeftIcon as ArrowLeft,
+  SparklesIcon as Sparkles,
+  CheckCircleIcon as CheckCircle
 } from '@heroicons/react/24/outline'
 
 export default function Contact() {
