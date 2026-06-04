@@ -78,17 +78,30 @@ export default function NewSignalement() {
   }
 
   useEffect(() => {
-    // If the user already granted geolocation permission, obtain it automatically.
+    // If the user already granted geolocation permission, or if the browser would prompt,
+    // attempt to obtain it automatically on page load so the user sees the permission prompt.
     if (typeof navigator !== 'undefined' && navigator.permissions && navigator.permissions.query) {
       navigator.permissions.query({ name: 'geolocation' }).then((status) => {
-        if (status.state === 'granted') {
+        if (status.state === 'granted' || status.state === 'prompt') {
           requestGeolocation()
         } else if (status.state === 'denied') {
           setGeoError('Accès à la géolocalisation refusé')
         }
       }).catch(() => {
-        // Permissions API unavailable, do not prompt automatically.
+        // Permissions API unavailable, fallback: attempt to request geolocation once.
+        try {
+          requestGeolocation()
+        } catch (e) {
+          // ignore
+        }
       })
+    } else {
+      // Permissions API not supported; try asking once.
+      try {
+        requestGeolocation()
+      } catch (e) {
+        // ignore
+      }
     }
   }, [])
 
