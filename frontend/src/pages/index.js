@@ -39,6 +39,19 @@ export default function Home() {
     { title: 'Impact local', text: 'Aidez votre quartier à agir plus vite grâce à une communauté mobilisée.', icon: '🌍' },
   ]
 
+  // Blog posts data
+  const posts = [
+    { icon: '🎯', title: 'Lancer une Campagne de Sensibilisation Efficace', excerpt: "Découvrez les meilleures pratiques pour créer une campagne qui engage votre communauté et génère le changement.", date: '01/06/2026', author: 'Équipe Signal-Moi', href: '/blog/lancer-campagne', category: 'Guides' },
+    { icon: '🔒', title: 'Comment Signaler un Problème de Sécurité Publique', excerpt: 'Un guide complet pour faire un signalement efficace avec photos, localisation et descriptions détaillées.', date: '28/05/2026', author: 'Équipe Signal-Moi', href: '/blog/signaler-securite', category: 'Tutoriels' },
+    { icon: '💬', title: 'Témoignage : Comment Signal-Moi a Changé Notre Quartier', excerpt: "Les habitants d'un quartier partagent comment la plateforme a permis de résoudre des problèmes locaux importants.", date: '25/05/2026', author: 'Communauté', href: '/blog/temoignage-quartier', category: 'Témoignages' },
+    { icon: '⭐', title: 'Les Dix Signalements Les Plus Impactants de 2025', excerpt: 'Découvrez les signalements qui ont changé les choses dans les communautés à travers le pays.', date: '20/05/2026', author: 'Équipe Signal-Moi', href: '/blog/top-signalements-2025', category: 'Actualités' },
+    { icon: '🔐', title: 'Protéger Votre Vie Privée sur Signal-Moi', excerpt: 'Conseils pratiques pour maintenir votre confidentialité tout en contribuant à l'amélioration de votre communauté.', date: '10/05/2026', author: 'Équipe Signal-Moi', href: '/blog/proteger-vie-privee', category: 'Sécurité' }
+  ]
+
+  const [activeFilter, setActiveFilter] = useState('Tous')
+
+  const filteredPosts = activeFilter === 'Tous' ? posts : posts.filter(p => p.category === activeFilter)
+
   useEffect(() => {
     // PWA Installation
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -258,79 +271,27 @@ export default function Home() {
                 <span className="hidden sm:inline">Filtrer :</span>
                 <div className="flex gap-1">
                   {['Tous','Guides','Tutoriels','Témoignages','Actualités','Sécurité'].map((tab) => (
-                    <button key={tab} className="px-3 py-1 rounded-full bg-white border text-sm text-gray-700 hover:bg-indigo-50">{tab}</button>
+                    <button
+                      key={tab}
+                      onClick={() => setActiveFilter(tab)}
+                      className={`px-3 py-1 rounded-full text-sm ${activeFilter === tab ? 'bg-indigo-600 text-white' : 'bg-white border text-gray-700 hover:bg-indigo-50'}`}>
+                      {tab}
+                    </button>
                   ))}
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Article 1 - Guides */}
-              <article className="rounded-2xl bg-white p-5 shadow-sm border">
-                <div className="text-2xl mb-3">🎯</div>
-                <h3 className="text-lg font-semibold">Lancer une Campagne de Sensibilisation Efficace</h3>
-                <p className="text-sm text-gray-600 mt-2">Découvrez les meilleures pratiques pour créer une campagne qui engage votre communauté et génère le changement.</p>
-                <div className="mt-4 text-xs text-gray-500">01/06/2026 — Équipe Signal-Moi</div>
-                <div className="mt-4">
-                  <Link href="/blog/lancer-campagne">
-                    <a className="text-indigo-600 font-medium">Lire l'article →</a>
-                  </Link>
-                </div>
-              </article>
-
-              {/* Article 2 - Tutoriels */}
-              <article className="rounded-2xl bg-white p-5 shadow-sm border">
-                <div className="text-2xl mb-3">🔒</div>
-                <h3 className="text-lg font-semibold">Comment Signaler un Problème de Sécurité Publique</h3>
-                <p className="text-sm text-gray-600 mt-2">Un guide complet pour faire un signalement efficace avec photos, localisation et descriptions détaillées.</p>
-                <div className="mt-4 text-xs text-gray-500">28/05/2026 — Équipe Signal-Moi</div>
-                <div className="mt-4">
-                  <Link href="/blog/signaler-securite">
-                    <a className="text-indigo-600 font-medium">Lire l'article →</a>
-                  </Link>
-                </div>
-              </article>
-
-              {/* Article 3 - Témoignages */}
-              <article className="rounded-2xl bg-white p-5 shadow-sm border">
-                <div className="text-2xl mb-3">💬</div>
-                <h3 className="text-lg font-semibold">Témoignage : Comment Signal-Moi a Changé Notre Quartier</h3>
-                <p className="text-sm text-gray-600 mt-2">Les habitants d'un quartier partagent comment la plateforme a permis de résoudre des problèmes locaux importants.</p>
-                <div className="mt-4 text-xs text-gray-500">25/05/2026 — Communauté</div>
-                <div className="mt-4">
-                  <Link href="/blog/temoignage-quartier">
-                    <a className="text-indigo-600 font-medium">Lire l'article →</a>
-                  </Link>
-                </div>
-              </article>
+              {filteredPosts.slice(0,3).map((p) => (
+                <BlogCard key={p.href} {...p} />
+              ))}
             </div>
 
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Article 4 - Actualités */}
-              <article className="rounded-2xl bg-white p-5 shadow-sm border">
-                <div className="text-2xl mb-3">⭐</div>
-                <h3 className="text-lg font-semibold">Les Dix Signalements Les Plus Impactants de 2025</h3>
-                <p className="text-sm text-gray-600 mt-2">Découvrez les signalements qui ont changé les choses dans les communautés à travers le pays.</p>
-                <div className="mt-4 text-xs text-gray-500">20/05/2026 — Équipe Signal-Moi</div>
-                <div className="mt-4">
-                  <Link href="/blog/top-signalements-2025">
-                    <a className="text-indigo-600 font-medium">Lire l'article →</a>
-                  </Link>
-                </div>
-              </article>
-
-              {/* Article 5 - Guides / Sécurité */}
-              <article className="rounded-2xl bg-white p-5 shadow-sm border">
-                <div className="text-2xl mb-3">🔐</div>
-                <h3 className="text-lg font-semibold">Protéger Votre Vie Privée sur Signal-Moi</h3>
-                <p className="text-sm text-gray-600 mt-2">Conseils pratiques pour maintenir votre confidentialité tout en contribuant à l'amélioration de votre communauté.</p>
-                <div className="mt-4 text-xs text-gray-500">10/05/2026 — Équipe Signal-Moi</div>
-                <div className="mt-4">
-                  <Link href="/blog/proteger-vie-privee">
-                    <a className="text-indigo-600 font-medium">Lire l'article →</a>
-                  </Link>
-                </div>
-              </article>
+              {filteredPosts.slice(3,5).map((p) => (
+                <BlogCard key={p.href} {...p} />
+              ))}
             </div>
 
             <div className="mt-8 text-center">
