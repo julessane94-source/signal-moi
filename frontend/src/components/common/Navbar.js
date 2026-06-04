@@ -6,18 +6,18 @@ import { API_BASE } from '../../config/api'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '../ui'
 import {
-  Bars3,
-  XMark,
-  Home,
-  InformationCircle,
-  DocumentText,
-  UserGroup,
-  Envelope,
-  UserCircle,
-  ArrowRightOnRectangle,
-  Cog,
-  Heart,
-  Bell
+  Bars3Icon as Bars3,
+  XMarkIcon as XMark,
+  HomeIcon as Home,
+  InformationCircleIcon as InformationCircle,
+  DocumentTextIcon as DocumentText,
+  UserGroupIcon as UserGroup,
+  EnvelopeIcon as Envelope,
+  UserCircleIcon as UserCircle,
+  ArrowRightOnRectangleIcon as ArrowRightOnRectangle,
+  CogIcon as Cog,
+  HeartIcon as Heart,
+  BellIcon as Bell
 } from '@heroicons/react/24/outline'
 
 export default function Navbar() {
