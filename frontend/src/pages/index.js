@@ -17,23 +17,30 @@ const getImageUrl = (url) => {
       return parsed.pathname || '/icons/icon-192x192.png'
     } catch (err) {
       return '/icons/icon-192x192.png'
-    }
-  }
-
-  if (url.startsWith('/uploads/')) return `${API_BASE}${url}`
-  return url
-}
-
-export default function Home() {
-  const { user } = useAuth()
-  const [deferredPrompt, setDeferredPrompt] = useState(null)
-  const [showInstallButton, setShowInstallButton] = useState(false)
-  const [config, setConfig] = useState({
-    home_page: {
-      title: 'Signalez les incidents',
-      heroText: 'dans votre quartier',
-      content: 'Une plateforme citoyenne pour signaler et suivre les problemes de votre communaute.',
-      images: [],
+                    <>
+                        <div className="relative w-full h-72">
+                          {config.home_page.images.map((img, i) => (
+                            <img
+                              key={i}
+                              src={getImageUrl(img)}
+                              alt={`Slide ${i + 1}`}
+                              loading={i === slideIndex ? 'eager' : 'lazy'}
+                              decoding="async"
+                              aria-hidden={i === slideIndex ? 'false' : 'true'}
+                              className={`absolute inset-0 w-full h-72 object-cover transition-opacity duration-700 ease-in-out ${i === slideIndex ? 'opacity-100' : 'opacity-0'}`}
+                            />
+                          ))}
+                          <button
+                            onClick={() => setSlideIndex((s) => (s - 1 + config.home_page.images.length) % config.home_page.images.length)}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 text-white p-2 rounded-full"
+                            aria-label="Précédent"
+                          >‹</button>
+                          <button
+                            onClick={() => setSlideIndex((s) => (s + 1) % config.home_page.images.length)}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 text-white p-2 rounded-full"
+                            aria-label="Suivant"
+                          >›</button>
+                        </div>
       videos: []
     }
   })
