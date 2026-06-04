@@ -140,12 +140,12 @@ export default function Home() {
           <div className="absolute -top-24 right-0 h-64 w-64 rounded-full bg-cyan-400/10 blur-3xl" />
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 lg:py-16">
             <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
-              <div className="text-center lg:text-left">
+              <div className="text-center lg:text-left max-w-xl">
                 <span className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-cyan-100 shadow-lg">
                   <img src={getImageUrl(config.logoUrl)} alt="Logo Signal-Moi" className="h-6 w-6 rounded-md object-cover ring-1 ring-white/10" />
                   Signal-Moi
                 </span>
-                <h1 className="mt-6 text-4xl md:text-5xl lg:text-6xl font-black leading-tight text-white">{config.home_page?.title || 'Signalez les incidents'}</h1>
+                <h1 className="mt-6 text-4xl md:text-5xl lg:text-6xl font-black leading-tight text-white drop-shadow-lg">{config.home_page?.title || 'Signalez les incidents'}</h1>
                 <p className="mt-4 text-xl md:text-2xl text-slate-100 max-w-2xl">{config.home_page?.heroText || 'dans votre quartier'}</p>
 
                 {config.home_page?.content && config.home_page.content.includes('<') ? (
@@ -164,10 +164,12 @@ export default function Home() {
                 </div>
 
                 <div className="mt-8 grid gap-4 sm:grid-cols-3">{stats.map((item) => (
-                  <div key={item.label} className="rounded-2xl border border-white/10 bg-white/10 p-4 shadow-lg backdrop-blur-md">
-                    <div className="text-2xl mb-2">{item.icon}</div>
-                    <p className="text-xs uppercase tracking-[0.25em] text-slate-200">{item.label}</p>
-                    <p className="mt-1 text-lg font-semibold text-white">{item.value}</p>
+                  <div key={item.label} className="rounded-2xl border border-white/10 bg-white/10 p-4 shadow-lg backdrop-blur-md flex items-start gap-3">
+                    <div className="text-3xl bg-white/10 p-2 rounded-lg">{item.icon}</div>
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.25em] text-slate-200">{item.label}</p>
+                      <p className="mt-1 text-lg font-semibold text-white">{item.value}</p>
+                    </div>
                   </div>
                 ))}</div>
 
@@ -178,24 +180,26 @@ export default function Home() {
                 )}
               </div>
 
-              <div>
-                <div className="rounded-3xl border border-white/10 bg-white/10 p-4 shadow-2xl backdrop-blur-xl">
-                  <div className="rounded-3xl overflow-hidden border border-white/10 shadow-soft relative">
+              <div className="flex justify-center lg:justify-end">
+                <div className="rounded-3xl border border-white/10 bg-white/10 p-4 shadow-2xl backdrop-blur-xl w-full max-w-md">
+                  <div className="rounded-2xl overflow-hidden border border-white/10 relative bg-black/5">
                     {Array.isArray(config.home_page?.images) && config.home_page.images.length > 0 ? (
                       <>
                         <img
                           src={getImageUrl(config.home_page.images[slideIndex])}
                           alt={`Slide ${slideIndex + 1}`}
-                          className="w-full h-72 object-cover block"
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-72 object-cover block transition-transform duration-700 ease-in-out transform hover:scale-105"
                         />
                         <button
                           onClick={() => setSlideIndex((s) => (s - 1 + config.home_page.images.length) % config.home_page.images.length)}
-                          className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 text-white p-2 rounded-full"
+                          className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full"
                           aria-label="Précédent"
                         >‹</button>
                         <button
                           onClick={() => setSlideIndex((s) => (s + 1) % config.home_page.images.length)}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 text-white p-2 rounded-full"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full"
                           aria-label="Suivant"
                         >›</button>
                       </>
@@ -204,13 +208,13 @@ export default function Home() {
                     )}
                   </div>
                   {Array.isArray(config.home_page?.images) && config.home_page.images.length > 0 ? (
-                    <div className="mt-4 flex items-center justify-center gap-2">
+                    <div className="mt-4 flex items-center justify-center gap-3">
                       {config.home_page.images.map((_, i) => (
                         <button
                           key={i}
                           onClick={() => setSlideIndex(i)}
                           aria-label={`Aller au slide ${i + 1}`}
-                          className={`w-2 h-2 rounded-full ${i === slideIndex ? 'bg-white' : 'bg-white/40'}`}
+                          className={`w-3 h-3 rounded-full ${i === slideIndex ? 'bg-white' : 'bg-white/40'}`}
                         />
                       ))}
                     </div>
@@ -224,11 +228,11 @@ export default function Home() {
         </section>
 
         <section className="py-8 bg-slate-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 grid gap-4 md:grid-cols-3">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 grid gap-6 md:grid-cols-3">
             {features.map((feature) => (
-              <article key={feature.title} className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm hover:-translate-y-1 hover:shadow-xl transition">
-                <div className="text-3xl mb-3">{feature.icon}</div>
-                <h3 className="text-xl font-semibold text-slate-900 mb-2">{feature.title}</h3>
+              <article key={feature.title} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:-translate-y-1 hover:shadow-xl transition flex flex-col items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">{feature.icon}</div>
+                <h3 className="text-lg font-semibold text-slate-900">{feature.title}</h3>
                 <p className="text-slate-600">{feature.text}</p>
               </article>
             ))}
@@ -305,7 +309,7 @@ export default function Home() {
               <p className="text-sm text-gray-600">Recevez nos Actualités — Abonnez-vous à notre newsletter pour rester informé des dernières actualités et guides</p>
               <div className="mt-4 flex justify-center">
                 <Link href="/newsletter">
-                  <a className="inline-block bg-indigo-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-indigo-700">S'abonner</a>
+                  <Button size="md" className="bg-indigo-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-indigo-700">S'abonner</Button>
                 </Link>
               </div>
             </div>
@@ -317,12 +321,16 @@ export default function Home() {
           <section className="py-8 bg-gray-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Galerie</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {config.home_page?.images?.map((img, idx) => (
-                  <img key={idx} src={img} alt={`Galerie ${idx}`} loading="lazy" decoding="async" className="w-full h-52 object-cover rounded-lg shadow" />
+                  <div key={idx} className="overflow-hidden rounded-lg shadow bg-white">
+                    <img src={img} alt={`Galerie ${idx}`} loading="lazy" decoding="async" className="w-full h-52 object-cover" />
+                  </div>
                 ))}
                 {config.home_page?.videos?.map((vid, idx) => (
-                  <iframe key={`v-${idx}`} src={vid} loading="lazy" className="w-full h-52 rounded-lg" />
+                  <div key={`v-${idx}`} className="overflow-hidden rounded-lg shadow bg-black">
+                    <iframe src={vid} loading="lazy" className="w-full h-52" />
+                  </div>
                 ))}
               </div>
             </div>
