@@ -20,6 +20,21 @@ const adminTelephone = '0600000000';
 const adminVille = 'Paris';
 const adminQuartier = 'Admin';
 
+async function detectUsersTable(pool) {
+  const candidates = ['signal_moi.users', 'users'];
+  for (const table of candidates) {
+    try {
+      await pool.query(`SELECT 1 FROM ${table} LIMIT 1`);
+      return table;
+    } catch (error) {
+      if (!/does not exist|relation .* does not exist/i.test(error.message)) {
+        throw error;
+      }
+    }
+  }
+  throw new Error('Aucune table users disponible');
+}
+
 async function createAdmin() {
   if (!DATABASE_URL) {
     console.error('❌ DATABASE_URL not provided!');
@@ -46,8 +61,10 @@ async function createAdmin() {
     console.log('🔐 Création d\'un nouvel admin...');
     console.log(`📧 Email: ${adminEmail}`);
 
+    const usersTable = await detectUsersTable(pool);
+
     // Check if admin already exists
-    const checkQuery = 'SELECT id FROM users WHERE email = $1';
+    const checkQuery = `SELECT id FROM ${usersTable} WHERE email = $1`;
     const checkResult = await pool.query(checkQuery, [adminEmail]);
 
     if (checkResult.rows.length > 0) {
@@ -62,7 +79,7 @@ async function createAdmin() {
 
     // Insert admin
     const insertQuery = `
-      INSERT INTO users (prenom, nom, email, telephone, password, ville, quartier, role, is_active)
+      INSERT INTO ${usersTable} (prenom, nom, email, telephone, password, ville, quartier, role, is_active)
       VALUES ($1, $2, $3, $4, $5, $6, $7, 'admin', true)
       RETURNING id, prenom, nom, email, role, created_at
     `;

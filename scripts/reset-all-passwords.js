@@ -17,6 +17,21 @@ try {
     process.exit(0);
 }
 
+async function detectUsersTable(client) {
+    const candidates = ['signal_moi.users', 'users'];
+    for (const table of candidates) {
+        try {
+            await client.query(`SELECT 1 FROM ${table} LIMIT 1`);
+            return table;
+        } catch (error) {
+            if (!/does not exist|relation .* does not exist/i.test(error.message)) {
+                throw error;
+            }
+        }
+    }
+    throw new Error('Aucune table users disponible');
+}
+
 async function resetPasswords() {
     const client = new Client({
         connectionString: databaseUrl,
@@ -29,8 +44,10 @@ async function resetPasswords() {
         await client.connect();
         console.log('✅ Connecté à la base de données PostgreSQL');
 
+        const usersTable = await detectUsersTable(client);
+
         // Récupérer tous les utilisateurs
-        const result = await client.query('SELECT id, password, email FROM users');
+        const result = await client.query(`SELECT id, password, email FROM ${usersTable}`);
         const users = result.rows;
 
         console.log(`\n📊 ${users.length} utilisateurs trouvés\n`);
@@ -52,7 +69,7 @@ async function resetPasswords() {
             
             // Mettre à jour l'utilisateur
             await client.query(
-                'UPDATE users SET password = $1 WHERE id = $2',
+                `UPDATE ${usersTable} SET password = $1 WHERE id = $2`,
                 [hashedPassword, user.id]
             );
             updated++;

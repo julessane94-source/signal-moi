@@ -2,22 +2,24 @@ const db = require('../config/database');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+const USERS_TABLE = process.env.USERS_TABLE || 'signal_moi.users';
+
 const User = {
     findAll: async () => {
-        const res = await db.query('SELECT id, prenom, nom, email, telephone, ville, quartier, role, is_active, created_at FROM users ORDER BY created_at DESC');
+        const res = await db.query(`SELECT id, prenom, nom, email, telephone, ville, quartier, role, is_active, created_at FROM ${USERS_TABLE} ORDER BY created_at DESC`);
         return res.rows;
     },
     
     findOne: async (options) => {
         if (options.where && options.where.email) {
-            const res = await db.query('SELECT * FROM users WHERE email = $1', [options.where.email]);
+            const res = await db.query(`SELECT * FROM ${USERS_TABLE} WHERE email = $1`, [options.where.email]);
             return res.rows[0] ? new UserInstance(res.rows[0]) : null;
         }
         return null;
     },
     
     findById: async (id) => {
-        const res = await db.query('SELECT * FROM users WHERE id = $1', [id]);
+        const res = await db.query(`SELECT * FROM ${USERS_TABLE} WHERE id = $1`, [id]);
         return res.rows[0] ? new UserInstance(res.rows[0]) : null;
     },
     
@@ -28,7 +30,7 @@ const User = {
         const hashedPassword = password ? await bcrypt.hash(password, 10) : await bcrypt.hash('Default123!', 10);
         
         const res = await db.query(
-            `INSERT INTO users (prenom, nom, email, telephone, password, ville, quartier, role, email_verification_token)
+            `INSERT INTO ${USERS_TABLE} (prenom, nom, email, telephone, password, ville, quartier, role, email_verification_token)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, prenom, nom, email, role, is_active, email_verified`,
             [prenom, nom, email, telephone, hashedPassword, ville, quartier, role || 'citoyen', emailVerificationToken]
         );
@@ -40,24 +42,24 @@ const User = {
         const values = Object.values(updates);
         const setClause = fields.map((f, idx) => `${f} = $${idx + 1}`).join(', ');
         const res = await db.query(
-            `UPDATE users SET ${setClause} WHERE id = $${fields.length + 1} RETURNING *`,
+            `UPDATE ${USERS_TABLE} SET ${setClause} WHERE id = $${fields.length + 1} RETURNING *`,
             [...values, id]
         );
         return res.rows[0] ? new UserInstance(res.rows[0]) : null;
     },
     
     delete: async (id) => {
-        await db.query('DELETE FROM users WHERE id = $1', [id]);
+        await db.query(`DELETE FROM ${USERS_TABLE} WHERE id = $1`, [id]);
     },
     
     updateRole: async (id, role) => {
-        const res = await db.query('UPDATE users SET role = $1 WHERE id = $2 RETURNING id, role', [role, id]);
+        const res = await db.query(`UPDATE ${USERS_TABLE} SET role = $1 WHERE id = $2 RETURNING id, role`, [role, id]);
         return res.rows[0];
     },
     
     resetPassword: async (id, newPassword = 'Default123!') => {
         const hashedPassword = await bcrypt.hash(newPassword, 10);
-        await db.query('UPDATE users SET password = $1 WHERE id = $2', [hashedPassword, id]);
+        await db.query(`UPDATE ${USERS_TABLE} SET password = $1 WHERE id = $2`, [hashedPassword, id]);
     }
 };
 
@@ -135,7 +137,7 @@ class UserInstance {
         const setClause = fields.map((f, idx) => `${f} = $${idx + 1}`).join(', ');
         
         const res = await db.query(
-            `UPDATE users SET ${setClause} WHERE id = $${fields.length + 1} RETURNING *`,
+            `UPDATE ${USERS_TABLE} SET ${setClause} WHERE id = $${fields.length + 1} RETURNING *`,
             [...values, this.id]
         );
         

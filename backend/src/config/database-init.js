@@ -12,16 +12,19 @@ const initializeDatabase = async () => {
 
     try {
         // Vérifier si la table site_config existe
-        const tableExists = await sequelize.query(
+        const tableExistsResult = await sequelize.query(
             `SELECT EXISTS(
                 SELECT 1 FROM information_schema.tables 
                 WHERE table_schema = 'signal_moi' 
                 AND table_name = 'site_config'
-            );`,
-            { raw: true }
+            );`
         );
 
-        if (!tableExists[0][0].exists) {
+        const tableExists = Array.isArray(tableExistsResult?.rows)
+            ? (tableExistsResult.rows[0]?.[0]?.exists ?? tableExistsResult.rows[0]?.exists ?? false)
+            : false;
+
+        if (!tableExists) {
             console.log('⚠️  Table site_config manquante, exécution de la migration 013...');
 
             // Lire et exécuter la migration
@@ -53,12 +56,17 @@ const initializeDatabase = async () => {
             console.log('✅ Table site_config vérifiée');
 
             // Vérifier qu'il y a des données de base
-            const configCount = await sequelize.query(
-                'SELECT COUNT(*) as count FROM signal_moi.site_config',
-                { raw: true }
+            const configCountResult = await sequelize.query(
+                'SELECT COUNT(*) as count FROM signal_moi.site_config'
             );
 
-            if (configCount[0][0].count === 0) {
+            const configCount = Number(
+                Array.isArray(configCountResult?.rows)
+                    ? (configCountResult.rows[0]?.count ?? configCountResult.rows[0]?.[0]?.count ?? 0)
+                    : 0
+            );
+
+            if (configCount === 0) {
                 console.log('⚠️  Aucune configuration trouvée, initialisation des valeurs par défaut...');
                 
                 const defaults = [
