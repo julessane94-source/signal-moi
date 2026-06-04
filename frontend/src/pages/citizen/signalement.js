@@ -5,7 +5,10 @@ import { API_BASE } from '../../config/api'
 import { toast } from 'react-toastify'
 import dynamic from 'next/dynamic'
 
-const LeafletMap = dynamic(() => import('../../components/Map/LeafletMap'), { ssr: false })
+const LeafletMap = dynamic(() => import('../../components/Map/LeafletMap.jsx'), {
+  ssr: false,
+  loading: () => <div className="w-full h-80 rounded bg-gray-100 animate-pulse" />
+})
 
 const QUICK_TYPES = [
   { value: 'probleme_eclairage', label: 'Éclairage', icon: '💡', hint: 'Lampadaires, éclairage public' },

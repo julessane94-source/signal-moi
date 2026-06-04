@@ -3,7 +3,7 @@ import dynamic from 'next/dynamic'
 
 // Dynamic import to avoid SSR issues with Leaflet
 const DynamicMapContent = dynamic(
-  () => import('./MapContent'),
+  () => import('./MapContent.jsx'),
   {
     loading: () => <div className="w-full h-80 bg-gray-200 rounded animate-pulse"></div>,
     ssr: false
