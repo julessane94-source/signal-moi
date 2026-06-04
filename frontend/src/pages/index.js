@@ -52,7 +52,7 @@ export default function Home() {
     { icon: '🔒', title: 'Comment Signaler un Problème de Sécurité Publique', excerpt: 'Un guide complet pour faire un signalement efficace avec photos, localisation et descriptions détaillées.', date: '28/05/2026', author: 'Équipe Signal-Moi', href: '/blog/signaler-securite', category: 'Tutoriels' },
     { icon: '💬', title: 'Témoignage : Comment Signal-Moi a Changé Notre Quartier', excerpt: "Les habitants d'un quartier partagent comment la plateforme a permis de résoudre des problèmes locaux importants.", date: '25/05/2026', author: 'Communauté', href: '/blog/temoignage-quartier', category: 'Témoignages' },
     { icon: '⭐', title: 'Les Dix Signalements Les Plus Impactants de 2025', excerpt: 'Découvrez les signalements qui ont changé les choses dans les communautés à travers le pays.', date: '20/05/2026', author: 'Équipe Signal-Moi', href: '/blog/top-signalements-2025', category: 'Actualités' },
-    { icon: '🔐', title: 'Protéger Votre Vie Privée sur Signal-Moi', excerpt: 'Conseils pratiques pour maintenir votre confidentialité tout en contribuant à l'amélioration de votre communauté.', date: '10/05/2026', author: 'Équipe Signal-Moi', href: '/blog/proteger-vie-privee', category: 'Sécurité' }
+    { icon: '🔐', title: 'Protéger Votre Vie Privée sur Signal-Moi', excerpt: "Conseils pratiques pour maintenir votre confidentialité tout en contribuant à l'amélioration de votre communauté.", date: '10/05/2026', author: 'Équipe Signal-Moi', href: '/blog/proteger-vie-privee', category: 'Sécurité' }
   ]
 
   const [activeFilter, setActiveFilter] = useState('Tous')
