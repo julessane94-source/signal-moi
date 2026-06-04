@@ -6,7 +6,7 @@ import { motion } from 'framer-motion'
 import { toast } from 'react-toastify'
 import { API_BASE } from '../../config/api'
 import {
-  UsersIcon,
+  Users,
   DocumentText,
   Cog,
   BarChart,
@@ -499,7 +499,7 @@ export default function AdminDashboard() {
           <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
             {[
               { id: 'dashboard', label: 'Tableau de bord', icon: BarChart },
-              { id: 'users', label: 'Utilisateurs', icon: UsersIcon },
+              { id: 'users', label: 'Utilisateurs', icon: Users },
               { id: 'signalements', label: 'Signalements', icon: DocumentText },
               { id: 'campagnes', label: 'Campagnes', icon: BarChart },
               { id: 'config', label: 'Configuration', icon: Cog },
@@ -532,7 +532,7 @@ export default function AdminDashboard() {
                 <StatCardModern
                   title="Total utilisateurs"
                   value={stats.totalUsers}
-                  icon={UsersIcon}
+                  icon={Users}
                   gradient={true}
                   trend="up"
                   change={12}
@@ -556,7 +556,7 @@ export default function AdminDashboard() {
                 <StatCardModern
                   title="Utilisateurs actifs"
                   value={stats.activeUsers}
-                  icon={UsersIcon}
+                  icon={Users}
                   gradient={true}
                   trend="up"
                   change={15}
