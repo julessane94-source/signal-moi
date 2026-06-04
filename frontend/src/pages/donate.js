@@ -12,6 +12,25 @@ export default function Donate() {
     setTimeout(() => setCopiedText(''), 2000);
   };
 
+  const [showModal, setShowModal] = useState(false);
+
+  const tryOpenApp = (schemeUrl, fallbackUrl) => {
+    if (typeof window === 'undefined') return;
+    try {
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = schemeUrl;
+      document.body.appendChild(iframe);
+      setTimeout(() => {
+        try { document.body.removeChild(iframe); } catch (e) {}
+        // fallback to telephone link if app didn't open
+        window.location.href = fallbackUrl;
+      }, 800);
+    } catch (e) {
+      window.location.href = fallbackUrl;
+    }
+  };
+
   const donationOptions = [
     {
       name: 'PayPal',
@@ -299,7 +318,7 @@ export default function Donate() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
-                onClick={() => document.querySelector('[data-donate-wave]').click()}
+                onClick={() => setShowModal(true)}
                 className="px-8 py-3 bg-white text-red-600 font-bold rounded-lg hover:bg-gray-100 transition"
               >
                 Faire un don maintenant
@@ -314,12 +333,51 @@ export default function Donate() {
         </motion.section>
       </motion.div>
 
-      {/* Hidden button for action */}
-      <button
-        data-donate-wave
-        onClick={() => window.open('https://www.wave.com/send', '_blank')}
-        style={{ display: 'none' }}
-      />
+      {/* Donation modal: Wave, Orange Money, PayPal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black opacity-50" onClick={() => setShowModal(false)} />
+          <div className="relative bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-xl font-semibold mb-4">Choisir un moyen de donation</h3>
+            <p className="text-sm text-gray-600 mb-4">Sélectionnez Wave ou Orange Money pour ouvrir l'application et pré-sélectionner le numéro, ou PayPal pour ouvrir la page de paiement.</p>
+            <div className="space-y-3">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  tryOpenApp('wave://send?recipient=221778851691', 'tel:+221778851691');
+                }}
+                className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg font-semibold"
+              >
+                Ouvrir Wave (778851691)
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  tryOpenApp('om://send?phone=221778851691', 'tel:+221778851691');
+                }}
+                className="w-full px-4 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-semibold"
+              >
+                Ouvrir Orange Money (778851691)
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open(donationOptions[0]?.url || 'https://paypal.me/julessane94', '_blank');
+                }}
+                className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold"
+              >
+                Ouvrir PayPal
+              </button>
+            </div>
+
+            <div className="mt-4 text-right">
+              <button onClick={() => setShowModal(false)} className="text-sm text-gray-600 hover:underline">Annuler</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
