@@ -126,6 +126,12 @@ app.get('/uploads/*', async (req, res, next) => {
         );
         const file = result.rows[0];
         if (!file || !file.file_data) {
+            // If the requested file is a campaign image and not found, return a small SVG placeholder
+            if (filePath.startsWith('uploads/campagnes/')) {
+                const svg = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450' viewBox='0 0 800 450'>\n  <rect width='100%' height='100%' fill='#f3f4f6'/>\n  <g fill='#e11d48' font-family='Arial, Helvetica, sans-serif' font-size='32' text-anchor='middle'>\n    <text x='50%' y='45%' fill='#ef4444' font-weight='700'>Image indisponible</text>\n    <text x='50%' y='62%' fill='#6b7280' font-size='18'>Campagne — image manquante</text>\n  </g>\n</svg>`;
+                res.type('image/svg+xml');
+                return res.send(svg);
+            }
             return next();
         }
         if (file.mime_type) {
