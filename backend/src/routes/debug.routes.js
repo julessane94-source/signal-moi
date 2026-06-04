@@ -17,6 +17,23 @@ router.get('/uploads/signalements', (req, res) => {
   }
 });
 
+// Lister les fichiers présents dans uploads/campagnes et les enregistrements DB correspondants
+router.get('/uploads/campagnes', async (req, res) => {
+  try {
+    const dir = path.join(__dirname, '..', '..', 'uploads', 'campagnes');
+    const localFiles = fs.existsSync(dir) ? fs.readdirSync(dir).map(f => ({ name: f, path: `/uploads/campagnes/${f}` })) : [];
+
+    // Récupérer les enregistrements en base pour les chemins commençant par uploads/campagnes/
+    const dbResult = await db.query("SELECT id, nom_fichier, chemin, type, mime_type FROM signal_moi.fichiers WHERE chemin LIKE 'uploads/campagnes/%' ORDER BY id DESC LIMIT 500");
+    const dbFiles = dbResult.rows || [];
+
+    res.json({ localFiles, dbFiles });
+  } catch (err) {
+    console.error('Debug list campagnes error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Lister les enregistrements fichiers pour un signalement_id
 router.get('/fichiers/signalement/:id', async (req, res) => {
   const { id } = req.params;
