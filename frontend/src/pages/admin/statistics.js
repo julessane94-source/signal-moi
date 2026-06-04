@@ -72,25 +72,18 @@ export default function Statistics() {
         return
       }
 
+      const fetchOpts = {
+        credentials: 'include',
+        headers: { Authorization: `Bearer ${token}`, 'Accept': 'application/json' }
+      }
+
       const [overview, byType, byMonth, byGender, byAge, exportDat] = await Promise.all([
-        fetch(`${API_BASE}/api/statistics/overview`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }).then(r => r.json()),
-        fetch(`${API_BASE}/api/statistics/by-type`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }).then(r => r.json()),
-        fetch(`${API_BASE}/api/statistics/by-month?year=${new Date().getFullYear()}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }).then(r => r.json()),
-        fetch(`${API_BASE}/api/statistics/by-gender`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }).then(r => r.json()),
-        fetch(`${API_BASE}/api/statistics/by-age`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }).then(r => r.json()),
-        fetch(`${API_BASE}/api/statistics/export-data?startDate=${filters.startDate}&endDate=${filters.endDate}&type=${filters.type}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }).then(r => r.json())
+        fetch(`${API_BASE}/api/statistics/overview`, fetchOpts).then(r => r.json()),
+        fetch(`${API_BASE}/api/statistics/by-type`, fetchOpts).then(r => r.json()),
+        fetch(`${API_BASE}/api/statistics/by-month?year=${new Date().getFullYear()}`, fetchOpts).then(r => r.json()),
+        fetch(`${API_BASE}/api/statistics/by-gender`, fetchOpts).then(r => r.json()),
+        fetch(`${API_BASE}/api/statistics/by-age`, fetchOpts).then(r => r.json()),
+        fetch(`${API_BASE}/api/statistics/export-data?startDate=${filters.startDate}&endDate=${filters.endDate}&type=${filters.type}`, fetchOpts).then(r => r.json())
       ])
 
       setData({

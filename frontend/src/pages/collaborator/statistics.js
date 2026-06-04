@@ -67,18 +67,16 @@ export default function CollaboratorStatistics() {
       }
 
       const [overview, byType, byGender, byAge] = await Promise.all([
-        fetch(`${API_BASE}/api/statistics/overview`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }).then(r => r.json()),
-        fetch(`${API_BASE}/api/statistics/by-type`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }).then(r => r.json()),
-        fetch(`${API_BASE}/api/statistics/by-gender`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }).then(r => r.json()),
-        fetch(`${API_BASE}/api/statistics/by-age`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }).then(r => r.json())
+        const fetchOpts = {
+          credentials: 'include',
+          headers: { Authorization: `Bearer ${token}`, 'Accept': 'application/json' }
+        }
+
+        const [overview, byType, byGender, byAge] = await Promise.all([
+          fetch(`${API_BASE}/api/statistics/overview`, fetchOpts).then(r => r.json()),
+          fetch(`${API_BASE}/api/statistics/by-type`, fetchOpts).then(r => r.json()),
+          fetch(`${API_BASE}/api/statistics/by-gender`, fetchOpts).then(r => r.json()),
+          fetch(`${API_BASE}/api/statistics/by-age`, fetchOpts).then(r => r.json())
       ])
 
       setData({
