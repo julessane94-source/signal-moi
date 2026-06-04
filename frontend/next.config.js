@@ -7,7 +7,19 @@ const nextConfig = {
     defaultLocale: 'fr',
   },
   images: {
-    domains: ['localhost', 'signal-moi.vercel.app'],
+    domains: (function(){
+      const defaults = ['localhost', 'signal-moi.vercel.app']
+      try {
+        const api = process.env.NEXT_PUBLIC_API_URL
+        if (!api) return defaults
+        const u = new URL(api)
+        const host = u.hostname
+        if (!defaults.includes(host)) defaults.push(host)
+      } catch (e) {
+        // ignore invalid env
+      }
+      return defaults
+    })(),
   },
   async headers() {
     return [

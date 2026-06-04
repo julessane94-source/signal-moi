@@ -1,5 +1,6 @@
 ﻿'use client'
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import Head from 'next/head'
 import Link from 'next/link'
 import { useAuth } from '../context/AuthContext'
@@ -185,13 +186,15 @@ export default function Home() {
                   <div className="rounded-2xl overflow-hidden border border-white/10 relative bg-black/5">
                     {Array.isArray(config.home_page?.images) && config.home_page.images.length > 0 ? (
                       <>
-                        <img
-                          src={getImageUrl(config.home_page.images[slideIndex])}
-                          alt={`Slide ${slideIndex + 1}`}
-                          loading="lazy"
-                          decoding="async"
-                          className="w-full h-72 object-cover block transition-transform duration-700 ease-in-out transform hover:scale-105"
-                        />
+                        <div className="relative w-full h-72">
+                          <Image
+                            src={getImageUrl(config.home_page.images[slideIndex])}
+                            alt={`Slide ${slideIndex + 1}`}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 420px"
+                            className="object-cover transition-transform duration-700 ease-in-out transform hover:scale-105"
+                          />
+                        </div>
                         <button
                           onClick={() => setSlideIndex((s) => (s - 1 + config.home_page.images.length) % config.home_page.images.length)}
                           className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full"
