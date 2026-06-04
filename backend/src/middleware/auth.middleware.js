@@ -16,6 +16,8 @@ const protect = async (req, res, next) => {
   }
   
   try {
+    if (!process.env.JWT_SECRET) console.warn('[AuthMiddleware] JWT_SECRET not set');
+    console.log('[AuthMiddleware] token snippet:', token ? token.substring(0, 20) + '...' : 'no-token');
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // ✅ FIX: PostgreSQL syntax ($1) instead of MySQL (?)
@@ -32,7 +34,8 @@ const protect = async (req, res, next) => {
     req.user = users[0];
     next();
   } catch (error) {
-    console.error('❌ Auth middleware error:', error.message);
+    console.error('❌ Auth middleware error:', error.name, error.message);
+    if (error.stack) console.error(error.stack.split('\n').slice(0,3).join('\n'));
     return res.status(401).json({
       success: false,
       message: 'Non autorisé - Token invalide'
