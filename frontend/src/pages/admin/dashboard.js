@@ -53,6 +53,8 @@ export default function AdminDashboard() {
   const [deleteType, setDeleteType] = useState(null) // 'signalement' ou 'campagne'
   const [logoUrl, setLogoUrl] = useState('/icons/icon-192x192.png')
   const [uploadingLogo, setUploadingLogo] = useState(false)
+  const [uploadingSlideshow, setUploadingSlideshow] = useState(false)
+  const [slideshowFiles, setSlideshowFiles] = useState([])
   const [siteConfig, setSiteConfig] = useState({
     siteName: 'Signal-Moi',
     contactEmail: 'contact@signal-moi.com',
@@ -851,6 +853,54 @@ export default function AdminDashboard() {
                           onChange={e => setSiteConfig({...siteConfig, homePage: {...siteConfig.homePage, content: e.target.value}})}
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg min-h-[120px] focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
+                      </FormField>
+                      <FormField label="Images du diaporama (téléversement direct)">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={(e) => setSlideshowFiles(Array.from(e.target.files || []))}
+                          className="w-full text-sm text-slate-600 file:mr-4 file:rounded-full file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100"
+                        />
+                        <div className="mt-3 flex flex-wrap gap-3">
+                          <Button
+                            size="sm"
+                            variant="primary"
+                            onClick={async () => {
+                              if (!slideshowFiles.length) {
+                                toast.error('Sélectionnez au moins une image')
+                                return
+                              }
+                              setUploadingSlideshow(true)
+                              try {
+                                const token = localStorage.getItem('token')
+                                const formData = new FormData()
+                                slideshowFiles.forEach((file) => formData.append('images', file))
+                                const res = await fetch(`${API_BASE}/api/admin/site-config/slideshow-images`, {
+                                  method: 'PUT',
+                                  headers: { Authorization: `Bearer ${token}` },
+                                  body: formData
+                                })
+                                const data = await res.json()
+                                if (!res.ok) throw new Error(data.error || 'Erreur lors de l\'upload')
+                                setSiteConfig(prev => ({
+                                  ...prev,
+                                  homePage: { ...(prev.homePage || {}), images: data.images || [] }
+                                }))
+                                toast.success('✅ Images du diaporama enregistrées')
+                                setSlideshowFiles([])
+                              } catch (error) {
+                                toast.error('❌ ' + (error.message || 'Erreur'))
+                              } finally {
+                                setUploadingSlideshow(false)
+                              }
+                            }}
+                            disabled={uploadingSlideshow}
+                          >
+                            {uploadingSlideshow ? 'Téléversement...' : 'Téléverser les images'}
+                          </Button>
+                          <span className="text-xs text-slate-500">Les images sont stockées directement dans la configuration de la page d’accueil.</span>
+                        </div>
                       </FormField>
                     </div>
 

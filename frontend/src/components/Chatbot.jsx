@@ -4,24 +4,45 @@ import { useState, useRef, useEffect } from 'react'
 const STORAGE_KEY = 'superman_chat_history_v1'
 
 const FAQ = [
-  { q: 'Comment signaler un incident ?', a: "Cliquez sur « Faire un signalement » sur la page d'accueil, ajoutez une description, des photos et la localisation." },
-  { q: 'Comment créer un compte ?', a: "Cliquez sur Rejoindre en haut de la page et suivez le formulaire d'inscription." },
-  { q: 'Comment me désabonner de la newsletter ?', a: "Rendez-vous sur la page Newsletter et cliquez sur le lien de désabonnement reçu par e-mail." },
+  { q: 'Qui es-tu ?', a: "Je suis Superman, votre assistant virtuel sur Signal-Moi. Je peux vous orienter vers les signalements, l’inscription, votre profil et les pages d’aide." },
+  { q: 'Qu est ce que Signal-Moi ?', a: "Signal-Moi est une plateforme citoyenne qui permet de signaler des incidents, suivre leur traitement et agir ensemble pour améliorer son quartier." },
+  { q: 'Qui est Souleymane Sane ?', a: "Souleymane Sane est le président de Signal-Moi, il porte la vision stratégique et la gouvernance de l’organisation." },
+  { q: 'Comment signaler un incident ?', a: "Cliquez sur « Faire un signalement » depuis la page d'accueil, décrivez l'événement, ajoutez des photos ou vidéos, puis précisez la localisation si possible." },
+  { q: 'Comment créer un compte ?', a: "Cliquez sur « Rejoindre » en haut à droite, remplissez vos informations, validez l'inscription et connectez-vous ensuite pour accéder à votre espace." },
+  { q: 'Comment me contacter ?', a: "Utilisez la page Contact pour envoyer un message, ou consultez la FAQ et les ressources disponibles sur le site." },
+  { q: 'Comment changer mon mot de passe ?', a: "Connectez-vous, ouvrez votre profil ou vos paramètres, puis utilisez la section sécurité pour réinitialiser ou mettre à jour votre mot de passe." },
+  { q: 'Où trouver mes campagnes ?', a: "Les campagnes et suivis sont disponibles dans votre espace utilisateur, dans les sections Campagnes, Profil et Paramètres." },
+  { q: 'Comment me désabonner ?', a: "Rendez-vous dans vos paramètres ou sur la page Newsletter et utilisez le lien de désabonnement fourni par e-mail." },
 ]
 
 const INTENTS = [
-  { patterns: ['signal', 'signalement', 'signaler'], reply: "Pour signaler un incident, utilisez le bouton 'Faire un signalement' et joignez des preuves (photo, vidéo). Voulez-vous un lien vers le formulaire ?" },
-  { patterns: ['compte', 'inscri', 's inscrire', 'registre'], reply: "Pour créer un compte, cliquez sur 'Rejoindre' en haut à droite. Je peux vous donner la marche à suivre si besoin." },
-  { patterns: ['contact', 'support'], reply: "Vous pouvez nous contacter via la page Contact ou répondre à nos emails de support." },
-  { patterns: ['newsletter', 'abonne', 'abonnement'], reply: "Pour vous abonner, allez sur la page Newsletter et entrez votre adresse email." },
+  { id: 'identity', patterns: ['qui es tu', 'qui etes tu', 'tu es qui', 'superman', 'assistant'], reply: "Je suis Superman, l’assistant de Signal-Moi. Je peux vous aider à comprendre la plateforme, trouver les bonnes pages et répondre aux questions courantes." },
+  { id: 'brand', patterns: ['signal moi', 'plateforme citoyenne', 'quartier', 'signaler un incident'], reply: "Signal-Moi est une plateforme citoyenne qui permet de signaler des incidents, suivre les réponses et agir ensemble dans son quartier." },
+  { id: 'person', patterns: ['souleymane sane', 'president signal moi', 'vision strategique'], reply: "Souleymane Sane est le président de Signal-Moi. Il porte la vision stratégique et la gouvernance de l’organisation." },
+  { id: 'signalement', patterns: ['signal', 'signalement', 'signaler', 'plainte', 'incident', 'preuve', 'photo', 'video'], reply: "Pour signaler un incident, utilisez le bouton « Faire un signalement » et joignez des preuves utiles (photo, vidéo, localisation). Si vous le souhaitez, je peux vous guider étape par étape." },
+  { id: 'compte', patterns: ['compte', 'inscri', 's inscrire', 'registre', 'connexion', 'login', 'mot de passe'], reply: "Pour créer un compte ou vous reconnecter, utilisez le bouton « Rejoindre » puis le formulaire d'inscription. En cas de souci d'accès, passez par la page de connexion ou la section sécurité de votre profil." },
+  { id: 'contact', patterns: ['contact', 'support', 'aide', 'assistance', 'message'], reply: "Vous pouvez nous contacter via la page Contact, ou utiliser ce chatbot pour obtenir des réponses rapides sur les démarches, le profil et le signalement." },
+  { id: 'newsletter', patterns: ['newsletter', 'abonne', 'abonnement', 'desabonne', 'mail'], reply: "Pour vous abonner ou vous désabonner, utilisez la page Newsletter ou les paramètres de votre compte, selon le message reçu par e-mail." },
+  { id: 'profil', patterns: ['profil', 'parametre', 'paramètres', 'compte utilisateur', 'espace'], reply: "Votre profil et vos paramètres regroupent vos informations, préférences et accès à vos campagnes. Vous pouvez y retrouver vos réglages rapides." },
+  { id: 'campagne', patterns: ['campagne', 'plaidoyer', 'initiative', 'suivi'], reply: "Les campagnes et plaidoyers sont visibles dans votre espace utilisateur. Vous pouvez suivre leur avancement, consulter les détails et les actions à faire." },
 ]
 
 const quickIntents = [
   { label: 'Signalement', text: 'Comment signaler un incident ?' },
   { label: 'Compte', text: 'Comment créer un compte ?' },
-  { label: 'Contact', text: 'Comment me contacter ?' },
-  { label: 'FAQ', text: 'Montrez-moi les réponses rapides.' },
+  { label: 'Profil', text: 'Où gérer mon profil et mes paramètres ?' },
+  { label: 'Contact', text: 'Comment me contacter rapidement ?' },
+  { label: 'Aide', text: 'Peux-tu m’aider à trouver la bonne page ?' },
 ]
+
+const normalizeText = (text) =>
+  text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 
 export default function Chatbot() {
   const [open, setOpen] = useState(false)
@@ -48,9 +69,42 @@ export default function Chatbot() {
   }, [messages, open])
 
   const detectIntent = (text) => {
-    const t = text.toLowerCase()
+    const t = normalizeText(text)
+    let best = { score: 0, reply: null, id: null }
+
     for (const it of INTENTS) {
-      for (const p of it.patterns) if (t.includes(p)) return it.reply
+      let score = 0
+      for (const p of it.patterns) {
+        const np = normalizeText(p)
+        if (t.includes(np)) score += 4
+        else if (t.split(' ').some((word) => word.length > 3 && np.includes(word))) score += 1
+      }
+      if (t.includes('comment') && (it.id === 'signalement' || it.id === 'compte' || it.id === 'contact')) score += 1
+      if (score > best.score) best = { score, reply: it.reply, id: it.id }
+    }
+
+    return best.score >= 4 ? best : null
+  }
+
+  const smartFallback = (text) => {
+    const t = normalizeText(text)
+    if (/^(salut|bonjour|bonsoir|hello|hi|yo)/.test(t)) {
+      return "Bonjour ! Je suis Superman, votre assistant dédié. Je peux vous guider sur les signalements, vos campagnes, votre profil ou la page de contact."
+    }
+    if (/qui es tu|qui etes tu|tu es qui|quel est ton role|tu es qui exactement/.test(t)) {
+      return "Je suis Superman, l’assistant virtuel de Signal-Moi. Je peux vous aider à trouver la bonne page, expliquer le service et répondre à vos questions simples."
+    }
+    if (/qu est ce que signal moi|c est quoi signal moi|signal moi est quoi|signal moi c est/.test(t)) {
+      return "Signal-Moi est une plateforme citoyenne qui permet de signaler des incidents, suivre leur traitement et améliorer sa communauté avec des actions concrètes."
+    }
+    if (/qui est souleymane sane|souleymane sane qui|president signal moi/.test(t)) {
+      return "Souleymane Sane est le président de Signal-Moi. Il porte la vision stratégique et la gouvernance de l’organisation."
+    }
+    if (/merci/.test(t)) {
+      return "Avec plaisir. Si vous voulez, je peux aussi vous proposer un raccourci vers la bonne page ou vous expliquer la procédure en 3 étapes." 
+    }
+    if (/faq|reponse rapide|reponses rapides|question rapide/.test(t)) {
+      return "Voici les réponses rapides que je sais traiter : signalement, compte, profile, contact, newsletter et campagnes. Dites-moi simplement ce que vous cherchez." 
     }
     return null
   }
@@ -73,22 +127,42 @@ export default function Chatbot() {
         const reply = data.reply || "Désolé, je n'ai pas de réponse."
         setMessages((m) => [...m, { from: 'bot', text: reply, ts: Date.now() }])
       } else {
-        // local intent/FAQ fallback
-        const intentResponse = detectIntent(text)
-        if (intentResponse) {
+        const smart = smartFallback(text)
+        if (smart) {
           await new Promise((r) => setTimeout(r, 300))
-          setMessages((m) => [...m, { from: 'bot', text: intentResponse, ts: Date.now() }])
-        } else {
-          // try matching FAQ keywords
-          const faq = FAQ.find(f => text.toLowerCase().includes(f.q.split(' ')[0].toLowerCase()))
-          if (faq) {
-            await new Promise((r) => setTimeout(r, 300))
-            setMessages((m) => [...m, { from: 'bot', text: faq.a, ts: Date.now() }])
-          } else {
-            await new Promise((r) => setTimeout(r, 400))
-            setMessages((m) => [...m, { from: 'bot', text: "Je n'ai pas compris parfaitement — pouvez-vous reformuler ou choisir une option : Signalement, Compte, Contact, Newsletter?", ts: Date.now() }])
-          }
+          setMessages((m) => [...m, { from: 'bot', text: smart, ts: Date.now() }])
+          return
         }
+
+        const intent = detectIntent(text)
+        if (intent?.reply) {
+          await new Promise((r) => setTimeout(r, 300))
+          setMessages((m) => [...m, { from: 'bot', text: intent.reply, ts: Date.now() }])
+          return
+        }
+
+        const faq = FAQ.reduce((best, item) => {
+          const query = normalizeText(item.q)
+          const answer = normalizeText(text)
+          let score = 0
+          query.split(' ').forEach((word) => {
+            if (answer.includes(word) && word.length > 2) score += 1
+          })
+          return score > best.score ? { item, score } : best
+        }, { item: null, score: 0 })
+
+        if (faq.item && faq.score >= 2) {
+          await new Promise((r) => setTimeout(r, 300))
+          setMessages((m) => [...m, { from: 'bot', text: faq.item.a, ts: Date.now() }])
+          return
+        }
+
+        await new Promise((r) => setTimeout(r, 400))
+        setMessages((m) => [...m, {
+          from: 'bot',
+          text: "Je peux vous aider sur les signalements, le compte, le profil, la FAQ ou le contact. Reformulez votre demande avec un mot-clé comme « signalement », « compte », « profil » ou « contact ».",
+          ts: Date.now(),
+        }])
       }
     } catch (e) {
       setMessages((m) => [...m, { from: 'bot', text: 'Erreur réseau — veuillez réessayer.', ts: Date.now() }])

@@ -43,6 +43,37 @@ const uploadLogo = multer({
   }
 });
 
+const slideshowStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(__dirname, '..', '..', 'uploads', 'slideshow');
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = `slideshow-${uuidv4()}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  }
+});
+
+const slideshowFilter = (req, file, cb) => {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Type de fichier non supporté. Accepte: JPEG, PNG, WebP, GIF'), false);
+  }
+};
+
+const uploadSlideshowImages = multer({
+  storage: slideshowStorage,
+  fileFilter: slideshowFilter,
+  limits: {
+    fileSize: 5242880 // 5MB
+  }
+});
+
 // ? Middleware d'authentification admin
 const authMiddleware = async (req, res, next) => {
     try {
@@ -382,6 +413,49 @@ router.post('/site-config', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('[ADMIN POST /site-config] Erreur:', err);
     res.status(500).json({ error: 'Erreur lors de la sauvegarde', details: err.message });
+  }
+});
+
+// PUT /api/admin/site-config/slideshow-images - Téléversement des images du diaporama de la page d'accueil
+router.put('/site-config/slideshow-images', authMiddleware, uploadSlideshowImages.array('images', 10), async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'Aucun fichier n\'a été téléchargé' });
+    }
+
+    const currentConfig = await SiteConfig.getAll();
+    const homePage = typeof currentConfig.home_page === 'string' ? JSON.parse(currentConfig.home_page) : (currentConfig.home_page || {});
+    const existingImages = Array.isArray(homePage.images) ? homePage.images.filter(Boolean) : [];
+
+    const uploadedImages = req.files.map((file) => {
+      const buffer = fs.readFileSync(file.path);
+      return `data:${file.mimetype || 'image/png'};base64,${buffer.toString('base64')}`;
+    });
+
+    const nextImages = [...existingImages, ...uploadedImages];
+    homePage.images = nextImages;
+
+    await SiteConfig.set('home_page', JSON.stringify(homePage));
+
+    req.files.forEach((file) => {
+      try {
+        if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+      } catch (e) {
+        console.warn('⚠️  Impossible de supprimer l\'image temporaire:', e.message);
+      }
+    });
+
+    res.json({ success: true, message: 'Images du diaporama enregistrées', images: nextImages });
+  } catch (err) {
+    console.error('[ADMIN PUT /site-config/slideshow-images] Erreur:', err);
+    req.files?.forEach((file) => {
+      try {
+        if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+      } catch (e) {
+        console.warn('⚠️  Impossible de nettoyer l\'image temporaire:', e.message);
+      }
+    });
+    res.status(500).json({ error: 'Erreur lors de l\'upload des images du diaporama', details: err.message });
   }
 });
 
