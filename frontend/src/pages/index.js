@@ -319,10 +319,10 @@ export default function Home() {
               <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Galerie</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {config.home_page?.images?.map((img, idx) => (
-                  <img key={idx} src={img} alt={`Galerie ${idx}`} className="w-full h-52 object-cover rounded-lg shadow" />
+                  <img key={idx} src={img} alt={`Galerie ${idx}`} loading="lazy" decoding="async" className="w-full h-52 object-cover rounded-lg shadow" />
                 ))}
                 {config.home_page?.videos?.map((vid, idx) => (
-                  <iframe key={`v-${idx}`} src={vid} className="w-full h-52 rounded-lg" />
+                  <iframe key={`v-${idx}`} src={vid} loading="lazy" className="w-full h-52 rounded-lg" />
                 ))}
               </div>
             </div>
@@ -338,7 +338,7 @@ export default function Home() {
                 {collaboratorCampaigns.map(c => (
                   <div key={c.id} className="rounded-xl shadow overflow-hidden bg-white">
                     {c.image_url ? (
-                      <img src={getImageUrl(c.image_url)} alt={c.titre} className="w-full h-44 object-cover" />
+                      <img src={getImageUrl(c.image_url)} alt={c.titre} loading="lazy" decoding="async" className="w-full h-44 object-cover" />
                     ) : (
                       <div className="w-full h-44 bg-gray-100 flex items-center justify-center text-gray-400">Pas d'image</div>
                     )}
