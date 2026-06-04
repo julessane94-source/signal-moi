@@ -62,6 +62,16 @@ export default function Home() {
     fetchConfig()
   }, [])
 
+  // Slideshow state for hero right column
+  const [slideIndex, setSlideIndex] = useState(0)
+  useEffect(() => {
+    if (!config.home_page?.images || config.home_page.images.length === 0) return
+    const id = setInterval(() => {
+      setSlideIndex((s) => (s + 1) % config.home_page.images.length)
+    }, 5000)
+    return () => clearInterval(id)
+  }, [config.home_page?.images])
+
   const fetchConfig = async () => {
     try {
       const res = await fetch(`${API_BASE}/api/auth/site-config`)
@@ -159,10 +169,43 @@ export default function Home() {
 
               <div>
                 <div className="rounded-3xl border border-white/10 bg-white/10 p-4 shadow-2xl backdrop-blur-xl">
-                  <div className="rounded-3xl overflow-hidden border border-white/10 shadow-soft">
-                    <iframe title="Carte aperçu" src="https://www.openstreetmap.org/export/embed.html?bbox=2.2137%2C46.2276%2C2.2137%2C46.2276&layer=mapnik&marker=46.2276%2C2.2137" className="w-full h-72" style={{ border: 0 }} />
+                  <div className="rounded-3xl overflow-hidden border border-white/10 shadow-soft relative">
+                    {Array.isArray(config.home_page?.images) && config.home_page.images.length > 0 ? (
+                      <>
+                        <img
+                          src={getImageUrl(config.home_page.images[slideIndex])}
+                          alt={`Slide ${slideIndex + 1}`}
+                          className="w-full h-72 object-cover block"
+                        />
+                        <button
+                          onClick={() => setSlideIndex((s) => (s - 1 + config.home_page.images.length) % config.home_page.images.length)}
+                          className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 text-white p-2 rounded-full"
+                          aria-label="Précédent"
+                        >‹</button>
+                        <button
+                          onClick={() => setSlideIndex((s) => (s + 1) % config.home_page.images.length)}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 text-white p-2 rounded-full"
+                          aria-label="Suivant"
+                        >›</button>
+                      </>
+                    ) : (
+                      <iframe title="Carte aperçu" src="https://www.openstreetmap.org/export/embed.html?bbox=2.2137%2C46.2276%2C2.2137%2C46.2276&layer=mapnik&marker=46.2276%2C2.2137" className="w-full h-72" style={{ border: 0 }} />
+                    )}
                   </div>
-                  <div className="mt-4 rounded-2xl bg-slate-950/30 p-4 text-sm text-slate-100">Aperçu interactif — la carte complète vous aide à situer l’incident rapidement.</div>
+                  {Array.isArray(config.home_page?.images) && config.home_page.images.length > 0 ? (
+                    <div className="mt-4 flex items-center justify-center gap-2">
+                      {config.home_page.images.map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setSlideIndex(i)}
+                          aria-label={`Aller au slide ${i + 1}`}
+                          className={`w-2 h-2 rounded-full ${i === slideIndex ? 'bg-white' : 'bg-white/40'}`}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="mt-4 rounded-2xl bg-slate-950/30 p-4 text-sm text-slate-100">Aperçu interactif — la carte complète vous aide à situer l’incident rapidement.</div>
+                  )}
                 </div>
               </div>
             </div>
