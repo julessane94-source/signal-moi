@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { useAuth } from '../context/AuthContext'
 import { Button, Card, FormField, Input } from '../components/ui'
-import { UserIcon, EnvelopeIcon, LockClosedIcon, PhoneIcon, MapPinIcon } from '@heroicons/react/24/outline'
+import { User, Envelope, LockClosed, Phone, MapPin } from '@heroicons/react/24/outline'
 import { motion } from 'framer-motion'
 
 export default function Register() {
@@ -156,7 +156,7 @@ export default function Register() {
                         placeholder="Jean"
                         value={formData.prenom}
                         onChange={handleChange}
-                        icon={UserIcon}
+                        icon={User}
                         error={!!errors.prenom}
                         className="bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-indigo-500"
                       />
@@ -169,7 +169,7 @@ export default function Register() {
                         placeholder="Dupont"
                         value={formData.nom}
                         onChange={handleChange}
-                        icon={UserIcon}
+                        icon={User}
                         error={!!errors.nom}
                         className="bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-indigo-500"
                       />
@@ -185,7 +185,7 @@ export default function Register() {
                       placeholder="vous@exemple.com"
                       value={formData.email}
                       onChange={handleChange}
-                      icon={EnvelopeIcon}
+                      icon={Envelope}
                       error={!!errors.email}
                       className="bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-indigo-500"
                     />
@@ -216,7 +216,7 @@ export default function Register() {
                       placeholder="••••••••"
                       value={formData.password}
                       onChange={handleChange}
-                      icon={LockClosedIcon}
+                      icon={LockClosed}
                       error={!!errors.password}
                       className="bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-indigo-500"
                     />
@@ -231,7 +231,7 @@ export default function Register() {
                       placeholder="••••••••"
                       value={formData.confirmPassword}
                       onChange={handleChange}
-                      icon={LockClosedIcon}
+                      icon={LockClosed}
                       error={!!errors.confirmPassword}
                       className="bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-indigo-500"
                     />
@@ -273,7 +273,7 @@ export default function Register() {
                       placeholder="+221 7XX XXX XXX"
                       value={formData.telephone}
                       onChange={handleChange}
-                      icon={PhoneIcon}
+                      icon={Phone}
                       error={!!errors.telephone}
                       className="bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-indigo-500"
                     />
@@ -288,7 +288,7 @@ export default function Register() {
                         placeholder="Dakar"
                         value={formData.ville}
                         onChange={handleChange}
-                        icon={MapPinIcon}
+                        icon={MapPin}
                         error={!!errors.ville}
                         className="bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-indigo-500"
                       />
@@ -301,7 +301,7 @@ export default function Register() {
                         placeholder="Centre-ville"
                         value={formData.quartier}
                         onChange={handleChange}
-                        icon={MapPinIcon}
+                        icon={MapPin}
                         error={!!errors.quartier}
                         className="bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-indigo-500"
                       />

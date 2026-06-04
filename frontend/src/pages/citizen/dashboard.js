@@ -6,11 +6,11 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { toast } from 'react-toastify'
 import {
-  DocumentTextIcon,
-  CheckCircleIcon,
-  PencilSquareIcon,
-  UserGroupIcon,
-  PlusIcon
+  DocumentText,
+  CheckCircle,
+  PencilSquare,
+  UserGroup,
+  Plus
 } from '@heroicons/react/24/outline'
 
 export default function CitizenDashboard() {
@@ -117,10 +117,10 @@ export default function CitizenDashboard() {
   }
 
   const tabs = [
-    { id: 'signalements', name: 'Mes signalements', icon: DocumentTextIcon },
-    { id: 'campagnes', name: 'Campagnes', icon: CheckCircleIcon },
-    { id: 'plaidoyers', name: 'Plaidoyers', icon: PencilSquareIcon },
-    { id: 'profil', name: 'Mon profil', icon: UserGroupIcon }
+    { id: 'signalements', name: 'Mes signalements', icon: DocumentText },
+    { id: 'campagnes', name: 'Campagnes', icon: CheckCircle },
+    { id: 'plaidoyers', name: 'Plaidoyers', icon: PencilSquare },
+    { id: 'profil', name: 'Mon profil', icon: UserGroup }
   ]
 
   const getStatusBadge = (statut) => {
@@ -194,7 +194,7 @@ export default function CitizenDashboard() {
             className="mb-8"
           >
             <Link href="/citizen/signalement">
-              <Button size="lg" icon={PlusIcon} className="w-full md:w-auto bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg">
+              <Button size="lg" icon={Plus} className="w-full md:w-auto bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg">
                 🚨 Signaler un incident
               </Button>
             </Link>
@@ -242,7 +242,7 @@ export default function CitizenDashboard() {
                   <div className="text-6xl mb-4">📭</div>
                   <p className="text-gray-500 mb-4">Aucun signalement pour le moment</p>
                   <Link href="/citizen/signalement">
-                    <Button variant="primary" icon={PlusIcon}>
+                    <Button variant="primary" icon={Plus}>
                       Créer mon premier signalement
                     </Button>
                   </Link>

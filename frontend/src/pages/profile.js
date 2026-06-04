@@ -3,14 +3,14 @@ import { useAuth } from '../context/AuthContext'
 import { Button, Card, FormField, Input } from '../components/ui'
 import { motion } from 'framer-motion'
 import {
-  UserCircleIcon,
-  KeyIcon,
-  BellIcon,
-  EnvelopeIcon,
-  PhoneIcon,
-  MapPinIcon,
-  CameraIcon,
-  CheckIcon
+  UserCircle,
+  Key,
+  Bell,
+  Envelope,
+  Phone,
+  MapPin,
+  Camera,
+  Check
 } from '@heroicons/react/24/outline'
 
 export default function Profile() {
@@ -104,9 +104,9 @@ export default function Profile() {
   }
 
   const tabs = [
-    { id: 'profile', name: 'Mon profil', icon: UserCircleIcon },
-    { id: 'password', name: 'Sécurité', icon: KeyIcon },
-    { id: 'notifications', name: 'Notifications', icon: BellIcon }
+    { id: 'profile', name: 'Mon profil', icon: UserCircle },
+    { id: 'password', name: 'Sécurité', icon: Key },
+    { id: 'notifications', name: 'Notifications', icon: Bell }
   ]
 
   return (
@@ -132,7 +132,7 @@ export default function Profile() {
                       </span>
                     </div>
                     <button className="absolute bottom-0 right-0 bg-indigo-600 text-white p-2 rounded-lg shadow-md hover:bg-indigo-700 transition">
-                      <CameraIcon className="h-4 w-4" />
+                      <Camera className="h-4 w-4" />
                     </button>
                   </div>
 
@@ -200,7 +200,7 @@ export default function Profile() {
                   : 'bg-red-50 text-red-700 border border-red-200'
               }`}
             >
-              <CheckIcon className="h-5 w-5" />
+              <Check className="h-5 w-5" />
               {message}
             </motion.div>
           )}
@@ -224,7 +224,7 @@ export default function Profile() {
                         placeholder="Jean"
                         value={formData.prenom}
                         onChange={handleProfileChange}
-                        icon={UserCircleIcon}
+                        icon={UserCircle}
                         error={!!profileErrors.prenom}
                       />
                     </FormField>
@@ -234,7 +234,7 @@ export default function Profile() {
                         placeholder="Dupont"
                         value={formData.nom}
                         onChange={handleProfileChange}
-                        icon={UserCircleIcon}
+                        icon={UserCircle}
                         error={!!profileErrors.nom}
                       />
                     </FormField>
@@ -245,7 +245,7 @@ export default function Profile() {
                       type="email"
                       value={user?.email || ''}
                       disabled
-                      icon={EnvelopeIcon}
+                      icon={Envelope}
                     />
                   </FormField>
 
@@ -257,7 +257,7 @@ export default function Profile() {
                         placeholder="+237 6xx xxx xxx"
                         value={formData.telephone}
                         onChange={handleProfileChange}
-                        icon={PhoneIcon}
+                        icon={Phone}
                       />
                     </FormField>
                     <FormField label="Ville">
@@ -266,7 +266,7 @@ export default function Profile() {
                         placeholder="Yaoundé"
                         value={formData.ville}
                         onChange={handleProfileChange}
-                        icon={MapPinIcon}
+                        icon={MapPin}
                       />
                     </FormField>
                   </div>
@@ -277,7 +277,7 @@ export default function Profile() {
                       placeholder="Centre-ville"
                       value={formData.quartier}
                       onChange={handleProfileChange}
-                      icon={MapPinIcon}
+                      icon={MapPin}
                     />
                   </FormField>
 
@@ -302,7 +302,7 @@ export default function Profile() {
                       placeholder="••••••••"
                       value={passwordData.currentPassword}
                       onChange={handlePasswordChange}
-                      icon={KeyIcon}
+                      icon={Key}
                       error={!!passwordErrors.currentPassword}
                     />
                   </FormField>
@@ -314,7 +314,7 @@ export default function Profile() {
                       placeholder="••••••••"
                       value={passwordData.newPassword}
                       onChange={handlePasswordChange}
-                      icon={KeyIcon}
+                      icon={Key}
                       error={!!passwordErrors.newPassword}
                     />
                   </FormField>
@@ -326,7 +326,7 @@ export default function Profile() {
                       placeholder="••••••••"
                       value={passwordData.confirmNewPassword}
                       onChange={handlePasswordChange}
-                      icon={KeyIcon}
+                      icon={Key}
                       error={!!passwordErrors.confirmNewPassword}
                     />
                   </FormField>
@@ -343,17 +343,17 @@ export default function Profile() {
               <div className="space-y-4">
                 {[
                   {
-                    icon: EnvelopeIcon,
+                    icon: Envelope,
                     title: 'Notifications par email',
                     description: 'Recevoir des alertes par email'
                   },
                   {
-                    icon: BellIcon,
+                    icon: Bell,
                     title: 'Notifications push',
                     description: 'Recevoir des notifications dans le navigateur'
                   },
                   {
-                    icon: UserCircleIcon,
+                    icon: UserCircle,
                     title: 'Nouveaux signalements',
                     description: 'Être alerté des nouveaux signalements près de vous'
                   }

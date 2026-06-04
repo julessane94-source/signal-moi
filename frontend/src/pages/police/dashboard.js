@@ -6,11 +6,11 @@ import { toast } from 'react-toastify'
 import { motion } from 'framer-motion'
 import { API_BASE } from '../../config/api'
 import {
-  MapPinIcon,
-  PhoneIcon,
-  DocumentTextIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon
+  MapPin,
+  Phone,
+  DocumentText,
+  ExclamationTriangle,
+  CheckCircle
 } from '@heroicons/react/24/outline'
 
 export default function PoliceDashboard() {
@@ -206,7 +206,7 @@ export default function PoliceDashboard() {
           >
             <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
               <div className="flex items-center gap-3 flex-1">
-                <ExclamationTriangleIcon className="h-6 w-6 flex-shrink-0" />
+                <ExclamationTriangle className="h-6 w-6 flex-shrink-0" />
                 <div>
                   <p className="font-semibold">{topSignal.titre}</p>
                   <p className="text-red-100 text-sm">Priorité: {topSignal.priorite || 'Normal'}</p>
@@ -355,7 +355,7 @@ export default function PoliceDashboard() {
                       <div className="flex flex-col gap-2">
                         <Button
                           size="sm"
-                          icon={DocumentTextIcon}
+                          icon={DocumentText}
                           onClick={() => {
                             console.log('Ouverture détails signal:', s);
                             setSelectedSignal(s);
@@ -373,7 +373,7 @@ export default function PoliceDashboard() {
                         <Button
                           size="sm"
                           variant="secondary"
-                          icon={MapPinIcon}
+                          icon={MapPin}
                           onClick={() => {
                             if (s.latitude && s.longitude) {
                               window.open(`https://www.google.com/maps/?q=${s.latitude},${s.longitude}`, '_blank')
@@ -444,7 +444,7 @@ export default function PoliceDashboard() {
             <div className="bg-indigo-50 p-5 rounded-lg border border-indigo-200">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <MapPinIcon className="h-5 w-5 text-indigo-600 mt-1" />
+                  <MapPin className="h-5 w-5 text-indigo-600 mt-1" />
                   <div>
                     <p className="font-semibold text-gray-900">{selectedSignal.localisation}</p>
                     {selectedSignal.latitude && (
@@ -457,7 +457,7 @@ export default function PoliceDashboard() {
                 <Button
                   size="sm"
                   variant="secondary"
-                  icon={MapPinIcon}
+                  icon={MapPin}
                   onClick={() => {
                     if (selectedSignal.latitude && selectedSignal.longitude) {
                       window.open(`https://www.google.com/maps/?q=${selectedSignal.latitude},${selectedSignal.longitude}`, '_blank')

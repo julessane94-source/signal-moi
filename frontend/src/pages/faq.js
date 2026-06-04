@@ -1,7 +1,7 @@
 import Head from 'next/head'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeftIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
+import { ArrowLeft, ChevronDown } from '@heroicons/react/24/outline'
 import { useRouter } from 'next/router'
 
 export default function FAQ() {
@@ -165,7 +165,7 @@ export default function FAQ() {
               onClick={() => router.back()}
               className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
             >
-              <ArrowLeftIcon className="h-5 w-5" />
+              <ArrowLeft className="h-5 w-5" />
               Retour
             </button>
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
@@ -203,7 +203,7 @@ export default function FAQ() {
                             animate={{ rotate: isOpen ? 180 : 0 }}
                             transition={{ duration: 0.3 }}
                           >
-                            <ChevronDownIcon className="h-5 w-5 text-gray-600 flex-shrink-0" />
+                            <ChevronDown className="h-5 w-5 text-gray-600 flex-shrink-0" />
                           </motion.div>
                         </button>
 

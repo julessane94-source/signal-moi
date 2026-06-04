@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { useAuth } from '../context/AuthContext'
 import { Button, Card, FormField, Input } from '../components/ui'
-import { EnvelopeIcon, LockClosedIcon } from '@heroicons/react/24/outline'
+import { Envelope, LockClosed } from '@heroicons/react/24/outline'
 import axios from 'axios'
 import { API_BASE } from '../config/api'
 import { motion } from 'framer-motion'
@@ -142,7 +142,7 @@ export default function Login() {
                       placeholder="vous@exemple.com"
                       value={formData.email}
                       onChange={handleChange}
-                      icon={EnvelopeIcon}
+                      icon={Envelope}
                       error={!!errors.email}
                       className="bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-indigo-500"
                     />
@@ -163,7 +163,7 @@ export default function Login() {
                     placeholder="••••••••"
                     value={formData.password}
                     onChange={handleChange}
-                    icon={LockClosedIcon}
+                    icon={LockClosed}
                     error={!!errors.password}
                     className="bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-indigo-500"
                   />

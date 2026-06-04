@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { Button, FormField, Input } from '../components/ui'
-import { EnvelopeIcon, CheckCircleIcon, ArrowLeftIcon } from '@heroicons/react/24/outline'
+import { Envelope, CheckCircle, ArrowLeft } from '@heroicons/react/24/outline'
 import { motion } from 'framer-motion'
 
 export default function ForgotPassword() {
@@ -251,7 +251,7 @@ export default function ForgotPassword() {
               animate={{ opacity: 1, y: 0 }}
               className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3"
             >
-              <CheckCircleIcon className="w-5 h-5 text-green-600 flex-shrink-0" />
+              <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
               <p className="text-green-700">{message}</p>
             </motion.div>
           )}
@@ -290,7 +290,7 @@ export default function ForgotPassword() {
                     placeholder="vous@exemple.com"
                     value={formData.email}
                     onChange={handleChange}
-                    icon={EnvelopeIcon}
+                    icon={Envelope}
                     className="bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-indigo-500"
                   />
                 </FormField>
@@ -373,7 +373,7 @@ export default function ForgotPassword() {
                   onClick={() => setStep('email')}
                   className="flex-1 flex items-center justify-center gap-2 text-indigo-600 hover:text-indigo-700 font-bold transition"
                 >
-                  <ArrowLeftIcon className="w-4 h-4" /> Retour
+                  <ArrowLeft className="w-4 h-4" /> Retour
                 </motion.button>
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
@@ -443,7 +443,7 @@ export default function ForgotPassword() {
                   onClick={() => setStep('code')}
                   className="flex-1 flex items-center justify-center gap-2 text-indigo-600 hover:text-indigo-700 font-bold transition"
                 >
-                  <ArrowLeftIcon className="w-4 h-4" /> Retour
+                  <ArrowLeft className="w-4 h-4" /> Retour
                 </motion.button>
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}

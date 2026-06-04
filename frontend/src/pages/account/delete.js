@@ -7,9 +7,9 @@ import { API_BASE } from '../../config/api'
 import { motion } from 'framer-motion'
 import Head from 'next/head'
 import { 
-  TrashIcon, 
-  ExclamationIcon,
-  ArrowLeftIcon 
+  Trash, 
+  Exclamation,
+  ArrowLeft 
 } from '@heroicons/react/24/outline'
 
 export default function DeleteAccount() {
@@ -116,11 +116,11 @@ export default function DeleteAccount() {
               onClick={() => router.back()}
               className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
             >
-              <ArrowLeftIcon className="h-5 w-5" />
+              <ArrowLeft className="h-5 w-5" />
               Retour
             </button>
             <h1 className="text-4xl font-bold text-gray-900 flex items-center gap-3">
-              <TrashIcon className="h-10 w-10 text-red-600" />
+              <Trash className="h-10 w-10 text-red-600" />
               Supprimer mon compte
             </h1>
             <p className="text-gray-600 mt-2">Cette action est irréversible</p>
@@ -136,7 +136,7 @@ export default function DeleteAccount() {
               {/* Avertissement */}
               <div className="bg-red-50 border-l-4 border-red-600 p-6 mb-8 rounded">
                 <div className="flex gap-4">
-                  <ExclamationIcon className="h-8 w-8 text-red-600 flex-shrink-0" />
+                  <Exclamation className="h-8 w-8 text-red-600 flex-shrink-0" />
                   <div>
                     <h3 className="font-bold text-red-900 mb-2">⚠️ Attention!</h3>
                     <p className="text-red-800 text-sm">

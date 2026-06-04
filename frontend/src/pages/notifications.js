@@ -6,13 +6,13 @@ import Head from 'next/head'
 import { motion } from 'framer-motion'
 import { Button, Card } from '../components/ui'
 import {
-  BellIcon,
-  CheckIcon,
-  XMarkIcon,
-  ArrowLeftIcon,
-  ExclamationIcon,
-  DocumentTextIcon,
-  CampaignIcon
+  Bell,
+  Check,
+  XMark,
+  ArrowLeft,
+  Exclamation,
+  DocumentText,
+  Campaign
 } from '@heroicons/react/24/outline'
 import { API_BASE } from '../config/api'
 
@@ -52,11 +52,11 @@ export default function NotificationsPage() {
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'new_signalement':
-        return DocumentTextIcon
+        return DocumentText
       case 'new_campaign':
-        return CampaignIcon
+        return Campaign
       default:
-        return BellIcon
+        return Bell
     }
   }
 
@@ -89,13 +89,13 @@ export default function NotificationsPage() {
           >
             <Link href="/profile">
               <Button variant="secondary" size="sm" className="mb-4">
-                <ArrowLeftIcon className="h-4 w-4 mr-2" /> Retour
+                <ArrowLeft className="h-4 w-4 mr-2" /> Retour
               </Button>
             </Link>
 
             <div className="flex items-center gap-3">
               <div className="p-3 bg-blue-100 rounded-lg">
-                <BellIcon className="h-8 w-8 text-blue-600" />
+                <Bell className="h-8 w-8 text-blue-600" />
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
@@ -181,7 +181,7 @@ export default function NotificationsPage() {
                         </div>
 
                         {isRead ? (
-                          <CheckIcon className="h-5 w-5 text-green-500 flex-shrink-0" />
+                          <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
                         ) : (
                           <div className="h-3 w-3 rounded-full bg-blue-500 flex-shrink-0 mt-1"></div>
                         )}

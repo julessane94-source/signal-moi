@@ -6,18 +6,18 @@ import { API_BASE } from '../../config/api'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '../ui'
 import {
-  Bars3Icon,
-  XMarkIcon,
-  HomeIcon,
-  InformationCircleIcon,
-  DocumentTextIcon,
-  UserGroupIcon,
-  EnvelopeIcon,
-  UserCircleIcon,
-  ArrowRightOnRectangleIcon,
-  CogIcon,
-  HeartIcon,
-  BellIcon
+  Bars3,
+  XMark,
+  Home,
+  InformationCircle,
+  DocumentText,
+  UserGroup,
+  Envelope,
+  UserCircle,
+  ArrowRightOnRectangle,
+  Cog,
+  Heart,
+  Bell
 } from '@heroicons/react/24/outline'
 
 export default function Navbar() {
@@ -79,12 +79,12 @@ export default function Navbar() {
   }
 
   const navigation = [
-    { name: 'Accueil', href: '/', icon: HomeIcon },
-    { name: 'À propos', href: '/about', icon: InformationCircleIcon },
-    { name: 'Signalements', href: '/signalements', icon: DocumentTextIcon },
-    { name: 'Campagnes', href: '/campagnes', icon: UserGroupIcon },
-    { name: 'Plaidoyers', href: '/plaidoyers', icon: DocumentTextIcon },
-    { name: 'Contact', href: '/contact', icon: EnvelopeIcon },
+    { name: 'Accueil', href: '/', icon: Home },
+    { name: 'À propos', href: '/about', icon: InformationCircle },
+    { name: 'Signalements', href: '/signalements', icon: DocumentText },
+    { name: 'Campagnes', href: '/campagnes', icon: UserGroup },
+    { name: 'Plaidoyers', href: '/plaidoyers', icon: DocumentText },
+    { name: 'Contact', href: '/contact', icon: Envelope },
   ]
 
   return (
@@ -121,7 +121,7 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-3">
           <Link href="/donate">
             <motion.a whileHover={{ scale: 1.05 }} className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-600 to-pink-600 text-white font-semibold rounded-full hover:from-red-700 hover:to-pink-700 transition-all">
-              <HeartIcon className="h-5 w-5" />
+              <Heart className="h-5 w-5" />
               Donner
             </motion.a>
           </Link>
@@ -151,7 +151,7 @@ export default function Navbar() {
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                   className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-slate-900 transition hover:bg-slate-200 relative"
                 >
-                  <UserCircleIcon className="h-5 w-5" />
+                  <UserCircle className="h-5 w-5" />
                   <span className="text-sm font-medium">{user?.prenom}</span>
                   {notificationCount > 0 && (
                     <motion.div
@@ -178,17 +178,17 @@ export default function Navbar() {
                       </div>
                       <Link href="/profile">
                         <motion.a whileHover={{ backgroundColor: '#f8fafc' }} className="flex items-center gap-2 px-4 py-3 text-sm text-slate-700 hover:text-slate-900">
-                          <UserCircleIcon className="h-4 w-4" /> Mon profil
+                          <UserCircle className="h-4 w-4" /> Mon profil
                         </motion.a>
                       </Link>
                       <Link href="/settings">
                         <motion.a whileHover={{ backgroundColor: '#f8fafc' }} className="flex items-center gap-2 px-4 py-3 text-sm text-slate-700 hover:text-slate-900">
-                          <CogIcon className="h-4 w-4" /> Paramètres
+                          <Cog className="h-4 w-4" /> Paramètres
                         </motion.a>
                       </Link>
                       <Link href="/notifications">
                         <motion.a whileHover={{ backgroundColor: '#f8fafc' }} className="flex items-center gap-2 px-4 py-3 text-sm text-slate-700 hover:text-slate-900 relative">
-                          <BellIcon className="h-4 w-4" />
+                          <Bell className="h-4 w-4" />
                           Notifications
                           {notificationCount > 0 && (
                             <span className="ml-auto bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
@@ -205,7 +205,7 @@ export default function Navbar() {
                         }}
                         className="flex w-full items-center gap-2 px-4 py-3 text-sm text-rose-600 hover:bg-rose-50"
                       >
-                        <ArrowRightOnRectangleIcon className="h-4 w-4" /> Déconnexion
+                        <ArrowRightOnRectangle className="h-4 w-4" /> Déconnexion
                       </motion.button>
                     </motion.div>
                   )}
@@ -221,7 +221,7 @@ export default function Navbar() {
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
         >
-          {mobileMenuOpen ? <XMarkIcon className="h-6 w-6" /> : <Bars3Icon className="h-6 w-6" />}
+          {mobileMenuOpen ? <XMark className="h-6 w-6" /> : <Bars3 className="h-6 w-6" />}
         </motion.button>
       </div>
 
@@ -261,7 +261,7 @@ export default function Navbar() {
             <div className="px-4 py-4 space-y-2">
               <Link href="/donate" onClick={() => setMobileMenuOpen(false)}>
                 <motion.a className="flex items-center justify-center gap-2 w-full rounded-full px-4 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white font-semibold hover:from-red-700 hover:to-pink-700 transition-all">
-                  <HeartIcon className="h-5 w-5" />
+                  <Heart className="h-5 w-5" />
                   Soutenir
                 </motion.a>
               </Link>
@@ -288,13 +288,13 @@ export default function Navbar() {
                   </Link>
                   <Link href="/profile" onClick={() => setMobileMenuOpen(false)}>
                     <motion.a className="flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-700 transition hover:bg-slate-100">
-                      <UserCircleIcon className="h-5 w-5" />
+                      <UserCircle className="h-5 w-5" />
                       {user?.prenom}
                     </motion.a>
                   </Link>
                   <Link href="/settings" onClick={() => setMobileMenuOpen(false)}>
                     <motion.a className="flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-700 transition hover:bg-slate-100">
-                      <CogIcon className="h-5 w-5" />
+                      <Cog className="h-5 w-5" />
                       Paramètres
                     </motion.a>
                   </Link>
@@ -306,7 +306,7 @@ export default function Navbar() {
                     }}
                     className="flex w-full items-center justify-center gap-2 rounded-full bg-rose-50 px-4 py-3 text-rose-600"
                   >
-                    <ArrowRightOnRectangleIcon className="h-5 w-5" />
+                    <ArrowRightOnRectangle className="h-5 w-5" />
                     Déconnexion
                   </motion.button>
                 </>
