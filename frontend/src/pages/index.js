@@ -6,7 +6,9 @@ import { useAuth } from '../context/AuthContext'
 import { API_BASE } from '../config/api'
 import { Button } from '../components/ui'
 
-const getImageUrl = (url) => {
+export default function Home() {
+
+  const getImageUrl = (url) => {
   if (!url) return '/icons/icon-192x192.png'
   if (url.startsWith('data:')) return url
 
