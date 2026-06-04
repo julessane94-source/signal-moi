@@ -169,7 +169,9 @@ export default function Profile() {
 
           {/* Tabs Navigation */}
           <div className="flex gap-2 mb-6 border-b border-gray-200">
-            {tabs.map((tab) => (
+            {tabs.map((tab) => {
+              const TabIcon = tab.icon
+              return (
               <motion.button
                 key={tab.id}
                 whileHover={{ y: -2 }}
@@ -183,10 +185,11 @@ export default function Profile() {
                     : 'border-transparent text-gray-600 hover:text-gray-900'
                 }`}
               >
-                <tab.icon className="h-5 w-5" />
+                <TabIcon className="h-5 w-5" />
                 <span>{tab.name}</span>
               </motion.button>
-            ))}
+              )
+            })}
           </div>
 
           {/* Message */}
@@ -357,7 +360,9 @@ export default function Profile() {
                     title: 'Nouveaux signalements',
                     description: 'Être alerté des nouveaux signalements près de vous'
                   }
-                ].map((notif, idx) => (
+                ].map((notif, idx) => {
+                  const NotifIcon = notif.icon
+                  return (
                   <motion.div
                     key={idx}
                     initial={{ opacity: 0, x: -20 }}
@@ -368,7 +373,7 @@ export default function Profile() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <div className="p-3 bg-indigo-50 rounded-lg">
-                            <notif.icon className="h-6 w-6 text-indigo-600" />
+                            <NotifIcon className="h-6 w-6 text-indigo-600" />
                           </div>
                           <div>
                             <h3 className="font-semibold text-gray-900">{notif.title}</h3>
@@ -382,7 +387,8 @@ export default function Profile() {
                       </div>
                     </Card>
                   </motion.div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </motion.div>

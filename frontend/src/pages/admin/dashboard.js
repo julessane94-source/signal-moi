@@ -504,7 +504,9 @@ export default function AdminDashboard() {
               { id: 'campagnes', label: 'Campagnes', icon: BarChart },
               { id: 'config', label: 'Configuration', icon: Cog },
               { id: 'settings', label: 'Paramètres', icon: Cog }
-            ].map((tab) => (
+            ].map((tab) => {
+              const TabIcon = tab.icon
+              return (
               <motion.button
                 key={tab.id}
                 whileHover={{ y: -2 }}
@@ -515,10 +517,11 @@ export default function AdminDashboard() {
                     : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
                 }`}
               >
-                <tab.icon className="h-5 w-5" />
+                <TabIcon className="h-5 w-5" />
                 {tab.label}
               </motion.button>
-            ))}
+              )
+            })}
           </div>
 
           {/* Dashboard Tab - Stats */}
