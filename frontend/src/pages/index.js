@@ -140,9 +140,9 @@ export default function Home() {
         <section className="relative overflow-hidden bg-[linear-gradient(135deg,#0f172a_0%,#1e293b_45%,#2563eb_100%)] text-white">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(129,140,248,0.25),_transparent_20%),radial-gradient(circle_at_bottom_right,_rgba(45,212,191,0.18),_transparent_25%)]" />
           <div className="absolute -top-24 right-0 h-64 w-64 rounded-full bg-cyan-400/10 blur-3xl" />
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 lg:py-16">
-            <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
-              <div className="text-center lg:text-left max-w-xl">
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-10 lg:py-14">
+            <div className="grid items-center gap-8 lg:gap-10 lg:grid-cols-[1.05fr_0.95fr]">
+              <div className="text-center lg:text-left max-w-2xl">
                 <span className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-cyan-100 shadow-lg">
                   <img src={getImageUrl(config.logoUrl)} alt="Logo Signal-Moi" className="h-6 w-6 rounded-md object-cover ring-1 ring-white/10" />
                   Signal-Moi
@@ -165,7 +165,7 @@ export default function Home() {
                   </Link>
                 </div>
 
-                <div className="mt-8 grid gap-4 sm:grid-cols-3">{stats.map((item) => (
+                <div className="mt-8 grid gap-4 sm:grid-cols-3 max-w-4xl">{stats.map((item) => (
                   <div key={item.label} className="rounded-2xl border border-white/10 bg-white/10 p-4 shadow-lg backdrop-blur-md flex items-start gap-3">
                     <div className="text-3xl bg-white/10 p-2 rounded-lg">{item.icon}</div>
                     <div>
@@ -182,17 +182,17 @@ export default function Home() {
                 )}
               </div>
 
-              <div className="flex justify-center lg:justify-end">
-                <div className="rounded-3xl border border-white/10 bg-white/10 p-4 shadow-2xl backdrop-blur-xl w-full max-w-md">
+              <div className="flex justify-center lg:justify-end w-full">
+                <div className="rounded-3xl border border-white/10 bg-white/10 p-4 shadow-2xl backdrop-blur-xl w-full max-w-2xl">
                   <div className="rounded-2xl overflow-hidden border border-white/10 relative bg-black/5">
                     {Array.isArray(config.home_page?.images) && config.home_page.images.length > 0 ? (
                       <>
-                        <div className="relative w-full h-72">
+                        <div className="relative w-full h-80 sm:h-96">
                           <Image
                             src={getImageUrl(config.home_page.images[slideIndex])}
                             alt={`Slide ${slideIndex + 1}`}
                             fill
-                            sizes="(max-width: 768px) 100vw, 420px"
+                            sizes="(max-width: 768px) 100vw, 700px"
                             className="object-cover transition-transform duration-700 ease-in-out transform hover:scale-105"
                           />
                         </div>
