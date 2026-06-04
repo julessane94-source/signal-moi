@@ -65,24 +65,31 @@ export default function Statistics() {
   const fetchStatistics = async () => {
     try {
       setLoading(true)
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+      if (!token) {
+        toast.error('❌ Auth token manquant — veuillez vous reconnecter')
+        setLoading(false)
+        return
+      }
+
       const [overview, byType, byMonth, byGender, byAge, exportDat] = await Promise.all([
         fetch(`${API_BASE}/api/statistics/overview`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          headers: { Authorization: `Bearer ${token}` }
         }).then(r => r.json()),
         fetch(`${API_BASE}/api/statistics/by-type`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          headers: { Authorization: `Bearer ${token}` }
         }).then(r => r.json()),
         fetch(`${API_BASE}/api/statistics/by-month?year=${new Date().getFullYear()}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          headers: { Authorization: `Bearer ${token}` }
         }).then(r => r.json()),
         fetch(`${API_BASE}/api/statistics/by-gender`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          headers: { Authorization: `Bearer ${token}` }
         }).then(r => r.json()),
         fetch(`${API_BASE}/api/statistics/by-age`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          headers: { Authorization: `Bearer ${token}` }
         }).then(r => r.json()),
         fetch(`${API_BASE}/api/statistics/export-data?startDate=${filters.startDate}&endDate=${filters.endDate}&type=${filters.type}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          headers: { Authorization: `Bearer ${token}` }
         }).then(r => r.json())
       ])
 
