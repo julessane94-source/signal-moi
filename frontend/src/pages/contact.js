@@ -181,7 +181,7 @@ export default function Contact() {
               animate={{ opacity: 1, y: 0 }}
               className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-6 text-white border border-white/30"
             >
-              <SparklesIcon className="h-4 w-4" />
+              <Sparkles className="h-4 w-4" />
               <span className="text-sm font-semibold">Nous sommes là pour vous aider</span>
             </motion.div>
 
