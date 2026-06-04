@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext'
 import { API_BASE } from '../config/api'
 import { Button } from '../components/ui'
 import BlogCard from '../components/BlogCard'
+import Chatbot from '../components/Chatbot'
 
 export default function Home() {
 
@@ -384,6 +385,7 @@ export default function Home() {
           </div>
         </section>
       </main>
+      <Chatbot />
     </>
   )
 }
