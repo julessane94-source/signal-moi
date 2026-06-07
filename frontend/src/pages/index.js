@@ -36,12 +36,6 @@ export default function Home() {
 
   const [collaboratorCampaigns, setCollaboratorCampaigns] = useState([])
 
-  const stats = [
-    { label: 'Incidents suivis', value: '100% transparent', icon: '📍' },
-    { label: 'Mises à jour', value: 'Suivi en temps réel', icon: '⚡' },
-    { label: 'Citoyens engagés', value: 'Communauté locale active', icon: '🤝' },
-  ]
-
   const features = [
     { title: 'Signalement simple', text: 'Décrivez l’incident, joignez vos preuves et envoyez en quelques clics.', icon: '🚨' },
     { title: 'Suivi clair', text: 'Recevez des mises à jour et gardez une vue complète des dossiers ouverts.', icon: '📊' },
@@ -162,25 +156,6 @@ export default function Home() {
                 ) : (
                   <p className="mt-6 text-slate-200 max-w-xl">{config.home_page?.content || 'Signal-Moi est une plateforme citoyenne d\'engagement communautaire. Signalez les problèmes de sécurité publique, lancez des campagnes de sensibilisation et contribuez à l\'amélioration de votre quartier.'}</p>
                 )}
-
-                <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 lg:justify-start justify-center">
-                  <Link href={user ? "/citizen/signalement" : "/login"}>
-                    <Button size="lg" variant="danger" className="px-8 py-3 shadow-xl">🚨 Faire un signalement</Button>
-                  </Link>
-                  <Link href={user ? "/citizen/dashboard" : "/register"}>
-                    <button className="px-6 py-3 rounded-xl bg-white/10 border border-white/20 text-white hover:bg-white/20 transition font-semibold shadow-lg">{user ? '✓ Mon dashboard' : '👥 Rejoindre'}</button>
-                  </Link>
-                </div>
-
-                <div className="mt-8 grid gap-4 sm:grid-cols-3 max-w-4xl">{stats.map((item) => (
-                  <div key={item.label} className="rounded-2xl border border-white/10 bg-white/10 p-4 shadow-lg backdrop-blur-md flex items-start gap-3">
-                    <div className="text-3xl bg-white/10 p-2 rounded-lg">{item.icon}</div>
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.25em] text-slate-200">{item.label}</p>
-                      <p className="mt-1 text-lg font-semibold text-white">{item.value}</p>
-                    </div>
-                  </div>
-                ))}</div>
 
                 {showInstallButton && (
                   <div className="mt-5 text-sm text-slate-100">
