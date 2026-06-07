@@ -79,7 +79,7 @@ export default function CollaboratorStatistics() {
       ])
 
       setData({
-        overview: overview.data,
+        overview: overview,
         byType: byType.data || [],
         byGender: byGender.data || [],
         byAge: byAge.data || []
