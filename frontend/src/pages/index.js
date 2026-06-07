@@ -302,27 +302,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Gallery */}
-        {(slideshowImages.length > 0 || slideshowVideos.length > 0) && (
-          <section className="py-8 bg-gray-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Galerie</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {slideshowImages.map((img, idx) => (
-                  <div key={idx} className="overflow-hidden rounded-lg shadow bg-white">
-                    <img src={getImageUrl(img)} alt={`Galerie ${idx}`} loading="lazy" decoding="async" className="w-full h-52 object-cover" />
-                  </div>
-                ))}
-                {slideshowVideos.map((vid, idx) => (
-                  <div key={`v-${idx}`} className="overflow-hidden rounded-lg shadow bg-black">
-                    <iframe src={vid} loading="lazy" className="w-full h-52" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
         {/* Collaborator campaigns */}
         {collaboratorCampaigns.length > 0 && (
           <section className="py-8">
