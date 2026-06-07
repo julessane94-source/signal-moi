@@ -114,12 +114,15 @@ export default function Login() {
             <motion.div
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 3, repeat: Infinity }}
-              className="inline-flex items-center justify-center w-16 h-16 bg-gray-200 rounded-2xl mb-6"
+              className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl mb-6"
             >
               <span className="text-3xl">🔐</span>
             </motion.div>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">Connexion</h1>
-            <p className="text-gray-600">Accédez à votre compte Signal-Moi</p>
+            <div className="mb-4">
+              <span className="inline-block text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Signal-Moi</span>
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Connexion sécurisée</h1>
+            <p className="text-gray-600">Connectez-vous à votre compte pour signaler et suivre les incidents de votre communauté</p>
           </div>
 
           {/* Main Card */}
@@ -186,11 +189,9 @@ export default function Login() {
                   />
                   <span className="text-sm text-gray-600 group-hover:text-gray-900 transition">Se souvenir de moi</span>
                 </label>
-                <Link href="/forgot-password">
-                  <a className="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition">
+                <Link href="/forgot-password" className="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition">
                     Mot de passe oublié?
-                  </a>
-                </Link>
+                  </Link>
               </motion.div>
 
               {/* Submit Button */}
@@ -243,11 +244,9 @@ export default function Login() {
           >
             <p className="text-gray-600">
               Vous n'avez pas de compte?{' '}
-              <Link href="/register">
-                <a className="font-bold text-indigo-600 hover:text-indigo-700 transition">
+              <Link href="/register" className="font-bold text-indigo-600 hover:text-indigo-700 transition">
                   S'inscrire
-                </a>
-              </Link>
+                </Link>
             </p>
           </motion.div>
 

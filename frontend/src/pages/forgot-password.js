@@ -208,12 +208,15 @@ export default function ForgotPassword() {
           <motion.div
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ duration: 3, repeat: Infinity }}
-            className="inline-flex items-center justify-center w-16 h-16 bg-gray-200 rounded-2xl mb-6"
+            className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-100 to-cyan-100 rounded-2xl mb-6"
           >
             <span className="text-3xl">🔑</span>
           </motion.div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Mot de passe oublié</h1>
-          <p className="text-gray-600">Réinitialisez votre mot de passe en quelques étapes</p>
+          <div className="mb-4">
+            <span className="inline-block text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Signal-Moi</span>
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Réinitialiser votre mot de passe</h1>
+          <p className="text-gray-600">Ré initialis ez votre mot de passe en quelques étapes simples et sécurisées</p>
         </div>
 
         {/* Progress Indicator */}
@@ -472,11 +475,9 @@ export default function ForgotPassword() {
           >
             <p className="text-gray-600">
               Vous vous souvenez de votre mot de passe?{' '}
-              <Link href="/login">
-                <a className="font-bold text-indigo-600 hover:text-indigo-700 transition">
+              <Link href="/login" className="font-bold text-indigo-600 hover:text-indigo-700 transition">
                   Se connecter
-                </a>
-              </Link>
+                </Link>
             </p>
           </motion.div>
         </motion.div>

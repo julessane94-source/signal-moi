@@ -60,6 +60,8 @@ export default function Home() {
   const [activeFilter, setActiveFilter] = useState('Tous')
 
   const filteredPosts = activeFilter === 'Tous' ? posts : posts.filter(p => p.category === activeFilter)
+  const slideshowImages = Array.isArray(config.home_page?.images) ? config.home_page.images.filter(Boolean) : []
+  const slideshowVideos = Array.isArray(config.home_page?.videos) ? config.home_page.videos.filter(Boolean) : []
 
   useEffect(() => {
     // PWA Installation
@@ -75,19 +77,24 @@ export default function Home() {
   // Slideshow state for hero right column
   const [slideIndex, setSlideIndex] = useState(0)
   useEffect(() => {
-    if (!config.home_page?.images || config.home_page.images.length === 0) return
+    if (!slideshowImages.length) return
     const id = setInterval(() => {
-      setSlideIndex((s) => (s + 1) % config.home_page.images.length)
+      setSlideIndex((s) => (s + 1) % slideshowImages.length)
     }, 5000)
     return () => clearInterval(id)
-  }, [config.home_page?.images])
+  }, [slideshowImages.length])
 
   const fetchConfig = async () => {
     try {
       const res = await fetch(`${API_BASE}/api/auth/site-config`)
       if (res.ok) {
         const data = await res.json()
-        const homePage = typeof data.home_page === 'string' ? JSON.parse(data.home_page) : (data.home_page || config.home_page)
+        const parsedHomePage = typeof data.home_page === 'string' ? JSON.parse(data.home_page) : (data.home_page || {})
+        const homePage = {
+          ...parsedHomePage,
+          images: Array.isArray(parsedHomePage.images) ? parsedHomePage.images.filter(Boolean) : [],
+          videos: Array.isArray(parsedHomePage.videos) ? parsedHomePage.videos.filter(Boolean) : []
+        }
         setConfig({
           ...data,
           logoUrl: data.logoUrl || data.logo_url || '/icons/icon-192x192.png',
@@ -130,8 +137,8 @@ export default function Home() {
         <title>Signal-Moi - Plateforme de Signalement Citoyen</title>
         <meta name="description" content="Signalez les incidents dans votre quartier" />
         <link rel="manifest" href="/manifest.json" />
-        {config.home_page?.images && config.home_page.images.length > 0 && (
-          <link rel="preload" as="image" href={getImageUrl(config.home_page.images[0])} />
+        {slideshowImages.length > 0 && (
+          <link rel="preload" as="image" href={getImageUrl(slideshowImages[0])} />
         )}
       </Head>
 
@@ -147,13 +154,13 @@ export default function Home() {
                   <img src={getImageUrl(config.logoUrl)} alt="Logo Signal-Moi" className="h-6 w-6 rounded-md object-cover ring-1 ring-white/10" />
                   Signal-Moi
                 </span>
-                <h1 className="mt-6 text-4xl md:text-5xl lg:text-6xl font-black leading-tight text-white drop-shadow-lg">{config.home_page?.title || 'Signalez les incidents'}</h1>
-                <p className="mt-4 text-xl md:text-2xl text-slate-100 max-w-2xl">{config.home_page?.heroText || 'dans votre quartier'}</p>
+                <h1 className="mt-6 text-4xl md:text-5xl lg:text-6xl font-black leading-tight text-white drop-shadow-lg">{config.home_page?.title || 'Ensemble pour une Communauté Plus Sûre'}</h1>
+                <p className="mt-4 text-xl md:text-2xl text-slate-100 max-w-2xl">{config.home_page?.heroText || 'Signalez les incidents de votre quartier et engagez le dialogue avec les autorités locales'}</p>
 
                 {config.home_page?.content && config.home_page.content.includes('<') ? (
                   <div className="mt-6 text-slate-200 max-w-xl" dangerouslySetInnerHTML={{ __html: sanitizedHomeContent }} />
                 ) : (
-                  <p className="mt-6 text-slate-200 max-w-xl">{config.home_page?.content || 'Une plateforme citoyenne pour signaler et suivre les problemes de votre communaute.'}</p>
+                  <p className="mt-6 text-slate-200 max-w-xl">{config.home_page?.content || 'Signal-Moi est une plateforme citoyenne d\'engagement communautaire. Signalez les problèmes de sécurité publique, lancez des campagnes de sensibilisation et contribuez à l\'amélioration de votre quartier.'}</p>
                 )}
 
                 <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 lg:justify-start justify-center">
@@ -185,11 +192,11 @@ export default function Home() {
               <div className="flex justify-center lg:justify-end w-full">
                 <div className="rounded-3xl border border-white/10 bg-white/10 p-4 shadow-2xl backdrop-blur-xl w-full max-w-2xl">
                   <div className="rounded-2xl overflow-hidden border border-white/10 relative bg-black/5">
-                    {Array.isArray(config.home_page?.images) && config.home_page.images.length > 0 ? (
+                    {slideshowImages.length > 0 ? (
                       <>
                         <div className="relative w-full h-80 sm:h-96">
                           <Image
-                            src={getImageUrl(config.home_page.images[slideIndex])}
+                            src={getImageUrl(slideshowImages[slideIndex])}
                             alt={`Slide ${slideIndex + 1}`}
                             fill
                             sizes="(max-width: 768px) 100vw, 700px"
@@ -197,12 +204,12 @@ export default function Home() {
                           />
                         </div>
                         <button
-                          onClick={() => setSlideIndex((s) => (s - 1 + config.home_page.images.length) % config.home_page.images.length)}
+                          onClick={() => setSlideIndex((s) => (s - 1 + slideshowImages.length) % slideshowImages.length)}
                           className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full"
                           aria-label="Précédent"
                         >‹</button>
                         <button
-                          onClick={() => setSlideIndex((s) => (s + 1) % config.home_page.images.length)}
+                          onClick={() => setSlideIndex((s) => (s + 1) % slideshowImages.length)}
                           className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full"
                           aria-label="Suivant"
                         >›</button>
@@ -211,9 +218,9 @@ export default function Home() {
                       <iframe title="Carte aperçu" src="https://www.openstreetmap.org/export/embed.html?bbox=2.2137%2C46.2276%2C2.2137%2C46.2276&layer=mapnik&marker=46.2276%2C2.2137" className="w-full h-72" style={{ border: 0 }} />
                     )}
                   </div>
-                  {Array.isArray(config.home_page?.images) && config.home_page.images.length > 0 ? (
+                  {slideshowImages.length > 0 ? (
                     <div className="mt-4 flex items-center justify-center gap-3">
-                      {config.home_page.images.map((_, i) => (
+                      {slideshowImages.map((_, i) => (
                         <button
                           key={i}
                           onClick={() => setSlideIndex(i)}
@@ -321,17 +328,17 @@ export default function Home() {
         </section>
 
         {/* Gallery */}
-        {(config.home_page?.images?.length > 0 || config.home_page?.videos?.length > 0) && (
+        {(slideshowImages.length > 0 || slideshowVideos.length > 0) && (
           <section className="py-8 bg-gray-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Galerie</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {config.home_page?.images?.map((img, idx) => (
+                {slideshowImages.map((img, idx) => (
                   <div key={idx} className="overflow-hidden rounded-lg shadow bg-white">
-                    <img src={img} alt={`Galerie ${idx}`} loading="lazy" decoding="async" className="w-full h-52 object-cover" />
+                    <img src={getImageUrl(img)} alt={`Galerie ${idx}`} loading="lazy" decoding="async" className="w-full h-52 object-cover" />
                   </div>
                 ))}
-                {config.home_page?.videos?.map((vid, idx) => (
+                {slideshowVideos.map((vid, idx) => (
                   <div key={`v-${idx}`} className="overflow-hidden rounded-lg shadow bg-black">
                     <iframe src={vid} loading="lazy" className="w-full h-52" />
                   </div>
@@ -357,9 +364,7 @@ export default function Home() {
                     <div className="p-4">
                       <h3 className="text-lg font-semibold mb-2">{c.titre}</h3>
                       <p className="text-sm text-gray-600 mb-3">{c.description?.slice(0, 140)}</p>
-                      <Link href={`/campagnes`}>
-                        <a className="text-indigo-600 font-medium">Voir la campagne →</a>
-                      </Link>
+                      <Link href="/campagnes" className="text-indigo-600 font-medium">Voir la campagne →</Link>
                     </div>
                   </div>
                 ))}

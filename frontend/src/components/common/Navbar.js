@@ -100,10 +100,10 @@ export default function Navbar() {
   return (
     <nav className="fixed inset-x-0 top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-xl shadow-sm">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-        <motion.div whileHover={{ scale: 1.03 }}>
-          <Link href="/" className="flex items-center gap-3 rounded-2xl bg-slate-900 px-4 py-2 text-white shadow-sm shadow-slate-200/20 transition hover:bg-slate-800">
-            <img src={getImageUrl(logoUrl)} alt="Logo Signal-Moi" className="h-8 w-8 rounded-xl object-cover ring-1 ring-white/10" />
-            <span className="text-lg font-semibold tracking-tight">Signal-Moi</span>
+        <motion.div whileHover={{ scale: 1.05 }}>
+          <Link href="/" className="flex items-center gap-2 transition hover:opacity-80">
+            <img src={getImageUrl(logoUrl)} alt="Logo Signal-Moi" className="h-10 w-10 rounded-lg object-cover shadow-md" />
+            <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Signal-Moi</span>
           </Link>
         </motion.div>
 

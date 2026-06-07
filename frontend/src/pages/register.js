@@ -99,12 +99,15 @@ export default function Register() {
           <motion.div
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ duration: 3, repeat: Infinity }}
-            className="inline-flex items-center justify-center w-16 h-16 bg-gray-200 rounded-2xl mb-6"
+            className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl mb-6"
           >
             <span className="text-3xl">✨</span>
           </motion.div>
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">Rejoignez-nous</h1>
-          <p className="text-gray-600">Créez un compte pour participer à la communauté Signal-Moi</p>
+          <div className="mb-4">
+            <span className="inline-block text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Signal-Moi</span>
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Rejoignez la communauté</h1>
+          <p className="text-gray-600">Créez votre compte pour devenir citoyen actif et améliorer votre quartier</p>
         </div>
 
         {/* Progress Indicator */}
@@ -358,11 +361,9 @@ export default function Register() {
         >
           <p className="text-gray-300">
             Vous avez déjà un compte?{' '}
-            <Link href="/login">
-              <a className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-300 hover:to-pink-300 transition">
+            <Link href="/login" className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-300 hover:to-pink-300 transition">
                 Connectez-vous
-              </a>
-            </Link>
+              </Link>
           </p>
         </motion.div>
 
