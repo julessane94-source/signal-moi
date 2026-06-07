@@ -30,9 +30,9 @@ const INTENTS = [
 const quickIntents = [
   { label: 'Signalement', text: 'Comment signaler un incident ?' },
   { label: 'Compte', text: 'Comment créer un compte ?' },
-  { label: 'Profil', text: 'Où gérer mon profil et mes paramètres ?' },
-  { label: 'Contact', text: 'Comment me contacter rapidement ?' },
-  { label: 'Aide', text: 'Peux-tu m’aider à trouver la bonne page ?' },
+  { label: 'Suivi', text: 'Comment suivre mon signalement ?' },
+  { label: 'Campagne', text: 'Qu\'est-ce qu\'une campagne ?' },
+  { label: 'Contact', text: 'Comment vous contacter ?' },
 ]
 
 const normalizeText = (text) =>
@@ -43,6 +43,35 @@ const normalizeText = (text) =>
     .replace(/[^a-z0-9\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
+
+const calculateSimilarity = (str1, str2) => {
+  const longer = str1.length > str2.length ? str1 : str2
+  const shorter = str1.length > str2.length ? str2 : str1
+  if (longer.length === 0) return 1.0
+  
+  const editDistance = getEditDistance(longer, shorter)
+  return (longer.length - editDistance) / parseFloat(longer.length)
+}
+
+const getEditDistance = (s1, s2) => {
+  const costs = []
+  for (let i = 0; i <= s1.length; i++) {
+    let lastValue = i
+    for (let j = 0; j <= s2.length; j++) {
+      if (i === 0) costs[j] = j
+      else if (j > 0) {
+        let newValue = costs[j - 1]
+        if (s1.charAt(i - 1) !== s2.charAt(j - 1)) {
+          newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1
+        }
+        costs[j - 1] = lastValue
+        lastValue = newValue
+      }
+    }
+    if (i > 0) costs[s2.length] = lastValue
+  }
+  return costs[s2.length]
+}
 
 export default function Chatbot() {
   const [open, setOpen] = useState(false)
@@ -57,9 +86,9 @@ export default function Chatbot() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY)
       if (raw) setMessages(JSON.parse(raw))
-      else setMessages([{ from: 'bot', text: "Bonjour ! Je suis Superman, comment puis-je vous aider aujourd'hui ?" }])
+      else setMessages([{ from: 'bot', text: "Bonjour ! 👋 Je suis Superman, votre assistant IA sur Signal-Moi. Comment puis-je vous aider aujourd'hui ? Vous pouvez me poser des questions sur les signalements, créer un compte, ou n'importe quel sujet !" }])
     } catch (e) {
-      setMessages([{ from: 'bot', text: "Bonjour ! Je suis Superman, comment puis-je vous aider aujourd'hui ?" }])
+      setMessages([{ from: 'bot', text: "Bonjour ! 👋 Je suis Superman, votre assistant IA. Comment puis-je vous aider ?" }])
     }
   }, [])
 
@@ -76,10 +105,11 @@ export default function Chatbot() {
       let score = 0
       for (const p of it.patterns) {
         const np = normalizeText(p)
-        if (t.includes(np)) score += 4
-        else if (t.split(' ').some((word) => word.length > 3 && np.includes(word))) score += 1
+        if (t.includes(np)) score += 6
+        else if (t.split(' ').some((word) => word.length > 2 && np.includes(word))) score += 2
       }
       if (t.includes('comment') && (it.id === 'signalement' || it.id === 'compte' || it.id === 'contact')) score += 1
+      if (t.includes('quoi') && (it.id === 'brand' || it.id === 'campagne')) score += 1
       if (score > best.score) best = { score, reply: it.reply, id: it.id }
     }
 
@@ -146,8 +176,10 @@ export default function Chatbot() {
           const answer = normalizeText(text)
           let score = 0
           query.split(' ').forEach((word) => {
-            if (answer.includes(word) && word.length > 2) score += 1
+            if (word.length > 2 && answer.includes(word)) score += 2
           })
+          const similarity = calculateSimilarity(query, answer)
+          score += similarity * 3
           return score > best.score ? { item, score } : best
         }, { item: null, score: 0 })
 
@@ -160,7 +192,7 @@ export default function Chatbot() {
         await new Promise((r) => setTimeout(r, 400))
         setMessages((m) => [...m, {
           from: 'bot',
-          text: "Je peux vous aider sur les signalements, le compte, le profil, la FAQ ou le contact. Reformulez votre demande avec un mot-clé comme « signalement », « compte », « profil » ou « contact ».",
+          text: "Hmm, je ne suis pas sûr 🤔. Vous pouvez reformuler avec d'autres mots ? Je peux vous aider avec les signalements, votre compte, les campagnes, le suivi, le profil ou le contact !",
           ts: Date.now(),
         }])
       }
@@ -179,7 +211,7 @@ export default function Chatbot() {
   }
 
   const clearHistory = () => {
-    setMessages([{ from: 'bot', text: "Bonjour ! Je suis Superman, comment puis-je vous aider aujourd'hui ?" }])
+    setMessages([{ from: 'bot', text: "Conversation réinitialisée 🔄. Bonjour ! Je suis Superman, comment puis-je vous aider ?" }])
     try { localStorage.removeItem(STORAGE_KEY) } catch (e) {}
   }
 
@@ -189,60 +221,60 @@ export default function Chatbot() {
     <div className="fixed right-4 bottom-6 z-50">
       <div className="flex items-end justify-end">
         {open && (
-          <div className="w-80 sm:w-96 bg-white rounded-2xl shadow-xl overflow-hidden ring-1 ring-black/8">
-            <div className="bg-indigo-600 text-white px-4 py-3 flex items-center justify-between">
+          <div className="w-80 sm:w-96 bg-white rounded-2xl shadow-2xl overflow-hidden ring-1 ring-black/8 border border-indigo-100">
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-3 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">S</div>
-                <div className="font-semibold">Superman — Assistance</div>
+                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold text-lg">🦸</div>
+                <div className="font-semibold">Superman — Assistance IA</div>
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={clearHistory} aria-label="Effacer" className="text-white/80 text-xs">Effacer</button>
-                <button onClick={() => setOpen(false)} aria-label="Fermer" className="text-white/90">✕</button>
+                <button onClick={clearHistory} aria-label="Effacer" className="text-white/80 text-xs hover:text-white transition">Effacer</button>
+                <button onClick={() => setOpen(false)} aria-label="Fermer" className="text-white/90 hover:text-white transition">✕</button>
               </div>
             </div>
-            <div className="p-2 border-b bg-gray-50 flex gap-2 overflow-x-auto">
+            <div className="p-2 border-b bg-gradient-to-r from-indigo-50 to-purple-50 flex gap-2 overflow-x-auto">
               {quickIntents.map((q) => (
-                <button key={q.label} onClick={() => send(q.text)} className="text-xs px-2 py-1 rounded-full bg-white border text-gray-700 hover:bg-indigo-50">{q.label}</button>
+                <button key={q.label} onClick={() => send(q.text)} className="text-xs px-2 py-1 rounded-full bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50 transition whitespace-nowrap">{q.label}</button>
               ))}
             </div>
-            <div ref={listRef} className="p-3 max-h-64 overflow-y-auto space-y-3 bg-gray-50">
+            <div ref={listRef} className="p-3 max-h-64 overflow-y-auto space-y-3 bg-white">
               {messages.map((m, i) => (
                 <div key={i} className={`flex items-end ${m.from === 'user' ? 'justify-end' : 'justify-start'}`}>
                   {m.from === 'bot' && (
-                    <div className="mr-2 flex-shrink-0 w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center">S</div>
+                    <div className="mr-2 flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-white flex items-center justify-center text-sm">🦸</div>
                   )}
-                  <div className={`${m.from === 'user' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-900'} rounded-lg p-2 text-sm shadow max-w-[78%]`}>
+                  <div className={`${m.from === 'user' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-900'} rounded-lg p-3 text-sm shadow max-w-[78%] break-words`}>
                     <div>{m.text}</div>
-                    <div className="text-[10px] text-gray-400 mt-1 text-right">{m.ts ? new Date(m.ts).toLocaleTimeString() : ''}</div>
+                    <div className={`text-[10px] ${m.from === 'user' ? 'text-indigo-200' : 'text-gray-400'} mt-1 text-right`}>{m.ts ? new Date(m.ts).toLocaleTimeString() : ''}</div>
                   </div>
                   {m.from === 'user' && (
                     <div className="ml-2 flex-shrink-0 text-xs text-gray-500">Vous</div>
                   )}
                 </div>
               ))}
-              {loading && <div className="text-sm text-gray-500">Superman écrit…</div>}
+              {loading && <div className="text-sm text-gray-500 animate-pulse">Superman réfléchit…</div>}
             </div>
-            <div className="p-3 border-t bg-white">
+            <div className="p-3 border-t bg-gray-50">
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={onKey}
-                placeholder="Posez votre question…"
-                className="w-full min-h-[44px] max-h-24 resize-none rounded-md border px-3 py-2 text-sm"
+                placeholder="Posez une question naturelle…"
+                className="w-full min-h-[44px] max-h-24 resize-none rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
               <div className="mt-2 flex items-center justify-between">
                 <div className="flex gap-2">
-                  <button onClick={() => send()} disabled={loading} className="bg-indigo-600 text-white px-3 py-1 rounded-md text-sm">Envoyer</button>
-                  <button onClick={() => { setInput(''); }} className="text-sm text-gray-500">Annuler</button>
+                  <button onClick={() => send()} disabled={loading} className="bg-indigo-600 text-white px-3 py-1 rounded-md text-sm hover:bg-indigo-700 transition disabled:opacity-50">Envoyer</button>
+                  <button onClick={() => { setInput(''); }} className="text-sm text-gray-500 hover:text-gray-700 transition">Annuler</button>
                 </div>
-                <button onClick={() => { navigator.clipboard?.writeText(JSON.stringify(messages)); }} className="text-xs text-gray-500">Exporter</button>
+                <button onClick={() => { navigator.clipboard?.writeText(JSON.stringify(messages)); }} className="text-xs text-gray-500 hover:text-gray-700 transition">Copier</button>
               </div>
             </div>
           </div>
         )}
         <button
           onClick={() => setOpen((o) => !o)}
-          className="ml-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg ring-2 ring-white/40"
+          className="ml-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg ring-2 ring-white/40 transition transform hover:scale-110 active:scale-95 text-2xl"
           aria-label="Ouvrir le chat Superman"
         >
           🦸
