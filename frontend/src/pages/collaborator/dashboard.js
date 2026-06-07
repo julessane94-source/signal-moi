@@ -396,11 +396,9 @@ export default function CollaboratorDashboard() {
                     <h3 className="text-lg font-bold flex items-center gap-2">
                       <Sparkles className="h-6 w-6" /> Mes campagnes récentes
                     </h3>
-                    <Link href="/collaborator/campagne/mes-campagnes">
-                      <a className="text-sm font-semibold bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full transition">
+                    <Link href="/collaborator/campagne/mes-campagnes" className="text-sm font-semibold bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full transition">
                         Voir tout
-                      </a>
-                    </Link>
+                      </Link>
                   </div>
                 </div>
                 <div className="p-6">
@@ -408,11 +406,9 @@ export default function CollaboratorDashboard() {
                     <div className="text-center py-8">
                       <Sparkles className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                       <p className="text-gray-500">Aucune campagne créée</p>
-                      <Link href="/collaborator/campagne/new">
-                        <a className="inline-block mt-3 text-blue-600 font-semibold hover:underline">
+                      <Link href="/collaborator/campagne/new" className="inline-block mt-3 text-blue-600 font-semibold hover:underline">
                           Créer la première →
-                        </a>
-                      </Link>
+                        </Link>
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -454,11 +450,9 @@ export default function CollaboratorDashboard() {
                     <h3 className="text-lg font-bold flex items-center gap-2">
                       <HandThumbsUp className="h-6 w-6" /> Mes plaidoyers récents
                     </h3>
-                    <Link href="/collaborator/plaidoyer/mes-plaidoyers">
-                      <a className="text-sm font-semibold bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full transition">
+                    <Link href="/collaborator/plaidoyer/mes-plaidoyers" className="text-sm font-semibold bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full transition">
                         Voir tout
-                      </a>
-                    </Link>
+                      </Link>
                   </div>
                 </div>
                 <div className="p-6">
@@ -466,11 +460,9 @@ export default function CollaboratorDashboard() {
                     <div className="text-center py-8">
                       <HandThumbsUp className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                       <p className="text-gray-500">Aucun plaidoyer créé</p>
-                      <Link href="/collaborator/plaidoyer/new">
-                        <a className="inline-block mt-3 text-amber-600 font-semibold hover:underline">
+                      <Link href="/collaborator/plaidoyer/new" className="inline-block mt-3 text-amber-600 font-semibold hover:underline">
                           Créer le premier →
-                        </a>
-                      </Link>
+                        </Link>
                     </div>
                   ) : (
                     <div className="space-y-3">

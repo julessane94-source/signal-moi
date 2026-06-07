@@ -39,12 +39,10 @@ export default function CookiesPolicy() {
           transition={{ duration: 0.6 }}
           className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8"
         >
-          <Link href="/">
-            <a className="inline-flex items-center text-white hover:text-indigo-100 transition mb-6">
+          <Link href="/" className="inline-flex items-center text-white hover:text-indigo-100 transition mb-6">
               <ArrowLeft className="w-5 h-5 mr-2" />
               Retour
-            </a>
-          </Link>
+            </Link>
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Politique de Gestion des Cookies
           </h1>

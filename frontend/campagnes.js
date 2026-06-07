@@ -17,6 +17,9 @@ export default function Campagnes() {
 
   useEffect(() => {
     fetchCampagnes()
+    // Rafraîchir les campagnes toutes les 30 secondes
+    const interval = setInterval(fetchCampagnes, 30000)
+    return () => clearInterval(interval)
   }, [])
 
   const fetchCampagnes = async () => {

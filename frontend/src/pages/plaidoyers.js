@@ -45,16 +45,12 @@ export default function PlaidoyersPage() {
               Explorez les plaidoyers publics qui récoltent des signatures et mobilisent la communauté pour faire bouger les choses.
             </p>
             <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 gap-3">
-              <Link href="/contact">
-                <a className="inline-flex items-center justify-center rounded-full bg-white/10 border border-white/20 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20">
+              <Link href="/contact" className="inline-flex items-center justify-center rounded-full bg-white/10 border border-white/20 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20">
                   📩 Nous contacter
-                </a>
-              </Link>
-              <Link href="/signalements">
-                <a className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100">
+                </Link>
+              <Link href="/signalements" className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100">
                   📢 Voir les signalements
-                </a>
-              </Link>
+                </Link>
             </div>
           </div>
 

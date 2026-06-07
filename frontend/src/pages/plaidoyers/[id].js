@@ -50,11 +50,9 @@ export default function PlaidoyerDetail() {
         <div className="min-h-screen pt-20 flex items-center justify-center px-4">
           <div className="bg-white rounded-xl shadow-md p-8 text-center max-w-md w-full">
             <h1 className="text-2xl font-bold mb-4">⚠️ {error || 'Plaidoyer introuvable'}</h1>
-            <Link href="/plaidoyers">
-              <a className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-6 py-3 text-white hover:bg-indigo-700">
+            <Link href="/plaidoyers" className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-6 py-3 text-white hover:bg-indigo-700">
                 Retour aux plaidoyers
-              </a>
-            </Link>
+              </Link>
           </div>
         </div>
       </>
@@ -66,9 +64,7 @@ export default function PlaidoyerDetail() {
       <main className="min-h-screen bg-gray-50 pt-20">
         <div className="max-w-4xl mx-auto px-4 py-10">
           <div className="mb-6">
-            <Link href="/plaidoyers">
-              <a className="text-indigo-600 hover:text-indigo-700 text-sm font-medium">← Retour aux plaidoyers</a>
-            </Link>
+            <Link href="/plaidoyers" className="text-indigo-600 hover:text-indigo-700 text-sm font-medium">← Retour aux plaidoyers</Link>
           </div>
 
           <div className="bg-white rounded-3xl shadow-lg overflow-hidden">

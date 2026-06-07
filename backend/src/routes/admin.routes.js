@@ -118,10 +118,10 @@ router.get('/test-db', async (req, res) => {
 });
 
 // --- Gestion des utilisateurs ---
-// GET /api/admin/users - R�cup�re la liste de tous les utilisateurs (prot�g�)
+// GET /api/admin/users - Récupére la liste de tous les utilisateurs actifs (protégé)
 router.get('/users', authMiddleware, async (req, res) => {
   try {
-    const result = await db.query('SELECT id, prenom, nom, email, telephone, ville, quartier, role, is_active FROM signal_moi.users ORDER BY created_at DESC');
+    const result = await db.query('SELECT id, prenom, nom, email, telephone, ville, quartier, role, is_active FROM signal_moi.users WHERE is_active = true ORDER BY created_at DESC');
     res.json(result.rows);
   } catch (err) {
     console.error('[ADMIN GET /users] Erreur:', err);

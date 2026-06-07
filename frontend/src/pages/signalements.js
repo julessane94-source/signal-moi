@@ -9,6 +9,9 @@ export default function SignalementsPublic() {
 
   useEffect(() => {
     fetchSignalements()
+    // Rafraîchir les signalements toutes les 30 secondes
+    const interval = setInterval(fetchSignalements, 30000)
+    return () => clearInterval(interval)
   }, [])
 
   const fetchSignalements = async () => {
@@ -79,16 +82,12 @@ export default function SignalementsPublic() {
               Explorez les incidents signalés par votre communauté, suivez les évolutions et encouragez le changement là où il est le plus nécessaire.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/contact">
-                <a className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20">
+              <Link href="/contact" className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20">
                   📩 Nous contacter
-                </a>
-              </Link>
-              <Link href="/">
-                <a className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100">
+                </Link>
+              <Link href="/" className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100">
                   ↩️ Retour à l'accueil
-                </a>
-              </Link>
+                </Link>
             </div>
           </div>
         </section>
@@ -155,11 +154,9 @@ export default function SignalementsPublic() {
                         </span>
                       </div>
                       <div className="mt-5 flex items-center justify-between gap-3">
-                        <Link href="/citizen/signalement">
-                          <a className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition">
+                        <Link href="/citizen/signalement" className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition">
                             Voir le signalement
-                          </a>
-                        </Link>
+                          </Link>
                         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
                           {s.signatures ? `${s.signatures} signatures` : 'Pas de signature'}
                         </span>

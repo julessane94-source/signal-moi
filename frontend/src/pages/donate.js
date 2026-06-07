@@ -106,12 +106,10 @@ export default function Donate() {
           transition={{ duration: 0.6 }}
           className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8"
         >
-          <Link href="/">
-            <a className="inline-flex items-center text-white hover:text-red-100 transition mb-6">
+          <Link href="/" className="inline-flex items-center text-white hover:text-red-100 transition mb-6">
               <ArrowLeft className="w-5 h-5 mr-2" />
               Retour
-            </a>
-          </Link>
+            </Link>
           <div className="flex items-center gap-3 mb-4">
             <Heart className="w-12 h-12 text-white animate-pulse" />
             <h1 className="text-4xl md:text-5xl font-bold text-white">
@@ -323,11 +321,9 @@ export default function Donate() {
               >
                 Faire un don maintenant
               </button>
-              <Link href="/">
-                <a className="px-8 py-3 border-2 border-white text-white font-bold rounded-lg hover:bg-white hover:bg-opacity-10 transition">
+              <Link href="/" className="px-8 py-3 border-2 border-white text-white font-bold rounded-lg hover:bg-white hover:bg-opacity-10 transition">
                   Retour à l'accueil
-                </a>
-              </Link>
+                </Link>
             </div>
           </div>
         </motion.section>
