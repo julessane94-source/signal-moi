@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '../../context/AuthContext'
+import { useSocket } from '../../context/SocketContext'
 import { API_BASE } from '../../config/api'
 import { toast } from 'react-toastify'
 import dynamic from 'next/dynamic'
@@ -24,6 +25,7 @@ const MAX_RECORDING_MS = 3 * 60 * 1000
 
 export default function NewSignalement() {
   const { user } = useAuth()
+  const { socket } = useSocket()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [files, setFiles] = useState([])
@@ -37,6 +39,8 @@ export default function NewSignalement() {
   const mediaRecorderRef = useRef(null)
   const recordingChunksRef = useRef([])
   const recordingTimerRef = useRef(null)
+  const liveFrameTimerRef = useRef(null)
+  const liveSessionIdRef = useRef(null)
   const videoPreviewRef = useRef(null)
   const recordedVideoNameRef = useRef(null)
   const [formData, setFormData] = useState({
@@ -52,6 +56,59 @@ export default function NewSignalement() {
   const [geoError, setGeoError] = useState(null)
   const shouldOfferVideoProof = VIDEO_PROMPT_TYPES.includes(formData.type)
   const hasRecordedVideo = Boolean(recordedVideoName)
+
+  const getTypeLabel = (type) => QUICK_TYPES.find(item => item.value === type)?.label || type
+
+  const ensureAutomaticDescription = (type) => {
+    const label = getTypeLabel(type)
+    setFormData(prev => {
+      if (prev.description.trim()) return prev
+      return {
+        ...prev,
+        description: `Signalement urgent: ${label}. Une video preuve est en cours d'enregistrement et la localisation automatique est transmise aux autorites.`
+      }
+    })
+  }
+
+  const emitLiveLocation = (locationData) => {
+    if (!socket || !liveSessionIdRef.current || !locationData) return
+    socket.emit('live_recording_location', {
+      sessionId: liveSessionIdRef.current,
+      type: formData.type,
+      titre: formData.titre || `Signalement : ${getTypeLabel(formData.type)}`,
+      latitude: locationData.latitude,
+      longitude: locationData.longitude,
+      localisation: locationData.localisation
+    })
+  }
+
+  const startLiveFrameBroadcast = () => {
+    if (!socket || liveFrameTimerRef.current) return
+
+    liveFrameTimerRef.current = setInterval(() => {
+      const video = videoPreviewRef.current
+      if (!video || video.readyState < 2 || !liveSessionIdRef.current) return
+
+      const canvas = document.createElement('canvas')
+      canvas.width = 320
+      canvas.height = 180
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+      socket.emit('live_recording_frame', {
+        sessionId: liveSessionIdRef.current,
+        frame: canvas.toDataURL('image/jpeg', 0.45)
+      })
+    }, 2000)
+  }
+
+  const stopLiveFrameBroadcast = () => {
+    if (liveFrameTimerRef.current) {
+      clearInterval(liveFrameTimerRef.current)
+      liveFrameTimerRef.current = null
+    }
+  }
 
   const requestGeolocation = async () => {
     setGeoError(null)
@@ -126,6 +183,7 @@ export default function NewSignalement() {
 
         setFormData(prev => ({ ...prev, localisation: prev.localisation || localisation, latitude: lat, longitude: lng }))
         if (!silent) toast.success('Localisation automatique trouvee')
+        emitLiveLocation({ latitude: lat, longitude: lng, localisation })
         resolve({ latitude: lat, longitude: lng, localisation })
       }, (err) => {
         if (err.code === 1) {
@@ -182,6 +240,7 @@ export default function NewSignalement() {
   useEffect(() => {
     return () => {
       stopCameraStream()
+      stopLiveFrameBroadcast()
       if (recordingTimerRef.current) {
         clearTimeout(recordingTimerRef.current)
       }
@@ -200,6 +259,7 @@ export default function NewSignalement() {
     if (name === 'type') {
       setVideoPromptHandled(false)
       if (VIDEO_PROMPT_TYPES.includes(value) && !hasRecordedVideo) {
+        ensureAutomaticDescription(value)
         setShowVideoPrompt(true)
         startVideoRecording()
       }
@@ -214,6 +274,7 @@ export default function NewSignalement() {
     }))
     setVideoPromptHandled(false)
     if (VIDEO_PROMPT_TYPES.includes(type) && !hasRecordedVideo) {
+      ensureAutomaticDescription(type)
       setShowVideoPrompt(true)
       startVideoRecording()
     }
@@ -267,6 +328,26 @@ export default function NewSignalement() {
       mediaRecorderRef.current = recorder
       setLiveStream(stream)
       setRecordingState('recording')
+      const sessionId = liveSessionIdRef.current || `live-${Date.now()}-${Math.random().toString(36).slice(2)}`
+      liveSessionIdRef.current = sessionId
+
+      if (socket) {
+        socket.emit('live_recording_started', {
+          sessionId,
+          type: formData.type,
+          titre: formData.titre || `Signalement : ${getTypeLabel(formData.type)}`,
+          description: formData.description || `Signalement urgent: ${getTypeLabel(formData.type)}`,
+          latitude,
+          longitude,
+          localisation: formData.localisation || null
+        })
+      }
+
+      if (latitude === null || longitude === null || !formData.localisation) {
+        getAutomaticLocation({ silent: true }).then(emitLiveLocation)
+      } else {
+        emitLiveLocation({ latitude, longitude, localisation: formData.localisation })
+      }
 
       recorder.ondataavailable = (event) => {
         if (event.data && event.data.size > 0) {
@@ -275,6 +356,7 @@ export default function NewSignalement() {
       }
 
       recorder.onstop = () => {
+        stopLiveFrameBroadcast()
         const finalMimeType = recorder.mimeType || mimeType || 'video/webm'
         const blob = new Blob(recordingChunksRef.current, { type: finalMimeType })
         const extension = finalMimeType.includes('mp4') ? 'mp4' : 'webm'
@@ -292,10 +374,17 @@ export default function NewSignalement() {
         setFiles(prev => [...prev.filter(file => file.name !== previousProofName), proofFile])
         setRecordingState('saved')
         setVideoPromptHandled(true)
+        if (socket && liveSessionIdRef.current) {
+          socket.emit('live_recording_stopped', {
+            sessionId: liveSessionIdRef.current,
+            type: formData.type
+          })
+        }
         stopCameraStream()
       }
 
       recorder.start()
+      startLiveFrameBroadcast()
       recordingTimerRef.current = setTimeout(() => {
         stopVideoRecording()
       }, MAX_RECORDING_MS)
@@ -303,6 +392,7 @@ export default function NewSignalement() {
       console.error('[VideoRecording] Error:', error)
       setRecordingState('idle')
       setRecordingError('Impossible d acceder a la camera. Verifiez les permissions puis reessayez.')
+      stopLiveFrameBroadcast()
       stopCameraStream()
     }
   }
@@ -398,6 +488,7 @@ export default function NewSignalement() {
     e.preventDefault()
 
     if (shouldOfferVideoProof && !videoPromptHandled && !hasRecordedVideo) {
+      ensureAutomaticDescription(formData.type)
       setShowVideoPrompt(true)
       startVideoRecording()
       return

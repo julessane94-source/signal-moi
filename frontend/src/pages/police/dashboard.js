@@ -7,10 +7,9 @@ import { motion } from 'framer-motion'
 import { API_BASE } from '../../config/api'
 import {
   MapPinIcon as MapPin,
-  PhoneIcon as Phone,
   DocumentTextIcon as DocumentText,
   ExclamationTriangleIcon as ExclamationTriangle,
-  CheckCircleIcon as CheckCircle
+  VideoCameraIcon as VideoCamera
 } from '@heroicons/react/24/outline'
 
 export default function PoliceDashboard() {
@@ -24,6 +23,7 @@ export default function PoliceDashboard() {
   const [showTransferModal, setShowTransferModal] = useState(false)
   const [selectedPoliceToTransfer, setSelectedPoliceToTransfer] = useState(null)
   const [transferingSignalId, setTransferingSignalId] = useState(null)
+  const [liveRecordings, setLiveRecordings] = useState({})
 
   useEffect(() => {
     fetchSignalements()
@@ -38,12 +38,62 @@ export default function PoliceDashboard() {
       socket.on('signalement_received', () => {
         fetchSignalements()
       })
+
+      socket.on('live_recording_started', (data) => {
+        toast.warning(`Video en direct: ${data.titre || data.type}`)
+        setLiveRecordings(prev => ({
+          ...prev,
+          [data.sessionId]: {
+            ...prev[data.sessionId],
+            ...data,
+            status: 'recording'
+          }
+        }))
+      })
+
+      socket.on('live_recording_location', (data) => {
+        setLiveRecordings(prev => ({
+          ...prev,
+          [data.sessionId]: {
+            ...prev[data.sessionId],
+            ...data,
+            status: prev[data.sessionId]?.status || 'recording'
+          }
+        }))
+      })
+
+      socket.on('live_recording_frame', (data) => {
+        setLiveRecordings(prev => ({
+          ...prev,
+          [data.sessionId]: {
+            ...prev[data.sessionId],
+            frame: data.frame,
+            frameAt: data.frameAt,
+            status: prev[data.sessionId]?.status || 'recording'
+          }
+        }))
+      })
+
+      socket.on('live_recording_stopped', (data) => {
+        setLiveRecordings(prev => ({
+          ...prev,
+          [data.sessionId]: {
+            ...prev[data.sessionId],
+            ...data,
+            status: 'stopped'
+          }
+        }))
+      })
     }
     
     return () => {
       if (socket) {
         socket.off('new_signalement_notification')
         socket.off('signalement_received')
+        socket.off('live_recording_started')
+        socket.off('live_recording_location')
+        socket.off('live_recording_frame')
+        socket.off('live_recording_stopped')
       }
     }
   }, [socket])
@@ -183,6 +233,9 @@ export default function PoliceDashboard() {
   }
 
   const topSignal = getHighestPrioritySignalement()
+  const liveRecordingsList = Object.values(liveRecordings)
+    .filter(item => item && item.status === 'recording')
+    .sort((a, b) => new Date(b.startedAt || b.updatedAt || 0) - new Date(a.startedAt || a.updatedAt || 0))
 
   if (loading) {
     return (
@@ -254,6 +307,74 @@ export default function PoliceDashboard() {
               Bienvenue {user?.prenom} {user?.nom} - Gestion des signalements en temps réel
             </p>
           </motion.div>
+
+          {liveRecordingsList.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8 rounded-2xl border-2 border-red-300 bg-red-50 p-5 shadow-lg"
+            >
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-red-600 text-white">
+                  <VideoCamera className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-red-900">Enregistrements vidéo en direct</h2>
+                  <p className="text-sm text-red-700">Un citoyen filme actuellement une preuve avec localisation active.</p>
+                </div>
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-2">
+                {liveRecordingsList.map((live) => (
+                  <div key={live.sessionId} className="overflow-hidden rounded-xl border border-red-200 bg-white shadow-sm">
+                    <div className="bg-slate-950">
+                      {live.frame ? (
+                        <img src={live.frame} alt="Apercu video en direct" className="h-56 w-full object-cover" />
+                      ) : (
+                        <div className="flex h-56 items-center justify-center text-sm text-slate-300">
+                          En attente de l apercu video...
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-3 p-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="danger">EN DIRECT</Badge>
+                        {live.type && <Badge variant="gray">{live.type}</Badge>}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">{live.titre || 'Signalement urgent'}</p>
+                        {live.citizenName && <p className="text-sm text-gray-600">Signalant: {live.citizenName}</p>}
+                      </div>
+                      <div className="rounded-lg bg-indigo-50 p-3 text-sm text-indigo-900">
+                        <p className="font-semibold">Localisation</p>
+                        <p>{live.localisation || 'Localisation en cours de récupération...'}</p>
+                        {live.latitude && live.longitude && (
+                          <p className="mt-1 text-xs text-indigo-700">
+                            GPS: {parseFloat(live.latitude).toFixed(5)}, {parseFloat(live.longitude).toFixed(5)}
+                          </p>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        icon={MapPin}
+                        onClick={() => {
+                          if (live.latitude && live.longitude) {
+                            window.open(`https://www.google.com/maps/?q=${live.latitude},${live.longitude}`, '_blank')
+                          } else if (live.localisation) {
+                            window.open(`https://www.google.com/maps/search/${encodeURIComponent(live.localisation)}`, '_blank')
+                          }
+                        }}
+                        disabled={!live.latitude && !live.longitude && !live.localisation}
+                      >
+                        Voir la localisation
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
 
           {/* Stats Grid */}
           <motion.div

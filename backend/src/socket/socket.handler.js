@@ -70,6 +70,57 @@ const setupSocket = (io) => {
         logger.error('Erreur new_signalement:', error);
       }
     });
+
+    socket.on('live_recording_started', (data) => {
+      try {
+        const payload = {
+          ...data,
+          citizenId: socket.user.id,
+          citizenName: `${socket.user.prenom || ''} ${socket.user.nom || ''}`.trim(),
+          startedAt: new Date()
+        };
+        io.to('police_room').emit('live_recording_started', payload);
+        io.to('admin_room').emit('live_recording_started', payload);
+      } catch (error) {
+        logger.error('Erreur live_recording_started:', error);
+      }
+    });
+
+    socket.on('live_recording_location', (data) => {
+      try {
+        io.to('police_room').emit('live_recording_location', {
+          ...data,
+          citizenId: socket.user.id,
+          updatedAt: new Date()
+        });
+      } catch (error) {
+        logger.error('Erreur live_recording_location:', error);
+      }
+    });
+
+    socket.on('live_recording_frame', (data) => {
+      try {
+        io.to('police_room').emit('live_recording_frame', {
+          ...data,
+          citizenId: socket.user.id,
+          frameAt: new Date()
+        });
+      } catch (error) {
+        logger.error('Erreur live_recording_frame:', error);
+      }
+    });
+
+    socket.on('live_recording_stopped', (data) => {
+      try {
+        io.to('police_room').emit('live_recording_stopped', {
+          ...data,
+          citizenId: socket.user.id,
+          stoppedAt: new Date()
+        });
+      } catch (error) {
+        logger.error('Erreur live_recording_stopped:', error);
+      }
+    });
     
     // Envoyer un message
     socket.on('send_message', async (data) => {
