@@ -95,20 +95,70 @@ export default function NewSignalement() {
     })
   }
 
+  const getAutomaticLocation = async ({ silent = false } = {}) => {
+    setGeoError(null)
+
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      if (!silent) toast.error('Geolocalisation non prise en charge par votre navigateur')
+      setGeoError('Geolocalisation non prise en charge')
+      return null
+    }
+
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        const lat = pos.coords.latitude
+        const lng = pos.coords.longitude
+        const coordsLabel = `GPS: ${lat.toFixed(6)}, ${lng.toFixed(6)}`
+        let localisation = coordsLabel
+
+        setLatitude(lat)
+        setLongitude(lng)
+
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+          if (res.ok) {
+            const data = await res.json()
+            localisation = data.display_name || coordsLabel
+          }
+        } catch (e) {
+          localisation = coordsLabel
+        }
+
+        setFormData(prev => ({ ...prev, localisation: prev.localisation || localisation, latitude: lat, longitude: lng }))
+        if (!silent) toast.success('Localisation automatique trouvee')
+        resolve({ latitude: lat, longitude: lng, localisation })
+      }, (err) => {
+        if (err.code === 1) {
+          if (!silent) toast.error('Acces a la geolocalisation refuse')
+          setGeoError('Autorisez la localisation du site dans le navigateur, puis cliquez sur Localiser.')
+        } else {
+          if (!silent) toast.error('Impossible de recuperer la geolocalisation')
+          setGeoError('Impossible de recuperer la geolocalisation automatiquement.')
+        }
+        console.log('Geolocalisation erreur:', err)
+        resolve(null)
+      }, {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0
+      })
+    })
+  }
+
   useEffect(() => {
     // If the user already granted geolocation permission, or if the browser would prompt,
     // attempt to obtain it automatically on page load so the user sees the permission prompt.
     if (typeof navigator !== 'undefined' && navigator.permissions && navigator.permissions.query) {
       navigator.permissions.query({ name: 'geolocation' }).then((status) => {
         if (status.state === 'granted' || status.state === 'prompt') {
-          requestGeolocation()
+          getAutomaticLocation({ silent: true })
         } else if (status.state === 'denied') {
           setGeoError('Accès à la géolocalisation refusé')
         }
       }).catch(() => {
         // Permissions API unavailable, fallback: attempt to request geolocation once.
         try {
-          requestGeolocation()
+          getAutomaticLocation({ silent: true })
         } catch (e) {
           // ignore
         }
@@ -116,7 +166,7 @@ export default function NewSignalement() {
     } else {
       // Permissions API not supported; try asking once.
       try {
-        requestGeolocation()
+        getAutomaticLocation({ silent: true })
       } catch (e) {
         // ignore
       }
@@ -267,15 +317,34 @@ export default function NewSignalement() {
         return
       }
 
+      let localisationValue = formData.localisation.trim()
+      let latitudeValue = latitude
+      let longitudeValue = longitude
+
+      if (!localisationValue || latitudeValue === null || longitudeValue === null) {
+        const detectedLocation = await getAutomaticLocation()
+        if (detectedLocation) {
+          localisationValue = localisationValue || detectedLocation.localisation
+          latitudeValue = detectedLocation.latitude
+          longitudeValue = detectedLocation.longitude
+        }
+      }
+
+      if (!localisationValue) {
+        toast.error('Impossible de localiser automatiquement. Autorisez la localisation puis reessayez.')
+        setLoading(false)
+        return
+      }
+
       const fd = new FormData()
       fd.append('titre', formData.titre)
       fd.append('description', formData.description)
       fd.append('type', formData.type)
-      fd.append('localisation', formData.localisation)
+      fd.append('localisation', localisationValue)
       fd.append('estAnonyme', String(formData.estAnonyme === true))
       // append coordinates if available (from geolocation or map)
-      if (latitude !== null) fd.append('latitude', latitude)
-      if (longitude !== null) fd.append('longitude', longitude)
+      if (latitudeValue !== null) fd.append('latitude', latitudeValue)
+      if (longitudeValue !== null) fd.append('longitude', longitudeValue)
 
       // Append files
       files.forEach((f) => fd.append('fichiers', f))
@@ -307,6 +376,11 @@ export default function NewSignalement() {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
+    if (!formData.titre.trim() || !formData.description.trim() || !formData.type) {
+      toast.error('Veuillez renseigner le titre, la description et le type.')
+      return
+    }
+
     if (shouldOfferVideoProof && !videoPromptHandled && !hasRecordedVideo) {
       setShowVideoPrompt(true)
       return
@@ -321,7 +395,7 @@ export default function NewSignalement() {
         <div className="max-w-3xl mx-auto px-4 py-8">
           <div className="bg-white rounded-xl shadow-md p-6">
             <h1 className="text-2xl font-bold mb-6">Nouveau signalement</h1>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} noValidate className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Titre *</label>
                 <input type="text" name="titre" required value={formData.titre} onChange={handleChange} className="w-full border rounded px-3 py-2" placeholder="ex: Nid-de-poule dangereux" />
@@ -357,9 +431,9 @@ export default function NewSignalement() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Localisation *</label>
-                <input type="text" name="localisation" required value={formData.localisation} onChange={handleChange} className="w-full border rounded px-3 py-2" placeholder="Ex: Carrefour Mvan, Yaoundé" />
+                <input type="text" name="localisation" value={formData.localisation} onChange={handleChange} className="w-full border rounded px-3 py-2" placeholder="Ex: Carrefour Mvan, Yaoundé" />
                 <div className="mt-2 flex gap-2 items-center">
-                  <button type="button" onClick={requestGeolocation} className="text-sm px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition font-medium">📍 Localiser</button>
+                  <button type="button" onClick={() => getAutomaticLocation()} className="text-sm px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition font-medium">📍 Localiser</button>
                   <span className="text-sm text-gray-600 font-medium">{latitude != null && longitude != null ? `✓ ${latitude.toFixed(5)}, ${longitude.toFixed(5)}` : 'Pas de localisation'}</span>
                 </div>
                 {geoError && <p className="text-sm text-red-600 mt-2">{geoError}</p>}
