@@ -199,6 +199,10 @@ export default function NewSignalement() {
     }))
     if (name === 'type') {
       setVideoPromptHandled(false)
+      if (VIDEO_PROMPT_TYPES.includes(value) && !hasRecordedVideo) {
+        setShowVideoPrompt(true)
+        startVideoRecording()
+      }
     }
   }
 
@@ -209,6 +213,10 @@ export default function NewSignalement() {
       titre: prev.titre || `Signalement : ${label}`
     }))
     setVideoPromptHandled(false)
+    if (VIDEO_PROMPT_TYPES.includes(type) && !hasRecordedVideo) {
+      setShowVideoPrompt(true)
+      startVideoRecording()
+    }
   }
 
   const handleFileChange = (e) => {
@@ -237,13 +245,21 @@ export default function NewSignalement() {
   const startVideoRecording = async () => {
     setRecordingError(null)
 
+    if (recordingState === 'recording' || recordingState === 'saving') {
+      setShowVideoPrompt(true)
+      return
+    }
+
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
       setRecordingError('Votre navigateur ne permet pas de filmer directement depuis cette page.')
       return
     }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
+        audio: true
+      })
       const mimeType = getRecordingMimeType()
       const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
 
@@ -317,6 +333,11 @@ export default function NewSignalement() {
         return
       }
 
+      if (!formData.titre.trim() || !formData.description.trim() || !formData.type) {
+        toast.error('Veuillez renseigner le titre, la description et le type.')
+        return
+      }
+
       let localisationValue = formData.localisation.trim()
       let latitudeValue = latitude
       let longitudeValue = longitude
@@ -376,13 +397,9 @@ export default function NewSignalement() {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!formData.titre.trim() || !formData.description.trim() || !formData.type) {
-      toast.error('Veuillez renseigner le titre, la description et le type.')
-      return
-    }
-
     if (shouldOfferVideoProof && !videoPromptHandled && !hasRecordedVideo) {
       setShowVideoPrompt(true)
+      startVideoRecording()
       return
     }
 
