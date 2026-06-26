@@ -64,7 +64,7 @@ if (USE_S3 && s3 && multerS3) {
 
 // Filtre des fichiers
 const fileFilter = (req, file, cb) => {
-  const defaultTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'audio/mpeg', 'audio/wav', 'video/mp4'];
+  const defaultTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'audio/mpeg', 'audio/wav', 'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
   const allowedTypes = process.env.ALLOWED_FILE_TYPES ? process.env.ALLOWED_FILE_TYPES.split(',').map(t => t.trim()) : defaultTypes;
 
   if (allowedTypes.includes(file.mimetype)) {
@@ -74,12 +74,15 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
+const DEFAULT_MAX_FILE_SIZE = 104857600; // 100MB, enough for short citizen proof videos
+const maxFileSize = parseInt(process.env.MAX_FILE_SIZE) || DEFAULT_MAX_FILE_SIZE;
+
 // Configuration multer
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: parseInt(process.env.MAX_FILE_SIZE) || 10485760, // 10MB
+    fileSize: maxFileSize,
     files: parseInt(process.env.MAX_FILE_COUNT) || 5 // Maximum files
   }
 });
@@ -88,7 +91,7 @@ const upload = multer({
 const handleUploadError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'FILE_TOO_LARGE') {
-      return res.status(400).json({ error: 'Fichier trop volumineux. Maximum 10MB.' });
+      return res.status(400).json({ error: `Fichier trop volumineux. Maximum ${Math.round(maxFileSize / 1024 / 1024)}MB.` });
     }
     if (err.code === 'LIMIT_FILE_COUNT') {
       return res.status(400).json({ error: 'Trop de fichiers. Maximum 5 fichiers.' });

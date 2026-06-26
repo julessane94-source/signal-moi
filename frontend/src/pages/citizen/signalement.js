@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE } from '../../config/api'
@@ -15,14 +15,30 @@ const QUICK_TYPES = [
   { value: 'nid_de_poule', label: 'Nid-de-poule', icon: '🕳️', hint: 'Routes, chaussées, trous' },
   { value: 'vol', label: 'Vol', icon: '💰', hint: 'Vol, cambriolage, objet volé' },
   { value: 'violence', label: 'Violence', icon: '⚠️', hint: 'Conflit, intimidation, agression' },
+  { value: 'accident', label: 'Accident', icon: '!', hint: 'Accident, blessure, danger immediat' },
   { value: 'autre', label: 'Autre', icon: '📌', hint: 'Autre incident à préciser' }
 ]
+
+const VIDEO_PROMPT_TYPES = ['violence', 'accident', 'vol']
+const MAX_RECORDING_MS = 3 * 60 * 1000
 
 export default function NewSignalement() {
   const { user } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [files, setFiles] = useState([])
+  const [showVideoPrompt, setShowVideoPrompt] = useState(false)
+  const [videoPromptHandled, setVideoPromptHandled] = useState(false)
+  const [recordingState, setRecordingState] = useState('idle')
+  const [recordingError, setRecordingError] = useState(null)
+  const [liveStream, setLiveStream] = useState(null)
+  const [recordedVideoUrl, setRecordedVideoUrl] = useState(null)
+  const [recordedVideoName, setRecordedVideoName] = useState(null)
+  const mediaRecorderRef = useRef(null)
+  const recordingChunksRef = useRef([])
+  const recordingTimerRef = useRef(null)
+  const videoPreviewRef = useRef(null)
+  const recordedVideoNameRef = useRef(null)
   const [formData, setFormData] = useState({
     titre: '',
     description: '',
@@ -34,6 +50,8 @@ export default function NewSignalement() {
   const [longitude, setLongitude] = useState(null)
 
   const [geoError, setGeoError] = useState(null)
+  const shouldOfferVideoProof = VIDEO_PROMPT_TYPES.includes(formData.type)
+  const hasRecordedVideo = Boolean(recordedVideoName)
 
   const requestGeolocation = async () => {
     setGeoError(null)
@@ -105,12 +123,33 @@ export default function NewSignalement() {
     }
   }, [])
 
+  useEffect(() => {
+    if (videoPreviewRef.current && liveStream) {
+      videoPreviewRef.current.srcObject = liveStream
+    }
+  }, [liveStream, showVideoPrompt])
+
+  useEffect(() => {
+    return () => {
+      stopCameraStream()
+      if (recordingTimerRef.current) {
+        clearTimeout(recordingTimerRef.current)
+      }
+      if (recordedVideoUrl) {
+        URL.revokeObjectURL(recordedVideoUrl)
+      }
+    }
+  }, [recordedVideoUrl])
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }))
+    if (name === 'type') {
+      setVideoPromptHandled(false)
+    }
   }
 
   const handleQuickType = (type, label) => {
@@ -119,6 +158,7 @@ export default function NewSignalement() {
       type,
       titre: prev.titre || `Signalement : ${label}`
     }))
+    setVideoPromptHandled(false)
   }
 
   const handleFileChange = (e) => {
@@ -129,8 +169,94 @@ export default function NewSignalement() {
     setFiles(prev => prev.filter((_, i) => i !== index))
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  const stopCameraStream = () => {
+    setLiveStream((stream) => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop())
+      }
+      return null
+    })
+  }
+
+  const getRecordingMimeType = () => {
+    if (typeof MediaRecorder === 'undefined') return ''
+    const candidates = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4']
+    return candidates.find(type => MediaRecorder.isTypeSupported(type)) || ''
+  }
+
+  const startVideoRecording = async () => {
+    setRecordingError(null)
+
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      setRecordingError('Votre navigateur ne permet pas de filmer directement depuis cette page.')
+      return
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+      const mimeType = getRecordingMimeType()
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
+
+      recordingChunksRef.current = []
+      mediaRecorderRef.current = recorder
+      setLiveStream(stream)
+      setRecordingState('recording')
+
+      recorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          recordingChunksRef.current.push(event.data)
+        }
+      }
+
+      recorder.onstop = () => {
+        const finalMimeType = recorder.mimeType || mimeType || 'video/webm'
+        const blob = new Blob(recordingChunksRef.current, { type: finalMimeType })
+        const extension = finalMimeType.includes('mp4') ? 'mp4' : 'webm'
+        const proofName = `preuve-video-${Date.now()}.${extension}`
+        const proofFile = new File([blob], proofName, { type: finalMimeType })
+
+        if (recordedVideoUrl) {
+          URL.revokeObjectURL(recordedVideoUrl)
+        }
+
+        const previousProofName = recordedVideoNameRef.current
+        recordedVideoNameRef.current = proofName
+        setRecordedVideoName(proofName)
+        setRecordedVideoUrl(URL.createObjectURL(blob))
+        setFiles(prev => [...prev.filter(file => file.name !== previousProofName), proofFile])
+        setRecordingState('saved')
+        setVideoPromptHandled(true)
+        stopCameraStream()
+      }
+
+      recorder.start()
+      recordingTimerRef.current = setTimeout(() => {
+        stopVideoRecording()
+      }, MAX_RECORDING_MS)
+    } catch (error) {
+      console.error('[VideoRecording] Error:', error)
+      setRecordingState('idle')
+      setRecordingError('Impossible d acceder a la camera. Verifiez les permissions puis reessayez.')
+      stopCameraStream()
+    }
+  }
+
+  const stopVideoRecording = () => {
+    if (recordingTimerRef.current) {
+      clearTimeout(recordingTimerRef.current)
+      recordingTimerRef.current = null
+    }
+
+    const recorder = mediaRecorderRef.current
+    if (recorder && recorder.state !== 'inactive') {
+      setRecordingState('saving')
+      recorder.stop()
+    } else {
+      stopCameraStream()
+    }
+  }
+
+  const submitSignalement = async () => {
     setLoading(true)
 
     try {
@@ -178,6 +304,17 @@ export default function NewSignalement() {
     }
   }
 
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    if (shouldOfferVideoProof && !videoPromptHandled && !hasRecordedVideo) {
+      setShowVideoPrompt(true)
+      return
+    }
+
+    await submitSignalement()
+  }
+
   return (
     <>
       <div className="min-h-screen bg-gray-50 pt-16">
@@ -208,6 +345,7 @@ export default function NewSignalement() {
                 <select name="type" required value={formData.type} onChange={handleChange} className="w-full border rounded px-3 py-2">
                   <option value="violence">Violence</option>
                   <option value="vol">Vol</option>
+                  <option value="accident">Accident</option>
                   <option value="probleme_eclairage">Problème éclairage</option>
                   <option value="nid_de_poule">Nid-de-poule</option>
                   <option value="autre">Autre</option>
@@ -292,6 +430,62 @@ export default function NewSignalement() {
           </div>
         </div>
       </div>
+      {showVideoPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="w-full max-w-lg rounded-xl bg-white p-5 shadow-xl">
+            <h2 className="text-xl font-bold text-gray-900">Voulez-vous filmer la preuve ?</h2>
+            <p className="mt-2 text-sm text-gray-600">
+              La camera affiche un apercu en direct. La video sera sauvegardee comme preuve avec une duree maximale de 3 minutes.
+            </p>
+
+            <div className="mt-4 overflow-hidden rounded-lg bg-gray-900">
+              {recordingState === 'recording' || recordingState === 'saving' ? (
+                <video ref={videoPreviewRef} autoPlay playsInline muted className="h-64 w-full object-cover" />
+              ) : recordedVideoUrl ? (
+                <video src={recordedVideoUrl} controls className="h-64 w-full object-cover" />
+              ) : (
+                <div className="flex h-64 items-center justify-center text-sm text-gray-300">
+                  Pret a demarrer l enregistrement
+                </div>
+              )}
+            </div>
+
+            {recordingError && <p className="mt-3 text-sm text-red-600">{recordingError}</p>}
+
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+              {recordingState === 'recording' ? (
+                <button type="button" onClick={stopVideoRecording} className="flex-1 rounded bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700">
+                  Arreter et sauvegarder
+                </button>
+              ) : (
+                <button type="button" onClick={startVideoRecording} disabled={recordingState === 'saving' || loading} className="flex-1 rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-60">
+                  {recordingState === 'saved' ? 'Refilmer' : recordingState === 'saving' ? 'Sauvegarde...' : 'Filmer maintenant'}
+                </button>
+              )}
+
+              {recordingState === 'saved' ? (
+                <button type="button" onClick={submitSignalement} disabled={loading} className="flex-1 rounded bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700 disabled:opacity-60">
+                  {loading ? 'Envoi...' : 'Envoyer avec la video'}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVideoPromptHandled(true)
+                    setShowVideoPrompt(false)
+                    stopCameraStream()
+                    submitSignalement()
+                  }}
+                  disabled={recordingState === 'recording' || recordingState === 'saving' || loading}
+                  className="flex-1 rounded border px-4 py-2 font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                >
+                  Continuer sans video
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
