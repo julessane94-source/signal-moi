@@ -46,7 +46,7 @@ app.use(cors({
     credentials: true,
     allowedHeaders: ['Authorization', 'Content-Type', 'X-Refresh-Token']
 }));
-app.use(express.json());
+app.use(express.json({ limit: '2mb' }));
 
 // Middleware de logging pour toutes les requêtes (sauf health checks)
 app.use((req, res, next) => {

@@ -108,7 +108,14 @@ export default function NewSignalement() {
 
   const emitLiveLocation = (locationData) => {
     const activeSocket = socketRef.current
-    if (!activeSocket || !liveSessionIdRef.current || !locationData) return
+    if (!liveSessionIdRef.current || !locationData) return
+    sendLiveSessionFallback({
+      action: 'location',
+      latitude: locationData.latitude,
+      longitude: locationData.longitude,
+      localisation: locationData.localisation
+    })
+    if (!activeSocket) return
     activeSocket.emit('live_recording_location', {
       sessionId: liveSessionIdRef.current,
       type: pendingLiveMetaRef.current.type || formData.type,
@@ -117,6 +124,31 @@ export default function NewSignalement() {
       longitude: locationData.longitude,
       localisation: locationData.localisation
     })
+  }
+
+  const sendLiveSessionFallback = (payload = {}) => {
+    if (!liveSessionIdRef.current || typeof window === 'undefined') return
+    const token = localStorage.getItem('token')
+    if (!token) return
+
+    const meta = pendingLiveMetaRef.current || {}
+    fetch(`${API_BASE}/api/signalements/live-session`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        sessionId: liveSessionIdRef.current,
+        type: meta.type || formData.type,
+        titre: meta.titre || formData.titre || `Signalement : ${getTypeLabel(formData.type)}`,
+        description: meta.description || formData.description,
+        latitude,
+        longitude,
+        localisation: formData.localisation || null,
+        ...payload
+      })
+    }).catch(() => {})
   }
 
   const startLiveFrameBroadcast = (stream) => {
@@ -142,11 +174,17 @@ export default function NewSignalement() {
       if (!ctx) return
 
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+      const frame = canvas.toDataURL('image/jpeg', 0.45)
       const activeSocket = socketRef.current
-      if (!activeSocket) return
-      activeSocket.emit('live_recording_frame', {
-        sessionId: liveSessionIdRef.current,
-        frame: canvas.toDataURL('image/jpeg', 0.45)
+      if (activeSocket) {
+        activeSocket.emit('live_recording_frame', {
+          sessionId: liveSessionIdRef.current,
+          frame
+        })
+      }
+      sendLiveSessionFallback({
+        action: 'frame',
+        frame
       })
     }, 1000)
   }
@@ -428,6 +466,12 @@ export default function NewSignalement() {
           localisation: formData.localisation || null
         })
       }
+      sendLiveSessionFallback({
+        action: 'start',
+        latitude,
+        longitude,
+        localisation: formData.localisation || null
+      })
 
       if (latitude === null || longitude === null || !formData.localisation) {
         getAutomaticLocation({ silent: true }).then(emitLiveLocation)
@@ -452,6 +496,7 @@ export default function NewSignalement() {
           if (activeSocket && liveSessionIdRef.current) {
             activeSocket.emit('live_recording_stopped', { sessionId: liveSessionIdRef.current, type: liveType })
           }
+          sendLiveSessionFallback({ action: 'stop' })
           stopCameraStream()
           submitSignalement()
           return
@@ -480,6 +525,7 @@ export default function NewSignalement() {
             type: liveType
           })
         }
+        sendLiveSessionFallback({ action: 'stop' })
         stopCameraStream()
       }
 

@@ -6,6 +6,25 @@ const { uploadMultiple } = require('../middlewares/upload');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const path = require('path');
+const activeLiveSessions = new Map();
+
+const normalizeRole = (role) => String(role || '').trim().toLowerCase();
+const isPoliceLikeRole = (role) => ['police', 'policier', 'gendarmerie', 'force_ordre'].includes(normalizeRole(role));
+const canViewLiveSessions = (role) => ['admin', 'administrateur', 'collaborateur', 'collaborator'].includes(normalizeRole(role)) || isPoliceLikeRole(role);
+const liveSessionPayload = (session) => ({
+    ...session,
+    isLiveRecording: true,
+    status: session.status || 'recording'
+});
+const pruneLiveSessions = () => {
+    const now = Date.now();
+    for (const [sessionId, session] of activeLiveSessions.entries()) {
+        const lastSeen = new Date(session.frameAt || session.updatedAt || session.startedAt || 0).getTime();
+        if (!lastSeen || now - lastSeen > 45000 || session.status === 'stopped') {
+            activeLiveSessions.delete(sessionId);
+        }
+    }
+};
 
 // Middleware d'authentification
 const authMiddleware = (req, res, next) => {
@@ -258,6 +277,78 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                 res.json(result.rows);
             } catch (err) {
                 console.error('Erreur GET /policiers:', err);
+                res.status(500).json({ error: 'Erreur serveur' });
+            }
+        });
+
+        router.get('/live-sessions', authMiddleware, async (req, res) => {
+            try {
+                if (!canViewLiveSessions(req.user.role)) {
+                    return res.status(403).json({ error: 'Acces refuse' });
+                }
+
+                pruneLiveSessions();
+                const sessions = Array.from(activeLiveSessions.values())
+                    .map(liveSessionPayload)
+                    .sort((a, b) => new Date(b.frameAt || b.updatedAt || b.startedAt || 0) - new Date(a.frameAt || a.updatedAt || a.startedAt || 0));
+
+                res.json({ success: true, sessions });
+            } catch (err) {
+                console.error('Erreur GET /live-sessions:', err);
+                res.status(500).json({ error: 'Erreur serveur' });
+            }
+        });
+
+        router.post('/live-session', authMiddleware, async (req, res) => {
+            try {
+                const { action = 'frame', sessionId, frame, type, titre, description, latitude, longitude, localisation } = req.body || {};
+                if (!sessionId) {
+                    return res.status(400).json({ error: 'sessionId requis' });
+                }
+
+                const now = new Date();
+                const existing = activeLiveSessions.get(sessionId) || {};
+                const payload = {
+                    ...existing,
+                    sessionId,
+                    type: type || existing.type,
+                    titre: titre || existing.titre,
+                    description: description || existing.description,
+                    latitude: latitude !== undefined ? latitude : existing.latitude,
+                    longitude: longitude !== undefined ? longitude : existing.longitude,
+                    localisation: localisation || existing.localisation,
+                    citizenId: req.user.id,
+                    citizenName: existing.citizenName || `${req.user.prenom || ''} ${req.user.nom || ''}`.trim(),
+                    status: action === 'stop' ? 'stopped' : 'recording',
+                    startedAt: existing.startedAt || now,
+                    updatedAt: now
+                };
+
+                if (frame) {
+                    payload.frame = frame;
+                    payload.frameAt = now;
+                }
+
+                if (action === 'stop') {
+                    activeLiveSessions.delete(sessionId);
+                } else {
+                    activeLiveSessions.set(sessionId, payload);
+                }
+
+                if (global.io) {
+                    const eventPayload = liveSessionPayload(payload);
+                    if (action === 'stop') {
+                        global.io.to('police_room').emit('live_recording_stopped', eventPayload);
+                    } else if (frame) {
+                        global.io.to('police_room').emit('live_recording_frame', eventPayload);
+                    } else {
+                        global.io.to('police_room').emit('live_recording_started', eventPayload);
+                    }
+                }
+
+                res.json({ success: true });
+            } catch (err) {
+                console.error('Erreur POST /live-session:', err);
                 res.status(500).json({ error: 'Erreur serveur' });
             }
         });

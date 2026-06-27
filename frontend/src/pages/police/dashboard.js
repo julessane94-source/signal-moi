@@ -35,6 +35,8 @@ export default function PoliceDashboard() {
   useEffect(() => {
     fetchSignalements()
     fetchPoliciers()
+    fetchLiveSessions()
+    const livePoll = setInterval(fetchLiveSessions, 2500)
     
     if (socket) {
       setSocketConnected(socket.connected)
@@ -106,6 +108,7 @@ export default function PoliceDashboard() {
     }
     
     return () => {
+      clearInterval(livePoll)
       if (socket) {
         socket.off('new_signalement_notification')
         socket.off('signalement_received')
@@ -148,6 +151,37 @@ export default function PoliceDashboard() {
       setPoliciers(policiersList)
     } catch (error) {
       console.error('Erreur chargement policiers:', error)
+    }
+  }
+
+  const mergeLiveSessions = (sessions = []) => {
+    if (!Array.isArray(sessions)) return
+    setLiveRecordings(prev => {
+      const next = { ...prev }
+      sessions.forEach((live) => {
+        if (!live?.sessionId) return
+        next[live.sessionId] = {
+          ...next[live.sessionId],
+          ...live,
+          status: live.status || next[live.sessionId]?.status || 'recording'
+        }
+      })
+      return next
+    })
+  }
+
+  const fetchLiveSessions = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) return
+      const res = await fetch(`${API_BASE}/api/signalements/live-sessions`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!res.ok) return
+      const data = await res.json()
+      mergeLiveSessions(data.sessions || [])
+    } catch (error) {
+      console.warn('Erreur chargement lives:', error)
     }
   }
 
