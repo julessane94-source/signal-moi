@@ -59,7 +59,7 @@ export default function AdminDashboard() {
     siteName: 'Signal-Moi',
     contactEmail: 'contact@signal-moi.com',
     contactPhone: '+237 600 000 000',
-    address: 'Yaounde, Cameroun',
+    address: 'Sedhiou, Senegal',
     contactPage: {
       title: 'Contactez-nous',
       content: 'Pour toute question, contactez-nous.',

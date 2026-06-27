@@ -18,7 +18,7 @@ export default function Contact() {
   const [siteConfig, setSiteConfig] = useState({
     contactEmail: 'julessane94@gmail.com',
     contactPhone: '+221778851691',
-    address: 'Dakar, Sénégal',
+    address: 'Sédhiou, Sénégal',
     country: 'SN',
     contactPage: { 
       title: 'Contactez-nous', 
@@ -66,13 +66,13 @@ export default function Contact() {
         SN: {
           contactEmail: 'julessane94@gmail.com',
           contactPhone: '+221778851691',
-          address: 'Dakar, Sénégal',
+          address: 'Sédhiou, Sénégal',
           country: 'SN'
         },
         CM: {
           contactEmail: 'julessane94@gmail.com',
           contactPhone: '+221778851691',
-          address: 'Yaoundé, Cameroun',
+          address: 'Sédhiou, Sénégal',
           country: 'CM'
         },
         CI: {

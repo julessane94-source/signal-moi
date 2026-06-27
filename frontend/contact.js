@@ -8,7 +8,7 @@ import { toast } from 'react-toastify'
 
 export default function Contact() {
   const [contactInfo, setContactInfo] = useState([
-    { icon: '📍', title: 'Adresse', content: 'Yaoundé, Cameroun' },
+    { icon: '📍', title: 'Adresse', content: 'Sédhiou, Sénégal' },
     { icon: '📞', title: 'Téléphone', content: '+237 600 000 000' },
     { icon: '✉️', title: 'Email', content: 'contact@signal-moi.com' },
     { icon: '🕒', title: 'Horaires', content: 'Lun-Ven: 8h-18h' },
@@ -21,7 +21,7 @@ export default function Contact() {
         if (!res.ok) return
         const cfg = await res.json()
         setContactInfo([
-          { icon: '📍', title: 'Adresse', content: cfg.address || 'Yaoundé, Cameroun' },
+          { icon: '📍', title: 'Adresse', content: cfg.address || 'Sédhiou, Sénégal' },
           { icon: '📞', title: 'Téléphone', content: cfg.phone || '+237 600 000 000' },
           { icon: '✉️', title: 'Email', content: cfg.contactEmail || 'contact@signal-moi.com' },
           { icon: '🕒', title: 'Horaires', content: 'Lun-Ven: 8h-18h' }
@@ -211,7 +211,7 @@ export default function Contact() {
             <div className="bg-gray-200 rounded-xl h-64 flex items-center justify-center">
               <div className="text-center">
                 <div className="text-4xl mb-2">🗺️</div>
-                <p className="text-gray-500">Carte interactive - Yaoundé, Cameroun</p>
+                <p className="text-gray-500">Carte interactive - Sédhiou, Sénégal</p>
                 <p className="text-sm text-gray-400">(Intégration Google Maps à venir)</p>
               </div>
             </div>

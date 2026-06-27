@@ -660,7 +660,7 @@ export default function NewSignalement() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Localisation *</label>
-                <input type="text" name="localisation" value={formData.localisation} onChange={handleChange} className="w-full border rounded px-3 py-2" placeholder="Ex: Carrefour Mvan, Yaoundé" />
+                <input type="text" name="localisation" value={formData.localisation} onChange={handleChange} className="w-full border rounded px-3 py-2" placeholder="Ex: Marché central, Sédhiou" />
                 <div className="mt-2 flex gap-2 items-center">
                   <button type="button" onClick={() => getAutomaticLocation()} className="text-sm px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition font-medium">📍 Localiser</button>
                   <span className="text-sm text-gray-600 font-medium">{latitude != null && longitude != null ? `✓ ${latitude.toFixed(5)}, ${longitude.toFixed(5)}` : 'Pas de localisation'}</span>

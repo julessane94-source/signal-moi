@@ -145,6 +145,8 @@ router.get('/by-age', authMiddleware, checkAdminOrCollaborator, async (req, res)
       FROM signal_moi.signalements s
       LEFT JOIN signal_moi.users u ON u.id = s.user_id
       WHERE u.date_naissance IS NOT NULL
+        AND u.date_naissance <= CURRENT_DATE
+        AND u.date_naissance >= CURRENT_DATE - INTERVAL '120 years'
       GROUP BY age_group, s.type
       ORDER BY
         CASE age_group
@@ -262,7 +264,10 @@ router.get('/export-data', authMiddleware, checkAdminOrCollaborator, async (req,
       stats.byMonth[month] = (stats.byMonth[month] || 0) + 1
 
       if (row.date_naissance) {
-        const age = new Date().getFullYear() - new Date(row.date_naissance).getFullYear()
+        const birthDate = new Date(row.date_naissance)
+        const now = new Date()
+        const age = now.getFullYear() - birthDate.getFullYear()
+        if (Number.isNaN(birthDate.getTime()) || age < 0 || age > 120) return
         const ageGroup = age < 18 ? 'Moins de 18 ans' :
           age < 25 ? '18-25 ans' :
           age < 35 ? '25-35 ans' :

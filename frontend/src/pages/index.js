@@ -37,9 +37,21 @@ export default function Home() {
   const [collaboratorCampaigns, setCollaboratorCampaigns] = useState([])
 
   const features = [
-    { title: 'Signalement simple', text: 'Décrivez l’incident, joignez vos preuves et envoyez en quelques clics.', icon: '🚨' },
-    { title: 'Suivi clair', text: 'Recevez des mises à jour et gardez une vue complète des dossiers ouverts.', icon: '📊' },
-    { title: 'Impact local', text: 'Aidez votre quartier à agir plus vite grâce à une communauté mobilisée.', icon: '🌍' },
+    { title: 'Alerter rapidement', text: 'Un formulaire court, une localisation claire et des preuves envoyées aux bons acteurs.', icon: '01' },
+    { title: 'Coordonner les réponses', text: 'Police, collaborateurs et administrateurs suivent les cas depuis des espaces dédiés.', icon: '02' },
+    { title: 'Mesurer l’impact', text: 'Les statistiques aident à prioriser les quartiers, les types d’incidents et les actions.', icon: '03' },
+  ]
+
+  const localStats = [
+    { label: 'Zone pilote', value: 'Sédhiou' },
+    { label: 'Signalement', value: '24h/24' },
+    { label: 'Preuves', value: 'Photo vidéo' }
+  ]
+
+  const actionCards = [
+    { title: 'Citoyens', text: 'Déclarer un incident, ajouter une preuve et suivre son évolution.', href: user ? '/citizen/signalement' : '/login' },
+    { title: 'Forces de l’ordre', text: 'Voir les urgences, lives vidéo et localisations en temps réel.', href: '/police/dashboard' },
+    { title: 'Collaborateurs', text: 'Analyser les tendances et organiser les actions de terrain.', href: '/collaborator/dashboard' }
   ]
 
   // Blog posts data
@@ -137,121 +149,164 @@ export default function Home() {
       </Head>
 
       <main className="min-h-screen pt-16 bg-white">
-        {/* Hero */}
-        <section className="relative overflow-hidden bg-[linear-gradient(135deg,#0f172a_0%,#1e293b_45%,#2563eb_100%)] text-white">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(129,140,248,0.25),_transparent_20%),radial-gradient(circle_at_bottom_right,_rgba(45,212,191,0.18),_transparent_25%)]" />
-          <div className="absolute -top-24 right-0 h-64 w-64 rounded-full bg-cyan-400/10 blur-3xl" />
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-10 lg:py-14">
-            <div className="grid items-center gap-8 lg:gap-10 lg:grid-cols-[1.05fr_0.95fr]">
-              <div className="text-center lg:text-left max-w-2xl">
-                <span className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-cyan-100 shadow-lg">
-                  <img src={getImageUrl(config.logoUrl)} alt="Logo Signal-Moi" className="h-6 w-6 rounded-md object-cover ring-1 ring-white/10" />
-                  Signal-Moi
-                </span>
-                <h1 className="mt-6 text-4xl md:text-5xl lg:text-6xl font-black leading-tight text-white drop-shadow-lg">{config.home_page?.title || 'Ensemble pour une Communauté Plus Sûre'}</h1>
-                <p className="mt-4 text-xl md:text-2xl text-slate-100 max-w-2xl">{config.home_page?.heroText || 'Signalez les incidents de votre quartier et engagez le dialogue avec les autorités locales'}</p>
+        <section className="relative overflow-hidden bg-slate-950 text-white">
+          <div className="absolute inset-0 opacity-20 bg-[linear-gradient(120deg,#0f172a_0%,#14532d_48%,#0369a1_100%)]" />
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 lg:py-16">
+            <div className="grid items-center gap-10 lg:grid-cols-[1fr_0.92fr]">
+              <div className="max-w-3xl">
+                <div className="inline-flex items-center gap-3 border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-emerald-100">
+                  <img src={getImageUrl(config.logoUrl)} alt="Logo Signal-Moi" className="h-7 w-7 rounded object-cover" />
+                  Signal-Moi Sédhiou
+                </div>
+                <h1 className="mt-6 text-4xl md:text-5xl lg:text-6xl font-black leading-tight">
+                  {config.home_page?.title || 'Un signalement clair pour une réponse plus rapide'}
+                </h1>
+                <p className="mt-5 text-lg md:text-xl text-slate-200 max-w-2xl">
+                  {config.home_page?.heroText || 'Aidez les quartiers de Sédhiou à remonter les urgences, les preuves et les besoins de terrain aux équipes concernées.'}
+                </p>
 
                 {config.home_page?.content && config.home_page.content.includes('<') ? (
-                  <div className="mt-6 text-slate-200 max-w-xl" dangerouslySetInnerHTML={{ __html: sanitizedHomeContent }} />
+                  <div className="mt-5 max-w-2xl text-sm leading-7 text-slate-300" dangerouslySetInnerHTML={{ __html: sanitizedHomeContent }} />
                 ) : (
-                  <p className="mt-6 text-slate-200 max-w-xl">{config.home_page?.content || 'Signal-Moi est une plateforme citoyenne d\'engagement communautaire. Signalez les problèmes de sécurité publique, lancez des campagnes de sensibilisation et contribuez à l\'amélioration de votre quartier.'}</p>
+                  <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-300">
+                    {config.home_page?.content || 'Signal-Moi centralise les alertes citoyennes, facilite la coordination avec les forces de l’ordre et donne une vue suivie des actions locales.'}
+                  </p>
                 )}
+
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <Link href={user ? "/citizen/signalement" : "/login"}>
+                    <Button className="bg-emerald-500 text-slate-950 px-7 py-3 font-bold hover:bg-emerald-400 transition" size="md">Faire un signalement</Button>
+                  </Link>
+                  <Link href="/signalements">
+                    <Button className="border border-white/25 bg-white/10 px-7 py-3 font-semibold text-white hover:bg-white/15 transition" size="md">Voir les signalements</Button>
+                  </Link>
+                </div>
 
                 {showInstallButton && (
-                  <div className="mt-5 text-sm text-slate-100">
-                    <button onClick={handleInstall} className="underline decoration-cyan-200 underline-offset-4">Installer l'application mobile</button>
+                  <button onClick={handleInstall} className="mt-5 text-sm font-semibold text-emerald-200 underline underline-offset-4">
+                    Installer l'application
+                  </button>
+                )}
+
+                <div className="mt-8 grid max-w-2xl grid-cols-3 border border-white/10 bg-white/5">
+                  {localStats.map((item) => (
+                    <div key={item.label} className="p-4">
+                      <p className="text-xl font-black text-white">{item.value}</p>
+                      <p className="mt-1 text-xs uppercase tracking-wide text-slate-400">{item.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="w-full">
+                <div className="overflow-hidden border border-white/10 bg-white/10 shadow-2xl">
+                  {slideshowImages.length > 0 ? (
+                    <div className="relative">
+                      <div className="relative h-[360px] w-full sm:h-[440px]">
+                        <Image
+                          src={getImageUrl(slideshowImages[slideIndex])}
+                          alt={`Aperçu Signal-Moi ${slideIndex + 1}`}
+                          fill
+                          sizes="(max-width: 768px) 100vw, 620px"
+                          className="object-cover"
+                          priority={slideIndex === 0}
+                        />
+                      </div>
+                      <div className="absolute bottom-4 left-4 right-4 bg-slate-950/75 p-4 text-sm text-slate-100 backdrop-blur">
+                        Suivi citoyen, preuves et localisation dans un même espace.
+                      </div>
+                      <button
+                        onClick={() => setSlideIndex((s) => (s - 1 + slideshowImages.length) % slideshowImages.length)}
+                        className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center bg-slate-950/70 text-2xl text-white"
+                        aria-label="Précédent"
+                      >‹</button>
+                      <button
+                        onClick={() => setSlideIndex((s) => (s + 1) % slideshowImages.length)}
+                        className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center bg-slate-950/70 text-2xl text-white"
+                        aria-label="Suivant"
+                      >›</button>
+                    </div>
+                  ) : (
+                    <iframe title="Carte de Sédhiou" src="https://www.openstreetmap.org/export/embed.html?bbox=-15.62%2C12.66%2C-15.49%2C12.75&layer=mapnik&marker=12.7081%2C-15.5569" className="h-[420px] w-full" style={{ border: 0 }} />
+                  )}
+                </div>
+                {slideshowImages.length > 0 && (
+                  <div className="mt-4 flex justify-center gap-2">
+                    {slideshowImages.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setSlideIndex(i)}
+                        aria-label={`Aller au slide ${i + 1}`}
+                        className={`h-2.5 w-8 ${i === slideIndex ? 'bg-emerald-400' : 'bg-white/30'}`}
+                      />
+                    ))}
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        </section>
 
-              <div className="flex justify-center lg:justify-end w-full">
-                <div className="rounded-3xl border border-white/10 bg-white/10 p-4 shadow-2xl backdrop-blur-xl w-full max-w-2xl">
-                  <div className="rounded-2xl overflow-hidden border border-white/10 relative bg-black/5">
-                    {slideshowImages.length > 0 ? (
-                      <>
-                        <div className="relative w-full h-80 sm:h-96">
-                          <Image
-                            src={getImageUrl(slideshowImages[slideIndex])}
-                            alt={`Slide ${slideIndex + 1}`}
-                            fill
-                            sizes="(max-width: 768px) 100vw, 700px"
-                            className="object-cover transition-transform duration-700 ease-in-out transform hover:scale-105"
-                          />
-                        </div>
-                        <button
-                          onClick={() => setSlideIndex((s) => (s - 1 + slideshowImages.length) % slideshowImages.length)}
-                          className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full"
-                          aria-label="Précédent"
-                        >‹</button>
-                        <button
-                          onClick={() => setSlideIndex((s) => (s + 1) % slideshowImages.length)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full"
-                          aria-label="Suivant"
-                        >›</button>
-                      </>
-                    ) : (
-                      <iframe title="Carte aperçu" src="https://www.openstreetmap.org/export/embed.html?bbox=2.2137%2C46.2276%2C2.2137%2C46.2276&layer=mapnik&marker=46.2276%2C2.2137" className="w-full h-72" style={{ border: 0 }} />
-                    )}
-                  </div>
-                  {slideshowImages.length > 0 ? (
-                    <div className="mt-4 flex items-center justify-center gap-3">
-                      {slideshowImages.map((_, i) => (
-                        <button
-                          key={i}
-                          onClick={() => setSlideIndex(i)}
-                          aria-label={`Aller au slide ${i + 1}`}
-                          className={`w-3 h-3 rounded-full ${i === slideIndex ? 'bg-white' : 'bg-white/40'}`}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="mt-4 rounded-2xl bg-slate-950/30 p-4 text-sm text-slate-100">Aperçu interactif — la carte complète vous aide à situer l’incident rapidement.</div>
-                  )}
-                </div>
+        <section className="border-b border-slate-200 bg-white py-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="grid gap-4 md:grid-cols-3">
+              {actionCards.map((item) => (
+                <Link key={item.title} href={item.href} className="group border border-slate-200 bg-white p-6 transition hover:border-emerald-300 hover:bg-emerald-50">
+                  <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">{item.title}</p>
+                  <p className="mt-3 text-lg font-bold text-slate-950 group-hover:text-emerald-900">{item.text}</p>
+                  <span className="mt-5 inline-block text-sm font-semibold text-slate-700">Ouvrir →</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-slate-50 py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-700">Pourquoi Signal-Moi</p>
+                <h2 className="mt-3 text-3xl font-black text-slate-950 md:text-4xl">Une plateforme structurée pour agir localement.</h2>
+                <p className="mt-4 text-slate-600">Chaque signalement rassemble les informations utiles: description, localisation, pièces jointes et suivi. Les équipes peuvent alors prioriser sans perdre de temps.</p>
+              </div>
+              <div className="grid gap-4 md:grid-cols-3">
+                {features.map((feature) => (
+                  <article key={feature.title} className="border border-slate-200 bg-white p-5 shadow-sm">
+                    <div className="text-sm font-black text-emerald-700">{feature.icon}</div>
+                    <h3 className="mt-4 text-lg font-bold text-slate-950">{feature.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{feature.text}</p>
+                  </article>
+                ))}
               </div>
             </div>
           </div>
         </section>
 
-        <section className="py-8 bg-slate-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 grid gap-6 md:grid-cols-3">
-            {features.map((feature) => (
-              <article key={feature.title} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:-translate-y-1 hover:shadow-xl transition flex flex-col items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">{feature.icon}</div>
-                <h3 className="text-lg font-semibold text-slate-900">{feature.title}</h3>
-                <p className="text-slate-600">{feature.text}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        {/* How it works */}
-        <section className="py-10 bg-white">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 text-center">
-            <p className="text-sm uppercase tracking-[0.35em] text-indigo-600 font-semibold">Comment ça marche</p>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-3">5 étapes simples pour agir rapidement</h2>
-            <p className="text-gray-600 mt-3 max-w-3xl mx-auto">Une expérience pensée pour que chaque citoyen puisse signaler, suivre et faire évoluer les problèmes de son quartier en un instant.</p>
-
-            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-              {[
-                { icon: '1', title: 'Créer un compte', text: 'Inscrivez-vous ou connectez-vous rapidement.' },
-                { icon: '2', title: 'Décrire', text: 'Expliquez l’incident et choisissez sa catégorie.' },
-                { icon: '📷', title: 'Preuves', text: 'Joignez photos, vidéos ou documents utiles.' },
-                { icon: '📍', title: 'Localiser', text: 'Précisez l’adresse ou le quartier concerné.' },
-                { icon: '5', title: 'Suivre', text: 'Recevez des mises à jour et suivez l’avancement.' }
-              ].map((step, i) => (
-                <article key={i} className="rounded-3xl border border-slate-200 bg-gradient-to-b from-white to-indigo-50 p-4 shadow-sm hover:shadow-xl transition text-center">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-600 to-cyan-500 text-white mx-auto flex items-center justify-center text-lg font-bold mb-2 shadow-lg">{step.icon}</div>
-                  <h3 className="font-semibold text-gray-900 mb-1 text-sm">{step.title}</h3>
-                  <p className="text-xs text-gray-600">{step.text}</p>
-                </article>
-              ))}
-            </div>
-
-            <div className="mt-8 flex justify-center">
-              <Link href={user ? "/citizen/signalement" : "/login"}>
-                <Button className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition" size="md">Commencer maintenant →</Button>
-              </Link>
+        <section className="bg-white py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="grid gap-8 lg:grid-cols-2">
+              <div className="border border-slate-200 p-6">
+                <p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Parcours citoyen</p>
+                <h2 className="mt-3 text-2xl font-black text-slate-950">Signaler en moins de quelques minutes</h2>
+                <div className="mt-6 space-y-4">
+                  {['Choisir le type d’incident', 'Décrire ce qui se passe', 'Ajouter une photo, vidéo ou un live', 'Confirmer la localisation à Sédhiou', 'Suivre le traitement du dossier'].map((step, index) => (
+                    <div key={step} className="flex gap-4 border-t border-slate-100 pt-4">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center bg-slate-950 text-sm font-bold text-white">{index + 1}</span>
+                      <p className="font-medium text-slate-800">{step}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="border border-emerald-200 bg-emerald-50 p-6">
+                <p className="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-700">Priorités locales</p>
+                <h2 className="mt-3 text-2xl font-black text-slate-950">Des données utiles pour Sédhiou</h2>
+                <p className="mt-4 text-slate-700">Les tableaux de bord aident à repérer les zones récurrentes, les urgences de sécurité et les besoins d’intervention. Les statistiques d’âge ignorent les profils sans date de naissance afin de garder des analyses propres.</p>
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  {['Sécurité publique', 'Voirie et éclairage', 'Incidents urgents', 'Actions communautaires'].map((item) => (
+                    <div key={item} className="border border-emerald-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800">{item}</div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </section>

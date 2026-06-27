@@ -267,7 +267,7 @@ export default function Profile() {
                     <FormField label="Ville">
                       <Input
                         name="ville"
-                        placeholder="Yaoundé"
+                        placeholder="Sédhiou"
                         value={formData.ville}
                         onChange={handleProfileChange}
                         icon={MapPin}

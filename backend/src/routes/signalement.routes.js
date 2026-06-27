@@ -320,7 +320,6 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                     }
 
                     const rows = result.rows.map((r) => {
-                        // Récupérer les fichiers pour ce signalement
                         return {
                             id: r.id,
                             titre: r.titre,

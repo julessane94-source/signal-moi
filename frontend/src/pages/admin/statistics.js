@@ -38,7 +38,7 @@ export default function Statistics() {
     type: 'all'
   })
   const [logo, setLogo] = useState(null)
-  const [company, setCompany] = useState({ name: 'Signal-Moi', address: 'Dakar, Sénégal' })
+  const [company, setCompany] = useState({ name: 'Signal-Moi', address: 'Sédhiou, Sénégal' })
 
   useEffect(() => {
     if (authLoading) return
@@ -63,7 +63,7 @@ export default function Statistics() {
         }
         setCompany({
           name: config.siteName || 'Signal-Moi',
-          address: config.address || 'Dakar, Sénégal'
+          address: config.address || 'Sédhiou, Sénégal'
         })
       }
     } catch (err) {

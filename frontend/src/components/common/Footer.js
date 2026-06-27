@@ -41,7 +41,7 @@ export default function Footer() {
   const [contactInfo, setContactInfo] = useState({
     contactEmail: 'contact@signal-moi.com',
     contactPhone: '+221 77 88516 91',
-    address: 'Dakar, Sénégal',
+    address: 'Sédhiou, Sénégal',
     country: 'SN',
     socialLinks: {
       facebook: '',
@@ -79,13 +79,13 @@ export default function Footer() {
         SN: {
           contactEmail: 'contact@signal-moi.com',
           contactPhone: '+221 77 88516 91',
-          address: 'Dakar, Sénégal',
+          address: 'Sédhiou, Sénégal',
           country: 'SN'
         },
         CM: {
           contactEmail: 'contact@signal-moi.com',
           contactPhone: '+237 77 88516 91',
-          address: 'Yaoundé, Cameroun',
+          address: 'Sédhiou, Sénégal',
           country: 'CM'
         },
         CI: {

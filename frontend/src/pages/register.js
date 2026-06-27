@@ -288,7 +288,7 @@ export default function Register() {
                     <FormField label="Ville" error={errors.ville} required>
                       <Input
                         name="ville"
-                        placeholder="Dakar"
+                        placeholder="Sédhiou"
                         value={formData.ville}
                         onChange={handleChange}
                         icon={MapPin}
