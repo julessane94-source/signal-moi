@@ -10,8 +10,7 @@ import {
   DocumentTextIcon as DocumentText,
   ExclamationTriangleIcon as ExclamationTriangle,
   VideoCameraIcon as VideoCamera,
-  ShieldCheckIcon as ShieldCheck,
-  ClockIcon as Clock
+  ShieldCheckIcon as ShieldCheck
 } from '@heroicons/react/24/outline'
 
 export default function PoliceDashboard() {
