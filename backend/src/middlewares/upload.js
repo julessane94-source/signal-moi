@@ -1,4 +1,4 @@
-ï»¿const multer = require('multer');
+const multer = require('multer');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
@@ -48,7 +48,7 @@ if (USE_S3 && s3 && multerS3) {
         uploadPath = path.join(uploadsRoot, 'profiles');
       }
 
-      // CrÃ©er le dossier s'il n'existe pas
+      // Créer le dossier s'il n'existe pas
       if (!fs.existsSync(uploadPath)) {
         fs.mkdirSync(uploadPath, { recursive: true });
       }
@@ -67,10 +67,14 @@ const fileFilter = (req, file, cb) => {
   const defaultTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'audio/mpeg', 'audio/wav', 'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
   const allowedTypes = process.env.ALLOWED_FILE_TYPES ? process.env.ALLOWED_FILE_TYPES.split(',').map(t => t.trim()) : defaultTypes;
 
-  if (allowedTypes.includes(file.mimetype)) {
+  const ext = path.extname(file.originalname || '').toLowerCase();
+  const acceptedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.mp3', '.wav', '.m4a', '.aac', '.ogg', '.mp4', '.webm', '.mov', '.m4v', '.3gp', '.3gpp', '.mkv'];
+  const isMediaMime = /^(image|audio|video)\//.test(file.mimetype || '');
+
+  if (allowedTypes.includes(file.mimetype) || isMediaMime || acceptedExtensions.includes(ext)) {
     cb(null, true);
   } else {
-    cb(new Error('Type de fichier non supportÃ©'), false);
+    cb(new Error('Type de fichier non supporté'), false);
   }
 };
 
@@ -87,7 +91,7 @@ const upload = multer({
   }
 });
 
-// Middleware pour gÃ©rer les erreurs d'upload
+// Middleware pour gérer les erreurs d'upload
 const handleUploadError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'FILE_TOO_LARGE') {

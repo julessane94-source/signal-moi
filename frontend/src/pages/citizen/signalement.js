@@ -36,6 +36,7 @@ export default function NewSignalement() {
   const [liveStream, setLiveStream] = useState(null)
   const [recordedVideoUrl, setRecordedVideoUrl] = useState(null)
   const [recordedVideoName, setRecordedVideoName] = useState(null)
+  const socketRef = useRef(socket)
   const mediaRecorderRef = useRef(null)
   const recordingChunksRef = useRef([])
   const recordingTimerRef = useRef(null)
@@ -59,6 +60,9 @@ export default function NewSignalement() {
   const shouldOfferVideoProof = VIDEO_PROMPT_TYPES.includes(formData.type)
   const hasRecordedVideo = Boolean(recordedVideoName)
 
+  useEffect(() => {
+    socketRef.current = socket
+  }, [socket])
   const getTypeLabel = (type) => QUICK_TYPES.find(item => item.value === type)?.label || type
 
   const ensureAutomaticDescription = (type) => {
@@ -73,8 +77,9 @@ export default function NewSignalement() {
   }
 
   const emitLiveLocation = (locationData) => {
-    if (!socket || !liveSessionIdRef.current || !locationData) return
-    socket.emit('live_recording_location', {
+    const activeSocket = socketRef.current
+    if (!activeSocket || !liveSessionIdRef.current || !locationData) return
+    activeSocket.emit('live_recording_location', {
       sessionId: liveSessionIdRef.current,
       type: pendingLiveMetaRef.current.type || formData.type,
       titre: pendingLiveMetaRef.current.titre || formData.titre || `Signalement : ${getTypeLabel(formData.type)}`,
@@ -85,7 +90,7 @@ export default function NewSignalement() {
   }
 
   const startLiveFrameBroadcast = (stream) => {
-    if (!socket || liveFrameTimerRef.current) return
+    if (liveFrameTimerRef.current) return
 
     if (stream && !liveVideoRef.current) {
       const liveVideo = document.createElement('video')
@@ -107,7 +112,9 @@ export default function NewSignalement() {
       if (!ctx) return
 
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-      socket.emit('live_recording_frame', {
+      const activeSocket = socketRef.current
+      if (!activeSocket) return
+      activeSocket.emit('live_recording_frame', {
         sessionId: liveSessionIdRef.current,
         frame: canvas.toDataURL('image/jpeg', 0.45)
       })
@@ -233,7 +240,10 @@ export default function NewSignalement() {
           setGeoError('GPS indisponible. Recuperation automatique d une position approximative...')
         }
         console.log('Geolocalisation erreur:', err)
-        getLocationFromIpFallback({ silent }).then(resolve)
+        getLocationFromIpFallback({ silent }).then((fallbackLocation) => {
+          if (fallbackLocation) resolve(fallbackLocation)
+          else resolve({ latitude: null, longitude: null, localisation: formData.localisation || 'Localisation automatique indisponible' })
+        })
       }, {
         enableHighAccuracy: true,
         timeout: 15000,
@@ -361,7 +371,7 @@ export default function NewSignalement() {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' } },
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: true
       })
       const mimeType = getRecordingMimeType()
@@ -374,8 +384,9 @@ export default function NewSignalement() {
       const sessionId = liveSessionIdRef.current || `live-${Date.now()}-${Math.random().toString(36).slice(2)}`
       liveSessionIdRef.current = sessionId
 
-      if (socket) {
-        socket.emit('live_recording_started', {
+      const activeSocket = socketRef.current
+      if (activeSocket) {
+        activeSocket.emit('live_recording_started', {
           sessionId,
           type: liveType,
           titre: liveTitle,
@@ -417,8 +428,9 @@ export default function NewSignalement() {
         setFiles(prev => [...prev.filter(file => file.name !== previousProofName), proofFile])
         setRecordingState('saved')
         setVideoPromptHandled(true)
-        if (socket && liveSessionIdRef.current) {
-          socket.emit('live_recording_stopped', {
+        const activeSocket = socketRef.current
+        if (activeSocket && liveSessionIdRef.current) {
+          activeSocket.emit('live_recording_stopped', {
             sessionId: liveSessionIdRef.current,
             type: liveType
           })

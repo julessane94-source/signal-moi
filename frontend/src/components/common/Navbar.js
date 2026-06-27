@@ -1,4 +1,4 @@
-ï»¿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { useAuth } from '../../context/AuthContext'
@@ -23,7 +23,7 @@ import {
 
 export default function Navbar() {
   const router = useRouter()
-  const { user, logout } = useAuth()
+  const { user, loading, logout } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
   const [logoUrl, setLogoUrl] = useState('/icons/icon-192x192.png')
@@ -32,12 +32,12 @@ export default function Navbar() {
   useEffect(() => {
     const fetchLogo = async () => {
       try {
-        // RÃ©cupÃ©rer le logo depuis la base de donnÃ©es (base64)
+        // Récupérer le logo depuis la base de données (base64)
         const res = await fetch(`${API_BASE}/api/auth/site-config`)
         const data = await res.json()
         setLogoUrl(data.logoUrl || '/icons/icon-192x192.png')
       } catch (err) {
-        console.warn('âš ï¸  Impossible de charger le logo depuis BD, utilisation du fallback:', err.message)
+        console.warn('??  Impossible de charger le logo depuis BD, utilisation du fallback:', err.message)
         setLogoUrl('/icons/icon-192x192.png')
       }
     }
@@ -61,12 +61,12 @@ export default function Navbar() {
         const data = await res.json()
         setNotificationCount(data.unreadCount || 0)
       } catch (err) {
-        console.warn('âš ï¸  Impossible de charger le compteur de notifications:', err.message)
+        console.warn('??  Impossible de charger le compteur de notifications:', err.message)
       }
     }
 
     fetchNotificationCount()
-    // RafraÃ®chir le compteur toutes les 30 secondes
+    // Rafraîchir le compteur toutes les 30 secondes
     const interval = setInterval(fetchNotificationCount, 30000)
     return () => clearInterval(interval)
   }, [user])
@@ -89,9 +89,15 @@ export default function Navbar() {
     return url
   }
 
+  const dashboardHref = user?.role === 'admin' ? '/admin/dashboard' :
+    user?.role === 'police' ? '/police/dashboard' :
+    user?.role === 'collaborateur' ? '/collaborator/dashboard' : '/citizen/dashboard'
+  const isLoggedIn = Boolean(user)
+  const showPublicNavigation = !loading && !isLoggedIn
+  const showPrivateNavigation = !loading && isLoggedIn
   const navigation = [
     { name: 'Accueil', href: '/', icon: Home },
-    { name: 'Ã€ propos', href: '/about', icon: InformationCircle },
+    { name: 'À propos', href: '/about', icon: InformationCircle },
     { name: 'Signalements', href: '/signalements', icon: DocumentText },
     { name: 'Campagnes', href: '/campagnes', icon: UserGroup },
     { name: 'Plaidoyers', href: '/plaidoyers', icon: DocumentText },
@@ -108,7 +114,7 @@ export default function Navbar() {
           </Link>
         </motion.div>
 
-        {!user && (
+        {showPublicNavigation && (
           <div className="hidden md:flex items-center gap-2">
             {navigation.map((item) => {
               const Icon = item.icon
@@ -136,7 +142,7 @@ export default function Navbar() {
               Donner
             </motion.a>
           </Link>
-          {!user ? (
+          {showPublicNavigation ? (
             <>
               <Link href="/login">
                 <motion.a whileHover={{ scale: 1.02 }} className="text-slate-700 hover:text-slate-900">
@@ -151,17 +157,19 @@ export default function Navbar() {
             </>
           ) : (
             <div className="flex items-center gap-3">
-              <Link href="/citizen/dashboard">
+              <Link href={dashboardHref}>
                 <motion.a whileHover={{ scale: 1.02 }} className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-200">
                   <Squares2X2 className="h-4 w-4" />
                   Tableau de bord
                 </motion.a>
               </Link>
-              <Link href="/citizen/signalement">
-                <Button variant="danger" size="sm" className="rounded-full px-5">
-                  ðŸš¨ Signaler
-                </Button>
-              </Link>
+              {user?.role === 'citoyen' && (
+                <Link href="/citizen/signalement">
+                  <Button variant="danger" size="sm" className="rounded-full px-5">
+                    Signaler
+                  </Button>
+                </Link>
+              )}
               <div className="relative">
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -198,14 +206,14 @@ export default function Navbar() {
                           <UserCircle className="h-4 w-4" /> Mon profil
                         </motion.a>
                       </Link>
-                      <Link href="/citizen/dashboard">
+                      <Link href={dashboardHref}>
                         <motion.a whileHover={{ backgroundColor: '#f8fafc' }} className="flex items-center gap-2 px-4 py-3 text-sm text-slate-700 hover:text-slate-900">
                           <Squares2X2 className="h-4 w-4" /> Tableau de bord
                         </motion.a>
                       </Link>
                       <Link href="/settings">
                         <motion.a whileHover={{ backgroundColor: '#f8fafc' }} className="flex items-center gap-2 px-4 py-3 text-sm text-slate-700 hover:text-slate-900">
-                          <Cog className="h-4 w-4" /> ParamÃ¨tres
+                          <Cog className="h-4 w-4" /> Paramètres
                         </motion.a>
                       </Link>
                       <Link href="/notifications">
@@ -227,7 +235,7 @@ export default function Navbar() {
                         }}
                         className="flex w-full items-center gap-2 px-4 py-3 text-sm text-rose-600 hover:bg-rose-50"
                       >
-                        <ArrowRightOnRectangle className="h-4 w-4" /> DÃ©connexion
+                        <ArrowRightOnRectangle className="h-4 w-4" /> Déconnexion
                       </motion.button>
                     </motion.div>
                   )}
@@ -260,7 +268,7 @@ export default function Navbar() {
               <span className="text-sm font-semibold text-slate-900">Menu</span>
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">{user ? `Bonjour, ${user.prenom}` : 'Visiteur'}</span>
             </div>
-            {!user && (
+            {showPublicNavigation && (
               <div className="px-4 py-4 space-y-2">
                 {navigation.map((item) => {
                   const Icon = item.icon
@@ -288,7 +296,7 @@ export default function Navbar() {
                 </motion.a>
               </Link>
 
-              {!user ? (
+              {showPublicNavigation ? (
                 <>
                   <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
                     <motion.a className="block rounded-2xl px-4 py-3 text-center text-slate-700 transition hover:bg-slate-100">
@@ -303,12 +311,14 @@ export default function Navbar() {
                 </>
               ) : (
                 <>
-                  <Link href="/citizen/signalement" onClick={() => setMobileMenuOpen(false)}>
-                    <Button variant="danger" className="w-full rounded-full text-white">
-                      ðŸš¨ Signaler
-                    </Button>
-                  </Link>
-                  <Link href="/citizen/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                  {user?.role === 'citoyen' && (
+                    <Link href="/citizen/signalement" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="danger" className="w-full rounded-full text-white">
+                        Signaler
+                      </Button>
+                    </Link>
+                  )}
+                  <Link href={dashboardHref} onClick={() => setMobileMenuOpen(false)}>
                     <motion.a className="flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-700 transition hover:bg-slate-100">
                       <Squares2X2 className="h-5 w-5" />
                       Tableau de bord
@@ -323,7 +333,7 @@ export default function Navbar() {
                   <Link href="/settings" onClick={() => setMobileMenuOpen(false)}>
                     <motion.a className="flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-700 transition hover:bg-slate-100">
                       <Cog className="h-5 w-5" />
-                      ParamÃ¨tres
+                      Paramètres
                     </motion.a>
                   </Link>
                   <motion.button
@@ -335,7 +345,7 @@ export default function Navbar() {
                     className="flex w-full items-center justify-center gap-2 rounded-full bg-rose-50 px-4 py-3 text-rose-600"
                   >
                     <ArrowRightOnRectangle className="h-5 w-5" />
-                    DÃ©connexion
+                    Déconnexion
                   </motion.button>
                 </>
               )}

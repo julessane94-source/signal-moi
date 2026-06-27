@@ -108,6 +108,19 @@ router.get('/by-gender', authMiddleware, checkAdminOrCollaborator, async (req, r
 
 router.get('/by-age', authMiddleware, checkAdminOrCollaborator, async (req, res) => {
   try {
+    const hasBirthDate = await db.query(`
+      SELECT 1
+      FROM information_schema.columns
+      WHERE table_schema = 'signal_moi'
+        AND table_name = 'users'
+        AND column_name = 'date_naissance'
+      LIMIT 1
+    `)
+
+    if (!hasBirthDate.rows.length) {
+      return res.json({ success: true, data: [] })
+    }
+
     const result = await db.query(`
       SELECT
         CASE
@@ -195,6 +208,15 @@ router.get('/export-data', authMiddleware, checkAdminOrCollaborator, async (req,
   try {
     const params = []
     const whereClause = optionalDateWhere(req.query, params)
+    const hasBirthDate = await db.query(`
+      SELECT 1
+      FROM information_schema.columns
+      WHERE table_schema = 'signal_moi'
+        AND table_name = 'users'
+        AND column_name = 'date_naissance'
+      LIMIT 1
+    `)
+    const birthDateSelect = hasBirthDate.rows.length ? 'u.date_naissance' : 'NULL AS date_naissance'
 
     const result = await db.query(`
       SELECT
@@ -206,7 +228,7 @@ router.get('/export-data', authMiddleware, checkAdminOrCollaborator, async (req,
         s.created_at,
         u.prenom,
         u.nom,
-        u.date_naissance
+        ${birthDateSelect}
       FROM signal_moi.signalements s
       LEFT JOIN signal_moi.users u ON u.id = s.user_id
       ${whereClause}
