@@ -155,7 +155,7 @@ export default function Navbar() {
                 </Button>
               </Link>
             </>
-          ) : (
+          ) : showPrivateNavigation ? (
             <div className="flex items-center gap-3">
               <Link href={dashboardHref}>
                 <motion.a whileHover={{ scale: 1.02 }} className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-200">
@@ -242,7 +242,7 @@ export default function Navbar() {
                 </AnimatePresence>
               </div>
             </div>
-          )}
+          ) : null}
         </div>
 
         <motion.button
@@ -309,7 +309,7 @@ export default function Navbar() {
                     </Button>
                   </Link>
                 </>
-              ) : (
+              ) : showPrivateNavigation ? (
                 <>
                   {user?.role === 'citoyen' && (
                     <Link href="/citizen/signalement" onClick={() => setMobileMenuOpen(false)}>
@@ -348,7 +348,7 @@ export default function Navbar() {
                     Déconnexion
                   </motion.button>
                 </>
-              )}
+              ) : null}
             </div>
           </motion.div>
         )}
