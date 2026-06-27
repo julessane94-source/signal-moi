@@ -3,6 +3,12 @@ const { User, Message, Signalement } = require('../models');
 const logger = require('../utils/logger');
 
 const setupSocket = (io) => {
+  const activeLiveRecordings = new Map();
+  const normalizeRole = (role) => String(role || '').trim().toLowerCase();
+  const isPoliceRole = (role) => ['police', 'policier', 'gendarmerie', 'force_ordre'].includes(normalizeRole(role));
+  const isCollaborateurRole = (role) => ['collaborateur', 'collaborator'].includes(normalizeRole(role));
+  const isAdminRole = (role) => ['admin', 'administrateur'].includes(normalizeRole(role));
+
   // Middleware d'authentification pour les sockets
   io.use(async (socket, next) => {
     try {
@@ -45,11 +51,20 @@ const setupSocket = (io) => {
     socket.join(`user_${socket.user.id}`);
     
     // Rejoindre les rooms par rôle
-    if (socket.user.role === 'police') {
+    if (isPoliceRole(socket.user.role)) {
       socket.join('police_room');
-    } else if (socket.user.role === 'collaborateur') {
+      activeLiveRecordings.forEach((payload) => {
+        socket.emit('live_recording_started', payload);
+        if (payload.latitude || payload.longitude || payload.localisation) {
+          socket.emit('live_recording_location', payload);
+        }
+        if (payload.frame) {
+          socket.emit('live_recording_frame', payload);
+        }
+      });
+    } else if (isCollaborateurRole(socket.user.role)) {
       socket.join('collaborateur_room');
-    } else if (socket.user.role === 'admin') {
+    } else if (isAdminRole(socket.user.role)) {
       socket.join('admin_room');
     }
     
@@ -79,6 +94,9 @@ const setupSocket = (io) => {
           citizenName: `${socket.user.prenom || ''} ${socket.user.nom || ''}`.trim(),
           startedAt: new Date()
         };
+        if (payload.sessionId) {
+          activeLiveRecordings.set(payload.sessionId, payload);
+        }
         io.to('police_room').emit('live_recording_started', payload);
         io.to('admin_room').emit('live_recording_started', payload);
         io.to('police_room').emit('new_signalement_notification', {
@@ -94,11 +112,19 @@ const setupSocket = (io) => {
 
     socket.on('live_recording_location', (data) => {
       try {
-        io.to('police_room').emit('live_recording_location', {
+        const payload = {
           ...data,
           citizenId: socket.user.id,
           updatedAt: new Date()
-        });
+        };
+        if (payload.sessionId) {
+          activeLiveRecordings.set(payload.sessionId, {
+            ...(activeLiveRecordings.get(payload.sessionId) || {}),
+            ...payload,
+            status: 'recording'
+          });
+        }
+        io.to('police_room').emit('live_recording_location', payload);
       } catch (error) {
         logger.error('Erreur live_recording_location:', error);
       }
@@ -106,11 +132,19 @@ const setupSocket = (io) => {
 
     socket.on('live_recording_frame', (data) => {
       try {
-        io.to('police_room').emit('live_recording_frame', {
+        const payload = {
           ...data,
           citizenId: socket.user.id,
           frameAt: new Date()
-        });
+        };
+        if (payload.sessionId) {
+          activeLiveRecordings.set(payload.sessionId, {
+            ...(activeLiveRecordings.get(payload.sessionId) || {}),
+            ...payload,
+            status: 'recording'
+          });
+        }
+        io.to('police_room').emit('live_recording_frame', payload);
       } catch (error) {
         logger.error('Erreur live_recording_frame:', error);
       }
@@ -118,11 +152,15 @@ const setupSocket = (io) => {
 
     socket.on('live_recording_stopped', (data) => {
       try {
-        io.to('police_room').emit('live_recording_stopped', {
+        const payload = {
           ...data,
           citizenId: socket.user.id,
           stoppedAt: new Date()
-        });
+        };
+        if (payload.sessionId) {
+          activeLiveRecordings.delete(payload.sessionId);
+        }
+        io.to('police_room').emit('live_recording_stopped', payload);
       } catch (error) {
         logger.error('Erreur live_recording_stopped:', error);
       }

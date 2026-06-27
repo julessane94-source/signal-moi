@@ -43,6 +43,7 @@ export default function NewSignalement() {
   const liveFrameTimerRef = useRef(null)
   const liveSessionIdRef = useRef(null)
   const liveVideoRef = useRef(null)
+  const liveStreamRef = useRef(null)
   const pendingLiveMetaRef = useRef({})
   const videoPreviewRef = useRef(null)
   const recordedVideoNameRef = useRef(null)
@@ -86,6 +87,9 @@ export default function NewSignalement() {
       })
       if (latitude !== null && longitude !== null) {
         emitLiveLocation({ latitude, longitude, localisation: formData.localisation || `GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}` })
+      }
+      if (liveStreamRef.current) {
+        startLiveFrameBroadcast(liveStreamRef.current)
       }
     }
   }, [socket, recordingState])
@@ -368,6 +372,7 @@ export default function NewSignalement() {
       if (stream) {
         stream.getTracks().forEach(track => track.stop())
       }
+      liveStreamRef.current = null
       return null
     })
   }
@@ -405,6 +410,7 @@ export default function NewSignalement() {
 
       recordingChunksRef.current = []
       mediaRecorderRef.current = recorder
+      liveStreamRef.current = stream
       setLiveStream(stream)
       setRecordingState('recording')
       const sessionId = liveSessionIdRef.current || `live-${Date.now()}-${Math.random().toString(36).slice(2)}`

@@ -7,6 +7,21 @@ const SocketContext = createContext()
 
 export const useSocket = () => useContext(SocketContext)
 
+const getSocketUrl = () => {
+  const explicitUrl = process.env.NEXT_PUBLIC_WS_URL
+  const baseUrl = explicitUrl || API_BASE
+
+  try {
+    const parsed = new URL(baseUrl)
+    if (parsed.pathname.replace(/\/+$/, '') === '/api') {
+      parsed.pathname = '/'
+    }
+    return parsed.toString().replace(/\/$/, '')
+  } catch (error) {
+    return baseUrl.replace(/\/api\/?$/, '')
+  }
+}
+
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null)
   const [notifications, setNotifications] = useState([])
@@ -26,7 +41,7 @@ export const SocketProvider = ({ children }) => {
       return () => {}
     }
 
-    const socketUrl = process.env.NEXT_PUBLIC_WS_URL || API_BASE
+    const socketUrl = getSocketUrl()
     const nextSocket = io(socketUrl, {
       auth: { token },
       transports: ['websocket', 'polling'],

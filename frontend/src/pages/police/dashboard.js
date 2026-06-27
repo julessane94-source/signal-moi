@@ -30,12 +30,17 @@ export default function PoliceDashboard() {
   const [transferingSignalId, setTransferingSignalId] = useState(null)
   const [liveRecordings, setLiveRecordings] = useState({})
   const [selectedLive, setSelectedLive] = useState(null)
+  const [socketConnected, setSocketConnected] = useState(false)
 
   useEffect(() => {
     fetchSignalements()
     fetchPoliciers()
     
     if (socket) {
+      setSocketConnected(socket.connected)
+      socket.on('connect', () => setSocketConnected(true))
+      socket.on('disconnect', () => setSocketConnected(false))
+
       socket.on('new_signalement_notification', (data) => {
         toast.warning(`Nouveau signalement: ${data.title}`)
         if (data.isLiveRecording) return
@@ -59,21 +64,26 @@ export default function PoliceDashboard() {
       })
 
       socket.on('live_recording_location', (data) => {
+        if (!data.sessionId) return
         setLiveRecordings(prev => ({
           ...prev,
           [data.sessionId]: {
             ...prev[data.sessionId],
             ...data,
+            sessionId: data.sessionId,
             status: prev[data.sessionId]?.status || 'recording'
           }
         }))
       })
 
       socket.on('live_recording_frame', (data) => {
+        if (!data.sessionId) return
         setLiveRecordings(prev => ({
           ...prev,
           [data.sessionId]: {
             ...prev[data.sessionId],
+            ...data,
+            sessionId: data.sessionId,
             frame: data.frame,
             frameAt: data.frameAt,
             status: prev[data.sessionId]?.status || 'recording'
@@ -82,11 +92,13 @@ export default function PoliceDashboard() {
       })
 
       socket.on('live_recording_stopped', (data) => {
+        if (!data.sessionId) return
         setLiveRecordings(prev => ({
           ...prev,
           [data.sessionId]: {
             ...prev[data.sessionId],
             ...data,
+            sessionId: data.sessionId,
             status: 'stopped'
           }
         }))
@@ -101,6 +113,8 @@ export default function PoliceDashboard() {
         socket.off('live_recording_location')
         socket.off('live_recording_frame')
         socket.off('live_recording_stopped')
+        socket.off('connect')
+        socket.off('disconnect')
       }
     }
   }, [socket])
@@ -243,6 +257,9 @@ export default function PoliceDashboard() {
   const liveRecordingsList = Object.values(liveRecordings)
     .filter(item => item && item.status === 'recording')
     .sort((a, b) => new Date(b.startedAt || b.updatedAt || 0) - new Date(a.startedAt || a.updatedAt || 0))
+  const lastLive = Object.values(liveRecordings)
+    .filter(Boolean)
+    .sort((a, b) => new Date(b.frameAt || b.updatedAt || b.startedAt || b.stoppedAt || 0) - new Date(a.frameAt || a.updatedAt || a.startedAt || a.stoppedAt || 0))[0]
   const activeLive = selectedLive ? liveRecordings[selectedLive.sessionId] || selectedLive : liveRecordingsList[0]
 
   if (loading) {
@@ -340,7 +357,7 @@ export default function PoliceDashboard() {
                 >
                   <p className="text-xs font-medium text-indigo-700">Lives</p>
                   <p className="mt-1 text-2xl font-bold text-indigo-700">{liveRecordingsList.length}</p>
-                  <p className="mt-1 text-xs font-semibold text-indigo-600">Voir le live</p>
+                  <p className="mt-1 text-xs font-semibold text-indigo-600">{socketConnected ? 'Voir le live' : 'Socket hors ligne'}</p>
                 </button>
               </div>
             </div>
@@ -358,7 +375,9 @@ export default function PoliceDashboard() {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-red-900">Enregistrements video en direct</h2>
-                  <p className="text-sm text-red-700">Un citoyen filme actuellement une preuve avec localisation active.</p>
+                  <p className="text-sm text-red-700">
+                    {socketConnected ? 'Un citoyen filme actuellement une preuve avec localisation active.' : 'Connexion temps reel en cours...'}
+                  </p>
                 </div>
               </div>
 
@@ -420,6 +439,22 @@ export default function PoliceDashboard() {
                 ))}
               </div>
             </motion.div>
+          )}
+
+          {!liveRecordingsList.length && lastLive?.frame && (
+            <div className="mb-8 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">Derniere image live recue</p>
+                  <p className="text-xs text-slate-500">
+                    {lastLive.frameAt ? new Date(lastLive.frameAt).toLocaleTimeString('fr-FR') : 'Heure inconnue'} - le direct peut etre termine.
+                  </p>
+                </div>
+                <Button size="sm" variant="secondary" icon={VideoCamera} onClick={() => setSelectedLive(lastLive)}>
+                  Voir la derniere image
+                </Button>
+              </div>
+            </div>
           )}
 
           {/* Stats Grid */}
