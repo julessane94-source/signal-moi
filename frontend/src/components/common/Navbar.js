@@ -97,9 +97,10 @@ export default function Navbar() {
     return url
   }
 
-  const dashboardHref = user?.role === 'admin' ? '/admin/dashboard' :
-    user?.role === 'police' ? '/police/dashboard' :
-    user?.role === 'collaborateur' ? '/collaborator/dashboard' : '/citizen/dashboard'
+  const role = normalizeRole(user?.role)
+  const dashboardHref = role === 'admin' ? '/admin/dashboard' :
+    role === 'police' ? '/police/dashboard' :
+    role === 'collaborateur' ? '/collaborator/dashboard' : '/citizen/dashboard'
   const isLoggedIn = Boolean(user)
   const showPublicNavigation = !loading && !isLoggedIn
   const showPrivateNavigation = !loading && isLoggedIn
