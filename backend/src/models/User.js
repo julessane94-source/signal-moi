@@ -79,6 +79,7 @@ class UserInstance {
         this.nom = data.nom;
         this.role = data.role;
         this.is_active = data.is_active;
+        this.isActive = data.is_active !== false;
         this.email_verified = data.email_verified;
     }
     

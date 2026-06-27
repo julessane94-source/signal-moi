@@ -1,9 +1,9 @@
-ï»¿const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 
 const authMiddleware = async (req, res, next) => {
   try {
-    // RÃ©cupÃ©rer le token depuis l'en-tÃªte Authorization, ou depuis un cookie 'token' en fallback
+    // Récupérer le token depuis l'en-tête Authorization, ou depuis un cookie 'token' en fallback
     const authHeader = req.header('Authorization');
     let token = null
 
@@ -26,7 +26,7 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // VÃ©rifier le JWT
+    // Vérifier le JWT
     if (!process.env.JWT_SECRET) console.warn('[AuthMiddleware] JWT_SECRET not set');
     console.log('[AuthMiddleware] token snippet:', token ? token.substring(0, 20) + '...' : 'no-token');
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -37,21 +37,23 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // RÃ©cupÃ©rer l'utilisateur
+    // Récupérer l'utilisateur
     const user = await User.findByPk(decoded.id, {
       attributes: { exclude: ['password'] }
     });
     
     if (!user) {
       return res.status(401).json({ 
-        error: 'Utilisateur non trouvÃ©',
+        error: 'Utilisateur non trouvé',
         code: 'USER_NOT_FOUND'
       });
     }
 
-    if (!user.isActive) {
+    const isActive = user.isActive !== undefined ? user.isActive : user.is_active !== false;
+
+    if (isActive === false) {
       return res.status(401).json({ 
-        error: 'Compte utilisateur dÃ©sactivÃ©',
+        error: 'Compte utilisateur désactivé',
         code: 'ACCOUNT_INACTIVE'
       });
     }
@@ -65,7 +67,7 @@ const authMiddleware = async (req, res, next) => {
     
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({ 
-        error: 'Token expirÃ©',
+        error: 'Token expiré',
         code: 'TOKEN_EXPIRED',
         expiredAt: error.expiredAt
       });
@@ -80,7 +82,7 @@ const authMiddleware = async (req, res, next) => {
     }
 
     res.status(401).json({ 
-      error: 'Authentification Ã©chouÃ©e',
+      error: 'Authentification échouée',
       code: 'AUTH_FAILED',
       details: error.message
     });
@@ -91,7 +93,7 @@ const roleMiddleware = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({ 
-        error: 'AccÃ¨s non autorisÃ©. Vous ne disposez pas des permissions nÃ©cessaires.',
+        error: 'Accès non autorisé. Vous ne disposez pas des permissions nécessaires.',
         code: 'FORBIDDEN'
       });
     }
@@ -106,7 +108,8 @@ const optionalAuthMiddleware = async (req, res, next) => {
     if (token) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const user = await User.findByPk(decoded.id);
-      if (user && user.isActive) {
+      const isActive = user?.isActive !== undefined ? user.isActive : user?.is_active !== false;
+      if (user && isActive !== false) {
         req.user = user;
       }
     }
@@ -127,7 +130,8 @@ const refreshTokenMiddleware = async (req, res, next) => {
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
     const user = await User.findByPk(decoded.id);
     
-    if (!user || !user.isActive) {
+    const isActive = user?.isActive !== undefined ? user.isActive : user?.is_active !== false;
+    if (!user || isActive === false) {
       throw new Error();
     }
 
@@ -135,7 +139,7 @@ const refreshTokenMiddleware = async (req, res, next) => {
     next();
   } catch (error) {
     res.status(401).json({ 
-      error: 'Refresh token invalide ou expirÃ©',
+      error: 'Refresh token invalide ou expiré',
       code: 'INVALID_REFRESH_TOKEN'
     });
   }

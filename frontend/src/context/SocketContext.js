@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react'
+import { createContext, useContext, useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import io from 'socket.io-client'
 import { useAuth } from './AuthContext'
 import { API_BASE } from '../config/api'
@@ -10,15 +10,19 @@ export const useSocket = () => useContext(SocketContext)
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null)
   const [notifications, setNotifications] = useState([])
+  const socketRef = useRef(null)
   const { user } = useAuth()
 
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+
+    if (socketRef.current) {
+      socketRef.current.disconnect()
+      socketRef.current = null
+      setSocket(null)
+    }
+
     if (!user?.id || !token) {
-      if (socket) {
-        socket.disconnect()
-        setSocket(null)
-      }
       return () => {}
     }
 
@@ -26,13 +30,12 @@ export const SocketProvider = ({ children }) => {
     const nextSocket = io(socketUrl, {
       auth: { token },
       transports: ['websocket', 'polling'],
-      reconnectionAttempts: 5,
+      reconnectionAttempts: 8,
       reconnectionDelay: 1000
     })
 
-    nextSocket.on('connect', () => {
-      setSocket(nextSocket)
-    })
+    socketRef.current = nextSocket
+    setSocket(nextSocket)
 
     nextSocket.on('connect_error', (error) => {
       console.warn('Socket connection error:', error.message)
@@ -44,6 +47,9 @@ export const SocketProvider = ({ children }) => {
 
     return () => {
       nextSocket.disconnect()
+      if (socketRef.current === nextSocket) {
+        socketRef.current = null
+      }
       setSocket(null)
     }
   }, [user?.id])
