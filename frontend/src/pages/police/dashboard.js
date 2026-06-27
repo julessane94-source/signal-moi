@@ -37,6 +37,7 @@ export default function PoliceDashboard() {
     if (socket) {
       socket.on('new_signalement_notification', (data) => {
         toast.warning(`Nouveau signalement: ${data.title}`)
+        if (data.isLiveRecording) return
         fetchSignalements()
       })
       
@@ -122,12 +123,12 @@ export default function PoliceDashboard() {
   const fetchPoliciers = async () => {
     try {
       const token = localStorage.getItem('token')
-      const res = await fetch(`${API_BASE}/api/admin/users`, {
+      const res = await fetch(`${API_BASE}/api/signalements/policiers`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()
       const policiersList = Array.isArray(data) 
-        ? data.filter(u => u.role === 'police' && u.id !== user?.id) 
+        ? data.filter(u => u.id !== user?.id) 
         : []
       setPoliciers(policiersList)
     } catch (error) {
@@ -157,7 +158,7 @@ export default function PoliceDashboard() {
   const transferer = async (signalId, policeId) => {
     try {
       const token = localStorage.getItem('token')
-      const res = await fetch(`${API_BASE}/api/signalements/${signalId}/transfere`, {
+      const res = await fetch(`${API_BASE}/api/signalements/${signalId}/transfert`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

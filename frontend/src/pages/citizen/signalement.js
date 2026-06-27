@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '../../context/AuthContext'
 import { useSocket } from '../../context/SocketContext'
@@ -60,6 +60,16 @@ export default function NewSignalement() {
   const [geoError, setGeoError] = useState(null)
   const shouldOfferVideoProof = VIDEO_PROMPT_TYPES.includes(formData.type)
   const hasRecordedVideo = Boolean(recordedVideoName)
+  const filePreviews = useMemo(() => files.map((file) => ({
+    file,
+    url: URL.createObjectURL(file)
+  })), [files])
+
+  useEffect(() => {
+    return () => {
+      filePreviews.forEach(preview => URL.revokeObjectURL(preview.url))
+    }
+  }, [filePreviews])
 
   useEffect(() => {
     socketRef.current = socket
@@ -134,7 +144,7 @@ export default function NewSignalement() {
         sessionId: liveSessionIdRef.current,
         frame: canvas.toDataURL('image/jpeg', 0.45)
       })
-    }, 2000)
+    }, 1000)
   }
 
   const stopLiveFrameBroadcast = () => {
@@ -667,11 +677,10 @@ export default function NewSignalement() {
                   <div className="mt-4">
                     <p className="text-sm font-medium text-gray-700 mb-3">{files.length} fichier(s) sélectionné(s)</p>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {files.map((f, i) => {
+                      {filePreviews.map(({ file: f, url: objectUrl }, i) => {
                         const isImage = f.type.startsWith('image/')
                         const isVideo = f.type.startsWith('video/')
                         const isAudio = f.type.startsWith('audio/')
-                        const objectUrl = URL.createObjectURL(f)
                         const sizeMB = (f.size / 1024 / 1024).toFixed(2)
                         
                         return (

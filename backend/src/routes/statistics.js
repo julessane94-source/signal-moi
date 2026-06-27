@@ -12,6 +12,14 @@ const checkAdminOrCollaborator = (req, res, next) => {
 
 const toInt = (value) => parseInt(value || 0, 10)
 
+const hasColumn = async (tableName, columnName) => {
+  const result = await db.query(
+    'SELECT 1 FROM information_schema.columns WHERE table_schema = $1 AND table_name = $2 AND column_name = $3 LIMIT 1',
+    ['signal_moi', tableName, columnName]
+  )
+  return result.rows.length > 0
+}
+
 const optionalDateWhere = ({ startDate, endDate, type }, params) => {
   const where = []
 
@@ -160,12 +168,17 @@ router.get('/by-age', authMiddleware, checkAdminOrCollaborator, async (req, res)
 
 router.get('/overview', authMiddleware, checkAdminOrCollaborator, async (req, res) => {
   try {
+    const hasPriorite = await hasColumn('signalements', 'priorite')
+    const hasStatut = await hasColumn('signalements', 'statut')
+    const statutExpr = hasStatut ? "COALESCE(s.statut, 'nouveau')" : "'nouveau'"
+    const prioriteExpr = hasPriorite ? "COALESCE(s.priorite, 'normale')" : "'normale'"
+
     const [totalRes, statusRes, typeRes, priorityRes, monthlyRes] = await Promise.all([
       db.query('SELECT COUNT(*)::int AS total FROM signal_moi.signalements'),
       db.query(`
-        SELECT COALESCE(s.statut, 'nouveau') AS statut, COUNT(*)::int AS count
+        SELECT ${statutExpr} AS statut, COUNT(*)::int AS count
         FROM signal_moi.signalements s
-        GROUP BY COALESCE(s.statut, 'nouveau')
+        GROUP BY ${statutExpr}
         ORDER BY count DESC
       `),
       db.query(`
@@ -176,9 +189,9 @@ router.get('/overview', authMiddleware, checkAdminOrCollaborator, async (req, re
         LIMIT 5
       `),
       db.query(`
-        SELECT COALESCE(s.priorite, 'normale') AS priorite, COUNT(*)::int AS count
+        SELECT ${prioriteExpr} AS priorite, COUNT(*)::int AS count
         FROM signal_moi.signalements s
-        GROUP BY COALESCE(s.priorite, 'normale')
+        GROUP BY ${prioriteExpr}
         ORDER BY count DESC
       `),
       db.query(`
@@ -208,23 +221,20 @@ router.get('/export-data', authMiddleware, checkAdminOrCollaborator, async (req,
   try {
     const params = []
     const whereClause = optionalDateWhere(req.query, params)
-    const hasBirthDate = await db.query(`
-      SELECT 1
-      FROM information_schema.columns
-      WHERE table_schema = 'signal_moi'
-        AND table_name = 'users'
-        AND column_name = 'date_naissance'
-      LIMIT 1
-    `)
-    const birthDateSelect = hasBirthDate.rows.length ? 'u.date_naissance' : 'NULL AS date_naissance'
+    const hasBirthDate = await hasColumn('users', 'date_naissance')
+    const hasPriorite = await hasColumn('signalements', 'priorite')
+    const hasStatut = await hasColumn('signalements', 'statut')
+    const birthDateSelect = hasBirthDate ? 'u.date_naissance' : 'NULL AS date_naissance'
+    const prioriteSelect = hasPriorite ? "COALESCE(s.priorite, 'normale')" : "'normale'"
+    const statutSelect = hasStatut ? "COALESCE(s.statut, 'nouveau')" : "'nouveau'"
 
     const result = await db.query(`
       SELECT
         s.id,
         s.titre,
         s.type,
-        COALESCE(s.statut, 'nouveau') AS statut,
-        COALESCE(s.priorite, 'normale') AS priorite,
+        ${statutSelect} AS statut,
+        ${prioriteSelect} AS priorite,
         s.created_at,
         u.prenom,
         u.nom,

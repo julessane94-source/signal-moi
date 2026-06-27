@@ -238,6 +238,30 @@ router.delete('/:id', authMiddleware, async (req, res) => {
         });
 
         // GET g�n�rique: signalements selon le r�le / utilisateur
+        router.get('/policiers', authMiddleware, async (req, res) => {
+            try {
+                if (!['police', 'admin', 'collaborateur'].includes(req.user.role)) {
+                    return res.status(403).json({ error: 'Acces refuse' });
+                }
+
+                const result = await db.query(
+                    `SELECT id, prenom, nom, email, telephone
+                     FROM signal_moi.users
+                     WHERE role = 'police'
+                       AND is_active = true
+                       AND id <> $1
+                     ORDER BY nom ASC, prenom ASC
+                     LIMIT 200`,
+                    [req.user.id]
+                );
+
+                res.json(result.rows);
+            } catch (err) {
+                console.error('Erreur GET /policiers:', err);
+                res.status(500).json({ error: 'Erreur serveur' });
+            }
+        });
+
         router.get('/', optionalAuthMiddleware, async (req, res) => {
             try {
                 if (req.user && req.user.role === 'citoyen') {
@@ -260,16 +284,43 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                 }
                 // Si c'est la police, ne retourner que les types pertinents (violence, vol)
                 if (req.user && req.user.role === 'police') {
-                    const allowed = ['violence', 'vol', 'theft'];
+                    const allowed = ['violence', 'vol', 'theft', 'accident'];
                     const result = await db.query(`SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, s.latitude, s.longitude, s.priorite, s.est_anonyme, s.created_at, s.updated_at, u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone, u.email AS user_email
                                                    FROM signal_moi.signalements s
                                                    LEFT JOIN signal_moi.users u ON u.id = s.user_id
                                                    WHERE LOWER(s.type) = ANY($1::text[])
                                                    ORDER BY s.created_at DESC LIMIT 500`, [allowed]);
-                    const rows = await Promise.all(result.rows.map(async (r) => {
+                    const signalementIds = result.rows.map(r => r.id);
+                    const filesBySignalement = {};
+
+                    if (signalementIds.length > 0) {
+                        const filesRes = await db.query(
+                            `SELECT id, signalement_id, nom_fichier, chemin, type, taille, mime_type, description
+                             FROM signal_moi.fichiers
+                             WHERE signalement_id = ANY($1::uuid[])
+                             ORDER BY created_at DESC`,
+                            [signalementIds]
+                        );
+
+                        filesRes.rows.forEach((f) => {
+                            if (!filesBySignalement[f.signalement_id]) {
+                                filesBySignalement[f.signalement_id] = [];
+                            }
+                            filesBySignalement[f.signalement_id].push({
+                                id: f.id,
+                                nom_fichier: f.nom_fichier,
+                                chemin: f.chemin,
+                                type: f.type,
+                                mime_type: f.mime_type,
+                                taille: f.taille,
+                                description: f.description,
+                                url: signalementFileUrl(f.id, f.chemin)
+                            });
+                        });
+                    }
+
+                    const rows = result.rows.map((r) => {
                         // Récupérer les fichiers pour ce signalement
-                        const filesRes = await db.query(`SELECT id, signalement_id, nom_fichier, chemin, type, taille, mime_type, description
-                                                        FROM signal_moi.fichiers WHERE signalement_id = $1 ORDER BY created_at DESC`, [r.id]);
                         return {
                             id: r.id,
                             titre: r.titre,
@@ -290,17 +341,9 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                                 telephone: r.user_telephone,
                                 email: r.user_email
                             },
-                            fichiers: filesRes.rows.map(f => ({
-                                id: f.id,
-                                nom_fichier: f.nom_fichier,
-                                chemin: f.chemin,
-                                type: f.type,
-                                mime_type: f.mime_type,
-                                taille: f.taille,
-                                description: f.description
-                            }))
+                            fichiers: filesBySignalement[r.id] || []
                         };
-                    }));
+                    });
                     return res.json(rows);
                 }
 
@@ -625,7 +668,3 @@ router.post('/:id/transfert', authMiddleware, async (req, res) => {
 });
 
 module.exports = router;
-
-
-
-
