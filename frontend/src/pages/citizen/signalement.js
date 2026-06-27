@@ -46,6 +46,7 @@ export default function NewSignalement() {
   const pendingLiveMetaRef = useRef({})
   const videoPreviewRef = useRef(null)
   const recordedVideoNameRef = useRef(null)
+  const skipVideoRef = useRef(false)
   const [formData, setFormData] = useState({
     titre: '',
     description: '',
@@ -62,7 +63,22 @@ export default function NewSignalement() {
 
   useEffect(() => {
     socketRef.current = socket
-  }, [socket])
+    if (socket && recordingState === 'recording' && liveSessionIdRef.current) {
+      const meta = pendingLiveMetaRef.current || {}
+      socket.emit('live_recording_started', {
+        sessionId: liveSessionIdRef.current,
+        type: meta.type || formData.type,
+        titre: meta.titre || formData.titre || `Signalement : ${getTypeLabel(formData.type)}`,
+        description: meta.description || formData.description,
+        latitude,
+        longitude,
+        localisation: formData.localisation || null
+      })
+      if (latitude !== null && longitude !== null) {
+        emitLiveLocation({ latitude, longitude, localisation: formData.localisation || `GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}` })
+      }
+    }
+  }, [socket, recordingState])
   const getTypeLabel = (type) => QUICK_TYPES.find(item => item.value === type)?.label || type
 
   const ensureAutomaticDescription = (type) => {
@@ -411,6 +427,19 @@ export default function NewSignalement() {
 
       recorder.onstop = () => {
         stopLiveFrameBroadcast()
+        if (skipVideoRef.current) {
+          skipVideoRef.current = false
+          recordingChunksRef.current = []
+          setRecordingState('idle')
+          setVideoPromptHandled(true)
+          const activeSocket = socketRef.current
+          if (activeSocket && liveSessionIdRef.current) {
+            activeSocket.emit('live_recording_stopped', { sessionId: liveSessionIdRef.current, type: liveType })
+          }
+          stopCameraStream()
+          submitSignalement()
+          return
+        }
         const finalMimeType = recorder.mimeType || mimeType || 'video/webm'
         const blob = new Blob(recordingChunksRef.current, { type: finalMimeType })
         const extension = finalMimeType.includes('mp4') ? 'mp4' : 'webm'
@@ -539,6 +568,33 @@ export default function NewSignalement() {
     }
   }
 
+
+  const continueWithoutVideo = () => {
+    setVideoPromptHandled(true)
+    setShowVideoPrompt(false)
+    setRecordedVideoName(null)
+    if (recordedVideoUrl) {
+      URL.revokeObjectURL(recordedVideoUrl)
+      setRecordedVideoUrl(null)
+    }
+    const previousProofName = recordedVideoNameRef.current
+    recordedVideoNameRef.current = null
+    if (previousProofName) {
+      setFiles(prev => prev.filter(file => file.name !== previousProofName))
+    }
+
+    const recorder = mediaRecorderRef.current
+    if (recorder && recorder.state !== 'inactive') {
+      skipVideoRef.current = true
+      setRecordingState('saving')
+      recorder.stop()
+      return
+    }
+
+    stopLiveFrameBroadcast()
+    stopCameraStream()
+    submitSignalement()
+  }
   const handleSubmit = async (e) => {
     e.preventDefault()
 
@@ -707,13 +763,8 @@ export default function NewSignalement() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => {
-                    setVideoPromptHandled(true)
-                    setShowVideoPrompt(false)
-                    stopCameraStream()
-                    submitSignalement()
-                  }}
-                  disabled={recordingState === 'recording' || recordingState === 'saving' || loading}
+                  onClick={continueWithoutVideo}
+                  disabled={recordingState === 'saving' || loading}
                   className="flex-1 rounded border px-4 py-2 font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
                 >
                   Continuer sans video

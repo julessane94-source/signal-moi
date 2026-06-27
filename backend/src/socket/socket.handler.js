@@ -1,4 +1,4 @@
-﻿const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 const { User, Message, Signalement } = require('../models');
 const logger = require('../utils/logger');
 
@@ -81,6 +81,12 @@ const setupSocket = (io) => {
         };
         io.to('police_room').emit('live_recording_started', payload);
         io.to('admin_room').emit('live_recording_started', payload);
+        io.to('police_room').emit('new_signalement_notification', {
+          ...payload,
+          title: payload.titre || `Enregistrement en direct: ${payload.type || 'urgence'}`,
+          message: 'Un citoyen est en train de filmer une preuve en direct.',
+          isLiveRecording: true
+        });
       } catch (error) {
         logger.error('Erreur live_recording_started:', error);
       }
