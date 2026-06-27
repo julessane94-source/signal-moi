@@ -10,6 +10,12 @@ import jsPDF from 'jspdf'
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 const COLORS = ['#6366f1', '#06b6d4', '#f97316', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#14b8a6']
+const normalizeRole = (role) => {
+  const value = String(role || '').trim().toLowerCase()
+  if (['collaborateur', 'collaborator'].includes(value)) return 'collaborateur'
+  if (['admin', 'administrateur'].includes(value)) return 'admin'
+  return value
+}
 const TYPE_ICONS = {
   violence: '🔴',
   vol: '🎒',
@@ -22,20 +28,23 @@ const TYPE_ICONS = {
 }
 
 export default function CollaboratorStatistics() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState(null)
   const [logo, setLogo] = useState(null)
   const [company, setCompany] = useState({ name: 'Signal-Moi', address: 'Dakar, Sénégal' })
 
   useEffect(() => {
-    if (!user || user.role !== 'collaborateur') {
-      toast.error('❌ Accès refusé')
+    if (authLoading) return
+    const role = normalizeRole(user?.role)
+    if (!user || role !== 'collaborateur') {
+      toast.error('Acces refuse')
+      setLoading(false)
       return
     }
     fetchStatistics()
     fetchConfig()
-  }, [user])
+  }, [user, authLoading])
 
   const fetchConfig = async () => {
     try {
@@ -144,7 +153,15 @@ export default function CollaboratorStatistics() {
     }
   }
 
-  if (!user || user.role !== 'collaborateur') {
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 pt-24 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    )
+  }
+
+  if (!user || normalizeRole(user.role) !== 'collaborateur') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">

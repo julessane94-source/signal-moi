@@ -63,9 +63,10 @@ export const AuthProvider = ({ children }) => {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       setUser(normalizeUser(userData))
       toast.success(`Bienvenue ${userData.prenom} !`)
+      const role = normalizeRole(userData.role)
       const routes = { admin: '/admin/dashboard', police: '/police/dashboard', collaborateur: '/collaborator/dashboard', citoyen: '/citizen/dashboard' }
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      setTimeout(() => router.push(routes[userData.role] || '/'), 100)
+      setTimeout(() => router.push(routes[role] || '/'), 100)
       return true
     } catch (error) {
       toast.error(error.response?.data?.error || 'Erreur de connexion')
@@ -104,10 +105,10 @@ export const AuthProvider = ({ children }) => {
       const response = await axios.put(`${API_URL}/api/auth/profile`, profileData)
       const updatedUser = response.data.user
       setUser(normalizeUser(updatedUser))
-      toast.success(response.data.message || 'Profil mis à jour avec succès')
+      toast.success(response.data.message || 'Profil mis ï¿½ jour avec succï¿½s')
       return true
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Erreur lors de la mise à jour')
+      toast.error(error.response?.data?.message || 'Erreur lors de la mise ï¿½ jour')
       return false
     }
   }, [])
@@ -115,7 +116,7 @@ export const AuthProvider = ({ children }) => {
   const changePassword = useCallback(async (passwordData) => {
     try {
       const response = await axios.post(`${API_URL}/api/auth/change-password`, passwordData)
-      toast.success(response.data.message || 'Mot de passe modifié avec succès')
+      toast.success(response.data.message || 'Mot de passe modifiï¿½ avec succï¿½s')
       return true
     } catch (error) {
       toast.error(error.response?.data?.message || 'Erreur lors du changement')

@@ -40,7 +40,7 @@ export default function Navbar() {
   useEffect(() => {
     const fetchLogo = async () => {
       try {
-        // Récupérer le logo depuis la base de données (base64)
+        // Rï¿½cupï¿½rer le logo depuis la base de donnï¿½es (base64)
         const res = await fetch(`${API_BASE}/api/auth/site-config`)
         const data = await res.json()
         setLogoUrl(data.logoUrl || '/icons/icon-192x192.png')
@@ -74,7 +74,7 @@ export default function Navbar() {
     }
 
     fetchNotificationCount()
-    // Rafraîchir le compteur toutes les 30 secondes
+    // Rafraï¿½chir le compteur toutes les 30 secondes
     const interval = setInterval(fetchNotificationCount, 30000)
     return () => clearInterval(interval)
   }, [user])
@@ -105,7 +105,7 @@ export default function Navbar() {
   const showPrivateNavigation = !loading && isLoggedIn
   const navigation = [
     { name: 'Accueil', href: '/', icon: Home },
-    { name: 'À propos', href: '/about', icon: InformationCircle },
+    { name: 'ï¿½ propos', href: '/about', icon: InformationCircle },
     { name: 'Signalements', href: '/signalements', icon: DocumentText },
     { name: 'Campagnes', href: '/campagnes', icon: UserGroup },
     { name: 'Plaidoyers', href: '/plaidoyers', icon: DocumentText },
@@ -221,7 +221,7 @@ export default function Navbar() {
                       </Link>
                       <Link href="/settings">
                         <motion.a whileHover={{ backgroundColor: '#f8fafc' }} className="flex items-center gap-2 px-4 py-3 text-sm text-slate-700 hover:text-slate-900">
-                          <Cog className="h-4 w-4" /> Paramètres
+                          <Cog className="h-4 w-4" /> Paramï¿½tres
                         </motion.a>
                       </Link>
                       <Link href="/notifications">
@@ -243,7 +243,7 @@ export default function Navbar() {
                         }}
                         className="flex w-full items-center gap-2 px-4 py-3 text-sm text-rose-600 hover:bg-rose-50"
                       >
-                        <ArrowRightOnRectangle className="h-4 w-4" /> Déconnexion
+                        <ArrowRightOnRectangle className="h-4 w-4" /> Dï¿½connexion
                       </motion.button>
                     </motion.div>
                   )}
@@ -341,7 +341,7 @@ export default function Navbar() {
                   <Link href="/settings" onClick={() => setMobileMenuOpen(false)}>
                     <motion.a className="flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-700 transition hover:bg-slate-100">
                       <Cog className="h-5 w-5" />
-                      Paramètres
+                      Paramï¿½tres
                     </motion.a>
                   </Link>
                   <motion.button
@@ -353,7 +353,7 @@ export default function Navbar() {
                     className="flex w-full items-center justify-center gap-2 rounded-full bg-rose-50 px-4 py-3 text-rose-600"
                   >
                     <ArrowRightOnRectangle className="h-5 w-5" />
-                    Déconnexion
+                    Dï¿½connexion
                   </motion.button>
                 </>
               ) : null}

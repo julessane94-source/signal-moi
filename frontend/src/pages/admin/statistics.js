@@ -10,6 +10,12 @@ import jsPDF from 'jspdf'
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 const COLORS = ['#6366f1', '#06b6d4', '#f97316', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#14b8a6']
+const normalizeRole = (role) => {
+  const value = String(role || '').trim().toLowerCase()
+  if (['admin', 'administrateur'].includes(value)) return 'admin'
+  if (['collaborateur', 'collaborator'].includes(value)) return 'collaborateur'
+  return value
+}
 const TYPE_ICONS = {
   violence: '🔴',
   vol: '🎒',
@@ -22,7 +28,7 @@ const TYPE_ICONS = {
 }
 
 export default function Statistics() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState(null)
   const [exportData, setExportData] = useState(null)
@@ -35,13 +41,16 @@ export default function Statistics() {
   const [company, setCompany] = useState({ name: 'Signal-Moi', address: 'Dakar, Sénégal' })
 
   useEffect(() => {
-    if (!user || !['admin', 'collaborateur'].includes(user.role)) {
-      toast.error('❌ Accès refusé')
+    if (authLoading) return
+    const role = normalizeRole(user?.role)
+    if (!user || !['admin', 'collaborateur'].includes(role)) {
+      toast.error('Acces refuse')
+      setLoading(false)
       return
     }
     fetchStatistics()
     fetchConfig()
-  }, [user, filters])
+  }, [user, authLoading, filters])
 
   const fetchConfig = async () => {
     try {
@@ -154,7 +163,15 @@ export default function Statistics() {
     }
   }
 
-  if (!user || !['admin', 'collaborateur'].includes(user.role)) {
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 pt-24 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    )
+  }
+
+  if (!user || !['admin', 'collaborateur'].includes(normalizeRole(user.role))) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
