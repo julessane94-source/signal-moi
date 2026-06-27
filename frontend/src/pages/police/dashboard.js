@@ -29,6 +29,7 @@ export default function PoliceDashboard() {
   const [selectedPoliceToTransfer, setSelectedPoliceToTransfer] = useState(null)
   const [transferingSignalId, setTransferingSignalId] = useState(null)
   const [liveRecordings, setLiveRecordings] = useState({})
+  const [selectedLive, setSelectedLive] = useState(null)
 
   useEffect(() => {
     fetchSignalements()
@@ -242,6 +243,7 @@ export default function PoliceDashboard() {
   const liveRecordingsList = Object.values(liveRecordings)
     .filter(item => item && item.status === 'recording')
     .sort((a, b) => new Date(b.startedAt || b.updatedAt || 0) - new Date(a.startedAt || a.updatedAt || 0))
+  const activeLive = selectedLive ? liveRecordings[selectedLive.sessionId] || selectedLive : liveRecordingsList[0]
 
   if (loading) {
     return (
@@ -328,10 +330,18 @@ export default function PoliceDashboard() {
                   <p className="text-xs font-medium text-red-700">Prioritaires</p>
                   <p className="mt-1 text-2xl font-bold text-red-700">{signalements.filter(s => ['urgente', 'haute'].includes((s.priorite || '').toLowerCase())).length}</p>
                 </div>
-                <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (liveRecordingsList.length > 0) setSelectedLive(liveRecordingsList[0])
+                    else toast.info('Aucun live citoyen en cours')
+                  }}
+                  className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-left transition hover:border-indigo-400 hover:bg-indigo-100"
+                >
                   <p className="text-xs font-medium text-indigo-700">Lives</p>
                   <p className="mt-1 text-2xl font-bold text-indigo-700">{liveRecordingsList.length}</p>
-                </div>
+                  <p className="mt-1 text-xs font-semibold text-indigo-600">Voir le live</p>
+                </button>
               </div>
             </div>
           </motion.div>
@@ -385,6 +395,14 @@ export default function PoliceDashboard() {
                       <Button
                         size="sm"
                         variant="danger"
+                        icon={VideoCamera}
+                        onClick={() => setSelectedLive(live)}
+                      >
+                        Voir le live
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
                         icon={MapPin}
                         onClick={() => {
                           if (live.latitude && live.longitude) {
@@ -395,7 +413,7 @@ export default function PoliceDashboard() {
                         }}
                         disabled={!live.latitude && !live.longitude && !live.localisation}
                       >
-                        Voir la localisation
+                        Localiser
                       </Button>
                     </div>
                   </div>
@@ -723,6 +741,77 @@ export default function PoliceDashboard() {
                   }}
                 >
                   Transferer
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={!!selectedLive}
+        onClose={() => setSelectedLive(null)}
+        title="Live citoyen en temps reel"
+        size="2xl"
+      >
+        {activeLive && (
+          <div className="space-y-5">
+            <div className="overflow-hidden rounded-xl bg-slate-950">
+              {activeLive.frame ? (
+                <img
+                  key={activeLive.frameAt || activeLive.frame}
+                  src={activeLive.frame}
+                  alt="Video en direct du citoyen"
+                  className="h-[28rem] w-full object-contain bg-black"
+                />
+              ) : (
+                <div className="flex h-[28rem] items-center justify-center text-slate-300">
+                  En attente du flux video...
+                </div>
+              )}
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-[1.2fr_0.8fr]">
+              <div className="rounded-lg border border-slate-200 bg-white p-4">
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <Badge variant={activeLive.status === 'recording' ? 'danger' : 'gray'}>
+                    {activeLive.status === 'recording' ? 'EN DIRECT' : 'TERMINE'}
+                  </Badge>
+                  {activeLive.type && <Badge variant="gray">{activeLive.type}</Badge>}
+                </div>
+                <h3 className="text-lg font-bold text-slate-950">{activeLive.titre || 'Signalement urgent'}</h3>
+                {activeLive.description && <p className="mt-2 text-sm text-slate-600">{activeLive.description}</p>}
+                {activeLive.citizenName && <p className="mt-3 text-sm font-medium text-slate-700">Signalant: {activeLive.citizenName}</p>}
+                {activeLive.frameAt && (
+                  <p className="mt-2 text-xs text-slate-500">
+                    Derniere image recue: {new Date(activeLive.frameAt).toLocaleTimeString('fr-FR')}
+                  </p>
+                )}
+              </div>
+
+              <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-950">
+                <p className="font-bold">Localisation</p>
+                <p className="mt-2">{activeLive.localisation || 'Localisation en cours...'}</p>
+                {activeLive.latitude && activeLive.longitude && (
+                  <p className="mt-2 text-xs">
+                    GPS: {parseFloat(activeLive.latitude).toFixed(5)}, {parseFloat(activeLive.longitude).toFixed(5)}
+                  </p>
+                )}
+                <Button
+                  size="sm"
+                  variant="primary"
+                  icon={MapPin}
+                  className="mt-4"
+                  disabled={!activeLive.latitude && !activeLive.longitude && !activeLive.localisation}
+                  onClick={() => {
+                    if (activeLive.latitude && activeLive.longitude) {
+                      window.open(`https://www.google.com/maps/?q=${activeLive.latitude},${activeLive.longitude}`, '_blank')
+                    } else if (activeLive.localisation) {
+                      window.open(`https://www.google.com/maps/search/${encodeURIComponent(activeLive.localisation)}`, '_blank')
+                    }
+                  }}
+                >
+                  Ouvrir la carte
                 </Button>
               </div>
             </div>

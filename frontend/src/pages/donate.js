@@ -17,6 +17,7 @@ const SUPPORT_PHONE = '+221 77 885 16 91'
 const SUPPORT_PHONE_COMPACT = '221778851691'
 const SUPPORT_EMAIL = 'julessane94@gmail.com'
 const PAYPAL_URL = 'https://paypal.me/julessane94'
+const WAVE_MERCHANT_URL = 'https://pay.wave.com/m/M_sn_WALm6CkqL2VK/c/sn/'
 
 const amounts = [2000, 5000, 10000, 25000, 50000]
 
@@ -24,24 +25,26 @@ const paymentMethods = [
   {
     id: 'wave',
     name: 'Wave',
-    description: 'Transfert mobile rapide vers le numero officiel.',
+    description: 'Transfert mobile rapide vers le numero officiel Wave.',
     detail: SUPPORT_PHONE,
-    actionLabel: 'Ouvrir Wave',
+    actionLabel: 'Payer avec Wave',
     icon: DevicePhoneMobile,
     color: 'border-sky-200 bg-sky-50 text-sky-800',
-    url: `wave://send?recipient=${SUPPORT_PHONE_COMPACT}`,
-    fallback: `tel:${SUPPORT_PHONE_COMPACT}`
+    url: WAVE_MERCHANT_URL,
+    fallback: `tel:${SUPPORT_PHONE_COMPACT}`,
+    fallbackLabel: 'Appeler le numero'
   },
   {
     id: 'orange',
     name: 'Orange Money',
-    description: 'Paiement mobile avec confirmation par telephone.',
+    description: 'Paiement mobile Orange Money avec montant pre-rempli autant que possible.',
     detail: SUPPORT_PHONE,
-    actionLabel: 'Ouvrir Orange Money',
+    actionLabel: 'Payer avec Orange Money',
     icon: DevicePhoneMobile,
     color: 'border-orange-200 bg-orange-50 text-orange-800',
-    url: `om://send?phone=${SUPPORT_PHONE_COMPACT}`,
-    fallback: `tel:${SUPPORT_PHONE_COMPACT}`
+    appUrl: (amount) => `om://send?phone=${SUPPORT_PHONE_COMPACT}&amount=${amount}`,
+    fallback: 'tel:%23144%23',
+    fallbackLabel: 'Composer #144#'
   },
   {
     id: 'paypal',
@@ -88,13 +91,23 @@ export default function Donate() {
 
   const openPayment = (method) => {
     if (typeof window === 'undefined') return
-    if (method.fallback) {
-      window.location.href = method.url
+    const amount = Math.max(1, Number(activeAmount) || selectedAmount)
+    const reference = `Don Signal-Moi ${amount} FCFA - ${SUPPORT_PHONE}`
+
+    try {
+      navigator.clipboard?.writeText(reference)
+      setCopied(method.name)
+      setTimeout(() => setCopied(''), 1800)
+    } catch (error) {}
+
+    if (method.appUrl) {
+      window.location.href = method.appUrl(amount)
       setTimeout(() => {
         window.location.href = method.fallback
-      }, 900)
+      }, 1200)
       return
     }
+
     window.open(method.url, '_blank', 'noopener,noreferrer')
   }
 
@@ -176,6 +189,11 @@ export default function Donate() {
                       <button onClick={() => openPayment(method)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
                         {method.actionLabel} <ArrowTopRight className="h-4 w-4" />
                       </button>
+                      {method.fallback && (
+                        <a href={method.fallback} className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                          {method.fallbackLabel || 'Finaliser'}
+                        </a>
+                      )}
                       <button onClick={() => copyToClipboard(method.detail, method.name)} className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
                         <ClipboardDocument className="h-4 w-4" /> {copied === method.name ? 'Copie' : 'Copier'}
                       </button>
@@ -205,7 +223,7 @@ export default function Donate() {
           <div className="flex gap-3">
             <ShieldCheck className="h-5 w-5 flex-none" />
             <p>
-              Situation reelle : les paiements mobiles ouvrent l'application si elle est installee, sinon le telephone est propose pour finaliser manuellement. Pour un paiement officiel automatise, il faudra connecter un compte marchand Wave/Orange Money ou un prestataire de paiement dans le backend.
+              Situation reelle : Wave ouvre maintenant le lien marchand officiel. Orange Money reste sur le flux mobile/USSD tant qu'un lien marchand ou une API Orange Money n'est pas connecte au backend.
             </p>
           </div>
         </div>
