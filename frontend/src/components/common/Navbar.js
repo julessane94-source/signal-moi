@@ -21,6 +21,14 @@ import {
   Squares2X2Icon as Squares2X2
 } from '@heroicons/react/24/outline'
 
+const normalizeRole = (role) => {
+  const value = String(role || '').trim().toLowerCase()
+  if (['admin', 'administrateur'].includes(value)) return 'admin'
+  if (['police', 'policier', 'force_ordre'].includes(value)) return 'police'
+  if (['collaborateur', 'collaborator'].includes(value)) return 'collaborateur'
+  if (['citoyen', 'citizen', 'user'].includes(value)) return 'citoyen'
+  return value
+}
 export default function Navbar() {
   const router = useRouter()
   const { user, loading, logout } = useAuth()
@@ -163,7 +171,7 @@ export default function Navbar() {
                   Tableau de bord
                 </motion.a>
               </Link>
-              {user?.role === 'citoyen' && (
+              {role === 'citoyen' && (
                 <Link href="/citizen/signalement">
                   <Button variant="danger" size="sm" className="rounded-full px-5">
                     Signaler
@@ -311,7 +319,7 @@ export default function Navbar() {
                 </>
               ) : showPrivateNavigation ? (
                 <>
-                  {user?.role === 'citoyen' && (
+                  {role === 'citoyen' && (
                     <Link href="/citizen/signalement" onClick={() => setMobileMenuOpen(false)}>
                       <Button variant="danger" className="w-full rounded-full text-white">
                         Signaler

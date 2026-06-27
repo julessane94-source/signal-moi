@@ -1,4 +1,4 @@
-ï»¿import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import axios from 'axios'
 import { API_BASE } from '../config/api'
@@ -7,6 +7,16 @@ import { toast } from 'react-toastify'
 const AuthContext = createContext()
 export const useAuth = () => useContext(AuthContext)
 
+const normalizeRole = (role) => {
+  const value = String(role || '').trim().toLowerCase()
+  if (['admin', 'administrateur'].includes(value)) return 'admin'
+  if (['police', 'policier', 'force_ordre'].includes(value)) return 'police'
+  if (['collaborateur', 'collaborator'].includes(value)) return 'collaborateur'
+  if (['citoyen', 'citizen', 'user'].includes(value)) return 'citoyen'
+  return value
+}
+
+const normalizeUser = (userData) => userData ? { ...userData, role: normalizeRole(userData.role) } : null
 // use central API base
 const API_URL = API_BASE
 
@@ -31,7 +41,7 @@ export const AuthProvider = ({ children }) => {
       // API returns { success: true, user: { ... } }
       const payload = response.data
       if (payload) {
-        setUser(payload.user || payload)
+        setUser(normalizeUser(payload.user || payload))
       } else {
         setUser(null)
       }
@@ -51,7 +61,7 @@ export const AuthProvider = ({ children }) => {
       const { token, user: userData } = response.data
       localStorage.setItem('token', token)
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-      setUser(userData)
+      setUser(normalizeUser(userData))
       toast.success(`Bienvenue ${userData.prenom} !`)
       const routes = { admin: '/admin/dashboard', police: '/police/dashboard', collaborateur: '/collaborator/dashboard', citoyen: '/citizen/dashboard' }
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -69,7 +79,7 @@ export const AuthProvider = ({ children }) => {
       const { token, user: userDataResponse } = response.data
       localStorage.setItem('token', token)
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-      setUser(userDataResponse)
+      setUser(normalizeUser(userDataResponse))
       toast.success('Inscription reussie !')
       // eslint-disable-next-line react-hooks/exhaustive-deps
       setTimeout(() => router.push('/citizen/dashboard'), 100)
@@ -93,11 +103,11 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await axios.put(`${API_URL}/api/auth/profile`, profileData)
       const updatedUser = response.data.user
-      setUser(updatedUser)
-      toast.success(response.data.message || 'Profil mis Ã  jour avec succÃ¨s')
+      setUser(normalizeUser(updatedUser))
+      toast.success(response.data.message || 'Profil mis à jour avec succès')
       return true
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Erreur lors de la mise Ã  jour')
+      toast.error(error.response?.data?.message || 'Erreur lors de la mise à jour')
       return false
     }
   }, [])
@@ -105,7 +115,7 @@ export const AuthProvider = ({ children }) => {
   const changePassword = useCallback(async (passwordData) => {
     try {
       const response = await axios.post(`${API_URL}/api/auth/change-password`, passwordData)
-      toast.success(response.data.message || 'Mot de passe modifiÃ© avec succÃ¨s')
+      toast.success(response.data.message || 'Mot de passe modifié avec succès')
       return true
     } catch (error) {
       toast.error(error.response?.data?.message || 'Erreur lors du changement')
