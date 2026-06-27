@@ -10,7 +10,11 @@ import {
   DocumentTextIcon as DocumentText,
   ExclamationTriangleIcon as ExclamationTriangle,
   VideoCameraIcon as VideoCamera,
-  ShieldCheckIcon as ShieldCheck
+  ShieldCheckIcon as ShieldCheck,
+  PaperClipIcon as PaperClip,
+  CalendarDaysIcon as CalendarDays,
+  PhoneIcon as Phone,
+  EnvelopeIcon as Envelope
 } from '@heroicons/react/24/outline'
 
 export default function PoliceDashboard() {
@@ -32,7 +36,7 @@ export default function PoliceDashboard() {
     
     if (socket) {
       socket.on('new_signalement_notification', (data) => {
-        toast.warning(`?? Nouveau signalement: ${data.title}`)
+        toast.warning(`Nouveau signalement: ${data.title}`)
         fetchSignalements()
       })
       
@@ -142,18 +146,18 @@ export default function PoliceDashboard() {
         },
         body: JSON.stringify({ statut })
       })
-      toast.success(`? Statut mis � jour: ${statut}`)
+      toast.success(`Statut mis a jour: ${statut}`)
       fetchSignalements()
       setSelectedSignal(null)
     } catch (error) {
-      toast.error('? Erreur lors de la mise � jour')
+      toast.error('Erreur lors de la mise a jour')
     }
   }
 
   const transferer = async (signalId, policeId) => {
     try {
       const token = localStorage.getItem('token')
-      const res = await fetch(`${API_BASE}/api/signalements/${signalId}/transfert`, {
+      const res = await fetch(`${API_BASE}/api/signalements/${signalId}/transfere`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -161,9 +165,9 @@ export default function PoliceDashboard() {
         },
         body: JSON.stringify({ police_id: policeId })
       })
-      if (!res.ok) throw new Error('Erreur transfert')
+      if (!res.ok) throw new Error('Erreur transfere')
       
-      // Aussi mettre � jour le statut � 'transfere'
+      // Aussi mettre a jour le statut a 'transfere'
       await fetch(`${API_BASE}/api/signalements/${signalId}/statut`, {
         method: 'PATCH',
         headers: {
@@ -173,15 +177,15 @@ export default function PoliceDashboard() {
         body: JSON.stringify({ statut: 'transfere' })
       })
       
-      toast.success('? Dossier transf�r� avec succ�s')
+      toast.success('Dossier transfere avec succes')
       setShowTransferModal(false)
       setSelectedPoliceToTransfer(null)
       setTransferingSignalId(null)
       setSelectedSignal(null)
       fetchSignalements()
     } catch (error) {
-      console.error('Erreur transfert:', error)
-      toast.error('? Erreur lors du transfert')
+      console.error('Erreur transfere:', error)
+      toast.error('Erreur lors du transfere')
     }
   }
 
@@ -211,7 +215,7 @@ export default function PoliceDashboard() {
     })
   }
 
-  const getHighestPrioritySignalement = () => {
+  const getHighestPrioriteSignalement = () => {
     const sorted = getSortedFilteredSignalements()
     return sorted.length > 0 ? sorted[0] : null
   }
@@ -233,7 +237,7 @@ export default function PoliceDashboard() {
     traites: signalements.filter(s => s.statut === 'traite').length
   }
 
-  const topSignal = getHighestPrioritySignalement()
+  const topSignal = getHighestPrioriteSignalement()
   const liveRecordingsList = Object.values(liveRecordings)
     .filter(item => item && item.status === 'recording')
     .sort((a, b) => new Date(b.startedAt || b.updatedAt || 0) - new Date(a.startedAt || a.updatedAt || 0))
@@ -263,7 +267,7 @@ export default function PoliceDashboard() {
                 <ExclamationTriangle className="h-6 w-6 flex-shrink-0" />
                 <div>
                   <p className="font-semibold">{topSignal.titre}</p>
-                  <p className="text-red-100 text-sm">Priorit�: {topSignal.priorite || 'Normal'}</p>
+                  <p className="text-red-100 text-sm">Priorite: {topSignal.priorite || 'Normal'}</p>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -299,14 +303,36 @@ export default function PoliceDashboard() {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
+            className="mb-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
           >
-            <h1 className="text-4xl font-bold text-gray-900">
-              Centre de Coordination Police
-            </h1>
-            <p className="text-gray-600 mt-2">
-              Bienvenue {user?.prenom} {user?.nom} - Gestion des signalements en temps r�el
-            </p>
+            <div className="grid gap-6 p-6 lg:grid-cols-[1.4fr_1fr] lg:p-8">
+              <div className="flex items-start gap-4">
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm">
+                  <ShieldCheck className="h-7 w-7" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">Espace forces de l'ordre</p>
+                  <h1 className="mt-1 text-3xl font-bold text-slate-950 md:text-4xl">Centre de coordination police</h1>
+                  <p className="mt-2 max-w-2xl text-sm text-slate-600 md:text-base">
+                    Bienvenue {user?.prenom} {user?.nom}. Suivez les alertes, les preuves video et les positions en temps reel.
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-xs font-medium text-slate-500">A traiter</p>
+                  <p className="mt-1 text-2xl font-bold text-slate-950">{stats.nouveaux + stats.enCours}</p>
+                </div>
+                <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+                  <p className="text-xs font-medium text-red-700">Prioritaires</p>
+                  <p className="mt-1 text-2xl font-bold text-red-700">{signalements.filter(s => ['urgente', 'haute'].includes((s.priorite || '').toLowerCase())).length}</p>
+                </div>
+                <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-4">
+                  <p className="text-xs font-medium text-indigo-700">Lives</p>
+                  <p className="mt-1 text-2xl font-bold text-indigo-700">{liveRecordingsList.length}</p>
+                </div>
+              </div>
+            </div>
           </motion.div>
 
           {liveRecordingsList.length > 0 && (
@@ -320,7 +346,7 @@ export default function PoliceDashboard() {
                   <VideoCamera className="h-6 w-6" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-red-900">Enregistrements vid�o en direct</h2>
+                  <h2 className="text-xl font-bold text-red-900">Enregistrements video en direct</h2>
                   <p className="text-sm text-red-700">Un citoyen filme actuellement une preuve avec localisation active.</p>
                 </div>
               </div>
@@ -348,7 +374,7 @@ export default function PoliceDashboard() {
                       </div>
                       <div className="rounded-lg bg-indigo-50 p-3 text-sm text-indigo-900">
                         <p className="font-semibold">Localisation</p>
-                        <p>{live.localisation || 'Localisation en cours de r�cup�ration...'}</p>
+                        <p>{live.localisation || 'Localisation en cours de recuperation...'}</p>
                         {live.latitude && live.longitude && (
                           <p className="mt-1 text-xs text-indigo-700">
                             GPS: {parseFloat(live.latitude).toFixed(5)}, {parseFloat(live.longitude).toFixed(5)}
@@ -400,7 +426,7 @@ export default function PoliceDashboard() {
               color="yellow"
             />
             <StatBox
-              title="Trait�s"
+              title="Traites"
               value={stats.traites}
               color="green"
             />
@@ -417,7 +443,7 @@ export default function PoliceDashboard() {
               { value: 'all', label: 'Tous' },
               { value: 'nouveau', label: 'Nouveaux' },
               { value: 'en_cours', label: 'En cours' },
-              { value: 'traite', label: 'Trait�s' }
+              { value: 'traite', label: 'Traites' }
             ].map(f => (
               <Button
                 key={f.value}
@@ -439,7 +465,7 @@ export default function PoliceDashboard() {
           >
             {getSortedFilteredSignalements().length === 0 ? (
               <Card className="p-12 text-center">
-                <div className="text-6xl mb-4">??</div>
+                <DocumentText className="mx-auto mb-4 h-14 w-14 text-slate-300" />
                 <p className="text-gray-500">Aucun signalement pour ce filtre</p>
               </Card>
             ) : (
@@ -466,12 +492,12 @@ export default function PoliceDashboard() {
                         <p className="text-gray-600 mt-1 line-clamp-2">{s.description}</p>
                         <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-gray-600">
                           <span className="flex items-center gap-1">
-                            ?? {s.localisation}
+                            <MapPin className="h-4 w-4" /> {s.localisation}
                           </span>
                           {s.fichiers?.length > 0 && (
-                            <span>?? {s.fichiers.length} pi�ce(s)</span>
+                            <span><PaperClip className="h-4 w-4" /> {s.fichiers.length} piece(s)</span>
                           )}
-                          <span>?? {new Date(s.createdAt).toLocaleDateString()}</span>
+                          <span className="inline-flex items-center gap-1"><CalendarDays className="h-4 w-4" /> {new Date(s.createdAt).toLocaleDateString()}</span>
                         </div>
                       </div>
                       <div className="flex flex-col gap-2">
@@ -479,11 +505,11 @@ export default function PoliceDashboard() {
                           size="sm"
                           icon={DocumentText}
                           onClick={() => {
-                            console.log('Ouverture d�tails signal:', s);
+                            console.log('Ouverture details signal:', s);
                             setSelectedSignal(s);
                           }}
                         >
-                          D�tails
+                          Details
                         </Button>
                         <Button
                           size="sm"
@@ -516,11 +542,11 @@ export default function PoliceDashboard() {
         </div>
       </div>
 
-      {/* Modal D�tails */}
+      {/* Modal Details */}
       <Modal
         isOpen={!!selectedSignal}
         onClose={() => setSelectedSignal(null)}
-        title="D�tails du signalement"
+        title="Details du signalement"
         size="lg"
       >
         {selectedSignal && (
@@ -528,36 +554,36 @@ export default function PoliceDashboard() {
             
             {/* INFO CITOYEN - Section distincte en haut */}
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-5 rounded-lg border-2 border-blue-200">
-              <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-3">?? Informations du signalant</p>
+              <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-3">Informations du signalant</p>
               <div className="space-y-2">
                 <p className="text-lg font-bold text-gray-900">
-                  {selectedSignal.estAnonyme ? '?? Signalement anonyme' : `${selectedSignal.user?.prenom || 'Inconnu'} ${selectedSignal.user?.nom || ''}`}
+                  {selectedSignal.estAnonyme ? 'Signalement anonyme' : `${selectedSignal.user?.prenom || 'Inconnu'} ${selectedSignal.user?.nom || ''}`}
                 </p>
                 {!selectedSignal.estAnonyme && selectedSignal.user?.telephone && (
-                  <p className="text-sm text-gray-700">?? {selectedSignal.user.telephone}</p>
+                  <p className="flex items-center gap-2 text-sm text-gray-700"><Phone className="h-4 w-4" /> {selectedSignal.user.telephone}</p>
                 )}
                 {selectedSignal.user?.email && (
-                  <p className="text-sm text-gray-700">?? {selectedSignal.user.email}</p>
+                  <p className="flex items-center gap-2 text-sm text-gray-700"><Envelope className="h-4 w-4" /> {selectedSignal.user.email}</p>
                 )}
                 {selectedSignal.user?.localisation && (
-                  <p className="text-sm text-gray-700">?? {selectedSignal.user.localisation}</p>
+                  <p className="flex items-center gap-2 text-sm text-gray-700"><MapPin className="h-4 w-4" /> {selectedSignal.user.localisation}</p>
                 )}
               </div>
             </div>
 
-            {/* D�tails du signalement */}
+            {/* Details du signalement */}
             <div>
               <h3 className="font-bold text-xl text-gray-900 mb-3">{selectedSignal.titre}</h3>
               <p className="text-gray-700 whitespace-pre-wrap text-base">{selectedSignal.description}</p>
             </div>
 
-            {/* Statut, Priorit�, Type */}
+            {/* Statut, Priorite, Type */}
             <div className="flex flex-wrap gap-2">
               <Badge variant={getStatusVariant(selectedSignal.statut)}>
                 Status: {selectedSignal.statut}
               </Badge>
               <Badge variant={getPriorityColor(selectedSignal.priorite)}>
-                Priorit�: {selectedSignal.priorite || 'Normal'}
+                Priorite: {selectedSignal.priorite || 'Normal'}
               </Badge>
               {selectedSignal.type && <Badge variant="gray">Type: {selectedSignal.type}</Badge>}
             </div>
@@ -596,11 +622,11 @@ export default function PoliceDashboard() {
             {/* Fichiers et Preuves - Section secondaire en bas */}
             {selectedSignal.fichiers?.length > 0 && (
               <div className="border-t pt-4">
-                <p className="text-sm font-semibold mb-3 text-gray-700">?? Preuves jointes ({selectedSignal.fichiers.length})</p>
+                <p className="text-sm font-semibold mb-3 text-gray-700">Preuves jointes ({selectedSignal.fichiers.length})</p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {selectedSignal.fichiers.map((f, i) => {
                     const isImage = f.mime_type?.startsWith('image/') || f.type?.startsWith('image/')
-                    // Normaliser le chemin: enlever les slashes en d�but et fin, et les chemins absolus
+                    // Normaliser le chemin: enlever les slashes en debut et fin, et les chemins absolus
                     let normalizedPath = f.chemin || `uploads/signalements/${f.id}`
                     if (normalizedPath.startsWith('/')) normalizedPath = normalizedPath.substring(1)
                     const fileUrl = `${API_BASE}/${normalizedPath}`
@@ -621,16 +647,16 @@ export default function PoliceDashboard() {
                               className="w-full h-full object-cover group-hover:scale-105 transition"
                               onError={(e) => {
                                 e.target.style.display = 'none'
-                                e.target.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px;background:#f3f4f6;">??</div>'
+                                e.target.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#64748b;background:#f3f4f6;">PREUVE</div>'
                               }}
                             />
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center">
-                              <span className="text-white text-xl opacity-0 group-hover:opacity-100 transition">??</span>
+                              <span className="text-white text-xs font-semibold opacity-0 group-hover:opacity-100 transition">Ouvrir</span>
                             </div>
                           </div>
                         ) : (
                           <div className="bg-gray-100 h-32 flex items-center justify-center group-hover:bg-gray-200 transition">
-                            <span className="text-2xl">??</span>
+                            <PaperClip className="h-8 w-8 text-slate-400" />
                           </div>
                         )}
                         <div className="p-2 bg-gray-50 text-center border-t border-gray-200">
@@ -646,14 +672,14 @@ export default function PoliceDashboard() {
             {/* Contacter la victime - Section Actions */}
             {!selectedSignal.estAnonyme && selectedSignal.user?.telephone && (
               <div className="border-t pt-4">
-                <p className="text-sm font-semibold mb-3 text-gray-700">?? Contacter la victime</p>
+                <p className="text-sm font-semibold mb-3 text-gray-700">Contacter la victime</p>
                 <div className="grid grid-cols-2 gap-2">
                   <Button
                     size="sm"
                     variant="success"
                     onClick={() => window.open(`tel:${selectedSignal.user.telephone}`)}
                   >
-                    ?? Appeler
+                    Appeler
                   </Button>
                   <Button
                     size="sm"
@@ -663,15 +689,15 @@ export default function PoliceDashboard() {
                       window.open(`https://wa.me/${phone}`)
                     }}
                   >
-                    ?? WhatsApp
+                    WhatsApp
                   </Button>
                 </div>
               </div>
             )}
 
-            {/* Mettre � jour le statut */}
+            {/* Mettre a jour le statut */}
             <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-              <p className="font-semibold text-yellow-900 mb-3">Mettre � jour le statut</p>
+              <p className="font-semibold text-yellow-900 mb-3">Mettre a jour le statut</p>
               <div className="flex flex-wrap gap-2">
                 <Button
                   size="sm"
@@ -685,7 +711,7 @@ export default function PoliceDashboard() {
                   variant="success"
                   onClick={() => updateStatus(selectedSignal.id, 'traite')}
                 >
-                  Trait�
+                  Traite
                 </Button>
                 <Button
                   size="sm"
@@ -695,7 +721,7 @@ export default function PoliceDashboard() {
                     setShowTransferModal(true)
                   }}
                 >
-                  Transf�rer
+                  Transferer
                 </Button>
               </div>
             </div>
@@ -710,11 +736,11 @@ export default function PoliceDashboard() {
           setShowTransferModal(false)
           setSelectedPoliceToTransfer(null)
         }}
-        title="Transf�rer le dossier"
+        title="Transferer le dossier"
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            S�lectionnez l'officier de police qui doit recevoir ce dossier :
+            Selectionnez l'officier de police qui doit recevoir ce dossier :
           </p>
           
           {policiers.length === 0 ? (
@@ -734,7 +760,7 @@ export default function PoliceDashboard() {
                   }`}
                 >
                   <div className="font-semibold text-gray-900">
-                    ?? {p.prenom} {p.nom}
+                    {p.prenom} {p.nom}
                   </div>
                   <div className="text-sm text-gray-500">{p.email}</div>
                 </button>
@@ -761,7 +787,7 @@ export default function PoliceDashboard() {
                 }
               }}
             >
-              Transf�rer
+              Transferer
             </Button>
           </div>
         </div>

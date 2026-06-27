@@ -40,12 +40,12 @@ export default function Navbar() {
   useEffect(() => {
     const fetchLogo = async () => {
       try {
-        // R�cup�rer le logo depuis la base de donn�es (base64)
+        // Recuperer le logo depuis la base de donnees (base64)
         const res = await fetch(`${API_BASE}/api/auth/site-config`)
         const data = await res.json()
         setLogoUrl(data.logoUrl || '/icons/icon-192x192.png')
       } catch (err) {
-        console.warn('??  Impossible de charger le logo depuis BD, utilisation du fallback:', err.message)
+        console.warn('Impossible de charger le logo depuis BD, utilisation du fallback:', err.message)
         setLogoUrl('/icons/icon-192x192.png')
       }
     }
@@ -69,12 +69,12 @@ export default function Navbar() {
         const data = await res.json()
         setNotificationCount(data.unreadCount || 0)
       } catch (err) {
-        console.warn('??  Impossible de charger le compteur de notifications:', err.message)
+        console.warn('Impossible de charger le compteur de notifications:', err.message)
       }
     }
 
     fetchNotificationCount()
-    // Rafra�chir le compteur toutes les 30 secondes
+    // Rafraichir le compteur toutes les 30 secondes
     const interval = setInterval(fetchNotificationCount, 30000)
     return () => clearInterval(interval)
   }, [user])
@@ -106,7 +106,7 @@ export default function Navbar() {
   const showPrivateNavigation = !loading && isLoggedIn
   const navigation = [
     { name: 'Accueil', href: '/', icon: Home },
-    { name: '� propos', href: '/about', icon: InformationCircle },
+    { name: 'A propos', href: '/about', icon: InformationCircle },
     { name: 'Signalements', href: '/signalements', icon: DocumentText },
     { name: 'Campagnes', href: '/campagnes', icon: UserGroup },
     { name: 'Plaidoyers', href: '/plaidoyers', icon: DocumentText },
@@ -146,9 +146,9 @@ export default function Navbar() {
 
         <div className="hidden md:flex items-center gap-3">
           <Link href="/donate">
-            <motion.a whileHover={{ scale: 1.05 }} className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-600 to-pink-600 text-white font-semibold rounded-full hover:from-red-700 hover:to-pink-700 transition-all">
+            <motion.a whileHover={{ scale: 1.05 }} className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 font-semibold text-white shadow-sm shadow-emerald-600/20 transition hover:bg-emerald-700">
               <Heart className="h-5 w-5" />
-              Donner
+              Soutenir
             </motion.a>
           </Link>
           {showPublicNavigation ? (
@@ -222,7 +222,7 @@ export default function Navbar() {
                       </Link>
                       <Link href="/settings">
                         <motion.a whileHover={{ backgroundColor: '#f8fafc' }} className="flex items-center gap-2 px-4 py-3 text-sm text-slate-700 hover:text-slate-900">
-                          <Cog className="h-4 w-4" /> Param�tres
+                          <Cog className="h-4 w-4" /> Parametres
                         </motion.a>
                       </Link>
                       <Link href="/notifications">
@@ -244,7 +244,7 @@ export default function Navbar() {
                         }}
                         className="flex w-full items-center gap-2 px-4 py-3 text-sm text-rose-600 hover:bg-rose-50"
                       >
-                        <ArrowRightOnRectangle className="h-4 w-4" /> D�connexion
+                        <ArrowRightOnRectangle className="h-4 w-4" /> Deconnexion
                       </motion.button>
                     </motion.div>
                   )}
@@ -299,7 +299,7 @@ export default function Navbar() {
             )}
             <div className="px-4 py-4 space-y-2">
               <Link href="/donate" onClick={() => setMobileMenuOpen(false)}>
-                <motion.a className="flex items-center justify-center gap-2 w-full rounded-full px-4 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white font-semibold hover:from-red-700 hover:to-pink-700 transition-all">
+                <motion.a className="flex items-center justify-center gap-2 w-full rounded-full bg-emerald-600 px-4 py-3 font-semibold text-white transition hover:bg-emerald-700">
                   <Heart className="h-5 w-5" />
                   Soutenir
                 </motion.a>
@@ -342,7 +342,7 @@ export default function Navbar() {
                   <Link href="/settings" onClick={() => setMobileMenuOpen(false)}>
                     <motion.a className="flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-700 transition hover:bg-slate-100">
                       <Cog className="h-5 w-5" />
-                      Param�tres
+                      Parametres
                     </motion.a>
                   </Link>
                   <motion.button
@@ -354,7 +354,7 @@ export default function Navbar() {
                     className="flex w-full items-center justify-center gap-2 rounded-full bg-rose-50 px-4 py-3 text-rose-600"
                   >
                     <ArrowRightOnRectangle className="h-5 w-5" />
-                    D�connexion
+                    Deconnexion
                   </motion.button>
                 </>
               ) : null}
