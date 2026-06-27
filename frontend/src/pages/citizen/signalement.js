@@ -41,6 +41,8 @@ export default function NewSignalement() {
   const recordingTimerRef = useRef(null)
   const liveFrameTimerRef = useRef(null)
   const liveSessionIdRef = useRef(null)
+  const liveVideoRef = useRef(null)
+  const pendingLiveMetaRef = useRef({})
   const videoPreviewRef = useRef(null)
   const recordedVideoNameRef = useRef(null)
   const [formData, setFormData] = useState({
@@ -74,19 +76,28 @@ export default function NewSignalement() {
     if (!socket || !liveSessionIdRef.current || !locationData) return
     socket.emit('live_recording_location', {
       sessionId: liveSessionIdRef.current,
-      type: formData.type,
-      titre: formData.titre || `Signalement : ${getTypeLabel(formData.type)}`,
+      type: pendingLiveMetaRef.current.type || formData.type,
+      titre: pendingLiveMetaRef.current.titre || formData.titre || `Signalement : ${getTypeLabel(formData.type)}`,
       latitude: locationData.latitude,
       longitude: locationData.longitude,
       localisation: locationData.localisation
     })
   }
 
-  const startLiveFrameBroadcast = () => {
+  const startLiveFrameBroadcast = (stream) => {
     if (!socket || liveFrameTimerRef.current) return
 
+    if (stream && !liveVideoRef.current) {
+      const liveVideo = document.createElement('video')
+      liveVideo.muted = true
+      liveVideo.playsInline = true
+      liveVideo.srcObject = stream
+      liveVideo.play().catch(() => {})
+      liveVideoRef.current = liveVideo
+    }
+
     liveFrameTimerRef.current = setInterval(() => {
-      const video = videoPreviewRef.current
+      const video = videoPreviewRef.current || liveVideoRef.current
       if (!video || video.readyState < 2 || !liveSessionIdRef.current) return
 
       const canvas = document.createElement('canvas')
@@ -107,6 +118,36 @@ export default function NewSignalement() {
     if (liveFrameTimerRef.current) {
       clearInterval(liveFrameTimerRef.current)
       liveFrameTimerRef.current = null
+    }
+    if (liveVideoRef.current) {
+      liveVideoRef.current.srcObject = null
+      liveVideoRef.current = null
+    }
+  }
+
+  const getLocationFromIpFallback = async ({ silent = false } = {}) => {
+    try {
+      const response = await fetch('https://ipapi.co/json/')
+      if (!response.ok) return null
+      const data = await response.json()
+      if (!data.latitude || !data.longitude) return null
+
+      const lat = Number(data.latitude)
+      const lng = Number(data.longitude)
+      const city = [data.city, data.region, data.country_name].filter(Boolean).join(', ')
+      const localisation = city || `Position approximative: ${lat.toFixed(6)}, ${lng.toFixed(6)}`
+
+      setLatitude(lat)
+      setLongitude(lng)
+      setFormData(prev => ({ ...prev, localisation: prev.localisation || localisation, latitude: lat, longitude: lng }))
+      setGeoError('Localisation GPS refusee: position approximative utilisee automatiquement.')
+      if (!silent) toast.info('Position approximative recuperee automatiquement')
+      const locationData = { latitude: lat, longitude: lng, localisation }
+      emitLiveLocation(locationData)
+      return locationData
+    } catch (error) {
+      console.warn('Fallback localisation IP impossible:', error)
+      return null
     }
   }
 
@@ -158,7 +199,7 @@ export default function NewSignalement() {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
       if (!silent) toast.error('Geolocalisation non prise en charge par votre navigateur')
       setGeoError('Geolocalisation non prise en charge')
-      return null
+      return getLocationFromIpFallback({ silent })
     }
 
     return new Promise((resolve) => {
@@ -187,14 +228,12 @@ export default function NewSignalement() {
         resolve({ latitude: lat, longitude: lng, localisation })
       }, (err) => {
         if (err.code === 1) {
-          if (!silent) toast.error('Acces a la geolocalisation refuse')
-          setGeoError('Autorisez la localisation du site dans le navigateur, puis cliquez sur Localiser.')
+          setGeoError('GPS refuse par le navigateur. Recuperation automatique d une position approximative...')
         } else {
-          if (!silent) toast.error('Impossible de recuperer la geolocalisation')
-          setGeoError('Impossible de recuperer la geolocalisation automatiquement.')
+          setGeoError('GPS indisponible. Recuperation automatique d une position approximative...')
         }
         console.log('Geolocalisation erreur:', err)
-        resolve(null)
+        getLocationFromIpFallback({ silent }).then(resolve)
       }, {
         enableHighAccuracy: true,
         timeout: 15000,
@@ -261,7 +300,7 @@ export default function NewSignalement() {
       if (VIDEO_PROMPT_TYPES.includes(value) && !hasRecordedVideo) {
         ensureAutomaticDescription(value)
         setShowVideoPrompt(true)
-        startVideoRecording()
+        startVideoRecording({ type: value, title: `Signalement : ${getTypeLabel(value)}` })
       }
     }
   }
@@ -276,7 +315,7 @@ export default function NewSignalement() {
     if (VIDEO_PROMPT_TYPES.includes(type) && !hasRecordedVideo) {
       ensureAutomaticDescription(type)
       setShowVideoPrompt(true)
-      startVideoRecording()
+      startVideoRecording({ type, title: formData.titre || `Signalement : ${label}` })
     }
   }
 
@@ -303,8 +342,12 @@ export default function NewSignalement() {
     return candidates.find(type => MediaRecorder.isTypeSupported(type)) || ''
   }
 
-  const startVideoRecording = async () => {
+  const startVideoRecording = async ({ type = formData.type, title = formData.titre } = {}) => {
     setRecordingError(null)
+    const liveType = type || formData.type
+    const liveTitle = title || formData.titre || `Signalement : ${getTypeLabel(liveType)}`
+    const liveDescription = formData.description || `Signalement urgent: ${getTypeLabel(liveType)}`
+    pendingLiveMetaRef.current = { type: liveType, titre: liveTitle, description: liveDescription }
 
     if (recordingState === 'recording' || recordingState === 'saving') {
       setShowVideoPrompt(true)
@@ -334,9 +377,9 @@ export default function NewSignalement() {
       if (socket) {
         socket.emit('live_recording_started', {
           sessionId,
-          type: formData.type,
-          titre: formData.titre || `Signalement : ${getTypeLabel(formData.type)}`,
-          description: formData.description || `Signalement urgent: ${getTypeLabel(formData.type)}`,
+          type: liveType,
+          titre: liveTitle,
+          description: liveDescription,
           latitude,
           longitude,
           localisation: formData.localisation || null
@@ -377,14 +420,14 @@ export default function NewSignalement() {
         if (socket && liveSessionIdRef.current) {
           socket.emit('live_recording_stopped', {
             sessionId: liveSessionIdRef.current,
-            type: formData.type
+            type: liveType
           })
         }
         stopCameraStream()
       }
 
       recorder.start()
-      startLiveFrameBroadcast()
+      startLiveFrameBroadcast(stream)
       recordingTimerRef.current = setTimeout(() => {
         stopVideoRecording()
       }, MAX_RECORDING_MS)
@@ -490,7 +533,7 @@ export default function NewSignalement() {
     if (shouldOfferVideoProof && !videoPromptHandled && !hasRecordedVideo) {
       ensureAutomaticDescription(formData.type)
       setShowVideoPrompt(true)
-      startVideoRecording()
+      startVideoRecording({ type: formData.type, title: formData.titre || `Signalement : ${getTypeLabel(formData.type)}` })
       return
     }
 

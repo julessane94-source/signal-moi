@@ -76,14 +76,22 @@ export default function Statistics() {
         credentials: 'include',
         headers: { Authorization: `Bearer ${token}`, 'Accept': 'application/json' }
       }
+      const apiGet = async (url) => {
+        const response = await fetch(url, fetchOpts)
+        const payload = await response.json()
+        if (!response.ok || payload.error) {
+          throw new Error(payload.error || 'Erreur API statistiques')
+        }
+        return payload
+      }
 
       const [overview, byType, byMonth, byGender, byAge, exportDat] = await Promise.all([
-        fetch(`${API_BASE}/api/statistics/overview`, fetchOpts).then(r => r.json()),
-        fetch(`${API_BASE}/api/statistics/by-type`, fetchOpts).then(r => r.json()),
-        fetch(`${API_BASE}/api/statistics/by-month?year=${new Date().getFullYear()}`, fetchOpts).then(r => r.json()),
-        fetch(`${API_BASE}/api/statistics/by-gender`, fetchOpts).then(r => r.json()),
-        fetch(`${API_BASE}/api/statistics/by-age`, fetchOpts).then(r => r.json()),
-        fetch(`${API_BASE}/api/statistics/export-data?startDate=${filters.startDate}&endDate=${filters.endDate}&type=${filters.type}`, fetchOpts).then(r => r.json())
+        apiGet(`${API_BASE}/api/statistics/overview`),
+        apiGet(`${API_BASE}/api/statistics/by-type`),
+        apiGet(`${API_BASE}/api/statistics/by-month?year=${new Date().getFullYear()}`),
+        apiGet(`${API_BASE}/api/statistics/by-gender`),
+        apiGet(`${API_BASE}/api/statistics/by-age`),
+        apiGet(`${API_BASE}/api/statistics/export-data?startDate=${filters.startDate}&endDate=${filters.endDate}&type=${filters.type}`)
       ])
 
       setData({
@@ -93,7 +101,7 @@ export default function Statistics() {
         byGender: byGender.data || [],
         byAge: byAge.data || []
       })
-      setExportData(exportDat.stats)
+      setExportData({ ...(exportDat.stats || {}), signalements: exportDat.signalements || [] })
     } catch (error) {
       console.error('Erreur:', error)
       toast.error('❌ Erreur lors du chargement des statistiques')
@@ -165,16 +173,16 @@ export default function Statistics() {
         <meta name="description" content="Statistiques détaillées des signalements" />
       </Head>
 
-      <main className="min-h-screen bg-gray-50 pt-20 pb-10">
+      <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 pt-20 pb-10">
         <div className="max-w-7xl mx-auto px-4">
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-8 rounded-2xl border border-indigo-100 bg-white p-6 shadow-sm">
             <h1 className="text-4xl font-bold text-gray-900 mb-2">📊 Statistiques des Signalements</h1>
             <p className="text-gray-600">Analyse complète par type, mois, sexe et âge</p>
           </div>
 
           {/* Filtres */}
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="grid md:grid-cols-4 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Date de début</label>
@@ -210,7 +218,7 @@ export default function Statistics() {
               <div className="flex items-end">
                 <button
                   onClick={downloadPDF}
-                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold py-2 rounded-lg hover:shadow-lg transition"
+                  className="w-full rounded-lg bg-indigo-600 py-2 font-semibold text-white transition hover:bg-indigo-700 hover:shadow-lg"
                 >
                   📥 Télécharger PDF
                 </button>
@@ -219,7 +227,7 @@ export default function Statistics() {
           </div>
 
           {/* Rapport */}
-          <div id="statistics-report" className="bg-white rounded-lg shadow-sm p-8 space-y-8">
+          <div id="statistics-report" className="space-y-8 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
             {/* Logo et titre */}
             <div className="border-b-2 border-indigo-600 pb-6">
               <div className="flex items-center gap-4 mb-4">
@@ -244,21 +252,21 @@ export default function Statistics() {
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 mb-4">📈 Vue d'ensemble</h3>
                   <div className="grid md:grid-cols-4 gap-4">
-                    <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-4">
+                    <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-4">
                       <p className="text-sm text-gray-600">Total de signalements</p>
                       <p className="text-3xl font-bold text-indigo-600">{data.overview?.totalSignalements || 0}</p>
                     </div>
-                    <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4">
+                    <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4">
                       <p className="text-sm text-gray-600">Traités</p>
-                      <p className="text-3xl font-bold text-green-600">{data.overview?.statusDistribution?.find(s => s.statut === 'traite')?.count || 0}</p>
+                      <p className="text-3xl font-bold text-emerald-600">{data.overview?.statusDistribution?.find(s => s.statut === 'traite')?.count || 0}</p>
                     </div>
-                    <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg p-4">
+                    <div className="rounded-xl border border-amber-100 bg-amber-50 p-4">
                       <p className="text-sm text-gray-600">En cours</p>
-                      <p className="text-3xl font-bold text-yellow-600">{data.overview?.statusDistribution?.find(s => s.statut === 'en_cours')?.count || 0}</p>
+                      <p className="text-3xl font-bold text-amber-600">{data.overview?.statusDistribution?.find(s => s.statut === 'en_cours')?.count || 0}</p>
                     </div>
-                    <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-4">
+                    <div className="rounded-xl border border-rose-100 bg-rose-50 p-4">
                       <p className="text-sm text-gray-600">Urgents</p>
-                      <p className="text-3xl font-bold text-red-600">{data.overview?.priorityDistribution?.find(p => p.priorite === 'urgente')?.count || 0}</p>
+                      <p className="text-3xl font-bold text-rose-600">{data.overview?.priorityDistribution?.find(p => p.priorite === 'urgente')?.count || 0}</p>
                     </div>
                   </div>
                 </div>
@@ -290,7 +298,7 @@ export default function Statistics() {
                             <td className="px-4 py-2">{TYPE_ICONS[t.type] || '❓'} {t.type}</td>
                             <td className="px-4 py-2 text-right">{t.count}</td>
                             <td className="px-4 py-2 text-right">
-                              {((t.count / data.overview?.totalSignalements) * 100).toFixed(1)}%
+                              {data.overview?.totalSignalements ? ((t.count / data.overview.totalSignalements) * 100).toFixed(1) : '0.0'}%
                             </td>
                           </tr>
                         ))}

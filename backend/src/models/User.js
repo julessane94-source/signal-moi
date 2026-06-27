@@ -22,6 +22,11 @@ const User = {
         const res = await db.query(`SELECT * FROM ${USERS_TABLE} WHERE id = $1`, [id]);
         return res.rows[0] ? new UserInstance(res.rows[0]) : null;
     },
+
+    findByPk: async (id) => {
+        const res = await db.query(`SELECT * FROM ${USERS_TABLE} WHERE id = $1`, [id]);
+        return res.rows[0] ? new UserInstance(res.rows[0]) : null;
+    },
     
     create: async (userData) => {
         const { prenom, nom, email, telephone, password, ville, quartier, role, emailVerificationToken } = userData;

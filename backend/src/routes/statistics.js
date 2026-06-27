@@ -1,140 +1,131 @@
 const express = require('express')
 const router = express.Router()
-const { authMiddleware, roleMiddleware } = require('../middlewares/auth')
-const { Signalement, User } = require('../models')
-const { sequelize } = require('../models')
-const { Op, fn, col, literal } = require('sequelize')
+const { authMiddleware } = require('../middlewares/auth')
+const db = require('../config/database')
 
-// Middleware pour vérifier admin ou collaborateur
 const checkAdminOrCollaborator = (req, res, next) => {
   if (!req.user || !['admin', 'collaborateur'].includes(req.user.role)) {
-    return res.status(403).json({ error: 'Accès refusé - admin ou collaborateur requis' })
+    return res.status(403).json({ error: 'Acces refuse - admin ou collaborateur requis' })
   }
   next()
 }
 
-// Récupérer statistiques par type de signalement
+const toInt = (value) => parseInt(value || 0, 10)
+
+const optionalDateWhere = ({ startDate, endDate, type }, params) => {
+  const where = []
+
+  if (startDate) {
+    params.push(startDate)
+    where.push(`s.created_at >= $${params.length}`)
+  }
+
+  if (endDate) {
+    params.push(endDate)
+    where.push(`s.created_at < ($${params.length}::date + INTERVAL '1 day')`)
+  }
+
+  if (type && type !== 'all') {
+    params.push(type)
+    where.push(`s.type = $${params.length}`)
+  }
+
+  return where.length ? `WHERE ${where.join(' AND ')}` : ''
+}
+
 router.get('/by-type', authMiddleware, checkAdminOrCollaborator, async (req, res) => {
   try {
-    const stats = await Signalement.findAll({
-      attributes: [
-        'type',
-        [fn('COUNT', col('id')), 'count'],
-        [fn('AVG', col('priorite')), 'avg_priorite']
-      ],
-      group: ['type'],
-      raw: true,
-      subQuery: false
-    })
+    const result = await db.query(`
+      SELECT s.type, COUNT(*)::int AS count
+      FROM signal_moi.signalements s
+      GROUP BY s.type
+      ORDER BY count DESC, s.type ASC
+    `)
 
-    res.json({
-      success: true,
-      data: stats.map(s => ({
-        ...s,
-        count: parseInt(s.count)
-      }))
-    })
+    res.json({ success: true, data: result.rows.map(row => ({ ...row, count: toInt(row.count) })) })
   } catch (error) {
     console.error('Erreur statistiques par type:', error)
-    res.status(500).json({ error: 'Erreur serveur' })
+    res.status(500).json({ error: 'Erreur serveur', details: error.message })
   }
 })
 
-// Récupérer statistiques par mois
 router.get('/by-month', authMiddleware, checkAdminOrCollaborator, async (req, res) => {
   try {
-    const { year } = req.query
-    const currentYear = year || new Date().getFullYear()
+    const year = Number(req.query.year) || new Date().getFullYear()
+    const result = await db.query(`
+      SELECT TO_CHAR(s.created_at, 'YYYY-MM') AS month, s.type, COUNT(*)::int AS count
+      FROM signal_moi.signalements s
+      WHERE s.created_at >= $1::date
+        AND s.created_at < ($2::date + INTERVAL '1 year')
+      GROUP BY TO_CHAR(s.created_at, 'YYYY-MM'), s.type
+      ORDER BY month ASC, s.type ASC
+    `, [`${year}-01-01`, `${year}-01-01`])
 
-    const stats = await Signalement.findAll({
-      attributes: [
-        [sequelize.literal(`TO_CHAR(created_at, 'YYYY-MM')`), 'month'],
-        'type',
-        [fn('COUNT', col('id')), 'count']
-      ],
-      where: {
-        created_at: {
-          [Op.gte]: new Date(`${currentYear}-01-01`),
-          [Op.lt]: new Date(`${currentYear + 1}-01-01`)
-        }
-      },
-      group: [sequelize.literal(`TO_CHAR(created_at, 'YYYY-MM')`), 'type'],
-      order: [sequelize.literal(`TO_CHAR(created_at, 'YYYY-MM')`)],
-      raw: true,
-      subQuery: false
-    })
-
-    // Restructurer les données
     const monthlyData = {}
-    stats.forEach(s => {
-      if (!monthlyData[s.month]) {
-        monthlyData[s.month] = { month: s.month, total: 0, byType: {} }
-      }
-      monthlyData[s.month].byType[s.type] = parseInt(s.count)
-      monthlyData[s.month].total += parseInt(s.count)
+    result.rows.forEach(row => {
+      if (!monthlyData[row.month]) monthlyData[row.month] = { month: row.month, total: 0, byType: {} }
+      const count = toInt(row.count)
+      monthlyData[row.month].byType[row.type] = count
+      monthlyData[row.month].total += count
     })
 
-    res.json({
-      success: true,
-      year: currentYear,
-      data: Object.values(monthlyData)
-    })
+    res.json({ success: true, year, data: Object.values(monthlyData) })
   } catch (error) {
     console.error('Erreur statistiques par mois:', error)
-    res.status(500).json({ error: 'Erreur serveur' })
+    res.status(500).json({ error: 'Erreur serveur', details: error.message })
   }
 })
 
-// Récupérer statistiques par sexe
 router.get('/by-gender', authMiddleware, checkAdminOrCollaborator, async (req, res) => {
   try {
-    const stats = await sequelize.query(`
-      SELECT 
-        COALESCE(u.genre, 'Non spécifié') as genre,
-        s.type,
-        COUNT(s.id) as count,
-        ROUND(AVG(EXTRACT(YEAR FROM AGE(DATE(u.date_naissance)))), 0) as avg_age
-      FROM signalements s
-      LEFT JOIN users u ON s.user_id = u.id
-      GROUP BY u.genre, s.type
-      ORDER BY u.genre, s.type
-    `, { type: sequelize.QueryTypes.SELECT })
+    const hasGenre = await db.query(`
+      SELECT 1
+      FROM information_schema.columns
+      WHERE table_schema = 'signal_moi'
+        AND table_name = 'users'
+        AND column_name = 'genre'
+      LIMIT 1
+    `)
 
-    res.json({
-      success: true,
-      data: stats.map(s => ({
-        ...s,
-        count: parseInt(s.count),
-        avg_age: s.avg_age ? parseFloat(s.avg_age) : null
-      }))
-    })
+    if (!hasGenre.rows.length) {
+      return res.json({ success: true, data: [] })
+    }
+
+    const result = await db.query(`
+      SELECT COALESCE(u.genre, 'Non specifie') AS genre, s.type, COUNT(*)::int AS count
+      FROM signal_moi.signalements s
+      LEFT JOIN signal_moi.users u ON u.id = s.user_id
+      GROUP BY COALESCE(u.genre, 'Non specifie'), s.type
+      ORDER BY genre ASC, s.type ASC
+    `)
+
+    res.json({ success: true, data: result.rows.map(row => ({ ...row, count: toInt(row.count) })) })
   } catch (error) {
     console.error('Erreur statistiques par sexe:', error)
-    res.status(500).json({ error: 'Erreur serveur' })
+    res.status(500).json({ error: 'Erreur serveur', details: error.message })
   }
 })
 
-// Récupérer statistiques par âge (tranches)
 router.get('/by-age', authMiddleware, checkAdminOrCollaborator, async (req, res) => {
   try {
-    const stats = await sequelize.query(`
-      SELECT 
+    const result = await db.query(`
+      SELECT
         CASE
-          WHEN EXTRACT(YEAR FROM AGE(DATE(u.date_naissance))) < 18 THEN 'Moins de 18 ans'
-          WHEN EXTRACT(YEAR FROM AGE(DATE(u.date_naissance))) < 25 THEN '18-25 ans'
-          WHEN EXTRACT(YEAR FROM AGE(DATE(u.date_naissance))) < 35 THEN '25-35 ans'
-          WHEN EXTRACT(YEAR FROM AGE(DATE(u.date_naissance))) < 45 THEN '35-45 ans'
-          WHEN EXTRACT(YEAR FROM AGE(DATE(u.date_naissance))) < 55 THEN '45-55 ans'
-          WHEN EXTRACT(YEAR FROM AGE(DATE(u.date_naissance))) < 65 THEN '55-65 ans'
+          WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, u.date_naissance)) < 18 THEN 'Moins de 18 ans'
+          WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, u.date_naissance)) < 25 THEN '18-25 ans'
+          WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, u.date_naissance)) < 35 THEN '25-35 ans'
+          WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, u.date_naissance)) < 45 THEN '35-45 ans'
+          WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, u.date_naissance)) < 55 THEN '45-55 ans'
+          WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, u.date_naissance)) < 65 THEN '55-65 ans'
           ELSE 'Plus de 65 ans'
-        END as age_group,
+        END AS age_group,
         s.type,
-        COUNT(s.id) as count
-      FROM signalements s
-      LEFT JOIN users u ON s.user_id = u.id
+        COUNT(*)::int AS count
+      FROM signal_moi.signalements s
+      LEFT JOIN signal_moi.users u ON u.id = s.user_id
       WHERE u.date_naissance IS NOT NULL
       GROUP BY age_group, s.type
-      ORDER BY 
+      ORDER BY
         CASE age_group
           WHEN 'Moins de 18 ans' THEN 1
           WHEN '18-25 ans' THEN 2
@@ -144,167 +135,128 @@ router.get('/by-age', authMiddleware, checkAdminOrCollaborator, async (req, res)
           WHEN '55-65 ans' THEN 6
           WHEN 'Plus de 65 ans' THEN 7
         END,
-        s.type
-    `, { type: sequelize.QueryTypes.SELECT })
+        s.type ASC
+    `)
 
-    res.json({
-      success: true,
-      data: stats.map(s => ({
-        ...s,
-        count: parseInt(s.count)
-      }))
-    })
+    res.json({ success: true, data: result.rows.map(row => ({ ...row, count: toInt(row.count) })) })
   } catch (error) {
-    console.error('Erreur statistiques par âge:', error)
-    res.status(500).json({ error: 'Erreur serveur' })
+    console.error('Erreur statistiques par age:', error)
+    res.status(500).json({ error: 'Erreur serveur', details: error.message })
   }
 })
 
-// Récupérer statistiques globales
 router.get('/overview', authMiddleware, checkAdminOrCollaborator, async (req, res) => {
   try {
-    const totalSignalements = await Signalement.count()
-    
-    const statusStats = await Signalement.findAll({
-      attributes: [
-        'statut',
-        [fn('COUNT', col('id')), 'count']
-      ],
-      group: ['statut'],
-      raw: true
-    })
-
-    const typeStats = await Signalement.findAll({
-      attributes: [
-        'type',
-        [fn('COUNT', col('id')), 'count']
-      ],
-      group: ['type'],
-      raw: true,
-      limit: 5,
-      order: [[sequelize.literal('COUNT(id)'), 'DESC']]
-    })
-
-    const priorityStats = await Signalement.findAll({
-      attributes: [
-        'priorite',
-        [fn('COUNT', col('id')), 'count']
-      ],
-      group: ['priorite'],
-      raw: true
-    })
-
-    const monthlyTrendQuery = await sequelize.query(`
-      SELECT 
-        TO_CHAR(created_at, 'YYYY-MM') as month,
-        COUNT(id) as count
-      FROM signalements
-      WHERE created_at >= NOW() - INTERVAL '12 months'
-      GROUP BY TO_CHAR(created_at, 'YYYY-MM')
-      ORDER BY month
-    `, { type: sequelize.QueryTypes.SELECT })
+    const [totalRes, statusRes, typeRes, priorityRes, monthlyRes] = await Promise.all([
+      db.query('SELECT COUNT(*)::int AS total FROM signal_moi.signalements'),
+      db.query(`
+        SELECT COALESCE(s.statut, 'nouveau') AS statut, COUNT(*)::int AS count
+        FROM signal_moi.signalements s
+        GROUP BY COALESCE(s.statut, 'nouveau')
+        ORDER BY count DESC
+      `),
+      db.query(`
+        SELECT s.type, COUNT(*)::int AS count
+        FROM signal_moi.signalements s
+        GROUP BY s.type
+        ORDER BY count DESC, s.type ASC
+        LIMIT 5
+      `),
+      db.query(`
+        SELECT COALESCE(s.priorite, 'normale') AS priorite, COUNT(*)::int AS count
+        FROM signal_moi.signalements s
+        GROUP BY COALESCE(s.priorite, 'normale')
+        ORDER BY count DESC
+      `),
+      db.query(`
+        SELECT TO_CHAR(s.created_at, 'YYYY-MM') AS month, COUNT(*)::int AS count
+        FROM signal_moi.signalements s
+        WHERE s.created_at >= NOW() - INTERVAL '12 months'
+        GROUP BY TO_CHAR(s.created_at, 'YYYY-MM')
+        ORDER BY month ASC
+      `)
+    ])
 
     res.json({
       success: true,
-      totalSignalements,
-      statusDistribution: statusStats.map(s => ({
-        ...s,
-        count: parseInt(s.count)
-      })),
-      topTypes: typeStats.map(s => ({
-        ...s,
-        count: parseInt(s.count)
-      })),
-      priorityDistribution: priorityStats.map(s => ({
-        ...s,
-        count: parseInt(s.count)
-      })),
-      monthlyTrend: monthlyTrendQuery.map(s => ({
-        ...s,
-        count: parseInt(s.count)
-      }))
+      totalSignalements: toInt(totalRes.rows[0]?.total),
+      statusDistribution: statusRes.rows.map(row => ({ ...row, count: toInt(row.count) })),
+      topTypes: typeRes.rows.map(row => ({ ...row, count: toInt(row.count) })),
+      priorityDistribution: priorityRes.rows.map(row => ({ ...row, count: toInt(row.count) })),
+      monthlyTrend: monthlyRes.rows.map(row => ({ ...row, count: toInt(row.count) }))
     })
   } catch (error) {
     console.error('Erreur statistiques overview:', error)
-    res.status(500).json({ error: 'Erreur serveur' })
+    res.status(500).json({ error: 'Erreur serveur', details: error.message })
   }
 })
 
-// Récupérer données détaillées pour PDF
 router.get('/export-data', authMiddleware, checkAdminOrCollaborator, async (req, res) => {
   try {
-    const { startDate, endDate, type } = req.query
+    const params = []
+    const whereClause = optionalDateWhere(req.query, params)
 
-    let whereClause = {}
-    if (startDate || endDate) {
-      whereClause.created_at = {}
-      if (startDate) whereClause.created_at[Op.gte] = new Date(startDate)
-      if (endDate) whereClause.created_at[Op.lte] = new Date(endDate)
-    }
-    if (type && type !== 'all') {
-      whereClause.type = type
-    }
+    const result = await db.query(`
+      SELECT
+        s.id,
+        s.titre,
+        s.type,
+        COALESCE(s.statut, 'nouveau') AS statut,
+        COALESCE(s.priorite, 'normale') AS priorite,
+        s.created_at,
+        u.prenom,
+        u.nom,
+        u.date_naissance
+      FROM signal_moi.signalements s
+      LEFT JOIN signal_moi.users u ON u.id = s.user_id
+      ${whereClause}
+      ORDER BY s.created_at DESC
+      LIMIT 10000
+    `, params)
 
-    const signalements = await Signalement.findAll({
-      where: whereClause,
-      include: [{ model: User, attributes: ['prenom', 'nom', 'genre', 'date_naissance'] }],
-      limit: 10000
-    })
-
-    // Calculer les statistiques
     const stats = {
-      total: signalements.length,
+      total: result.rows.length,
       byType: {},
       byMonth: {},
-      byGender: {},
       byAge: {},
       byStatus: {}
     }
 
-    signalements.forEach(s => {
-      // Par type
-      stats.byType[s.type] = (stats.byType[s.type] || 0) + 1
+    result.rows.forEach(row => {
+      stats.byType[row.type] = (stats.byType[row.type] || 0) + 1
+      stats.byStatus[row.statut] = (stats.byStatus[row.statut] || 0) + 1
 
-      // Par mois
-      const month = s.created_at.toISOString().slice(0, 7)
+      const month = row.created_at ? new Date(row.created_at).toISOString().slice(0, 7) : 'Non date'
       stats.byMonth[month] = (stats.byMonth[month] || 0) + 1
 
-      // Par sexe
-      const gender = s.User?.genre || 'Non spécifié'
-      stats.byGender[gender] = (stats.byGender[gender] || 0) + 1
-
-      // Par âge
-      if (s.User?.date_naissance) {
-        const age = new Date().getFullYear() - new Date(s.User.date_naissance).getFullYear()
+      if (row.date_naissance) {
+        const age = new Date().getFullYear() - new Date(row.date_naissance).getFullYear()
         const ageGroup = age < 18 ? 'Moins de 18 ans' :
-                        age < 25 ? '18-25 ans' :
-                        age < 35 ? '25-35 ans' :
-                        age < 45 ? '35-45 ans' :
-                        age < 55 ? '45-55 ans' :
-                        age < 65 ? '55-65 ans' : 'Plus de 65 ans'
+          age < 25 ? '18-25 ans' :
+          age < 35 ? '25-35 ans' :
+          age < 45 ? '35-45 ans' :
+          age < 55 ? '45-55 ans' :
+          age < 65 ? '55-65 ans' : 'Plus de 65 ans'
         stats.byAge[ageGroup] = (stats.byAge[ageGroup] || 0) + 1
       }
-
-      // Par statut
-      stats.byStatus[s.statut] = (stats.byStatus[s.statut] || 0) + 1
     })
 
     res.json({
       success: true,
       stats,
-      signalements: signalements.map(s => ({
-        id: s.id,
-        titre: s.titre,
-        type: s.type,
-        statut: s.statut,
-        priorite: s.priorite,
-        created_at: s.created_at,
-        userName: s.User ? `${s.User.prenom} ${s.User.nom}` : 'Anonyme'
+      signalements: result.rows.map(row => ({
+        id: row.id,
+        titre: row.titre,
+        type: row.type,
+        statut: row.statut,
+        priorite: row.priorite,
+        created_at: row.created_at,
+        userName: row.prenom || row.nom ? `${row.prenom || ''} ${row.nom || ''}`.trim() : 'Anonyme'
       }))
     })
   } catch (error) {
-    console.error('Erreur export données:', error)
-    res.status(500).json({ error: 'Erreur serveur' })
+    console.error('Erreur export donnees:', error)
+    res.status(500).json({ error: 'Erreur serveur', details: error.message })
   }
 })
 
