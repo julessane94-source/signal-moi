@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+﻿import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '../../context/AuthContext'
 import { useSocket } from '../../context/SocketContext'
@@ -672,32 +672,45 @@ export default function NewSignalement() {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-50 pt-16">
-        <div className="max-w-3xl mx-auto px-4 py-8">
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h1 className="text-2xl font-bold mb-6">Nouveau signalement</h1>
-            <form onSubmit={handleSubmit} noValidate className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Titre *</label>
-                <input type="text" name="titre" required value={formData.titre} onChange={handleChange} className="w-full border rounded px-3 py-2" placeholder="ex: Nid-de-poule dangereux" />
+      <div className="min-h-screen bg-slate-50 pt-16">
+        <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="mb-6 overflow-hidden rounded-2xl bg-slate-950 text-white shadow-xl">
+            <div className="p-6 sm:p-8">
+              <p className="text-sm font-semibold uppercase tracking-wide text-red-300">Signalement citoyen</p>
+              <h1 className="mt-2 text-3xl font-bold sm:text-4xl">Documenter un incident a Sedhiou</h1>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-200">
+                Decrivez la situation, ajoutez votre position et joignez des preuves. Les alertes urgentes peuvent transmettre une video en direct a l'espace police.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2 text-sm">
+                {['1. Details', '2. Position', '3. Preuves'].map((step) => (
+                  <span key={step} className="rounded-full bg-white/15 px-3 py-1 text-slate-100">{step}</span>
+                ))}
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Type d'incident *</label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
+            </div>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+            <form onSubmit={handleSubmit} noValidate className="space-y-7">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
+                <p className="mb-4 text-sm font-semibold text-red-600">Details de l'incident</p>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Titre *</label>
+                <input type="text" name="titre" required value={formData.titre} onChange={handleChange} className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100" placeholder="Ex: Nid-de-poule dangereux" />
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+                <label className="block text-sm font-semibold text-slate-700 mb-3">Type d'incident *</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-3">
                   {QUICK_TYPES.map((item) => (
                     <button
                       key={item.value}
                       type="button"
                       onClick={() => handleQuickType(item.value, item.label)}
-                      className={`rounded-xl border p-3 text-left transition ${formData.type === item.value ? 'border-red-500 bg-red-50 shadow-sm' : 'border-gray-200 bg-white hover:border-red-300 hover:bg-red-50/50'}`}
+                      className={`rounded-xl border p-4 text-left transition ${formData.type === item.value ? 'border-red-500 bg-red-50 shadow-sm ring-4 ring-red-100' : 'border-slate-200 bg-white hover:border-red-300 hover:bg-red-50/50'}`}
                     >
-                      <div className="text-lg">{item.icon}</div>
-                      <div className="font-semibold text-sm text-gray-900">{item.label}</div>
-                      <div className="text-xs text-gray-500 mt-1">{item.hint}</div>
+                      <div className="text-sm font-bold text-slate-900">{item.icon} {item.label}</div>
+                      <div className="text-xs text-slate-500 mt-1 leading-5">{item.hint}</div>
                     </button>
                   ))}
                 </div>
-                <select name="type" required value={formData.type} onChange={handleChange} className="w-full border rounded px-3 py-2">
+                <select name="type" required value={formData.type} onChange={handleChange} className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100">
                   <option value="violence">Violence</option>
                   <option value="vol">Vol</option>
                   <option value="accident">Accident</option>
@@ -707,24 +720,24 @@ export default function NewSignalement() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Description *</label>
-                <textarea name="description" required rows="4" value={formData.description} onChange={handleChange} className="w-full border rounded px-3 py-2" placeholder="Décrivez votre signalement en détail..."></textarea>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Description *</label>
+                <textarea name="description" required rows="5" value={formData.description} onChange={handleChange} className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100" placeholder="Décrivez votre signalement en détail..."></textarea>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Localisation *</label>
-                <input type="text" name="localisation" value={formData.localisation} onChange={handleChange} className="w-full border rounded px-3 py-2" placeholder="Ex: Marché central, Sédhiou" />
-                <div className="mt-2 flex gap-2 items-center">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Localisation *</label>
+                <input type="text" name="localisation" value={formData.localisation} onChange={handleChange} className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" placeholder="Ex: Marché central, Sédhiou" />
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
                   <button type="button" onClick={() => getAutomaticLocation()} className="text-sm px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition font-medium">📍 Localiser</button>
                   <span className="text-sm text-gray-600 font-medium">{latitude != null && longitude != null ? `✓ ${latitude.toFixed(5)}, ${longitude.toFixed(5)}` : 'Pas de localisation'}</span>
                 </div>
                 {geoError && <p className="text-sm text-red-600 mt-2">{geoError}</p>}
-                <div className="mt-3">
+                <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200">
                   <LeafletMap lat={latitude} lng={longitude} setLat={setLatitude} setLng={setLongitude} />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Preuves (photos, vidéos, audio)</label>
-                <input type="file" multiple accept="image/*,video/*,audio/*" onChange={handleFileChange} className="w-full" />
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Preuves (photos, vidéos, audio)</label>
+                <input type="file" multiple accept="image/*,video/*,audio/*" onChange={handleFileChange} className="w-full rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-red-600 file:px-4 file:py-2 file:font-semibold file:text-white" />
                 {files.length > 0 && (
                   <div className="mt-4">
                     <p className="text-sm font-medium text-gray-700 mb-3">{files.length} fichier(s) sélectionné(s)</p>
@@ -736,9 +749,9 @@ export default function NewSignalement() {
                         const sizeMB = (f.size / 1024 / 1024).toFixed(2)
                         
                         return (
-                          <div key={i} className="relative bg-gray-50 rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition">
+                          <div key={i} className="relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50 transition hover:shadow-md">
                             {/* Preview */}
-                            <div className="w-full h-32 bg-gray-100 flex items-center justify-center relative group">
+                            <div className="group relative flex h-32 w-full items-center justify-center bg-slate-100">
                               {isImage && (
                                 <img src={objectUrl} alt={f.name} className="w-full h-full object-cover" />
                               )}
@@ -755,15 +768,15 @@ export default function NewSignalement() {
                               <button
                                 type="button"
                                 onClick={() => removeFile(i)}
-                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-xs font-bold"
+                                className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white opacity-0 transition group-hover:opacity-100"
                               >
                                 ✕
                               </button>
                             </div>
                             {/* File info */}
                             <div className="p-2">
-                              <p className="text-xs font-medium text-gray-900 truncate">{f.name}</p>
-                              <p className="text-xs text-gray-500 mt-1">{sizeMB} MB</p>
+                              <p className="truncate text-xs font-semibold text-slate-900">{f.name}</p>
+                              <p className="mt-1 text-xs text-slate-500">{sizeMB} MB</p>
                             </div>
                           </div>
                         )
@@ -772,13 +785,13 @@ export default function NewSignalement() {
                   </div>
                 )}
               </div>
-              <div className="flex items-center">
+              <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <input type="checkbox" name="estAnonyme" id="anonyme" checked={formData.estAnonyme} onChange={handleChange} className="h-4 w-4" />
-                <label htmlFor="anonyme" className="ml-2 text-sm text-gray-700">Signaler anonymement</label>
+                <label htmlFor="anonyme" className="text-sm font-semibold text-slate-700">Signaler anonymement</label>
               </div>
-              <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => router.back()} className="flex-1 border rounded py-2">Annuler</button>
-                <button type="submit" disabled={loading} className="flex-1 bg-red-600 text-white rounded py-2">{loading ? 'Envoi...' : 'Signaler'}</button>
+              <div className="flex flex-col gap-3 pt-2 sm:flex-row">
+                <button type="button" onClick={() => router.back()} className="flex-1 rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-100">Annuler</button>
+                <button type="submit" disabled={loading} className="flex-1 rounded-xl bg-red-600 px-5 py-3 font-semibold text-white shadow-lg shadow-red-600/20 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-70">{loading ? 'Envoi...' : 'Signaler'}</button>
               </div>
             </form>
           </div>
@@ -838,3 +851,4 @@ export default function NewSignalement() {
     </>
   )
 }
+

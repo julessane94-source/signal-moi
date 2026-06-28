@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE } from '../../config/api'
 import { Button, Card, Badge } from '../../components/ui'
@@ -123,6 +123,13 @@ export default function CitizenDashboard() {
     { id: 'profil', name: 'Mon profil', icon: UserGroup }
   ]
 
+  const dashboardStats = [
+    { label: 'Signalements', value: signalements.length, tone: 'text-red-700 bg-red-50 border-red-100' },
+    { label: 'En cours', value: signalements.filter((item) => item.statut === 'en_cours').length, tone: 'text-amber-700 bg-amber-50 border-amber-100' },
+    { label: 'Traites', value: signalements.filter((item) => item.statut === 'traite').length, tone: 'text-emerald-700 bg-emerald-50 border-emerald-100' },
+    { label: 'Actions locales', value: campagnes.length + plaidoyers.length, tone: 'text-blue-700 bg-blue-50 border-blue-100' }
+  ]
+
   const getStatusBadge = (statut) => {
     const statusMap = {
       'nouveau': 'info',
@@ -170,36 +177,44 @@ export default function CitizenDashboard() {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 pt-20 pb-12">
+      <div className="min-h-screen bg-slate-50 pt-20 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Page Header */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
+            className="mb-6 overflow-hidden rounded-2xl bg-slate-950 text-white shadow-xl"
           >
-            <h1 className="text-4xl font-bold text-gray-900">
-              Espace Citoyen
-            </h1>
-            <p className="text-gray-600 mt-2">
-              Bienvenue {user?.prenom} ! Votre voix compte.
-            </p>
+            <div className="grid gap-6 p-6 lg:grid-cols-[1fr_auto] lg:items-end lg:p-8">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-wide text-red-300">Espace citoyen</p>
+                <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
+                  Bonjour {user?.prenom || 'citoyen'}, suivez vos actions a Sedhiou.
+                </h1>
+                <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-200">
+                  Retrouvez vos signalements, campagnes et plaidoyers dans un tableau de bord clair, rapide a parcourir.
+                </p>
+              </div>
+              <Link href="/citizen/signalement">
+                <Button size="lg" icon={Plus} className="w-full bg-red-600 text-white shadow-lg hover:bg-red-700 lg:w-auto">
+                  Signaler un incident
+                </Button>
+              </Link>
+            </div>
           </motion.div>
 
-          {/* CTA Button */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="mb-8"
+            className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
           >
-            <Link href="/citizen/signalement">
-              <Button size="lg" icon={Plus} className="w-full md:w-auto bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg">
-                🚨 Signaler un incident
-              </Button>
-            </Link>
+            {dashboardStats.map((stat) => (
+              <div key={stat.label} className={`rounded-2xl border p-5 shadow-sm ${stat.tone}`}>
+                <p className="text-sm font-semibold">{stat.label}</p>
+                <p className="mt-2 text-3xl font-bold">{stat.value}</p>
+              </div>
+            ))}
           </motion.div>
-
           {/* Error Message */}
           {error && (
             <motion.div
@@ -212,16 +227,16 @@ export default function CitizenDashboard() {
           )}
 
           {/* Tabs Navigation */}
-          <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
+          <div className="mb-8 flex gap-2 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
             {tabs.map((tab) => (
               <motion.button
                 key={tab.id}
                 whileHover={{ y: -2 }}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${
+                className={`flex items-center gap-2 px-4 py-3 rounded-xl font-semibold transition-all whitespace-nowrap ${
                   activeTab === tab.id
-                    ? 'bg-indigo-600 text-white shadow-lg'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                    ? 'bg-slate-950 text-white shadow-lg'
+                    : 'text-slate-700 hover:bg-slate-100'
                 }`}
               >
                 <tab.icon className="h-5 w-5" />
@@ -420,3 +435,4 @@ export default function CitizenDashboard() {
     </>
   )
 }
+
