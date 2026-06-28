@@ -1,42 +1,132 @@
 "use client"
-import { useState, useRef, useEffect } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useRouter } from 'next/router'
 
-const STORAGE_KEY = 'superman_chat_history_v1'
+const STORAGE_KEY = 'signal_moi_chat_history_v2'
 
-const FAQ = [
-  { q: 'Qui es-tu ?', a: "Je suis Superman, votre assistant virtuel sur Signal-Moi. Je peux vous orienter vers les signalements, l’inscription, votre profil et les pages d’aide." },
-  { q: 'Qu est ce que Signal-Moi ?', a: "Signal-Moi est une plateforme citoyenne qui permet de signaler des incidents, suivre leur traitement et agir ensemble pour améliorer son quartier." },
-  { q: 'Qui est Souleymane Sane ?', a: "Souleymane Sane est le président de Signal-Moi, il porte la vision stratégique et la gouvernance de l’organisation." },
-  { q: 'Comment signaler un incident ?', a: "Cliquez sur « Faire un signalement » depuis la page d'accueil, décrivez l'événement, ajoutez des photos ou vidéos, puis précisez la localisation si possible." },
-  { q: 'Comment créer un compte ?', a: "Cliquez sur « Rejoindre » en haut à droite, remplissez vos informations, validez l'inscription et connectez-vous ensuite pour accéder à votre espace." },
-  { q: 'Comment me contacter ?', a: "Utilisez la page Contact pour envoyer un message, ou consultez la FAQ et les ressources disponibles sur le site." },
-  { q: 'Comment changer mon mot de passe ?', a: "Connectez-vous, ouvrez votre profil ou vos paramètres, puis utilisez la section sécurité pour réinitialiser ou mettre à jour votre mot de passe." },
-  { q: 'Où trouver mes campagnes ?', a: "Les campagnes et suivis sont disponibles dans votre espace utilisateur, dans les sections Campagnes, Profil et Paramètres." },
-  { q: 'Comment me désabonner ?', a: "Rendez-vous dans vos paramètres ou sur la page Newsletter et utilisez le lien de désabonnement fourni par e-mail." },
+const KNOWLEDGE = [
+  {
+    id: 'signalement',
+    title: 'Faire un signalement',
+    keywords: ['signalement', 'signaler', 'incident', 'probleme', 'plainte', 'danger', 'photo', 'video', 'preuve', 'localisation', 'gps'],
+    answer: [
+      'Pour faire un signalement, choisissez d abord le gros bouton qui ressemble au probleme.',
+      'Ajoutez votre position ou un repere connu a Sedhiou.',
+      'Ajoutez une photo, une video ou dictez votre description si vous ne voulez pas ecrire.',
+      'Si c est urgent, la police peut recevoir le live en temps reel.'
+    ],
+    links: [{ label: 'Ouvrir le signalement', href: '/citizen/signalement' }]
+  },
+  {
+    id: 'campagne',
+    title: 'Campagnes',
+    keywords: ['campagne', 'participer', 'inscrire', 'rejoindre', 'sensibilisation', 'activite'],
+    answer: [
+      'Les campagnes servent a organiser une action locale: sensibilisation, nettoyage, formation ou mobilisation.',
+      'Un citoyen connecte peut ouvrir une campagne puis cliquer sur Participer.',
+      'Les collaborateurs peuvent creer et suivre leurs campagnes depuis leur espace.'
+    ],
+    links: [{ label: 'Voir les campagnes', href: '/campagnes' }]
+  },
+  {
+    id: 'compte',
+    title: 'Compte et connexion',
+    keywords: ['compte', 'connexion', 'connecter', 'inscription', 'inscrire', 'mot de passe', 'login', 'profil'],
+    answer: [
+      'Pour utiliser toutes les fonctions, connectez-vous avec votre email et votre mot de passe.',
+      'Si vous n avez pas encore de compte, creez un compte citoyen.',
+      'Le profil permet de modifier vos informations et votre mot de passe.'
+    ],
+    links: [{ label: 'Connexion', href: '/login' }, { label: 'Inscription', href: '/register' }]
+  },
+  {
+    id: 'suivi',
+    title: 'Suivre un dossier',
+    keywords: ['suivi', 'statut', 'dossier', 'traitement', 'nouveau', 'en cours', 'traite', 'mes signalements'],
+    answer: [
+      'Dans votre espace citoyen, vous voyez vos signalements et leur statut.',
+      'Nouveau signifie que le dossier est recu.',
+      'En cours signifie qu une equipe travaille dessus.',
+      'Traite signifie que le dossier a ete pris en charge.'
+    ],
+    links: [{ label: 'Espace citoyen', href: '/citizen/dashboard' }]
+  },
+  {
+    id: 'police',
+    title: 'Police et urgences',
+    keywords: ['police', 'urgence', 'live', 'direct', 'securite', 'violence', 'vol', 'accident'],
+    answer: [
+      'Les alertes de securite comme violence, vol ou accident peuvent etre vues par la police.',
+      'Pendant un live, la police peut voir les images et la localisation en temps reel.',
+      'L espace police est reserve aux comptes autorises.'
+    ],
+    links: [{ label: 'Faire une alerte', href: '/citizen/signalement' }]
+  },
+  {
+    id: 'collaborateur',
+    title: 'Espace collaborateur',
+    keywords: ['collaborateur', 'ong', 'association', 'statistique', 'rapport', 'export', 'plaidoyer'],
+    answer: [
+      'Le collaborateur peut creer des campagnes, suivre des dossiers et consulter les statistiques.',
+      'Il peut telecharger les statistiques en PDF ou Excel pour ses rapports.',
+      'Il peut aussi creer des plaidoyers pour mobiliser les citoyens.'
+    ],
+    links: [{ label: 'Espace collaborateur', href: '/collaborator/dashboard' }]
+  },
+  {
+    id: 'admin',
+    title: 'Administration',
+    keywords: ['admin', 'administrateur', 'utilisateur', 'logo', 'statistiques', 'configuration', 'site'],
+    answer: [
+      'L administrateur gere les utilisateurs, le logo, les contenus du site et les statistiques completes.',
+      'Les rapports statistiques peuvent etre telecharges avec le logo de la plateforme.',
+      'Les comptes sensibles comme police et collaborateur doivent rester reserves aux personnes autorisees.'
+    ],
+    links: [{ label: 'Administration', href: '/admin/dashboard' }]
+  },
+  {
+    id: 'don',
+    title: 'Dons et paiements',
+    keywords: ['don', 'payer', 'paiement', 'wave', 'orange', 'money', 'soutenir'],
+    answer: [
+      'La page Don permet de soutenir la plateforme.',
+      'Wave et Orange Money peuvent etre proposes selon les moyens de paiement configures.',
+      'Ne partagez jamais votre code secret dans le chatbot.'
+    ],
+    links: [{ label: 'Faire un don', href: '/donate' }]
+  },
+  {
+    id: 'contact',
+    title: 'Contact et aide',
+    keywords: ['contact', 'aide', 'support', 'assistance', 'message', 'question'],
+    answer: [
+      'Vous pouvez utiliser la page Contact pour envoyer un message a l equipe.',
+      'Vous pouvez aussi poser votre question ici, avec des mots simples.',
+      'Si la question concerne un danger immediat, faites directement un signalement.'
+    ],
+    links: [{ label: 'Contact', href: '/contact' }]
+  }
 ]
 
-const INTENTS = [
-  { id: 'identity', patterns: ['qui es tu', 'qui etes tu', 'tu es qui', 'superman', 'assistant'], reply: "Je suis Superman, l’assistant de Signal-Moi. Je peux vous aider à comprendre la plateforme, trouver les bonnes pages et répondre aux questions courantes." },
-  { id: 'brand', patterns: ['signal moi', 'plateforme citoyenne', 'quartier', 'signaler un incident'], reply: "Signal-Moi est une plateforme citoyenne qui permet de signaler des incidents, suivre les réponses et agir ensemble dans son quartier." },
-  { id: 'person', patterns: ['souleymane sane', 'president signal moi', 'vision strategique'], reply: "Souleymane Sane est le président de Signal-Moi. Il porte la vision stratégique et la gouvernance de l’organisation." },
-  { id: 'signalement', patterns: ['signal', 'signalement', 'signaler', 'plainte', 'incident', 'preuve', 'photo', 'video'], reply: "Pour signaler un incident, utilisez le bouton « Faire un signalement » et joignez des preuves utiles (photo, vidéo, localisation). Si vous le souhaitez, je peux vous guider étape par étape." },
-  { id: 'compte', patterns: ['compte', 'inscri', 's inscrire', 'registre', 'connexion', 'login', 'mot de passe'], reply: "Pour créer un compte ou vous reconnecter, utilisez le bouton « Rejoindre » puis le formulaire d'inscription. En cas de souci d'accès, passez par la page de connexion ou la section sécurité de votre profil." },
-  { id: 'contact', patterns: ['contact', 'support', 'aide', 'assistance', 'message'], reply: "Vous pouvez nous contacter via la page Contact, ou utiliser ce chatbot pour obtenir des réponses rapides sur les démarches, le profil et le signalement." },
-  { id: 'newsletter', patterns: ['newsletter', 'abonne', 'abonnement', 'desabonne', 'mail'], reply: "Pour vous abonner ou vous désabonner, utilisez la page Newsletter ou les paramètres de votre compte, selon le message reçu par e-mail." },
-  { id: 'profil', patterns: ['profil', 'parametre', 'paramètres', 'compte utilisateur', 'espace'], reply: "Votre profil et vos paramètres regroupent vos informations, préférences et accès à vos campagnes. Vous pouvez y retrouver vos réglages rapides." },
-  { id: 'campagne', patterns: ['campagne', 'plaidoyer', 'initiative', 'suivi'], reply: "Les campagnes et plaidoyers sont visibles dans votre espace utilisateur. Vous pouvez suivre leur avancement, consulter les détails et les actions à faire." },
-]
-
-const quickIntents = [
-  { label: 'Signalement', text: 'Comment signaler un incident ?' },
-  { label: 'Compte', text: 'Comment créer un compte ?' },
+const QUICK_ACTIONS = [
+  { label: 'Signaler', text: 'Je veux signaler un probleme' },
+  { label: 'Campagne', text: 'Comment participer a une campagne ?' },
   { label: 'Suivi', text: 'Comment suivre mon signalement ?' },
-  { label: 'Campagne', text: 'Qu\'est-ce qu\'une campagne ?' },
-  { label: 'Contact', text: 'Comment vous contacter ?' },
+  { label: 'Police', text: 'Comment marche le live pour la police ?' },
+  { label: 'Stats', text: 'Comment telecharger les statistiques ?' }
 ]
+
+const PAGE_HELP = {
+  '/citizen/signalement': 'Vous etes sur la page de signalement. Choisissez un gros bouton, ajoutez votre position, puis envoyez.',
+  '/citizen/dashboard': 'Vous etes dans votre espace citoyen. Vous pouvez suivre vos signalements, participer aux campagnes et signer les plaidoyers.',
+  '/collaborator/dashboard': 'Vous etes dans l espace collaborateur. Vous pouvez suivre les dossiers, creer des campagnes et telecharger les statistiques.',
+  '/police/dashboard': 'Vous etes dans l espace police. Les lives citoyens et les alertes urgentes y apparaissent en temps reel.',
+  '/admin/dashboard': 'Vous etes dans l administration. Vous pouvez gerer les utilisateurs, les contenus, le logo et les statistiques.',
+  '/campagnes': 'Vous consultez les campagnes. Ouvrez une campagne pour voir les details et participer.'
+}
 
 const normalizeText = (text) =>
-  text
+  String(text || '')
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -44,36 +134,40 @@ const normalizeText = (text) =>
     .replace(/\s+/g, ' ')
     .trim()
 
-const calculateSimilarity = (str1, str2) => {
-  const longer = str1.length > str2.length ? str1 : str2
-  const shorter = str1.length > str2.length ? str2 : str1
-  if (longer.length === 0) return 1.0
-  
-  const editDistance = getEditDistance(longer, shorter)
-  return (longer.length - editDistance) / parseFloat(longer.length)
+const tokenize = (text) => normalizeText(text).split(' ').filter((word) => word.length > 2)
+
+const scoreItem = (text, item) => {
+  const clean = normalizeText(text)
+  const words = tokenize(text)
+  let score = 0
+  item.keywords.forEach((keyword) => {
+    const normalizedKeyword = normalizeText(keyword)
+    if (clean.includes(normalizedKeyword)) score += 8
+    words.forEach((word) => {
+      if (normalizedKeyword.includes(word) || word.includes(normalizedKeyword)) score += 2
+    })
+  })
+  if (clean.includes('comment') || clean.includes('comment faire')) score += 1
+  if (clean.includes(item.id)) score += 6
+  return score
 }
 
-const getEditDistance = (s1, s2) => {
-  const costs = []
-  for (let i = 0; i <= s1.length; i++) {
-    let lastValue = i
-    for (let j = 0; j <= s2.length; j++) {
-      if (i === 0) costs[j] = j
-      else if (j > 0) {
-        let newValue = costs[j - 1]
-        if (s1.charAt(i - 1) !== s2.charAt(j - 1)) {
-          newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1
-        }
-        costs[j - 1] = lastValue
-        lastValue = newValue
-      }
-    }
-    if (i > 0) costs[s2.length] = lastValue
+const buildReply = (item, userText) => {
+  const intro = item ? item.title : 'Je vous aide'
+  const steps = item?.answer || [
+    'Je n ai pas encore une reponse certaine.',
+    'Reformulez avec des mots simples comme: signalement, campagne, compte, police ou statistiques.',
+    'Je peux aussi vous orienter vers la page Contact.'
+  ]
+  const confidence = item ? 'Reponse proposee' : 'Je ne suis pas sur a 100%'
+  return {
+    text: `${confidence} - ${intro}\n\n${steps.map((line, index) => `${index + 1}. ${line}`).join('\n')}`,
+    links: item?.links || [{ label: 'Contact', href: '/contact' }]
   }
-  return costs[s2.length]
 }
 
 export default function Chatbot() {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState([])
@@ -81,14 +175,22 @@ export default function Chatbot() {
   const listRef = useRef(null)
   const CHAT_API = process.env.NEXT_PUBLIC_CHAT_API || ''
 
+  const pageHelp = useMemo(() => PAGE_HELP[router.pathname] || null, [router.pathname])
+
   useEffect(() => {
-    // load history
     try {
       const raw = localStorage.getItem(STORAGE_KEY)
       if (raw) setMessages(JSON.parse(raw))
-      else setMessages([{ from: 'bot', text: "Bonjour ! 👋 Je suis Superman, votre assistant IA sur Signal-Moi. Comment puis-je vous aider aujourd'hui ? Vous pouvez me poser des questions sur les signalements, créer un compte, ou n'importe quel sujet !" }])
+      else {
+        setMessages([{
+          from: 'bot',
+          text: 'Bonjour. Je suis l assistant Signal-Moi. Posez votre question avec vos mots: signalement, campagne, compte, police, statistiques ou don.',
+          links: pageHelp ? [{ label: 'Aide de cette page', action: 'page_help' }] : [],
+          ts: Date.now()
+        }])
+      }
     } catch (e) {
-      setMessages([{ from: 'bot', text: "Bonjour ! 👋 Je suis Superman, votre assistant IA. Comment puis-je vous aider ?" }])
+      setMessages([{ from: 'bot', text: 'Bonjour. Comment puis-je vous aider sur Signal-Moi ?', ts: Date.now() }])
     }
   }, [])
 
@@ -97,110 +199,84 @@ export default function Chatbot() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)) } catch (e) {}
   }, [messages, open])
 
-  const detectIntent = (text) => {
-    const t = normalizeText(text)
-    let best = { score: 0, reply: null, id: null }
-
-    for (const it of INTENTS) {
-      let score = 0
-      for (const p of it.patterns) {
-        const np = normalizeText(p)
-        if (t.includes(np)) score += 6
-        else if (t.split(' ').some((word) => word.length > 2 && np.includes(word))) score += 2
+  const findBestAnswer = (text) => {
+    const clean = normalizeText(text)
+    if (/^(bonjour|salut|bonsoir|hello|salam)/.test(clean)) {
+      return {
+        text: 'Bonjour. Je peux vous guider pas a pas. Dites simplement ce que vous voulez faire: signaler, participer a une campagne, suivre un dossier, contacter l equipe ou telecharger des statistiques.',
+        links: [{ label: 'Faire un signalement', href: '/citizen/signalement' }]
       }
-      if (t.includes('comment') && (it.id === 'signalement' || it.id === 'compte' || it.id === 'contact')) score += 1
-      if (t.includes('quoi') && (it.id === 'brand' || it.id === 'campagne')) score += 1
-      if (score > best.score) best = { score, reply: it.reply, id: it.id }
+    }
+    if (clean.includes('aide page') || clean.includes('cette page') || clean.includes('ici')) {
+      return {
+        text: pageHelp || 'Je peux expliquer la page actuelle si vous me dites ce que vous voulez faire.',
+        links: []
+      }
     }
 
-    return best.score >= 4 ? best : null
-  }
+    const ranked = KNOWLEDGE
+      .map((item) => ({ item, score: scoreItem(text, item) }))
+      .sort((a, b) => b.score - a.score)
 
-  const smartFallback = (text) => {
-    const t = normalizeText(text)
-    if (/^(salut|bonjour|bonsoir|hello|hi|yo)/.test(t)) {
-      return "Bonjour ! Je suis Superman, votre assistant dédié. Je peux vous guider sur les signalements, vos campagnes, votre profil ou la page de contact."
-    }
-    if (/qui es tu|qui etes tu|tu es qui|quel est ton role|tu es qui exactement/.test(t)) {
-      return "Je suis Superman, l’assistant virtuel de Signal-Moi. Je peux vous aider à trouver la bonne page, expliquer le service et répondre à vos questions simples."
-    }
-    if (/qu est ce que signal moi|c est quoi signal moi|signal moi est quoi|signal moi c est/.test(t)) {
-      return "Signal-Moi est une plateforme citoyenne qui permet de signaler des incidents, suivre leur traitement et améliorer sa communauté avec des actions concrètes."
-    }
-    if (/qui est souleymane sane|souleymane sane qui|president signal moi/.test(t)) {
-      return "Souleymane Sane est le président de Signal-Moi. Il porte la vision stratégique et la gouvernance de l’organisation."
-    }
-    if (/merci/.test(t)) {
-      return "Avec plaisir. Si vous voulez, je peux aussi vous proposer un raccourci vers la bonne page ou vous expliquer la procédure en 3 étapes." 
-    }
-    if (/faq|reponse rapide|reponses rapides|question rapide/.test(t)) {
-      return "Voici les réponses rapides que je sais traiter : signalement, compte, profile, contact, newsletter et campagnes. Dites-moi simplement ce que vous cherchez." 
-    }
-    return null
+    if (ranked[0]?.score >= 5) return buildReply(ranked[0].item, text)
+    return buildReply(null, text)
   }
 
   const send = async (rawText) => {
     const text = (rawText ?? input).trim()
     if (!text) return
-    const userMsg = { from: 'user', text, ts: Date.now() }
-    setMessages((m) => [...m, userMsg])
+    setMessages((current) => [...current, { from: 'user', text, ts: Date.now() }])
     setInput('')
     setLoading(true)
+
     try {
       if (CHAT_API) {
         const res = await fetch(CHAT_API, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: text }),
+          body: JSON.stringify({
+            message: text,
+            page: router.pathname,
+            history: messages.slice(-8)
+          })
         })
         const data = await res.json()
-        const reply = data.reply || "Désolé, je n'ai pas de réponse."
-        setMessages((m) => [...m, { from: 'bot', text: reply, ts: Date.now() }])
-      } else {
-        const smart = smartFallback(text)
-        if (smart) {
-          await new Promise((r) => setTimeout(r, 300))
-          setMessages((m) => [...m, { from: 'bot', text: smart, ts: Date.now() }])
-          return
-        }
-
-        const intent = detectIntent(text)
-        if (intent?.reply) {
-          await new Promise((r) => setTimeout(r, 300))
-          setMessages((m) => [...m, { from: 'bot', text: intent.reply, ts: Date.now() }])
-          return
-        }
-
-        const faq = FAQ.reduce((best, item) => {
-          const query = normalizeText(item.q)
-          const answer = normalizeText(text)
-          let score = 0
-          query.split(' ').forEach((word) => {
-            if (word.length > 2 && answer.includes(word)) score += 2
-          })
-          const similarity = calculateSimilarity(query, answer)
-          score += similarity * 3
-          return score > best.score ? { item, score } : best
-        }, { item: null, score: 0 })
-
-        if (faq.item && faq.score >= 2) {
-          await new Promise((r) => setTimeout(r, 300))
-          setMessages((m) => [...m, { from: 'bot', text: faq.item.a, ts: Date.now() }])
-          return
-        }
-
-        await new Promise((r) => setTimeout(r, 400))
-        setMessages((m) => [...m, {
+        setMessages((current) => [...current, {
           from: 'bot',
-          text: "Hmm, je ne suis pas sûr 🤔. Vous pouvez reformuler avec d'autres mots ? Je peux vous aider avec les signalements, votre compte, les campagnes, le suivi, le profil ou le contact !",
-          ts: Date.now(),
+          text: data.reply || data.message || 'Je n ai pas recu de reponse IA.',
+          links: data.links || [],
+          ts: Date.now()
         }])
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 250))
+        const reply = findBestAnswer(text)
+        setMessages((current) => [...current, { from: 'bot', ...reply, ts: Date.now() }])
       }
     } catch (e) {
-      setMessages((m) => [...m, { from: 'bot', text: 'Erreur réseau — veuillez réessayer.', ts: Date.now() }])
+      const reply = findBestAnswer(text)
+      setMessages((current) => [...current, {
+        from: 'bot',
+        text: `${reply.text}\n\nNote: l IA externe n est pas joignable pour le moment, donc je reponds avec l assistant integre.`,
+        links: reply.links,
+        ts: Date.now()
+      }])
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleLink = (link) => {
+    if (link.action === 'page_help') {
+      setMessages((current) => [...current, { from: 'bot', text: pageHelp || 'Dites-moi ce que vous voulez faire sur cette page.', ts: Date.now() }])
+      return
+    }
+    if (link.href) router.push(link.href)
+  }
+
+  const clearHistory = () => {
+    const start = { from: 'bot', text: 'Conversation reinitialisee. Comment puis-je vous aider ?', ts: Date.now() }
+    setMessages([start])
+    try { localStorage.removeItem(STORAGE_KEY) } catch (e) {}
   }
 
   const onKey = (e) => {
@@ -210,74 +286,97 @@ export default function Chatbot() {
     }
   }
 
-  const clearHistory = () => {
-    setMessages([{ from: 'bot', text: "Conversation réinitialisée 🔄. Bonjour ! Je suis Superman, comment puis-je vous aider ?" }])
-    try { localStorage.removeItem(STORAGE_KEY) } catch (e) {}
-  }
-
-  const quick = (t) => send(t)
-
   return (
-    <div className="fixed right-4 bottom-6 z-50">
+    <div className="fixed bottom-6 right-4 z-50">
       <div className="flex items-end justify-end">
         {open && (
-          <div className="w-80 sm:w-96 bg-white rounded-2xl shadow-2xl overflow-hidden ring-1 ring-black/8 border border-indigo-100">
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold text-lg">🦸</div>
-                <div className="font-semibold">Superman — Assistance IA</div>
+          <div className="w-[21rem] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl sm:w-96">
+            <div className="bg-slate-950 px-4 py-3 text-white">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-bold">Assistant Signal-Moi</p>
+                  <p className="text-xs text-slate-300">{CHAT_API ? 'IA connectee' : 'IA integree prete a brancher'}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={clearHistory} className="text-xs text-slate-300 hover:text-white">Effacer</button>
+                  <button onClick={() => setOpen(false)} className="text-sm text-slate-200 hover:text-white">X</button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button onClick={clearHistory} aria-label="Effacer" className="text-white/80 text-xs hover:text-white transition">Effacer</button>
-                <button onClick={() => setOpen(false)} aria-label="Fermer" className="text-white/90 hover:text-white transition">✕</button>
-              </div>
+              {pageHelp && (
+                <button onClick={() => send('aide de cette page')} className="mt-3 w-full rounded-xl bg-white/10 px-3 py-2 text-left text-xs text-slate-100 hover:bg-white/15">
+                  Aide sur cette page: {pageHelp}
+                </button>
+              )}
             </div>
-            <div className="p-2 border-b bg-gradient-to-r from-indigo-50 to-purple-50 flex gap-2 overflow-x-auto">
-              {quickIntents.map((q) => (
-                <button key={q.label} onClick={() => send(q.text)} className="text-xs px-2 py-1 rounded-full bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50 transition whitespace-nowrap">{q.label}</button>
+
+            <div className="flex gap-2 overflow-x-auto border-b border-slate-200 bg-slate-50 p-2">
+              {QUICK_ACTIONS.map((item) => (
+                <button
+                  key={item.label}
+                  onClick={() => send(item.text)}
+                  className="whitespace-nowrap rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                >
+                  {item.label}
+                </button>
               ))}
             </div>
-            <div ref={listRef} className="p-3 max-h-64 overflow-y-auto space-y-3 bg-white">
-              {messages.map((m, i) => (
-                <div key={i} className={`flex items-end ${m.from === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  {m.from === 'bot' && (
-                    <div className="mr-2 flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-white flex items-center justify-center text-sm">🦸</div>
-                  )}
-                  <div className={`${m.from === 'user' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-900'} rounded-lg p-3 text-sm shadow max-w-[78%] break-words`}>
-                    <div>{m.text}</div>
-                    <div className={`text-[10px] ${m.from === 'user' ? 'text-indigo-200' : 'text-gray-400'} mt-1 text-right`}>{m.ts ? new Date(m.ts).toLocaleTimeString() : ''}</div>
+
+            <div ref={listRef} className="max-h-80 space-y-3 overflow-y-auto bg-white p-3">
+              {messages.map((message, index) => (
+                <div key={index} className={`flex ${message.from === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[85%] rounded-2xl p-3 text-sm shadow-sm ${message.from === 'user' ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-900'}`}>
+                    <div className="whitespace-pre-line">{message.text}</div>
+                    {Array.isArray(message.links) && message.links.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {message.links.map((link) => (
+                          <button
+                            key={`${link.label}-${link.href || link.action}`}
+                            onClick={() => handleLink(link)}
+                            className="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-800 ring-1 ring-slate-200 hover:bg-slate-50"
+                          >
+                            {link.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <div className={`mt-2 text-right text-[10px] ${message.from === 'user' ? 'text-slate-300' : 'text-slate-400'}`}>
+                      {message.ts ? new Date(message.ts).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''}
+                    </div>
                   </div>
-                  {m.from === 'user' && (
-                    <div className="ml-2 flex-shrink-0 text-xs text-gray-500">Vous</div>
-                  )}
                 </div>
               ))}
-              {loading && <div className="text-sm text-gray-500 animate-pulse">Superman réfléchit…</div>}
+              {loading && <div className="text-sm text-slate-500">Je reflechis...</div>}
             </div>
-            <div className="p-3 border-t bg-gray-50">
+
+            <div className="border-t border-slate-200 bg-slate-50 p-3">
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={onKey}
-                placeholder="Posez une question naturelle…"
-                className="w-full min-h-[44px] max-h-24 resize-none rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="Ecrivez votre question..."
+                className="max-h-24 min-h-[48px] w-full resize-none rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
               />
               <div className="mt-2 flex items-center justify-between">
-                <div className="flex gap-2">
-                  <button onClick={() => send()} disabled={loading} className="bg-indigo-600 text-white px-3 py-1 rounded-md text-sm hover:bg-indigo-700 transition disabled:opacity-50">Envoyer</button>
-                  <button onClick={() => { setInput(''); }} className="text-sm text-gray-500 hover:text-gray-700 transition">Annuler</button>
-                </div>
-                <button onClick={() => { navigator.clipboard?.writeText(JSON.stringify(messages)); }} className="text-xs text-gray-500 hover:text-gray-700 transition">Copier</button>
+                <button
+                  onClick={() => send()}
+                  disabled={loading}
+                  className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-bold text-white hover:bg-slate-800 disabled:opacity-50"
+                >
+                  Envoyer
+                </button>
+                <button onClick={() => setInput('')} className="text-xs font-semibold text-slate-500 hover:text-slate-800">
+                  Annuler
+                </button>
               </div>
             </div>
           </div>
         )}
         <button
-          onClick={() => setOpen((o) => !o)}
-          className="ml-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg ring-2 ring-white/40 transition transform hover:scale-110 active:scale-95 text-2xl"
-          aria-label="Ouvrir le chat Superman"
+          onClick={() => setOpen((value) => !value)}
+          className="ml-3 flex h-14 w-14 items-center justify-center rounded-full bg-slate-950 text-xl font-black text-white shadow-lg ring-4 ring-white transition hover:scale-105"
+          aria-label="Ouvrir l assistant Signal-Moi"
         >
-          🦸
+          IA
         </button>
       </div>
     </div>

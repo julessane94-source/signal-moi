@@ -7,6 +7,7 @@ import { useRouter } from 'next/router'
 import Navbar from '../components/common/Navbar'
 import EmergencyButtons from '../components/common/EmergencyButtons'
 import Footer from '../components/common/Footer'
+import Chatbot from '../components/Chatbot'
 import Head from 'next/head'
 import '../styles/globals.css'
 import 'react-toastify/dist/ReactToastify.css'
@@ -21,6 +22,8 @@ function MyApp({ Component, pageProps }) {
   
   const hideNavbar = noLayoutPages.includes(router.pathname)
   const hideFooter = noLayoutPages.includes(router.pathname) || dashboardPages.includes(router.pathname)
+  const pagesWithOwnChatbot = ['/', '/contact', '/profile', '/settings']
+  const showGlobalChatbot = !noLayoutPages.includes(router.pathname) && !pagesWithOwnChatbot.includes(router.pathname)
 
   useEffect(() => {
     document.documentElement.lang = 'fr'
@@ -39,6 +42,7 @@ function MyApp({ Component, pageProps }) {
           {!hideNavbar && <EmergencyButtons />}
           <Component {...pageProps} />
           {!hideFooter && <Footer />}
+          {showGlobalChatbot && <Chatbot />}
           <ToastContainer position="bottom-right" autoClose={5000} />
         </SocketProvider>
       </AuthProvider>

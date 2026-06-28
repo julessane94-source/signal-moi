@@ -150,7 +150,19 @@ export default function Home() {
 
       <main className="min-h-screen pt-16 bg-white">
         <section className="relative overflow-hidden bg-slate-950 text-white">
-          <div className="absolute inset-0 opacity-20 bg-[linear-gradient(120deg,#0f172a_0%,#14532d_48%,#0369a1_100%)]" />
+          {slideshowImages.length > 0 && (
+            <Image
+              key={`hero-bg-${slideIndex}`}
+              src={getImageUrl(slideshowImages[slideIndex])}
+              alt=""
+              fill
+              sizes="100vw"
+              className="object-cover opacity-45"
+              priority={slideIndex === 0}
+            />
+          )}
+          <div className="absolute inset-0 bg-slate-950/60" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,6,23,0.95)_0%,rgba(2,6,23,0.72)_46%,rgba(2,6,23,0.36)_100%)]" />
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 lg:py-16">
             <div className="grid items-center gap-10 lg:grid-cols-[1fr_0.92fr]">
               <div className="max-w-3xl">
@@ -164,14 +176,6 @@ export default function Home() {
                 <p className="mt-5 text-lg md:text-xl text-slate-200 max-w-2xl">
                   {config.home_page?.heroText || 'Aidez les quartiers de Sédhiou à remonter les urgences, les preuves et les besoins de terrain aux équipes concernées.'}
                 </p>
-
-                {config.home_page?.content && config.home_page.content.includes('<') ? (
-                  <div className="mt-5 max-w-2xl text-sm leading-7 text-slate-300" dangerouslySetInnerHTML={{ __html: sanitizedHomeContent }} />
-                ) : (
-                  <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-300">
-                    {config.home_page?.content || 'Signal-Moi centralise les alertes citoyennes, facilite la coordination avec les forces de l’ordre et donne une vue suivie des actions locales.'}
-                  </p>
-                )}
 
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                   <Link href={user ? "/citizen/signalement" : "/login"}>
@@ -211,9 +215,6 @@ export default function Home() {
                           className="object-cover"
                           priority={slideIndex === 0}
                         />
-                      </div>
-                      <div className="absolute bottom-4 left-4 right-4 bg-slate-950/75 p-4 text-sm text-slate-100 backdrop-blur">
-                        Suivi citoyen, preuves et localisation dans un même espace.
                       </div>
                       <button
                         onClick={() => setSlideIndex((s) => (s - 1 + slideshowImages.length) % slideshowImages.length)}
