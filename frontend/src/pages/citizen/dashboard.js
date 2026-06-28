@@ -136,7 +136,8 @@ export default function CitizenDashboard() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        if (res.status === 400 && String(data.error || '').toLowerCase().includes('deja')) {
+        const errorText = String(data.error || data.message || '').toLowerCase()
+        if (res.status === 400 && (errorText.includes('inscrit') || errorText.includes('campagne'))) {
           setJoinedCampaignIds(prev => prev.includes(campaignId) ? prev : [...prev, campaignId])
           toast.info('Vous etes deja inscrit a cette campagne')
           return
