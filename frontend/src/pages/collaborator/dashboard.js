@@ -250,33 +250,37 @@ export default function CollaboratorDashboard() {
         <title>Espace Collaborateur - Signal-Moi</title>
       </Head>
       
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 pt-24 pb-16">
+      <div className="min-h-screen bg-slate-50 pt-24 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           {/* === HEADER AVEC SALUTATION === */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-12"
+            className="mb-8 overflow-hidden rounded-3xl bg-slate-950 text-white shadow-xl"
           >
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div className="grid gap-6 p-6 lg:grid-cols-[1fr_auto] lg:items-end lg:p-8">
               <div>
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
-                  Bienvenue, {user?.prenom}! 👋
+                <p className="text-sm font-semibold uppercase tracking-wide text-emerald-300">Espace collaborateur</p>
+                <h1 className="mt-2 text-3xl font-black md:text-5xl">
+                  Bonjour {user?.prenom || 'collaborateur'}
                 </h1>
-                <p className="text-lg text-gray-600">
-                  Tableau de bord collaborateur — Gérez vos signalements et campagnes
+                <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-200 md:text-base">
+                  Pilotez les campagnes, suivez les dossiers importants et exportez les statistiques locales depuis un espace plus clair.
                 </p>
               </div>
-              <Link href="/profile">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="mt-4 md:mt-0 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full font-semibold shadow-lg hover:shadow-xl transition"
-                >
-                  ⚙️ Mon profil
-                </motion.button>
-              </Link>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Link href="/collaborator/campagne/new">
+                  <button className="rounded-2xl bg-emerald-500 px-5 py-3 font-bold text-slate-950 shadow-lg transition hover:bg-emerald-400">
+                    Nouvelle campagne
+                  </button>
+                </Link>
+                <Link href="/profile">
+                  <button className="rounded-2xl border border-white/20 bg-white/10 px-5 py-3 font-bold text-white transition hover:bg-white/15">
+                    Mon profil
+                  </button>
+                </Link>
+              </div>
             </div>
           </motion.div>
 
@@ -285,7 +289,7 @@ export default function CollaboratorDashboard() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ staggerChildren: 0.1 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
+            className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8"
           >
             {[
               {
@@ -320,14 +324,14 @@ export default function CollaboratorDashboard() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.1 }}
-                className={`${stat.bgColor} rounded-2xl p-6 shadow-sm hover:shadow-md transition border border-gray-100`}
+                className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600 mb-2">{stat.label}</p>
-                    <p className={`text-4xl font-bold ${stat.textColor}`}>{stat.value}</p>
+                    <p className="text-sm font-semibold text-slate-500 mb-2">{stat.label}</p>
+                    <p className={`text-4xl font-black ${stat.textColor}`}>{stat.value}</p>
                   </div>
-                  <div className={`p-4 rounded-xl bg-gradient-to-br ${stat.gradient} text-white`}>
+                  <div className={`p-4 rounded-2xl bg-gradient-to-br ${stat.gradient} text-white`}>
                     <IconComponent className="h-8 w-8" />
                   </div>
                 </div>
@@ -390,7 +394,7 @@ export default function CollaboratorDashboard() {
             transition={{ delay: 0.3 }}
             className="mb-12"
           >
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <h2 className="text-2xl font-black text-slate-950 mb-5 flex items-center gap-2">
               <Cog className="h-7 w-7" /> Actions rapides
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -426,9 +430,9 @@ export default function CollaboratorDashboard() {
               ].map((action, idx) => (
                 <motion.div key={idx} whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }}>
                   <Link href={action.href}>
-                    <button className={`w-full bg-gradient-to-br ${action.bg} border-2 border-transparent hover:border-gray-300 rounded-xl px-6 py-4 font-semibold transition shadow-sm hover:shadow-md`}>
-                      <div className="text-3xl mb-2">{action.icon}</div>
-                      {action.label}
+                    <button className="w-full rounded-3xl border border-slate-200 bg-white px-6 py-5 text-left font-bold text-slate-950 shadow-sm transition hover:-translate-y-1 hover:border-emerald-300 hover:shadow-lg">
+                      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-xl text-white">{action.icon}</div>
+                      <span>{action.label}</span>
                     </button>
                   </Link>
                 </motion.div>
@@ -436,28 +440,33 @@ export default function CollaboratorDashboard() {
             </div>
 
             {/* Boutons exports */}
-            <div className="mt-4 flex gap-4 flex-wrap">
+            <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="mb-4">
+                <h3 className="font-black text-slate-950">Telechargements</h3>
+                <p className="text-sm text-slate-500">Exportez les dossiers ou les statistiques pour vos rapports.</p>
+              </div>
+              <div className="flex gap-3 flex-wrap">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => exportCases('pdf')}
-                className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition flex items-center gap-2"
+                className="rounded-2xl bg-slate-950 px-5 py-3 font-bold text-white shadow-sm transition hover:bg-slate-800"
               >
-                📄 Exporter en PDF
+                Dossiers PDF
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => exportCases('excel')}
-                className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition flex items-center gap-2"
+                className="rounded-2xl bg-emerald-600 px-5 py-3 font-bold text-white shadow-sm transition hover:bg-emerald-700"
               >
-                📊 Exporter en Excel
+                Dossiers Excel
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => exportStatistics('pdf')}
-                className="px-6 py-3 bg-white text-indigo-700 border border-indigo-200 rounded-lg font-semibold shadow-sm hover:shadow-md transition flex items-center gap-2"
+                className="rounded-2xl border border-indigo-200 bg-indigo-50 px-5 py-3 font-bold text-indigo-700 transition hover:bg-indigo-100"
               >
                 Stats PDF
               </motion.button>
@@ -465,7 +474,7 @@ export default function CollaboratorDashboard() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => exportStatistics('excel')}
-                className="px-6 py-3 bg-white text-emerald-700 border border-emerald-200 rounded-lg font-semibold shadow-sm hover:shadow-md transition flex items-center gap-2"
+                className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-3 font-bold text-emerald-700 transition hover:bg-emerald-100"
               >
                 Stats Excel
               </motion.button>
@@ -473,11 +482,12 @@ export default function CollaboratorDashboard() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition flex items-center gap-2"
+                  className="rounded-2xl border border-slate-200 bg-white px-5 py-3 font-bold text-slate-800 transition hover:bg-slate-100"
                 >
-                  📈 Statistiques avancées
+                  Statistiques avancees
                 </motion.button>
               </Link>
+              </div>
             </div>
           </motion.div>
 

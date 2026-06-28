@@ -12,13 +12,22 @@ const LeafletMap = dynamic(() => import('../../components/Map/LeafletMap.jsx'), 
 })
 
 const QUICK_TYPES = [
-  { value: 'probleme_eclairage', label: 'Éclairage', icon: '💡', hint: 'Lampadaires, éclairage public' },
-  { value: 'nid_de_poule', label: 'Nid-de-poule', icon: '🕳️', hint: 'Routes, chaussées, trous' },
-  { value: 'vol', label: 'Vol', icon: '💰', hint: 'Vol, cambriolage, objet volé' },
-  { value: 'violence', label: 'Violence', icon: '⚠️', hint: 'Conflit, intimidation, agression' },
-  { value: 'accident', label: 'Accident', icon: '!', hint: 'Accident, blessure, danger immediat' },
-  { value: 'autre', label: 'Autre', icon: '📌', hint: 'Autre incident à préciser' }
+  { value: 'violence', label: 'Violence', simple: 'On attaque quelqu un', icon: '!', hint: 'Agression, menace, bagarre', tone: 'border-red-200 bg-red-50 text-red-900' },
+  { value: 'accident', label: 'Accident', simple: 'Il y a un accident', icon: '+', hint: 'Blessure, choc, danger immediat', tone: 'border-orange-200 bg-orange-50 text-orange-900' },
+  { value: 'vol', label: 'Vol', simple: 'On a vole quelque chose', icon: '$', hint: 'Vol, cambriolage, objet vole', tone: 'border-amber-200 bg-amber-50 text-amber-900' },
+  { value: 'probleme_eclairage', label: 'Eclairage', simple: 'La lumiere ne marche pas', icon: 'L', hint: 'Lampadaire ou rue sombre', tone: 'border-blue-200 bg-blue-50 text-blue-900' },
+  { value: 'nid_de_poule', label: 'Trou sur la route', simple: 'La route est abimee', icon: 'R', hint: 'Trou, route cassee, danger', tone: 'border-slate-200 bg-slate-50 text-slate-900' },
+  { value: 'autre', label: 'Autre probleme', simple: 'Autre chose a signaler', icon: '?', hint: 'Je ne sais pas choisir', tone: 'border-emerald-200 bg-emerald-50 text-emerald-900' }
 ]
+
+const SIMPLE_DESCRIPTIONS = {
+  violence: 'Je signale une violence ou une menace. Il faut intervenir rapidement.',
+  accident: 'Je signale un accident ou une personne en danger. Il faut intervenir rapidement.',
+  vol: 'Je signale un vol. Une personne a perdu un bien ou un cambriolage a eu lieu.',
+  probleme_eclairage: 'Je signale un probleme d eclairage public. La zone est sombre et dangereuse.',
+  nid_de_poule: 'Je signale un trou ou une route abimee. Cela peut provoquer un accident.',
+  autre: 'Je signale un probleme dans mon quartier. Merci de verifier la situation.'
+}
 
 const VIDEO_PROMPT_TYPES = ['violence', 'accident', 'vol']
 const MAX_RECORDING_MS = 3 * 60 * 1000
@@ -62,6 +71,8 @@ export default function NewSignalement() {
   const videoPreviewRef = useRef(null)
   const recordedVideoNameRef = useRef(null)
   const skipVideoRef = useRef(false)
+  const recognitionRef = useRef(null)
+  const [isListening, setIsListening] = useState(false)
   const [formData, setFormData] = useState({
     titre: '',
     description: '',
@@ -108,6 +119,47 @@ export default function NewSignalement() {
     }
   }, [socket, recordingState])
   const getTypeLabel = (type) => QUICK_TYPES.find(item => item.value === type)?.label || type
+
+  const speakHelp = (text) => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) {
+      toast.info(text)
+      return
+    }
+    window.speechSynthesis.cancel()
+    const utterance = new SpeechSynthesisUtterance(text)
+    utterance.lang = 'fr-FR'
+    utterance.rate = 0.9
+    window.speechSynthesis.speak(utterance)
+  }
+
+  const startDescriptionDictation = () => {
+    if (typeof window === 'undefined') return
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SpeechRecognition) {
+      toast.info('La dictee vocale n est pas disponible sur ce navigateur')
+      return
+    }
+    const recognition = new SpeechRecognition()
+    recognition.lang = 'fr-FR'
+    recognition.interimResults = false
+    recognition.maxAlternatives = 1
+    recognition.onstart = () => setIsListening(true)
+    recognition.onerror = () => {
+      setIsListening(false)
+      toast.error('Dictee vocale interrompue')
+    }
+    recognition.onend = () => setIsListening(false)
+    recognition.onresult = (event) => {
+      const transcript = event.results?.[0]?.[0]?.transcript || ''
+      if (!transcript) return
+      setFormData(prev => ({
+        ...prev,
+        description: prev.description ? `${prev.description} ${transcript}` : transcript
+      }))
+    }
+    recognitionRef.current = recognition
+    recognition.start()
+  }
 
   const ensureAutomaticDescription = (type) => {
     const label = getTypeLabel(type)
@@ -395,8 +447,10 @@ export default function NewSignalement() {
     setFormData(prev => ({
       ...prev,
       type,
-      titre: prev.titre || `Signalement : ${label}`
+      titre: prev.titre || `Signalement : ${label}`,
+      description: prev.description || SIMPLE_DESCRIPTIONS[type] || `Je signale: ${label}`
     }))
+    speakHelp(`${label}. ${SIMPLE_DESCRIPTIONS[type] || 'Expliquez le probleme ou ajoutez une photo.'}`)
     setVideoPromptHandled(false)
     if (VIDEO_PROMPT_TYPES.includes(type) && !hasRecordedVideo) {
       ensureAutomaticDescription(type)
@@ -699,26 +753,44 @@ export default function NewSignalement() {
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
             <form onSubmit={handleSubmit} noValidate className="space-y-7">
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
-                <p className="mb-4 text-sm font-semibold text-red-600">Details de l'incident</p>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Titre *</label>
-                <input type="text" name="titre" required value={formData.titre} onChange={handleChange} className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100" placeholder="Ex: Nid-de-poule dangereux" />
+                <p className="mb-2 text-sm font-semibold text-red-600">Etape facile</p>
+                <label className="block text-lg font-black text-slate-900 mb-2">Donnez un petit nom au probleme</label>
+                <input type="text" name="titre" required value={formData.titre} onChange={handleChange} className="w-full rounded-2xl border border-slate-300 px-5 py-4 text-lg outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100" placeholder="Ex: Accident au marche" />
+                <p className="mt-2 text-sm text-slate-500">Si vous ne savez pas ecrire, cliquez d abord sur un gros bouton ci-dessous.</p>
               </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-                <label className="block text-sm font-semibold text-slate-700 mb-3">Type d'incident *</label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-3">
+              <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-wide text-red-600">Choisir avec un gros bouton</p>
+                    <h2 className="text-2xl font-black text-slate-950">Qu est-ce qui se passe ?</h2>
+                    <p className="mt-1 text-sm text-slate-500">Cliquez seulement sur l image qui ressemble au probleme.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => speakHelp('Choisissez le probleme. Violence si on attaque quelqu un. Accident si une personne est blessee. Vol si quelque chose a ete vole. Eclairage si la lumiere ne marche pas. Route si la route est abimee.')}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-800 transition hover:bg-slate-100"
+                  >
+                    Ecouter l aide
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {QUICK_TYPES.map((item) => (
                     <button
                       key={item.value}
                       type="button"
                       onClick={() => handleQuickType(item.value, item.label)}
-                      className={`rounded-xl border p-4 text-left transition ${formData.type === item.value ? 'border-red-500 bg-red-50 shadow-sm ring-4 ring-red-100' : 'border-slate-200 bg-white hover:border-red-300 hover:bg-red-50/50'}`}
+                      className={`min-h-36 rounded-3xl border-2 p-5 text-left transition hover:-translate-y-1 hover:shadow-xl ${formData.type === item.value ? 'border-red-500 bg-red-50 shadow-lg ring-4 ring-red-100' : item.tone}`}
                     >
-                      <div className="text-sm font-bold text-slate-900">{item.icon} {item.label}</div>
-                      <div className="text-xs text-slate-500 mt-1 leading-5">{item.hint}</div>
+                      <div className="flex items-start justify-between gap-3">
+                        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-3xl font-black shadow-sm">{item.icon}</span>
+                        {formData.type === item.value && <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white">Choisi</span>}
+                      </div>
+                      <div className="mt-4 text-xl font-black">{item.simple}</div>
+                      <div className="mt-2 text-sm font-semibold opacity-75">{item.hint}</div>
                     </button>
                   ))}
                 </div>
-                <select name="type" required value={formData.type} onChange={handleChange} className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100">
+                <select name="type" required value={formData.type} onChange={handleChange} className="mt-4 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100">
                   <option value="violence">Violence</option>
                   <option value="vol">Vol</option>
                   <option value="accident">Accident</option>
@@ -727,9 +799,15 @@ export default function NewSignalement() {
                   <option value="autre">Autre</option>
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Description *</label>
-                <textarea name="description" required rows="5" value={formData.description} onChange={handleChange} className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100" placeholder="Décrivez votre signalement en détail..."></textarea>
+              <div className="rounded-3xl border border-slate-200 bg-white p-4 sm:p-5">
+                <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <label className="block text-lg font-black text-slate-900">Expliquez avec vos mots</label>
+                  <button type="button" onClick={startDescriptionDictation} className={`rounded-2xl px-4 py-3 text-sm font-bold transition ${isListening ? 'bg-red-600 text-white' : 'bg-slate-950 text-white hover:bg-slate-800'}`}>
+                    {isListening ? 'Je vous ecoute...' : 'Parler au telephone'}
+                  </button>
+                </div>
+                <textarea name="description" required rows="5" value={formData.description} onChange={handleChange} className="w-full rounded-2xl border border-slate-300 px-5 py-4 text-lg outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100" placeholder="Dites simplement ce qui se passe..."></textarea>
+                <p className="mt-2 text-sm text-slate-500">Vous pouvez aussi ajouter une photo ou une video au lieu de beaucoup ecrire.</p>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">Localisation *</label>
