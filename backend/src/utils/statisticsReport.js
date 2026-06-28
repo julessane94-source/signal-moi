@@ -7,6 +7,13 @@ const SiteConfig = require('../models/SiteConfig');
 
 const num = (value) => Number.parseInt(value || 0, 10);
 
+const normalizeImageExtension = (extension) => {
+  const value = String(extension || '').replace('.', '').toLowerCase();
+  if (value === 'jpg') return 'jpeg';
+  if (['jpeg', 'png'].includes(value)) return value;
+  return null;
+};
+
 const queryRows = async (sql, params = []) => {
   try {
     const result = await db.query(sql, params);
@@ -17,13 +24,30 @@ const queryRows = async (sql, params = []) => {
   }
 };
 
-const getLogoPath = async () => {
+const getLogoData = async () => {
   try {
+    const binary = await SiteConfig.getLogoBinary();
+    if (binary?.logo_data) {
+      const filename = binary.logo_filename || 'logo.png';
+      const extension = normalizeImageExtension(path.extname(filename));
+      if (!extension) return null;
+      return {
+        buffer: binary.logo_data,
+        extension
+      };
+    }
+
     const config = await SiteConfig.getAll();
     const logoUrl = config.logoUrl || config.logo_url;
     if (!logoUrl || !logoUrl.startsWith('/uploads/')) return null;
     const resolved = path.resolve(__dirname, '..', '..', logoUrl.replace(/^\/uploads\//, 'uploads/'));
-    return fs.existsSync(resolved) ? resolved : null;
+    if (!fs.existsSync(resolved)) return null;
+    const extension = normalizeImageExtension(path.extname(resolved));
+    if (!extension) return null;
+    return {
+      filename: resolved,
+      extension
+    };
   } catch (error) {
     return null;
   }
@@ -115,7 +139,7 @@ const addExcelRows = (sheet, title, entries) => {
 };
 
 const sendStatisticsExport = async (res, stats, format = 'excel') => {
-  const logoPath = await getLogoPath();
+  const logo = await getLogoData();
   const filenameDate = new Date().toISOString().slice(0, 10);
 
   if (format === 'pdf') {
@@ -123,8 +147,9 @@ const sendStatisticsExport = async (res, stats, format = 'excel') => {
     res.setHeader('Content-Disposition', `attachment; filename="statistiques-${stats.scope}-${filenameDate}.pdf"`);
     const doc = new PDFDocument({ margin: 40 });
     doc.pipe(res);
-    if (logoPath) doc.image(logoPath, 40, 30, { fit: [70, 50] });
-    doc.fontSize(20).text('Rapport complet des statistiques', logoPath ? 125 : 40, 40);
+    if (logo?.buffer) doc.image(logo.buffer, 40, 30, { fit: [70, 50] });
+    else if (logo?.filename) doc.image(logo.filename, 40, 30, { fit: [70, 50] });
+    doc.fontSize(20).text('Rapport complet des statistiques', logo ? 125 : 40, 40);
     doc.fontSize(9).fillColor('#666').text(`Genere le ${new Date(stats.generatedAt).toLocaleString('fr-FR')}`);
     doc.moveDown(2).fillColor('#111').fontSize(13).text('Indicateurs principaux');
     Object.entries(stats.totals).forEach(([label, value]) => doc.fontSize(10).text(`${label}: ${value}`));
@@ -141,8 +166,10 @@ const sendStatisticsExport = async (res, stats, format = 'excel') => {
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet('Statistiques');
   sheet.columns = [{ header: 'Indicateur', key: 'label', width: 35 }, { header: 'Valeur', key: 'value', width: 25 }];
-  if (logoPath) {
-    const imageId = workbook.addImage({ filename: logoPath, extension: path.extname(logoPath).replace('.', '') || 'png' });
+  if (logo) {
+    const imageId = workbook.addImage(logo.buffer
+      ? { buffer: logo.buffer, extension: logo.extension }
+      : { filename: logo.filename, extension: logo.extension });
     sheet.addImage(imageId, 'A1:B4');
     sheet.getRow(1).height = 55;
     sheet.addRow([]);

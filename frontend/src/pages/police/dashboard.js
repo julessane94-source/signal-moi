@@ -314,6 +314,19 @@ export default function PoliceDashboard() {
     .sort((a, b) => new Date(b.frameAt || b.updatedAt || b.startedAt || b.stoppedAt || 0) - new Date(a.frameAt || a.updatedAt || a.startedAt || a.stoppedAt || 0))[0]
   const activeLive = selectedLive ? liveRecordings[selectedLive.sessionId] || selectedLive : liveRecordingsList[0]
 
+  const downloadLiveFrame = (live) => {
+    if (!live?.frame) {
+      toast.info('Aucune image live a enregistrer pour le moment')
+      return
+    }
+    const a = document.createElement('a')
+    a.href = live.frame
+    a.download = `live-police-${live.sessionId || Date.now()}.jpg`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+  }
+
   if (!authLoading && (!user || !canAccessPoliceDashboard(user.role))) {
     return (
       <div className="min-h-screen bg-slate-100 pt-20 flex items-center justify-center px-4">
@@ -482,6 +495,15 @@ export default function PoliceDashboard() {
                         onClick={() => setSelectedLive(live)}
                       >
                         Voir le live
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        icon={PaperClip}
+                        onClick={() => downloadLiveFrame(live)}
+                        disabled={!live.frame}
+                      >
+                        Enregistrer
                       </Button>
                       <Button
                         size="sm"
@@ -911,6 +933,16 @@ export default function PoliceDashboard() {
                   }}
                 >
                   Ouvrir la carte
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  icon={PaperClip}
+                  className="mt-3"
+                  disabled={!activeLive.frame}
+                  onClick={() => downloadLiveFrame(activeLive)}
+                >
+                  Enregistrer sur cet ordinateur
                 </Button>
               </div>
             </div>

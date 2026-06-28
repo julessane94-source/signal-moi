@@ -29,6 +29,7 @@ export default function CollaboratorDashboard() {
   const [followed, setFollowed] = useState([])
   const [followedList, setFollowedList] = useState([])
   const [stats, setStats] = useState({ totalSignalements: 0, totalCampaigns: 0, pendingNotifications: 0 })
+  const [completeStats, setCompleteStats] = useState(null)
   const [recentCampaigns, setRecentCampaigns] = useState([])
   const [recentPlaidoyers, setRecentPlaidoyers] = useState([])
   const socketRef = useRef(null)
@@ -80,6 +81,25 @@ export default function CollaboratorDashboard() {
       }
     }
     fetchDashboard()
+
+    const fetchCompleteStats = async () => {
+      try {
+        const token = localStorage.getItem('token')
+        const r = await fetch(`${API_BASE}/api/collaborator/statistics`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+        if (r.ok) {
+          const d = await r.json()
+          setCompleteStats(d)
+          setStats(prev => ({
+            ...prev,
+            totalSignalements: d.totals?.signalements ?? prev.totalSignalements,
+            totalCampaigns: d.totals?.campagnes ?? prev.totalCampaigns
+          }))
+        }
+      } catch (e) {
+        console.warn('fetchCompleteStats failed', e)
+      }
+    }
+    fetchCompleteStats()
 
     // fetch recent campaigns created by this collaborator
     const fetchMyCampaigns = async () => {
@@ -204,6 +224,26 @@ export default function CollaboratorDashboard() {
     }
   }
 
+  const exportStatistics = async (format = 'excel') => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${API_BASE}/api/collaborator/statistics/export?format=${format}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+      if (!res.ok) throw new Error('export failed')
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = format === 'pdf' ? 'statistiques_collaborateur.pdf' : 'statistiques_collaborateur.xlsx'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (e) {
+      console.error('statistics export error', e)
+      toast.error('Export statistiques impossible')
+    }
+  }
+
   return (
     <>
       <Head>
@@ -296,6 +336,53 @@ export default function CollaboratorDashboard() {
             })}
           </motion.div>
 
+          {completeStats && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-12 grid gap-4 lg:grid-cols-3"
+            >
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h3 className="font-bold text-slate-950">Statistiques completes</h3>
+                <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                  {Object.entries({
+                    Nouveaux: completeStats.totals?.nouveaux,
+                    'En cours': completeStats.totals?.enCours,
+                    Traites: completeStats.totals?.traites,
+                    '7 jours': completeStats.totals?.last7d,
+                    GPS: completeStats.totals?.avecGps,
+                    Anonymes: completeStats.totals?.anonymes
+                  }).map(([label, value]) => (
+                    <div key={label} className="rounded-xl bg-slate-50 p-3">
+                      <p className="text-slate-500">{label}</p>
+                      <p className="text-xl font-bold text-slate-950">{value || 0}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h3 className="font-bold text-slate-950">Types les plus signales</h3>
+                <div className="mt-4 space-y-2 text-sm">
+                  {Object.entries(completeStats.byType || {}).slice(0, 8).map(([label, value]) => (
+                    <div key={label} className="flex justify-between rounded-lg bg-slate-50 px-3 py-2">
+                      <span>{label}</span><strong>{value}</strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h3 className="font-bold text-slate-950">Zones concernees</h3>
+                <div className="mt-4 space-y-2 text-sm">
+                  {Object.entries(completeStats.byZone || {}).slice(0, 8).map(([label, value]) => (
+                    <div key={label} className="flex justify-between rounded-lg bg-slate-50 px-3 py-2">
+                      <span className="truncate pr-3">{label}</span><strong>{value}</strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {/* === ACTIONS RAPIDES === */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -365,6 +452,22 @@ export default function CollaboratorDashboard() {
                 className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition flex items-center gap-2"
               >
                 📊 Exporter en Excel
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => exportStatistics('pdf')}
+                className="px-6 py-3 bg-white text-indigo-700 border border-indigo-200 rounded-lg font-semibold shadow-sm hover:shadow-md transition flex items-center gap-2"
+              >
+                Stats PDF
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => exportStatistics('excel')}
+                className="px-6 py-3 bg-white text-emerald-700 border border-emerald-200 rounded-lg font-semibold shadow-sm hover:shadow-md transition flex items-center gap-2"
+              >
+                Stats Excel
               </motion.button>
               <Link href="/collaborator/statistics">
                 <motion.button

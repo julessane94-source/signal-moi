@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '../../context/AuthContext'
 import { Button, Card, FormField, Input, Modal, DataTable, StatBox, Badge, EmptyState, LoadingSkeleton, DataTableModern, StatCardModern } from '../../components/ui'
@@ -96,6 +96,7 @@ export default function AdminDashboard() {
     totalCampagnes: 0,
     activeUsers: 0
   })
+  const [completeStats, setCompleteStats] = useState(null)
 
   useEffect(() => {
     if (!loading && (!user || user.role !== 'admin')) {
@@ -156,21 +157,45 @@ export default function AdminDashboard() {
     try {
       const token = localStorage.getItem('token')
       const base = API_BASE
-      const [signalementsRes, campagnesRes] = await Promise.all([
+      const [signalementsRes, campagnesRes, statsRes] = await Promise.all([
         fetch(`${base}/api/admin/signalements`, { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch(`${base}/api/campagnes`, { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch(`${base}/api/campagnes`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch(`${base}/api/admin/statistics`, { headers: { 'Authorization': `Bearer ${token}` } })
       ])
       const signalementsData = signalementsRes.ok ? await signalementsRes.json() : []
       const campagnesData = campagnesRes.ok ? await campagnesRes.json() : []
+      const completeStatsData = statsRes.ok ? await statsRes.json() : null
       setSignalements(Array.isArray(signalementsData) ? signalementsData : [])
       setCampagnes(Array.isArray(campagnesData) ? campagnesData : [])
+      setCompleteStats(completeStatsData)
       setStats(prev => ({
         ...prev,
-        totalSignalements: Array.isArray(signalementsData) ? signalementsData.length : 0,
-        totalCampagnes: Array.isArray(campagnesData) ? campagnesData.length : 0
+        totalSignalements: completeStatsData?.totals?.signalements ?? (Array.isArray(signalementsData) ? signalementsData.length : 0),
+        totalCampagnes: completeStatsData?.totals?.campagnes ?? (Array.isArray(campagnesData) ? campagnesData.length : 0)
       }))
     } catch (error) {
       console.error('Erreur fetchStats:', error)
+    }
+  }
+
+  const exportStatistics = async (format = 'excel') => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${API_BASE}/api/admin/statistics/export?format=${format}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!res.ok) throw new Error('Export impossible')
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = format === 'pdf' ? 'statistiques-admin.pdf' : 'statistiques-admin.xlsx'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      toast.error('Export des statistiques impossible')
     }
   }
 
@@ -578,6 +603,51 @@ export default function AdminDashboard() {
                 />
               </div>
 
+              {completeStats && (
+                <div className="grid gap-4 lg:grid-cols-3">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <h3 className="font-bold text-slate-950">Signalements au complet</h3>
+                    <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                      {Object.entries({
+                        Nouveaux: completeStats.totals?.nouveaux,
+                        'En cours': completeStats.totals?.enCours,
+                        Traites: completeStats.totals?.traites,
+                        Transferes: completeStats.totals?.transferes,
+                        '24h': completeStats.totals?.last24h,
+                        '7 jours': completeStats.totals?.last7d,
+                        GPS: completeStats.totals?.avecGps,
+                        Anonymes: completeStats.totals?.anonymes
+                      }).map(([label, value]) => (
+                        <div key={label} className="rounded-xl bg-slate-50 p-3">
+                          <p className="text-slate-500">{label}</p>
+                          <p className="text-xl font-bold text-slate-950">{value || 0}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <h3 className="font-bold text-slate-950">Par type</h3>
+                    <div className="mt-4 space-y-2 text-sm">
+                      {Object.entries(completeStats.byType || {}).slice(0, 8).map(([label, value]) => (
+                        <div key={label} className="flex justify-between rounded-lg bg-slate-50 px-3 py-2">
+                          <span>{label}</span><strong>{value}</strong>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <h3 className="font-bold text-slate-950">Par zone</h3>
+                    <div className="mt-4 space-y-2 text-sm">
+                      {Object.entries(completeStats.byZone || {}).slice(0, 8).map(([label, value]) => (
+                        <div key={label} className="flex justify-between rounded-lg bg-slate-50 px-3 py-2">
+                          <span className="truncate pr-3">{label}</span><strong>{value}</strong>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Statistiques PDF */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -589,15 +659,19 @@ export default function AdminDashboard() {
                     <h3 className="text-2xl font-bold mb-2">📊 Rapport de Statistiques</h3>
                     <p className="text-indigo-100">Accédez aux statistiques complètes des signalements avec graphiques et export PDF</p>
                   </div>
-                  <Link href="/admin/statistics">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="bg-white text-indigo-600 font-bold px-6 py-3 rounded-lg hover:shadow-lg transition"
-                    >
-                      Voir les statistiques →
-                    </motion.button>
-                  </Link>
+                  <div className="flex flex-wrap justify-end gap-3">
+                    <button onClick={() => exportStatistics('pdf')} className="bg-white text-indigo-600 font-bold px-5 py-3 rounded-lg hover:shadow-lg transition">
+                      Telecharger PDF
+                    </button>
+                    <button onClick={() => exportStatistics('excel')} className="bg-emerald-500 text-white font-bold px-5 py-3 rounded-lg hover:shadow-lg transition">
+                      Telecharger Excel
+                    </button>
+                    <Link href="/admin/statistics">
+                      <button className="bg-indigo-950/40 text-white font-bold px-5 py-3 rounded-lg hover:bg-indigo-950/60 transition">
+                        Voir plus
+                      </button>
+                    </Link>
+                  </div>
                 </div>
               </motion.div>
             </motion.div>
@@ -1316,3 +1390,4 @@ export default function AdminDashboard() {
     </>
   )
 }
+

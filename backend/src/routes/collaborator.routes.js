@@ -1,4 +1,4 @@
-// backend/src/routes/collaborator.routes.js
+﻿// backend/src/routes/collaborator.routes.js
 // Dashboard pour les collaborateurs (ONG, Association)
 
 const express = require('express');
@@ -312,26 +312,11 @@ router.post('/campaigns', authMiddleware, upload.single('image'), async (req, re
   }
 });
 
-// GET /api/collaborator/statistics - Statistiques
+// GET /api/collaborator/statistics - Statistiques completes
 router.get('/statistics', authMiddleware, async (req, res) => {
   try {
-    const result = await db.query(`
-      SELECT 
-        COUNT(DISTINCT s.id) as total_signalements,
-        COUNT(DISTINCT CASE WHEN s.statut = 'nouveau' THEN s.id END) as signalements_nouveaux,
-        COUNT(DISTINCT CASE WHEN s.statut = 'en_cours' THEN s.id END) as signalements_en_cours,
-        COUNT(DISTINCT CASE WHEN s.type = 'violence' THEN s.id END) as violence_cases
-      FROM signal_moi.signalements s
-    `);
-
-    const stats = {
-      totalSignalements: result.rows[0].total_signalements,
-      newCases: result.rows[0].signalements_nouveaux,
-      inProgressCases: result.rows[0].signalements_en_cours,
-      violenceCases: result.rows[0].violence_cases
-    };
-
-    console.log(`[COLLABORATOR GET /statistics] Stats retournées`);
+    const stats = await getCompleteStatistics({ scope: 'collaborator', userId: req.user.id });
+    console.log(`[COLLABORATOR GET /statistics] Stats completes retournees`);
     res.json(stats);
   } catch (err) {
     console.error('[COLLABORATOR GET /statistics] Erreur:', err);
@@ -339,6 +324,17 @@ router.get('/statistics', authMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/collaborator/statistics/export?format=pdf|excel
+router.get('/statistics/export', authMiddleware, async (req, res) => {
+  try {
+    const format = String(req.query.format || 'excel').toLowerCase();
+    const stats = await getCompleteStatistics({ scope: 'collaborator', userId: req.user.id });
+    await sendStatisticsExport(res, stats, format === 'pdf' ? 'pdf' : 'excel');
+  } catch (err) {
+    console.error('[COLLABORATOR GET /statistics/export] Erreur:', err);
+    if (!res.headersSent) res.status(500).json({ error: 'Erreur export statistiques', details: err.message });
+  }
+});
 // POST /api/collaborator/follow - suivre un signalement
 router.post('/follow', authMiddleware, async (req, res) => {
   try {
@@ -479,3 +475,4 @@ router.get('/export/cases', authMiddleware, async (req, res) => {
 });
 
 module.exports = router;
+
