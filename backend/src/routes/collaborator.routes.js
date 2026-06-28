@@ -12,6 +12,7 @@ const { v4: uuidv4 } = require('uuid');
 const FollowedCase = require('../models/FollowedCase');
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
+const { getCompleteStatistics, sendStatisticsExport } = require('../utils/statisticsReport');
 
 // Configuration multer pour les images de campagne
 const uploadDir = path.resolve(__dirname, '..', '..', 'uploads', 'campagnes');

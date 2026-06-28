@@ -10,6 +10,7 @@ const multer = require('multer');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
+const { getCompleteStatistics, sendStatisticsExport } = require('../utils/statisticsReport');
 
 // Configuration multer pour le logo
 const logoStorage = multer.diskStorage({
@@ -318,6 +319,27 @@ router.get('/signalements', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/statistics', authMiddleware, async (req, res) => {
+  try {
+    const stats = await getCompleteStatistics({ scope: 'admin', userId: req.user.id });
+    res.json(stats);
+  } catch (err) {
+    console.error('[ADMIN GET /statistics] Erreur:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
+  }
+});
+
+router.get('/statistics/export', authMiddleware, async (req, res) => {
+  try {
+    const format = String(req.query.format || 'excel').toLowerCase();
+    const stats = await getCompleteStatistics({ scope: 'admin', userId: req.user.id });
+    await sendStatisticsExport(res, stats, format === 'pdf' ? 'pdf' : 'excel');
+  } catch (err) {
+    console.error('[ADMIN GET /statistics/export] Erreur:', err);
+    if (!res.headersSent) res.status(500).json({ error: 'Erreur export statistiques', details: err.message });
   }
 });
 
