@@ -50,8 +50,8 @@ export default function Home() {
 
   const actionCards = [
     { title: 'Citoyens', text: 'Déclarer un incident, ajouter une preuve et suivre son évolution.', href: user ? '/citizen/signalement' : '/login' },
-    { title: 'Forces de l’ordre', text: 'Voir les urgences, lives vidéo et localisations en temps réel.', href: '/police/dashboard' },
-    { title: 'Collaborateurs', text: 'Analyser les tendances et organiser les actions de terrain.', href: '/collaborator/dashboard' }
+    { title: 'Forces de l’ordre', text: 'Accès réservé aux comptes autorisés par l’administration.', restricted: true },
+    { title: 'Collaborateurs', text: 'Accès réservé aux partenaires validés par l’administration.', restricted: true }
   ]
 
   // Blog posts data
@@ -251,11 +251,19 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="grid gap-4 md:grid-cols-3">
               {actionCards.map((item) => (
-                <Link key={item.title} href={item.href} className="group border border-slate-200 bg-white p-6 transition hover:border-emerald-300 hover:bg-emerald-50">
-                  <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">{item.title}</p>
-                  <p className="mt-3 text-lg font-bold text-slate-950 group-hover:text-emerald-900">{item.text}</p>
-                  <span className="mt-5 inline-block text-sm font-semibold text-slate-700">Ouvrir →</span>
-                </Link>
+                item.restricted ? (
+                  <article key={item.title} className="border border-slate-200 bg-slate-50 p-6">
+                    <p className="text-sm font-semibold uppercase tracking-wide text-slate-600">{item.title}</p>
+                    <p className="mt-3 text-lg font-bold text-slate-950">{item.text}</p>
+                    <span className="mt-5 inline-block text-sm font-semibold text-slate-500">Acces securise</span>
+                  </article>
+                ) : (
+                  <Link key={item.title} href={item.href} className="group border border-slate-200 bg-white p-6 transition hover:border-emerald-300 hover:bg-emerald-50">
+                    <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">{item.title}</p>
+                    <p className="mt-3 text-lg font-bold text-slate-950 group-hover:text-emerald-900">{item.text}</p>
+                    <span className="mt-5 inline-block text-sm font-semibold text-slate-700">Ouvrir →</span>
+                  </Link>
+                )
               ))}
             </div>
           </div>

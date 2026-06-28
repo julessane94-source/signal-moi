@@ -10,7 +10,7 @@ const activeLiveSessions = new Map();
 
 const normalizeRole = (role) => String(role || '').trim().toLowerCase();
 const isPoliceLikeRole = (role) => ['police', 'policier', 'gendarmerie', 'force_ordre'].includes(normalizeRole(role));
-const canViewLiveSessions = (role) => ['admin', 'administrateur', 'collaborateur', 'collaborator'].includes(normalizeRole(role)) || isPoliceLikeRole(role);
+const canViewLiveSessions = (role) => ['admin', 'administrateur'].includes(normalizeRole(role)) || isPoliceLikeRole(role);
 const liveSessionPayload = (session) => ({
     ...session,
     isLiveRecording: true,

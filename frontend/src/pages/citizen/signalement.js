@@ -22,6 +22,20 @@ const QUICK_TYPES = [
 
 const VIDEO_PROMPT_TYPES = ['violence', 'accident', 'vol']
 const MAX_RECORDING_MS = 3 * 60 * 1000
+const SEDHIOU_CENTER = { lat: 12.7086, lng: -15.5569 }
+const SEDHIOU_MAX_DISTANCE_KM = 120
+
+const getDistanceKm = (from, to) => {
+  const toRad = (value) => (value * Math.PI) / 180
+  const earthRadiusKm = 6371
+  const dLat = toRad(to.lat - from.lat)
+  const dLng = toRad(to.lng - from.lng)
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(from.lat)) * Math.cos(toRad(to.lat)) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2)
+  return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
 
 export default function NewSignalement() {
   const { user } = useAuth()
@@ -201,29 +215,11 @@ export default function NewSignalement() {
   }
 
   const getLocationFromIpFallback = async ({ silent = false } = {}) => {
-    try {
-      const response = await fetch('https://ipapi.co/json/')
-      if (!response.ok) return null
-      const data = await response.json()
-      if (!data.latitude || !data.longitude) return null
-
-      const lat = Number(data.latitude)
-      const lng = Number(data.longitude)
-      const city = [data.city, data.region, data.country_name].filter(Boolean).join(', ')
-      const localisation = city || `Position approximative: ${lat.toFixed(6)}, ${lng.toFixed(6)}`
-
-      setLatitude(lat)
-      setLongitude(lng)
-      setFormData(prev => ({ ...prev, localisation: prev.localisation || localisation, latitude: lat, longitude: lng }))
-      setGeoError('Localisation GPS refusee: position approximative utilisee automatiquement.')
-      if (!silent) toast.info('Position approximative recuperee automatiquement')
-      const locationData = { latitude: lat, longitude: lng, localisation }
-      emitLiveLocation(locationData)
-      return locationData
-    } catch (error) {
-      console.warn('Fallback localisation IP impossible:', error)
-      return null
-    }
+    const localisation = formData.localisation || 'Sedhiou - localisation a preciser'
+    setGeoError('GPS indisponible ou refuse. La localisation IP est desactivee pour eviter une ville incorrecte. Precisez le lieu manuellement ou autorisez le GPS.')
+    if (!silent) toast.info('Precisez votre lieu a Sedhiou ou autorisez le GPS')
+    setFormData(prev => ({ ...prev, localisation: prev.localisation || localisation }))
+    return { latitude: null, longitude: null, localisation }
   }
 
   const requestGeolocation = async () => {
@@ -283,6 +279,18 @@ export default function NewSignalement() {
         const lng = pos.coords.longitude
         const coordsLabel = `GPS: ${lat.toFixed(6)}, ${lng.toFixed(6)}`
         let localisation = coordsLabel
+        const distanceFromSedhiou = getDistanceKm({ lat, lng }, SEDHIOU_CENTER)
+
+        if (distanceFromSedhiou > SEDHIOU_MAX_DISTANCE_KM) {
+          const manualLocation = formData.localisation || 'Sedhiou - localisation a preciser'
+          setLatitude(null)
+          setLongitude(null)
+          setGeoError('Le GPS detecte une position loin de Sedhiou. Verifiez les autorisations GPS ou renseignez le quartier/repere manuellement.')
+          setFormData(prev => ({ ...prev, localisation: prev.localisation || manualLocation }))
+          if (!silent) toast.warning('Position GPS incoherente avec Sedhiou')
+          resolve({ latitude: null, longitude: null, localisation: manualLocation })
+          return
+        }
 
         setLatitude(lat)
         setLongitude(lng)

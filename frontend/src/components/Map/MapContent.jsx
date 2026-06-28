@@ -29,7 +29,7 @@ function ClickableMarker({ lat, lng, setLat, setLng }) {
 }
 
 export default function MapContent({ lat, lng, setLat, setLng, zoom = 13 }) {
-  const center = lat && lng ? [lat, lng] : [46.2276, 2.2137]
+  const center = lat && lng ? [lat, lng] : [12.7086, -15.5569]
 
   return (
     <div className="w-full h-80 rounded overflow-hidden">

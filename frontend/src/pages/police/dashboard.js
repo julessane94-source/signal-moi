@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
 import { useAuth } from '../../context/AuthContext'
 import { useSocket } from '../../context/SocketContext'
 import { Button, Card, Badge, Modal, StatBox } from '../../components/ui'
@@ -17,8 +18,12 @@ import {
   EnvelopeIcon as Envelope
 } from '@heroicons/react/24/outline'
 
+const normalizeRole = (role) => String(role || '').trim().toLowerCase()
+const canAccessPoliceDashboard = (role) => ['admin', 'administrateur', 'police', 'policier', 'gendarmerie', 'force_ordre'].includes(normalizeRole(role))
+
 export default function PoliceDashboard() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
+  const router = useRouter()
   const { socket } = useSocket()
   const [signalements, setSignalements] = useState([])
   const [selectedSignal, setSelectedSignal] = useState(null)
@@ -33,6 +38,19 @@ export default function PoliceDashboard() {
   const [socketConnected, setSocketConnected] = useState(false)
 
   useEffect(() => {
+    if (authLoading) return
+    if (!user) {
+      router.replace('/login')
+      setLoading(false)
+      return
+    }
+    if (!canAccessPoliceDashboard(user.role)) {
+      toast.error('Acces reserve aux forces de securite')
+      router.replace('/citizen/dashboard')
+      setLoading(false)
+      return
+    }
+
     fetchSignalements()
     fetchPoliciers()
     fetchLiveSessions()
@@ -120,7 +138,7 @@ export default function PoliceDashboard() {
         socket.off('disconnect')
       }
     }
-  }, [socket])
+  }, [socket, user, authLoading])
 
   const fetchSignalements = async () => {
     try {
@@ -296,7 +314,19 @@ export default function PoliceDashboard() {
     .sort((a, b) => new Date(b.frameAt || b.updatedAt || b.startedAt || b.stoppedAt || 0) - new Date(a.frameAt || a.updatedAt || a.startedAt || a.stoppedAt || 0))[0]
   const activeLive = selectedLive ? liveRecordings[selectedLive.sessionId] || selectedLive : liveRecordingsList[0]
 
-  if (loading) {
+  if (!authLoading && (!user || !canAccessPoliceDashboard(user.role))) {
+    return (
+      <div className="min-h-screen bg-slate-100 pt-20 flex items-center justify-center px-4">
+        <div className="max-w-md rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+          <ShieldCheck className="mx-auto h-10 w-10 text-red-600" />
+          <h1 className="mt-4 text-xl font-bold text-slate-950">Acces reserve</h1>
+          <p className="mt-2 text-sm text-slate-600">Cet espace est uniquement accessible aux comptes police, gendarmerie ou administrateur.</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (authLoading || loading) {
     return (
       <>
         <div className="min-h-screen pt-16 flex items-center justify-center">

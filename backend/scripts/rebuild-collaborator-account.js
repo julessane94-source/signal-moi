@@ -9,7 +9,7 @@ const DEFAULT_PASSWORD = process.env.COLLABORATOR_PASSWORD || 'Collab@1234!';
 const DEFAULT_PRENOM = process.env.COLLABORATOR_PRENOM || 'Test';
 const DEFAULT_NOM = process.env.COLLABORATOR_NOM || 'Collaborateur';
 const DEFAULT_TELEPHONE = process.env.COLLABORATOR_TELEPHONE || '0000000000';
-const DEFAULT_VILLE = process.env.COLLABORATOR_VILLE || 'Yaoundé';
+const DEFAULT_VILLE = process.env.COLLABORATOR_VILLE || 'Sedhiou';
 const DEFAULT_QUARTIER = process.env.COLLABORATOR_QUARTIER || 'Centre';
 
 async function main() {

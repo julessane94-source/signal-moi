@@ -41,7 +41,7 @@ router.post('/seed-users', async (req, res) => {
         nom: 'Sane',
         role: 'citoyen',
         telephone: '770789608',
-        ville: 'Thies',
+        ville: 'Sedhiou',
         quartier: 'Centre'
       }
     ];
