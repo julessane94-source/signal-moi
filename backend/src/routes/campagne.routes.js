@@ -128,7 +128,8 @@ router.post('/:id/inscrire', authMiddleware, async (req, res) => {
     );
     
     const nombreInscrits = parseInt(inscritsResult.rows[0].total);
-    if (nombreInscrits >= campagne.capacite_max) {
+    const capaciteMax = Number.parseInt(campagne.capacite_max || 0, 10);
+    if (capaciteMax > 0 && nombreInscrits >= capaciteMax) {
       return res.status(400).json({ error: 'Campagne complète' });
     }
     
@@ -267,4 +268,3 @@ router.post('/', authMiddleware, async (req, res) => {
 });
 
 module.exports = router;
-

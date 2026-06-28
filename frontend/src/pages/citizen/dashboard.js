@@ -23,6 +23,8 @@ export default function CitizenDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [signingPetition, setSigningPetition] = useState(null)
+  const [joiningCampaign, setJoiningCampaign] = useState(null)
+  const [joinedCampaignIds, setJoinedCampaignIds] = useState([])
 
   // ✅ FIX: Déclencher le fetch APRÈS que auth soit chargé ET user existe
   useEffect(() => {
@@ -49,11 +51,12 @@ export default function CitizenDashboard() {
       const headers = { 'Authorization': `Bearer ${token}` }
       
       const base = API_BASE
-      const [signalRes, campRes, plaidRes, signedRes] = await Promise.all([
+      const [signalRes, campRes, plaidRes, signedRes, inscriptionsRes] = await Promise.all([
         fetch(`${base}/api/signalements`, { headers }),
         fetch(`${base}/api/campagnes`, { headers }),
         fetch(`${base}/api/plaidoyers`, { headers }),
-        fetch(`${base}/api/plaidoyers/signed/user/${user.id}`, { headers })
+        fetch(`${base}/api/plaidoyers/signed/user/${user.id}`, { headers }),
+        fetch(`${base}/api/citizen/inscriptions`, { headers })
       ])
       
       // Vérifier les réponses
@@ -71,11 +74,14 @@ export default function CitizenDashboard() {
       const campData = campRes.ok ? await campRes.json() : []
       const plaidData = plaidRes.ok ? await plaidRes.json() : []
       const signedData = signedRes.ok ? await signedRes.json() : []
+      const inscriptionsPayload = inscriptionsRes.ok ? await inscriptionsRes.json() : []
+      const inscriptionsData = Array.isArray(inscriptionsPayload) ? inscriptionsPayload : (inscriptionsPayload.inscriptions || [])
       
       setSignalements(Array.isArray(signalData) ? signalData : [])
       setCampagnes(Array.isArray(campData) ? campData : [])
       setPlaidoyers(Array.isArray(plaidData) ? plaidData : [])
       setSignedPetitionIds(Array.isArray(signedData) ? signedData.map(p => p.id) : [])
+      setJoinedCampaignIds(Array.isArray(inscriptionsData) ? inscriptionsData.map(item => item.campagne_id || item.campagneId).filter(Boolean) : [])
     } catch (error) {
       console.error('[CitizenDashboard] Erreur fetch:', error)
       setError('Erreur lors du chargement des donnees. Verifiez votre connexion.')
@@ -113,6 +119,37 @@ export default function CitizenDashboard() {
       toast.error(error.message || 'Impossible de signer le plaidoyer')
     } finally {
       setSigningPetition(null)
+    }
+  }
+
+  const handleJoinCampaign = async (campaignId) => {
+    if (!campaignId) return
+    setJoiningCampaign(campaignId)
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${API_BASE}/api/campagnes/${campaignId}/inscrire`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        if (res.status === 400 && String(data.error || '').toLowerCase().includes('deja')) {
+          setJoinedCampaignIds(prev => prev.includes(campaignId) ? prev : [...prev, campaignId])
+          toast.info('Vous etes deja inscrit a cette campagne')
+          return
+        }
+        throw new Error(data.error || data.message || 'Inscription impossible')
+      }
+      setJoinedCampaignIds(prev => prev.includes(campaignId) ? prev : [...prev, campaignId])
+      toast.success('Inscription a la campagne reussie')
+    } catch (error) {
+      console.error('Erreur inscription campagne:', error)
+      toast.error(error.message || 'Impossible de participer a cette campagne')
+    } finally {
+      setJoiningCampaign(null)
     }
   }
 
@@ -314,26 +351,36 @@ export default function CitizenDashboard() {
                 </Card>
               ) : (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {campagnes.map((c, idx) => (
-                    <motion.div
-                      key={c.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.05 }}
-                    >
-                      <Card className="h-full p-6 flex flex-col hover:shadow-lg transition">
-                        <h3 className="font-semibold text-lg text-gray-900">{c.titre}</h3>
-                        <p className="text-gray-600 mt-2 flex-1">{c.description}</p>
-                        <div className="mt-4 pt-4 border-t border-gray-200 space-y-2 text-sm text-gray-600">
-                          <div>📅 {new Date(c.dateDebut).toLocaleDateString()}</div>
-                          <div>📍 {c.lieu}</div>
-                        </div>
-                        <Button variant="success" className="mt-4 w-full rounded-full px-5 py-3 shadow-lg hover:shadow-xl transition">
-                          Participer à cette campagne
-                        </Button>
-                      </Card>
-                    </motion.div>
-                  ))}
+                  {campagnes.map((c, idx) => {
+                    const campaignDate = c.dateDebut || c.date_debut
+                    const isJoined = joinedCampaignIds.includes(c.id)
+                    const isJoining = joiningCampaign === c.id
+                    return (
+                      <motion.div
+                        key={c.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                      >
+                        <Card className="h-full p-6 flex flex-col hover:shadow-lg transition">
+                          <h3 className="font-semibold text-lg text-gray-900">{c.titre}</h3>
+                          <p className="text-gray-600 mt-2 flex-1">{c.description}</p>
+                          <div className="mt-4 pt-4 border-t border-gray-200 space-y-2 text-sm text-gray-600">
+                            <div>📅 {campaignDate ? new Date(campaignDate).toLocaleDateString('fr-FR') : 'Date a confirmer'}</div>
+                            <div>📍 {c.lieu}</div>
+                          </div>
+                          <Button
+                            variant={isJoined ? 'secondary' : 'success'}
+                            disabled={isJoined || isJoining}
+                            onClick={() => handleJoinCampaign(c.id)}
+                            className="mt-4 w-full rounded-full px-5 py-3 shadow-lg hover:shadow-xl transition disabled:cursor-not-allowed disabled:opacity-70"
+                          >
+                            {isJoined ? 'Deja inscrit' : isJoining ? 'Inscription...' : 'Participer a cette campagne'}
+                          </Button>
+                        </Card>
+                      </motion.div>
+                    )
+                  })}
                 </div>
               )}
             </motion.div>
