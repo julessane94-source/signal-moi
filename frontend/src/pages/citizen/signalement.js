@@ -31,19 +31,10 @@ const SIMPLE_DESCRIPTIONS = {
 
 const VIDEO_PROMPT_TYPES = ['violence', 'accident', 'vol']
 const MAX_RECORDING_MS = 3 * 60 * 1000
-const SEDHIOU_CENTER = { lat: 12.7086, lng: -15.5569 }
-const SEDHIOU_MAX_DISTANCE_KM = 120
 
-const getDistanceKm = (from, to) => {
-  const toRad = (value) => (value * Math.PI) / 180
-  const earthRadiusKm = 6371
-  const dLat = toRad(to.lat - from.lat)
-  const dLng = toRad(to.lng - from.lng)
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(from.lat)) * Math.cos(toRad(to.lat)) *
-    Math.sin(dLng / 2) * Math.sin(dLng / 2)
-  return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+const shouldReplaceAutoLocation = (value) => {
+  const text = String(value || '')
+  return !text || text.startsWith('Position approximative IP') || text.startsWith('Sedhiou - localisation')
 }
 
 export default function NewSignalement() {
@@ -280,20 +271,19 @@ export default function NewSignalement() {
         ? `Position approximative IP: ${city}`
         : `Position approximative IP: ${lat.toFixed(6)}, ${lng.toFixed(6)}`
 
-      setLatitude(lat)
-      setLongitude(lng)
-      setFormData(prev => ({ ...prev, localisation: prev.localisation || localisation, latitude: lat, longitude: lng }))
-      setGeoError('GPS refuse ou indisponible. Une position approximative par IP est utilisee; corrigez le lieu si necessaire.')
+      setFormData(prev => ({
+        ...prev,
+        localisation: shouldReplaceAutoLocation(prev.localisation) ? localisation : prev.localisation
+      }))
+      setGeoError('GPS refuse ou indisponible. La ville IP est affichee seulement comme repere approximatif. Autorisez le GPS pour envoyer la vraie position a la police.')
       if (!silent) toast.info('Position approximative IP recuperee')
 
-      const locationData = { latitude: lat, longitude: lng, localisation }
-      emitLiveLocation(locationData)
-      return locationData
+      return { latitude: null, longitude: null, localisation, approximate: true }
     } catch (error) {
       const localisation = formData.localisation || 'Sedhiou - localisation a preciser'
       setGeoError('GPS et localisation IP indisponibles. Precisez le quartier ou un repere manuellement.')
       if (!silent) toast.info('Precisez votre lieu a Sedhiou')
-      setFormData(prev => ({ ...prev, localisation: prev.localisation || localisation }))
+          setFormData(prev => ({ ...prev, localisation: shouldReplaceAutoLocation(prev.localisation) ? localisation : prev.localisation }))
       return { latitude: null, longitude: null, localisation }
     }
   }
@@ -355,19 +345,6 @@ export default function NewSignalement() {
         const lng = pos.coords.longitude
         const coordsLabel = `GPS: ${lat.toFixed(6)}, ${lng.toFixed(6)}`
         let localisation = coordsLabel
-        const distanceFromSedhiou = getDistanceKm({ lat, lng }, SEDHIOU_CENTER)
-
-        if (distanceFromSedhiou > SEDHIOU_MAX_DISTANCE_KM) {
-          const manualLocation = formData.localisation || 'Sedhiou - localisation a preciser'
-          setLatitude(null)
-          setLongitude(null)
-          setGeoError('Le GPS detecte une position loin de Sedhiou. Verifiez les autorisations GPS ou renseignez le quartier/repere manuellement.')
-          setFormData(prev => ({ ...prev, localisation: prev.localisation || manualLocation }))
-          if (!silent) toast.warning('Position GPS incoherente avec Sedhiou')
-          resolve({ latitude: null, longitude: null, localisation: manualLocation })
-          return
-        }
-
         setLatitude(lat)
         setLongitude(lng)
 
@@ -381,15 +358,20 @@ export default function NewSignalement() {
           localisation = coordsLabel
         }
 
-        setFormData(prev => ({ ...prev, localisation: prev.localisation || localisation, latitude: lat, longitude: lng }))
+        setFormData(prev => ({
+          ...prev,
+          localisation: shouldReplaceAutoLocation(prev.localisation) ? localisation : prev.localisation,
+          latitude: lat,
+          longitude: lng
+        }))
         if (!silent) toast.success('Localisation automatique trouvee')
         emitLiveLocation({ latitude: lat, longitude: lng, localisation })
         resolve({ latitude: lat, longitude: lng, localisation })
       }, (err) => {
         if (err.code === 1) {
-          setGeoError('GPS refuse par le navigateur. Recuperation automatique d une position approximative...')
+          setGeoError('GPS refuse par le navigateur. Autorisez la localisation dans le navigateur pour envoyer la vraie position a la police.')
         } else {
-          setGeoError('GPS indisponible. Recuperation automatique d une position approximative...')
+          setGeoError('GPS indisponible. Tentative de repere approximatif par IP...')
         }
         console.log('Geolocalisation erreur:', err)
         getLocationFromIpFallback({ silent }).then((fallbackLocation) => {
@@ -398,7 +380,7 @@ export default function NewSignalement() {
         })
       }, {
         enableHighAccuracy: true,
-        timeout: 15000,
+        timeout: 25000,
         maximumAge: 0
       })
     })
