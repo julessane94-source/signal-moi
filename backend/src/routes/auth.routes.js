@@ -515,8 +515,10 @@ router.post('/forgot-password', async (req, res) => {
         `
       });
     } catch (mailError) {
-      console.warn('[FORGOT PASSWORD] Email non envoye, code journalise:', mailError.message);
-      console.log(`[FORGOT PASSWORD] Code pour ${email}: ${code}`);
+      console.warn('[FORGOT PASSWORD] Email non envoye:', mailError.message);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[FORGOT PASSWORD] Code pour ${email}: ${code}`);
+      }
     }
     
     // Réponse sécurisée
