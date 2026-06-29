@@ -39,6 +39,10 @@ router.get('/site-config', async (req, res) => {
     
     // Récupérer le logo en base64 s'il existe
     let logoUrl = normalizeLogoUrl(config.logoUrl || config.logo_url || '/icons/icon-192x192.png');
+    const logoRecord = await SiteConfig.getLogoBinary();
+    if (logoRecord?.logo_data) {
+      logoUrl = '/uploads/logo';
+    }
     
     // Coerce certains champs pour éviter les erreurs côté client
     const safeConfig = {

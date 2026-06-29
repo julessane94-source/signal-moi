@@ -347,6 +347,11 @@ router.get('/statistics/export', authMiddleware, async (req, res) => {
 router.get('/site-config', authMiddleware, async (req, res) => {
   try {
     const config = await SiteConfig.getAll();
+    const logoRecord = await SiteConfig.getLogoBinary();
+    if (logoRecord?.logo_data) {
+      config.logoUrl = '/uploads/logo';
+      config.logo_url = '/uploads/logo';
+    }
     res.json(config);
   } catch (err) {
     console.error('[ADMIN GET /site-config] Erreur:', err);
