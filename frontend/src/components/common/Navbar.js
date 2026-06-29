@@ -86,7 +86,7 @@ export default function Navbar() {
     if (url.startsWith('http://') || url.startsWith('https://')) {
       try {
         const parsed = new URL(url)
-        if (parsed.pathname.startsWith('/uploads/')) return `${API_BASE}${parsed.pathname}`
+        if (parsed.pathname.startsWith('/uploads/')) return `${API_BASE}${parsed.pathname}${parsed.search || ''}`
         return parsed.pathname || '/icons/icon-192x192.png'
       } catch (err) {
         return '/icons/icon-192x192.png'

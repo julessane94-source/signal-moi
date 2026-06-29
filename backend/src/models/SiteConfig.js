@@ -42,7 +42,7 @@ const SiteConfig = {
     },
     getLogoBinary: async () => {
         const res = await db.query(
-            'SELECT logo_data, logo_filename FROM signal_moi.site_config WHERE cle = $1',
+            'SELECT logo_data, logo_filename, updated_at FROM signal_moi.site_config WHERE cle = $1',
             ['logoUrl']
         );
         return res.rows[0] || null;

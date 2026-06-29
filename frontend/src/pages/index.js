@@ -19,7 +19,7 @@ export default function Home() {
       try {
         const parsed = new URL(url)
         if (parsed.pathname.startsWith('/uploads/')) {
-          return `${API_BASE}${parsed.pathname}`
+          return `${API_BASE}${parsed.pathname}${parsed.search || ''}`
         }
         return url
       } catch (err) {

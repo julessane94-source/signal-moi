@@ -24,6 +24,11 @@ const normalizeLogoUrl = (value) => {
 };
 
 const publicConfigCache = 'public, max-age=60, stale-while-revalidate=300';
+const buildLogoUrl = (logoRecord) => {
+  if (!logoRecord?.logo_data) return null;
+  const version = logoRecord.updated_at ? new Date(logoRecord.updated_at).getTime() : Date.now();
+  return `/uploads/logo?v=${version}`;
+};
 
 // GET /api/auth/site-config - Récupère la configuration du site (PUBLIC - sans auth)
 router.get('/site-config', async (req, res) => {
@@ -40,9 +45,7 @@ router.get('/site-config', async (req, res) => {
     // Récupérer le logo en base64 s'il existe
     let logoUrl = normalizeLogoUrl(config.logoUrl || config.logo_url || '/icons/icon-192x192.png');
     const logoRecord = await SiteConfig.getLogoBinary();
-    if (logoRecord?.logo_data) {
-      logoUrl = '/uploads/logo';
-    }
+    logoUrl = buildLogoUrl(logoRecord) || logoUrl;
     
     // Coerce certains champs pour éviter les erreurs côté client
     const safeConfig = {

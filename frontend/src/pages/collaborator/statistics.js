@@ -10,6 +10,12 @@ import jsPDF from 'jspdf'
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 const COLORS = ['#6366f1', '#06b6d4', '#f97316', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#14b8a6']
+const resolveLogoUrl = (url) => {
+  if (!url) return null
+  if (url.startsWith('data:') || url.startsWith('http')) return url
+  if (url.startsWith('/uploads/')) return `${API_BASE}${url}`
+  return url
+}
 const normalizeRole = (role) => {
   const value = String(role || '').trim().toLowerCase()
   if (['collaborateur', 'collaborator'].includes(value)) return 'collaborateur'
@@ -53,7 +59,7 @@ export default function CollaboratorStatistics() {
       if (configRes.ok) {
         const config = await configRes.json()
         if (config.logoUrl) {
-          setLogo(config.logoUrl) // Déjà en format data:image/...;base64,...
+          setLogo(resolveLogoUrl(config.logoUrl))
         }
         setCompany({
           name: config.siteName || 'Signal-Moi',

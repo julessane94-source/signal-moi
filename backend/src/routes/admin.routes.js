@@ -13,6 +13,12 @@ const fs = require('fs');
 const { getCompleteStatistics, sendStatisticsExport } = require('../utils/statisticsReport');
 const { persistHomePageImages, storeOptimizedImage } = require('../utils/imageStorage');
 
+const buildLogoUrl = (logoRecord) => {
+  if (!logoRecord?.logo_data) return null;
+  const version = logoRecord.updated_at ? new Date(logoRecord.updated_at).getTime() : Date.now();
+  return `/uploads/logo?v=${version}`;
+};
+
 // Configuration multer pour le logo
 const logoStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -348,9 +354,10 @@ router.get('/site-config', authMiddleware, async (req, res) => {
   try {
     const config = await SiteConfig.getAll();
     const logoRecord = await SiteConfig.getLogoBinary();
-    if (logoRecord?.logo_data) {
-      config.logoUrl = '/uploads/logo';
-      config.logo_url = '/uploads/logo';
+    const logoUrl = buildLogoUrl(logoRecord);
+    if (logoUrl) {
+      config.logoUrl = logoUrl;
+      config.logo_url = logoUrl;
     }
     res.json(config);
   } catch (err) {
@@ -512,6 +519,8 @@ router.put('/site-config/logo', authMiddleware, uploadLogo.single('logo'), async
 
     // Sauvegarder le logo en tant que données binaires dans la base de données
     await SiteConfig.setLogoBinary(logoBuffer, filename);
+    const logoRecord = await SiteConfig.getLogoBinary();
+    const nextLogoUrl = buildLogoUrl(logoRecord) || `/uploads/logo?v=${Date.now()}`;
 
     // Supprimer le fichier local après sauvegarde en BD
     try {
@@ -525,7 +534,7 @@ router.put('/site-config/logo', authMiddleware, uploadLogo.single('logo'), async
     res.json({
       success: true,
       message: 'Logo changé avec succès',
-      logoUrl: '/uploads/logo' // URL virtuelle pour récupérer depuis BD
+      logoUrl: nextLogoUrl
     });
   } catch (err) {
     console.error('[ADMIN PUT /site-config/logo] Erreur:', err);
