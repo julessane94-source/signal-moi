@@ -37,17 +37,31 @@ const accountRoutes = require('./routes/account');
 
 const app = express();
 
-// CORS - permettre les requêtes depuis Vercel
-app.use(cors({
-    origin: [
-        'http://localhost:3000',
-        'http://127.0.0.1:3000',
-        'http://localhost:3001',
-        process.env.FRONTEND_URL || '*'
-    ],
+const allowedOrigins = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:3001',
+    'https://signal-moi.sn',
+    'https://www.signal-moi.sn',
+    'https://signal-moi.vercel.app',
+    process.env.FRONTEND_URL
+].filter(Boolean);
+
+const corsOptions = {
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error(`Origine CORS non autorisee: ${origin}`));
+    },
     credentials: true,
-    allowedHeaders: ['Authorization', 'Content-Type', 'X-Refresh-Token']
-}));
+    allowedHeaders: ['Authorization', 'Content-Type', 'X-Refresh-Token'],
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS']
+};
+
+// CORS - permettre les requêtes depuis Vercel
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(compression({
     threshold: 1024,
     filter: (req, res) => {
@@ -260,12 +274,7 @@ const server = http.createServer(app);
 // Initialiser socket.io
 const io = socketIO(server, {
     cors: {
-        origin: [
-            'http://localhost:3000',
-            'http://127.0.0.1:3000',
-            'http://localhost:3001',
-            process.env.FRONTEND_URL || '*'
-        ],
+        origin: allowedOrigins,
         credentials: true
     },
     transports: ['websocket', 'polling']

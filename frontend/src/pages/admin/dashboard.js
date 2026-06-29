@@ -473,6 +473,9 @@ export default function AdminDashboard() {
     try {
       const token = localStorage.getItem('token')
       const base = API_BASE
+      if (!base || (typeof window !== 'undefined' && !window.location.hostname.includes('localhost') && base.includes('localhost'))) {
+        throw new Error('API mal configuree: NEXT_PUBLIC_API_URL doit pointer vers le backend en ligne.')
+      }
       const formData = new FormData()
       formData.append('logo', file)
 
@@ -483,7 +486,7 @@ export default function AdminDashboard() {
       })
 
       if (!res.ok) {
-        const error = await res.json()
+        const error = await res.json().catch(() => ({}))
         throw new Error(error.error || 'Erreur lors du changement du logo')
       }
 
@@ -491,7 +494,10 @@ export default function AdminDashboard() {
       setLogoUrl(data.logoUrl)
       toast.success('✅ ' + (data.message || 'Logo changé avec succès'))
     } catch (error) {
-      toast.error('❌ ' + (error.message || 'Erreur'))
+      const message = error?.message === 'Failed to fetch'
+        ? 'Impossible de joindre l API. Verifiez NEXT_PUBLIC_API_URL et le CORS du backend.'
+        : (error.message || 'Erreur')
+      toast.error('❌ ' + message)
     } finally {
       setUploadingLogo(false)
       // Réinitialiser l'input
