@@ -27,8 +27,8 @@ export default function Home() {
       }
     }
 
-    if (url.startsWith('/uploads/')) return preferApi ? `${API_BASE}${url}` : url
-    if (url.startsWith('uploads/')) return preferApi ? `${API_BASE}/${url}` : `/${url}`
+    if (url.startsWith('/uploads/')) return `${API_BASE}${url}`
+    if (url.startsWith('uploads/')) return `${API_BASE}/${url}`
     return url
   }
 
