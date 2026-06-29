@@ -1,16 +1,44 @@
 ﻿const nodemailer = require('nodemailer');
 const logger = require('../utils/logger');
 
-// Configuration du transporteur
-const transporter = nodemailer.createTransport({
+const smtpConfig = {
   host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT),
+  port: parseInt(process.env.SMTP_PORT || '587', 10),
   secure: process.env.SMTP_SECURE === 'true',
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
+  user: process.env.SMTP_USER,
+  pass: process.env.SMTP_PASS,
+  from: process.env.SMTP_FROM
+};
+
+const isSmtpConfigured = Boolean(
+  smtpConfig.host &&
+  smtpConfig.user &&
+  smtpConfig.pass &&
+  smtpConfig.from
+);
+
+// Configuration du transporteur
+const transporter = isSmtpConfigured
+  ? nodemailer.createTransport({
+      host: smtpConfig.host,
+      port: smtpConfig.port,
+      secure: smtpConfig.secure,
+      auth: {
+        user: smtpConfig.user,
+        pass: smtpConfig.pass
+      }
+    })
+  : null;
+
+if (!isSmtpConfigured) {
+  logger.warn('SMTP non configure: renseigner SMTP_HOST, SMTP_USER, SMTP_PASS et SMTP_FROM pour envoyer les emails.');
+}
+
+const ensureSmtpConfigured = () => {
+  if (!transporter) {
+    throw new Error('SMTP non configure: renseigner SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS et SMTP_FROM.');
   }
-});
+};
 
 // Templates d'emails
 const templates = {
@@ -109,10 +137,11 @@ const templates = {
 // Envoyer un email
 const sendEmail = async ({ to, subject, template, data }) => {
   try {
+    ensureSmtpConfigured();
     const templateData = templates[template](data);
     
     const mailOptions = {
-      from: process.env.SMTP_FROM,
+      from: smtpConfig.from,
       to,
       subject: subject || templateData.subject,
       html: templateData.html
@@ -130,8 +159,9 @@ const sendEmail = async ({ to, subject, template, data }) => {
 // Envoyer un email simple
 const sendSimpleEmail = async ({ to, subject, html }) => {
   try {
+    ensureSmtpConfigured();
     const mailOptions = {
-      from: process.env.SMTP_FROM,
+      from: smtpConfig.from,
       to,
       subject,
       html
@@ -148,5 +178,6 @@ const sendSimpleEmail = async ({ to, subject, html }) => {
 
 module.exports = {
   sendEmail,
-  sendSimpleEmail
+  sendSimpleEmail,
+  isSmtpConfigured
 };
