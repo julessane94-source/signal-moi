@@ -25,7 +25,7 @@ const getImageUrl = (url, { preferApi = true } = {}) => {
   if (url.startsWith('http://') || url.startsWith('https://')) {
     try {
       const parsed = new URL(url)
-      if (parsed.pathname.startsWith('/uploads/')) return preferApi ? `${API_BASE}${parsed.pathname}` : parsed.pathname
+      if (parsed.pathname.startsWith('/uploads/')) return `${API_BASE}${parsed.pathname}`
       return url || '/icons/icon-192x192.png'
     } catch (err) {
       return '/icons/icon-192x192.png'

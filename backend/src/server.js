@@ -126,6 +126,7 @@ app.head('/', (req, res) => {
 // Servir les fichiers statiques (uploads)
 const path = require('path');
 const mediaCacheHeader = 'public, max-age=31536000, immutable';
+const logoCacheHeader = 'public, max-age=300, stale-while-revalidate=86400';
 
 const getLogoMimeType = (filename = '') => {
     const lower = String(filename).toLowerCase();
@@ -142,7 +143,7 @@ app.get('/uploads/logo', async (req, res, next) => {
         if (!logo?.logo_data) return next();
         res.setHeader('Content-Type', getLogoMimeType(logo.logo_filename));
         res.setHeader('Content-Length', logo.logo_data.length);
-        res.setHeader('Cache-Control', mediaCacheHeader);
+        res.setHeader('Cache-Control', logoCacheHeader);
         return res.send(logo.logo_data);
     } catch (err) {
         console.error('[UPLOAD LOGO] Erreur de récupération du logo:', err);
