@@ -616,6 +616,20 @@ export default function NewSignalement() {
       recorder.ondataavailable = (event) => {
         if (event.data && event.data.size > 0) {
           recordingChunksRef.current.push(event.data)
+          const activeSocket = socketRef.current
+          if (activeSocket && liveSessionIdRef.current) {
+            const reader = new FileReader()
+            reader.onloadend = () => {
+              activeSocket.emit('live_recording_chunk', {
+                sessionId: liveSessionIdRef.current,
+                type: liveType,
+                mimeType: event.data.type || recorder.mimeType || mimeType || 'video/webm',
+                chunk: reader.result,
+                chunkSize: event.data.size
+              })
+            }
+            reader.readAsDataURL(event.data)
+          }
         }
       }
 
@@ -663,7 +677,7 @@ export default function NewSignalement() {
         stopCameraStream()
       }
 
-      recorder.start()
+      recorder.start(2500)
       startLiveFrameBroadcast(stream)
       recordingTimerRef.current = setTimeout(() => {
         stopVideoRecording()

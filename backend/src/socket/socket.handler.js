@@ -150,6 +150,20 @@ const setupSocket = (io) => {
       }
     });
 
+    socket.on('live_recording_chunk', (data) => {
+      try {
+        const payload = {
+          ...data,
+          citizenId: socket.user.id,
+          chunkAt: new Date()
+        };
+        io.to('police_room').emit('live_recording_chunk', payload);
+        io.to('admin_room').emit('live_recording_chunk', payload);
+      } catch (error) {
+        logger.error('Erreur live_recording_chunk:', error);
+      }
+    });
+
     socket.on('live_recording_stopped', (data) => {
       try {
         const payload = {

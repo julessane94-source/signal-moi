@@ -388,11 +388,13 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                 // Si c'est la police, ne retourner que les types pertinents (violence, vol)
                 if (req.user && req.user.role === 'police') {
                     const allowed = ['violence', 'vol', 'theft', 'accident'];
+                    const showArchive = String(req.query.archive || '').toLowerCase() === 'true';
                     const result = await db.query(`SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, s.latitude, s.longitude, s.priorite, s.est_anonyme, s.created_at, s.updated_at, u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone, u.email AS user_email
                                                    FROM signal_moi.signalements s
                                                    LEFT JOIN signal_moi.users u ON u.id = s.user_id
                                                    WHERE LOWER(s.type) = ANY($1::text[])
-                                                   ORDER BY s.created_at DESC LIMIT $2`, [allowed, limit]);
+                                                     AND ${showArchive ? "s.statut IN ('traite', 'closed')" : "COALESCE(s.statut, 'nouveau') NOT IN ('traite', 'closed')"}
+                                                   ORDER BY LOWER(s.type) ASC, s.created_at DESC LIMIT $2`, [allowed, limit]);
                     const signalementIds = result.rows.map(r => r.id);
                     const filesBySignalement = {};
 

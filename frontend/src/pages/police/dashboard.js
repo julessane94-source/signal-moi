@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '../../context/AuthContext'
 import { useSocket } from '../../context/SocketContext'
@@ -37,6 +37,7 @@ export default function PoliceDashboard() {
   const [selectedLive, setSelectedLive] = useState(null)
   const [socketConnected, setSocketConnected] = useState(false)
   const [interventionLoading, setInterventionLoading] = useState({})
+  const liveVideoChunksRef = useRef({})
 
   useEffect(() => {
     if (authLoading) return
@@ -110,6 +111,26 @@ export default function PoliceDashboard() {
         }))
       }
 
+      const handleLiveRecordingChunk = (data) => {
+        if (!data.sessionId || !data.chunk) return
+        if (!liveVideoChunksRef.current[data.sessionId]) {
+          liveVideoChunksRef.current[data.sessionId] = []
+        }
+        liveVideoChunksRef.current[data.sessionId].push(data.chunk)
+        setLiveRecordings(prev => ({
+          ...prev,
+          [data.sessionId]: {
+            ...prev[data.sessionId],
+            ...data,
+            sessionId: data.sessionId,
+            chunk: undefined,
+            videoChunkCount: liveVideoChunksRef.current[data.sessionId].length,
+            videoMimeType: data.mimeType || prev[data.sessionId]?.videoMimeType || 'video/webm',
+            status: prev[data.sessionId]?.status || 'recording'
+          }
+        }))
+      }
+
       const handleLiveRecordingStopped = (data) => {
         if (!data.sessionId) return
         setLiveRecordings(prev => ({
@@ -130,6 +151,7 @@ export default function PoliceDashboard() {
       socket.on('live_recording_started', handleLiveRecordingStarted)
       socket.on('live_recording_location', handleLiveRecordingLocation)
       socket.on('live_recording_frame', handleLiveRecordingFrame)
+      socket.on('live_recording_chunk', handleLiveRecordingChunk)
       socket.on('live_recording_stopped', handleLiveRecordingStopped)
 
       return () => {
@@ -141,6 +163,7 @@ export default function PoliceDashboard() {
         socket.off('live_recording_started', handleLiveRecordingStarted)
         socket.off('live_recording_location', handleLiveRecordingLocation)
         socket.off('live_recording_frame', handleLiveRecordingFrame)
+        socket.off('live_recording_chunk', handleLiveRecordingChunk)
         socket.off('live_recording_stopped', handleLiveRecordingStopped)
       }
     }
@@ -148,12 +171,13 @@ export default function PoliceDashboard() {
     return () => {
       clearInterval(livePoll)
     }
-  }, [socket, user, authLoading])
+  }, [socket, user, authLoading, filter])
 
   const fetchSignalements = async () => {
     try {
       const token = localStorage.getItem('token')
-      const res = await fetch(`${API_BASE}/api/signalements?limit=120`, {
+      const archiveParam = filter === 'archives' ? '&archive=true' : ''
+      const res = await fetch(`${API_BASE}/api/signalements?limit=120${archiveParam}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()
@@ -297,6 +321,7 @@ export default function PoliceDashboard() {
 
   const getFilteredSignalements = () => {
     if (filter === 'all') return signalements
+    if (filter === 'archives') return signalements
     return signalements.filter(s => s.statut === filter)
   }
 
@@ -317,9 +342,18 @@ export default function PoliceDashboard() {
     return getFilteredSignalements().slice().sort((a, b) => {
       const pa = priorityOrder[(a.priorite || '').toLowerCase()] || 0
       const pb = priorityOrder[(b.priorite || '').toLowerCase()] || 0
-      return pb - pa || new Date(b.createdAt) - new Date(a.createdAt)
+      const typeCompare = String(a.type || '').localeCompare(String(b.type || ''), 'fr')
+      return typeCompare || pb - pa || new Date(b.createdAt) - new Date(a.createdAt)
     })
   }
+
+  const getHourGroup = (signalement) => {
+    const date = new Date(signalement.createdAt || signalement.updatedAt || Date.now())
+    return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' - ' +
+      date.toLocaleTimeString('fr-FR', { hour: '2-digit' }) + '00'
+  }
+
+  const getSignalGroupKey = (signalement) => `${signalement.type || 'autre'}-${getHourGroup(signalement)}`
 
   const getHighestPrioriteSignalement = () => {
     const sorted = getSortedFilteredSignalements()
@@ -352,6 +386,11 @@ export default function PoliceDashboard() {
     .sort((a, b) => new Date(b.frameAt || b.updatedAt || b.startedAt || b.stoppedAt || 0) - new Date(a.frameAt || a.updatedAt || a.startedAt || a.stoppedAt || 0))[0]
   const activeLive = selectedLive ? liveRecordings[selectedLive.sessionId] || selectedLive : liveRecordingsList[0]
 
+  const dataUrlToBlob = async (dataUrl) => {
+    const response = await fetch(dataUrl)
+    return response.blob()
+  }
+
   const downloadLiveFrame = (live) => {
     if (!live?.frame) {
       toast.info('Aucune image live a enregistrer pour le moment')
@@ -363,6 +402,32 @@ export default function PoliceDashboard() {
     document.body.appendChild(a)
     a.click()
     a.remove()
+  }
+
+  const downloadLiveVideo = async (live) => {
+    const chunks = liveVideoChunksRef.current[live?.sessionId] || []
+    if (!chunks.length) {
+      downloadLiveFrame(live)
+      return
+    }
+    try {
+      const blobs = await Promise.all(chunks.map(dataUrlToBlob))
+      const mimeType = live.videoMimeType || blobs[0]?.type || 'video/webm'
+      const blob = new Blob(blobs, { type: mimeType })
+      const extension = mimeType.includes('mp4') ? 'mp4' : 'webm'
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `live-police-complet-${live.sessionId || Date.now()}.${extension}`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+      toast.success('Video live complete enregistree sur cet ordinateur')
+    } catch (error) {
+      console.error('Erreur enregistrement video live:', error)
+      toast.error('Impossible de reconstruire la video complete')
+    }
   }
 
   if (!authLoading && (!user || !canAccessPoliceDashboard(user.role))) {
@@ -543,10 +608,13 @@ export default function PoliceDashboard() {
                             GPS: {parseFloat(live.latitude).toFixed(5)}, {parseFloat(live.longitude).toFixed(5)}
                           </p>
                         )}
+                        <p className="mt-2 text-xs font-semibold text-indigo-700">
+                          Video recue: {live.videoChunkCount || 0} fragment(s)
+                        </p>
                       </div>
                       <div className="grid gap-2 sm:grid-cols-3">
                         <Button size="sm" variant="danger" icon={VideoCamera} onClick={() => setSelectedLive(live)}>Voir le live</Button>
-                        <Button size="sm" variant="secondary" icon={PaperClip} onClick={() => downloadLiveFrame(live)} disabled={!live.frame}>Enregistrer</Button>
+                        <Button size="sm" variant="secondary" icon={PaperClip} onClick={() => downloadLiveVideo(live)} disabled={!live.frame && !live.videoChunkCount}>Enregistrer</Button>
                         <Button
                           size="sm"
                           variant="secondary"
@@ -626,7 +694,7 @@ export default function PoliceDashboard() {
               { value: 'all', label: 'Tous' },
               { value: 'nouveau', label: 'Nouveaux' },
               { value: 'en_cours', label: 'En cours' },
-              { value: 'traite', label: 'Traites' }
+              { value: 'archives', label: 'Archives' }
             ].map(f => (
               <Button
                 key={f.value}
@@ -652,14 +720,25 @@ export default function PoliceDashboard() {
                 <p className="text-gray-500">Aucun signalement pour ce filtre</p>
               </Card>
             ) : (
-              getSortedFilteredSignalements().map((s, idx) => (
-                <motion.div
-                  key={s.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                >
-                  <Card className="border border-slate-200 p-5 transition hover:-translate-y-0.5 hover:shadow-xl sm:p-6">
+              getSortedFilteredSignalements().map((s, idx, list) => {
+                const groupKey = getSignalGroupKey(s)
+                const previousGroupKey = idx > 0 ? getSignalGroupKey(list[idx - 1]) : null
+                const showGroupHeader = groupKey !== previousGroupKey
+
+                return (
+                  <div key={s.id} className="space-y-3">
+                    {showGroupHeader && (
+                      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200 bg-slate-900 px-4 py-3 text-white shadow-sm">
+                        <span className="text-sm font-black uppercase">{s.type || 'autre'}</span>
+                        <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold">{getHourGroup(s)}</span>
+                      </div>
+                    )}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                    >
+                      <Card className="border border-slate-200 p-5 transition hover:-translate-y-0.5 hover:shadow-xl sm:p-6">
                     <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -718,9 +797,11 @@ export default function PoliceDashboard() {
                         </Button>
                       </div>
                     </div>
-                  </Card>
-                </motion.div>
-              ))
+                      </Card>
+                    </motion.div>
+                  </div>
+                )
+              })
             )}
           </motion.div>
         </div>
@@ -953,6 +1034,9 @@ export default function PoliceDashboard() {
                     Derniere image recue: {new Date(activeLive.frameAt).toLocaleTimeString('fr-FR')}
                   </p>
                 )}
+                <p className="mt-2 text-xs font-semibold text-slate-600">
+                  Video recue: {activeLive.videoChunkCount || 0} fragment(s)
+                </p>
               </div>
 
               <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-950">
@@ -984,10 +1068,10 @@ export default function PoliceDashboard() {
                   variant="secondary"
                   icon={PaperClip}
                   className="mt-3"
-                  disabled={!activeLive.frame}
-                  onClick={() => downloadLiveFrame(activeLive)}
+                  disabled={!activeLive.frame && !activeLive.videoChunkCount}
+                  onClick={() => downloadLiveVideo(activeLive)}
                 >
-                  Enregistrer sur cet ordinateur
+                  Enregistrer la video complete
                 </Button>
               </div>
             </div>
