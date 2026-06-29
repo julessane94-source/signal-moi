@@ -11,23 +11,36 @@ import Chatbot from '../components/Chatbot'
 
 export default function Home() {
 
-  const getImageUrl = (url) => {
-  if (!url) return '/icons/icon-192x192.png'
-  if (url.startsWith('data:')) return url
+  const getImageUrl = (url, { preferApi = false } = {}) => {
+    if (!url) return '/icons/icon-192x192.png'
+    if (url.startsWith('data:')) return url
 
-  if (url.startsWith('http://') || url.startsWith('https://')) {
-    try {
-      const parsed = new URL(url)
-      if (parsed.pathname.startsWith('/uploads/')) return `${API_BASE}${parsed.pathname}`
-      return parsed.pathname || '/icons/icon-192x192.png'
-    } catch (err) {
-      return '/icons/icon-192x192.png'
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      try {
+        const parsed = new URL(url)
+        if (parsed.pathname.startsWith('/uploads/')) {
+          return preferApi ? `${API_BASE}${parsed.pathname}` : parsed.pathname
+        }
+        return url
+      } catch (err) {
+        return '/icons/icon-192x192.png'
+      }
     }
+
+    if (url.startsWith('/uploads/')) return preferApi ? `${API_BASE}${url}` : url
+    if (url.startsWith('uploads/')) return preferApi ? `${API_BASE}/${url}` : `/${url}`
+    return url
   }
 
-  if (url.startsWith('/uploads/')) return `${API_BASE}${url}`
-  return url
-}
+  const handleImageFallback = (event, originalUrl) => {
+    const current = event.currentTarget
+    const apiUrl = getImageUrl(originalUrl, { preferApi: true })
+    if (current.src !== apiUrl && !originalUrl?.startsWith('data:')) {
+      current.src = apiUrl
+    } else {
+      current.src = '/icons/icon-192x192.png'
+    }
+  }
   const { user } = useAuth()
 
   const [config, setConfig] = useState({ home_page: {} })

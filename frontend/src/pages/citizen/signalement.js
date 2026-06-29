@@ -283,7 +283,7 @@ export default function NewSignalement() {
       const localisation = formData.localisation || 'Sedhiou - localisation a preciser'
       setGeoError('GPS et localisation IP indisponibles. Precisez le quartier ou un repere manuellement.')
       if (!silent) toast.info('Precisez votre lieu a Sedhiou')
-          setFormData(prev => ({ ...prev, localisation: shouldReplaceAutoLocation(prev.localisation) ? localisation : prev.localisation }))
+      setFormData(prev => ({ ...prev, localisation: shouldReplaceAutoLocation(prev.localisation) ? localisation : prev.localisation }))
       return { latitude: null, longitude: null, localisation }
     }
   }
@@ -308,7 +308,12 @@ export default function NewSignalement() {
         if (res.ok) {
           const data = await res.json()
           const addr = data.display_name
-          setFormData(prev => ({ ...prev, localisation: prev.localisation || addr, latitude: lat, longitude: lng }))
+          setFormData(prev => ({
+            ...prev,
+            localisation: shouldReplaceAutoLocation(prev.localisation) ? addr : prev.localisation,
+            latitude: lat,
+            longitude: lng
+          }))
           toast.success('📍 Localisation automatique trouvée')
         } else {
           setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }))
