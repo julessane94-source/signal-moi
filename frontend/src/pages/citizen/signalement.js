@@ -37,6 +37,19 @@ const shouldReplaceAutoLocation = (value) => {
   return !text || text.startsWith('Position approximative IP') || text.startsWith('Sedhiou - localisation')
 }
 
+const saveLastGpsLocation = ({ latitude, longitude, accuracy }) => {
+  if (typeof window === 'undefined') return
+  const lat = Number(latitude)
+  const lng = Number(longitude)
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
+  localStorage.setItem('signal_moi_last_location', JSON.stringify({
+    latitude: lat,
+    longitude: lng,
+    accuracy,
+    capturedAt: new Date().toISOString()
+  }))
+}
+
 export default function NewSignalement() {
   const { user } = useAuth()
   const { socket } = useSocket()
@@ -307,6 +320,7 @@ export default function NewSignalement() {
       const lng = pos.coords.longitude
       setLatitude(lat)
       setLongitude(lng)
+      saveLastGpsLocation({ latitude: lat, longitude: lng, accuracy: pos.coords.accuracy })
       // reverse geocode with Nominatim to fill localisation if empty
       try {
         const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
@@ -357,6 +371,7 @@ export default function NewSignalement() {
         let localisation = coordsLabel
         setLatitude(lat)
         setLongitude(lng)
+        saveLastGpsLocation({ latitude: lat, longitude: lng, accuracy: pos.coords.accuracy })
 
         try {
           const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
@@ -424,7 +439,12 @@ export default function NewSignalement() {
         if (status.state === 'granted' || status.state === 'prompt') {
           getAutomaticLocation({ silent: true })
         } else if (status.state === 'denied') {
-          setGeoError('Accès à la géolocalisation refusé')
+          setGeoError('GPS bloque par le navigateur. Ouvrez les parametres du site et autorisez la localisation, puis cliquez sur "Localiser par GPS".')
+        }
+        status.onchange = () => {
+          if (status.state === 'granted' || status.state === 'prompt') {
+            getAutomaticLocation({ silent: true })
+          }
         }
       }).catch(() => {
         // Permissions API unavailable, fallback: attempt to request geolocation once.
@@ -786,31 +806,43 @@ export default function NewSignalement() {
 
   return (
     <>
-      <div className="min-h-screen bg-slate-50 pt-16">
-        <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="mb-6 overflow-hidden rounded-2xl bg-slate-950 text-white shadow-xl">
-            <div className="p-6 sm:p-8">
-              <p className="text-sm font-semibold uppercase tracking-wide text-red-300">Signalement citoyen</p>
-              <h1 className="mt-2 text-3xl font-bold sm:text-4xl">Documenter un incident a Sedhiou</h1>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-200">
-                Decrivez la situation, ajoutez votre position et joignez des preuves. Les alertes urgentes peuvent transmettre une video en direct a l'espace police.
-              </p>
-              <div className="mt-5 flex flex-wrap gap-2 text-sm">
-                {['1. Details', '2. Position', '3. Preuves'].map((step) => (
-                  <span key={step} className="rounded-full bg-white/15 px-3 py-1 text-slate-100">{step}</span>
+      <div className="min-h-screen bg-slate-100 pt-16">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="mb-6 overflow-hidden rounded-[2rem] bg-slate-950 text-white shadow-2xl">
+            <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[1fr_320px] lg:items-end">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-red-300">Signalement citoyen</p>
+                <h1 className="mt-3 max-w-3xl text-3xl font-black leading-tight sm:text-5xl">Alerter vite, clairement, avec la bonne position</h1>
+                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-200">
+                  Choisissez le probleme, confirmez la localisation et ajoutez une preuve si possible.
+                </p>
+              </div>
+              <div className="grid gap-3 rounded-3xl border border-white/10 bg-white/10 p-4">
+                {['Choisir le probleme', 'Partager la position', 'Envoyer la preuve'].map((step, index) => (
+                  <div key={step} className="flex items-center gap-3">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-sm font-black text-slate-950">{index + 1}</span>
+                    <span className="text-sm font-semibold text-slate-100">{step}</span>
+                  </div>
                 ))}
               </div>
             </div>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
-            <form onSubmit={handleSubmit} noValidate className="space-y-7">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
-                <p className="mb-2 text-sm font-semibold text-red-600">Etape facile</p>
-                <label className="block text-lg font-black text-slate-900 mb-2">Donnez un petit nom au probleme</label>
-                <input type="text" name="titre" required value={formData.titre} onChange={handleChange} className="w-full rounded-2xl border border-slate-300 px-5 py-4 text-lg outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100" placeholder="Ex: Accident au marche" />
-                <p className="mt-2 text-sm text-slate-500">Si vous ne savez pas ecrire, cliquez d abord sur un gros bouton ci-dessous.</p>
-              </div>
-              <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+
+          <form onSubmit={handleSubmit} noValidate className="grid gap-6 lg:grid-cols-[1fr_340px]">
+            <div className="space-y-6">
+              <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+                <div className="mb-5 flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-bold uppercase tracking-wide text-red-600">Etape facile</p>
+                    <h2 className="mt-1 text-2xl font-black text-slate-950">Donnez un petit nom au probleme</h2>
+                  </div>
+                  <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-700">Obligatoire</span>
+                </div>
+                <input type="text" name="titre" required value={formData.titre} onChange={handleChange} className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-lg font-semibold text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-100" placeholder="Ex: Accident au marche" />
+                <p className="mt-3 text-sm text-slate-500">Cliquez d abord sur un gros bouton si vous voulez remplir plus vite.</p>
+              </section>
+
+              <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-sm font-semibold uppercase tracking-wide text-red-600">Choisir avec un gros bouton</p>
@@ -820,7 +852,7 @@ export default function NewSignalement() {
                   <button
                     type="button"
                     onClick={() => speakHelp('Choisissez le probleme. Violence si on attaque quelqu un. Accident si une personne est blessee. Vol si quelque chose a ete vole. Eclairage si la lumiere ne marche pas. Route si la route est abimee.')}
-                    className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-800 transition hover:bg-slate-100"
+                    className="rounded-2xl border border-slate-200 bg-slate-950 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800"
                   >
                     Ecouter l aide
                   </button>
@@ -831,10 +863,10 @@ export default function NewSignalement() {
                       key={item.value}
                       type="button"
                       onClick={() => handleQuickType(item.value, item.label)}
-                      className={`min-h-36 rounded-3xl border-2 p-5 text-left transition hover:-translate-y-1 hover:shadow-xl ${formData.type === item.value ? 'border-red-500 bg-red-50 shadow-lg ring-4 ring-red-100' : item.tone}`}
+                      className={`min-h-36 rounded-[1.5rem] border-2 p-5 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl ${formData.type === item.value ? 'border-red-500 bg-red-50 shadow-lg ring-4 ring-red-100' : `${item.tone} hover:border-slate-300`}`}
                     >
                       <div className="flex items-start justify-between gap-3">
-                        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-3xl font-black shadow-sm">{item.icon}</span>
+                        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-3xl font-black shadow-sm ring-1 ring-black/5">{item.icon}</span>
                         {formData.type === item.value && <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white">Choisi</span>}
                       </div>
                       <div className="mt-4 text-xl font-black">{item.simple}</div>
@@ -850,8 +882,9 @@ export default function NewSignalement() {
                   <option value="nid_de_poule">Nid-de-poule</option>
                   <option value="autre">Autre</option>
                 </select>
-              </div>
-              <div className="rounded-3xl border border-slate-200 bg-white p-4 sm:p-5">
+              </section>
+
+              <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
                 <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <label className="block text-lg font-black text-slate-900">Expliquez avec vos mots</label>
                   <button type="button" onClick={startDescriptionDictation} className={`rounded-2xl px-4 py-3 text-sm font-bold transition ${isListening ? 'bg-red-600 text-white' : 'bg-slate-950 text-white hover:bg-slate-800'}`}>
@@ -860,22 +893,32 @@ export default function NewSignalement() {
                 </div>
                 <textarea name="description" required rows="5" value={formData.description} onChange={handleChange} className="w-full rounded-2xl border border-slate-300 px-5 py-4 text-lg outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100" placeholder="Dites simplement ce qui se passe..."></textarea>
                 <p className="mt-2 text-sm text-slate-500">Vous pouvez aussi ajouter une photo ou une video au lieu de beaucoup ecrire.</p>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Localisation *</label>
-                <input type="text" name="localisation" value={formData.localisation} onChange={handleChange} className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" placeholder="Ex: Marché central, Sédhiou" />
-                <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
-                  <button type="button" onClick={() => getAutomaticLocation()} className="text-sm px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition font-medium">📍 Localiser</button>
-                  <span className="text-sm text-gray-600 font-medium">{latitude != null && longitude != null ? `✓ ${latitude.toFixed(5)}, ${longitude.toFixed(5)}` : 'Pas de localisation'}</span>
+              </section>
+
+              <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-bold uppercase tracking-wide text-blue-700">Position</p>
+                    <h2 className="text-2xl font-black text-slate-950">Ou faut-il intervenir ?</h2>
+                  </div>
+                  <button type="button" onClick={() => getAutomaticLocation()} className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700">Localiser par GPS</button>
+                </div>
+                <input type="text" name="localisation" value={formData.localisation} onChange={handleChange} className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100" placeholder="Ex: Marche central, Sedhiou" />
+                <div className="mt-3 inline-flex rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700">
+                  {latitude != null && longitude != null ? `GPS actif: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}` : 'GPS pas encore active'}
                 </div>
                 {geoError && <p className="text-sm text-red-600 mt-2">{geoError}</p>}
                 <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200">
                   <LeafletMap lat={latitude} lng={longitude} setLat={setLatitude} setLng={setLongitude} />
                 </div>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Preuves (photos, vidéos, audio)</label>
-                <input type="file" multiple accept="image/*,video/*,audio/*" onChange={handleFileChange} className="w-full rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-red-600 file:px-4 file:py-2 file:font-semibold file:text-white" />
+              </section>
+
+              <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+                <div className="mb-4">
+                  <p className="text-sm font-bold uppercase tracking-wide text-emerald-700">Preuves</p>
+                  <h2 className="text-2xl font-black text-slate-950">Ajouter photo, video ou audio</h2>
+                </div>
+                <input type="file" multiple accept="image/*,video/*,audio/*" onChange={handleFileChange} className="w-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-red-600 file:px-5 file:py-3 file:font-bold file:text-white hover:border-red-300 hover:bg-red-50/40" />
                 {files.length > 0 && (
                   <div className="mt-4">
                     <p className="text-sm font-medium text-gray-700 mb-3">{files.length} fichier(s) sélectionné(s)</p>
@@ -922,66 +965,96 @@ export default function NewSignalement() {
                     </div>
                   </div>
                 )}
+              </section>
+            </div>
+
+            <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+              <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
+                <p className="text-sm font-bold uppercase tracking-wide text-slate-500">Resume</p>
+                <div className="mt-4 space-y-3 text-sm">
+                  <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-3">
+                    <span className="font-semibold text-slate-600">Probleme</span>
+                    <span className="font-black text-slate-950">{getTypeLabel(formData.type)}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-3">
+                    <span className="font-semibold text-slate-600">Position</span>
+                    <span className={`font-black ${latitude != null && longitude != null ? 'text-emerald-700' : 'text-amber-700'}`}>{latitude != null && longitude != null ? 'GPS active' : 'A confirmer'}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-3">
+                    <span className="font-semibold text-slate-600">Preuves</span>
+                    <span className="font-black text-slate-950">{files.length}</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <input type="checkbox" name="estAnonyme" id="anonyme" checked={formData.estAnonyme} onChange={handleChange} className="h-4 w-4" />
-                <label htmlFor="anonyme" className="text-sm font-semibold text-slate-700">Signaler anonymement</label>
+
+              <label className="flex cursor-pointer items-start gap-3 rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
+                <input type="checkbox" name="estAnonyme" id="anonyme" checked={formData.estAnonyme} onChange={handleChange} className="mt-1 h-4 w-4" />
+                <span>
+                  <span className="block text-sm font-black text-slate-900">Signaler anonymement</span>
+                  <span className="mt-1 block text-xs leading-5 text-slate-500">Votre identite n'apparait pas dans le signalement public.</span>
+                </span>
+              </label>
+
+              <div className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm">
+                <button type="submit" disabled={loading} className="w-full rounded-2xl bg-red-600 px-5 py-4 text-base font-black text-white shadow-lg shadow-red-600/25 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-70">{loading ? 'Envoi en cours...' : 'Envoyer le signalement'}</button>
+                <button type="button" onClick={() => router.back()} className="mt-3 w-full rounded-2xl border border-slate-300 px-5 py-3 font-bold text-slate-700 transition hover:bg-slate-100">Annuler</button>
               </div>
-              <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-                <button type="button" onClick={() => router.back()} className="flex-1 rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-100">Annuler</button>
-                <button type="submit" disabled={loading} className="flex-1 rounded-xl bg-red-600 px-5 py-3 font-semibold text-white shadow-lg shadow-red-600/20 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-70">{loading ? 'Envoi...' : 'Signaler'}</button>
-              </div>
-            </form>
-          </div>
+            </aside>
+          </form>
         </div>
       </div>
       {showVideoPrompt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="w-full max-w-lg rounded-xl bg-white p-5 shadow-xl">
-            <h2 className="text-xl font-bold text-gray-900">Voulez-vous filmer la preuve ?</h2>
-            <p className="mt-2 text-sm text-gray-600">
-              La camera affiche un apercu en direct. La video sera sauvegardee comme preuve avec une duree maximale de 3 minutes.
-            </p>
-
-            <div className="mt-4 overflow-hidden rounded-lg bg-gray-900">
-              {recordingState === 'recording' || recordingState === 'saving' ? (
-                <video ref={videoPreviewRef} autoPlay playsInline muted className="h-64 w-full object-cover" />
-              ) : recordedVideoUrl ? (
-                <video src={recordedVideoUrl} controls className="h-64 w-full object-cover" />
-              ) : (
-                <div className="flex h-64 items-center justify-center text-sm text-gray-300">
-                  Pret a demarrer l enregistrement
-                </div>
-              )}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-2xl overflow-hidden rounded-[2rem] bg-white shadow-2xl">
+            <div className="border-b border-slate-200 bg-slate-950 p-5 text-white sm:p-6">
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-red-300">Preuve video</p>
+              <h2 className="mt-2 text-2xl font-black">Filmer ce qui se passe</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-300">
+                La camera envoie le live a la police et sauvegarde une preuve de 3 minutes maximum.
+              </p>
             </div>
 
-            {recordingError && <p className="mt-3 text-sm text-red-600">{recordingError}</p>}
+            <div className="p-5 sm:p-6">
+              <div className="overflow-hidden rounded-[1.5rem] bg-slate-950 ring-1 ring-slate-200">
+                {recordingState === 'recording' || recordingState === 'saving' ? (
+                  <video ref={videoPreviewRef} autoPlay playsInline muted className="h-72 w-full object-cover" />
+                ) : recordedVideoUrl ? (
+                  <video src={recordedVideoUrl} controls className="h-72 w-full object-cover" />
+                ) : (
+                  <div className="flex h-72 items-center justify-center text-sm font-semibold text-slate-300">
+                    Pret a demarrer l enregistrement
+                  </div>
+                )}
+              </div>
 
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-              {recordingState === 'recording' ? (
-                <button type="button" onClick={stopVideoRecording} className="flex-1 rounded bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700">
-                  Arreter et sauvegarder
-                </button>
-              ) : (
-                <button type="button" onClick={startVideoRecording} disabled={recordingState === 'saving' || loading} className="flex-1 rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-60">
-                  {recordingState === 'saved' ? 'Refilmer' : recordingState === 'saving' ? 'Sauvegarde...' : 'Filmer maintenant'}
-                </button>
-              )}
+              {recordingError && <p className="mt-3 rounded-2xl bg-red-50 p-3 text-sm font-semibold text-red-700">{recordingError}</p>}
 
-              {recordingState === 'saved' ? (
-                <button type="button" onClick={submitSignalement} disabled={loading} className="flex-1 rounded bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700 disabled:opacity-60">
-                  {loading ? 'Envoi...' : 'Envoyer avec la video'}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={continueWithoutVideo}
-                  disabled={recordingState === 'saving' || loading}
-                  className="flex-1 rounded border px-4 py-2 font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
-                >
-                  Continuer sans video
-                </button>
-              )}
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                {recordingState === 'recording' ? (
+                  <button type="button" onClick={stopVideoRecording} className="flex-1 rounded-2xl bg-red-600 px-5 py-3 font-black text-white shadow-lg shadow-red-600/20 transition hover:bg-red-700">
+                    Arreter et sauvegarder
+                  </button>
+                ) : (
+                  <button type="button" onClick={startVideoRecording} disabled={recordingState === 'saving' || loading} className="flex-1 rounded-2xl bg-blue-600 px-5 py-3 font-black text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 disabled:opacity-60">
+                    {recordingState === 'saved' ? 'Refilmer' : recordingState === 'saving' ? 'Sauvegarde...' : 'Filmer maintenant'}
+                  </button>
+                )}
+
+                {recordingState === 'saved' ? (
+                  <button type="button" onClick={submitSignalement} disabled={loading} className="flex-1 rounded-2xl bg-red-600 px-5 py-3 font-black text-white shadow-lg shadow-red-600/20 transition hover:bg-red-700 disabled:opacity-60">
+                    {loading ? 'Envoi...' : 'Envoyer avec la video'}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={continueWithoutVideo}
+                    disabled={recordingState === 'saving' || loading}
+                    className="flex-1 rounded-2xl border border-slate-300 px-5 py-3 font-black text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+                  >
+                    Continuer sans video
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

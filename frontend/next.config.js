@@ -31,6 +31,10 @@ const nextConfig = {
             key: 'Cache-Control',
             value: 'no-cache, no-store, must-revalidate',
           },
+          {
+            key: 'Permissions-Policy',
+            value: 'geolocation=(self), microphone=(self), camera=(self)',
+          },
         ],
       },
       // Apply no-cache to all non-static, non-api routes (pages rendered by Next)
@@ -41,6 +45,10 @@ const nextConfig = {
           {
             key: 'Cache-Control',
             value: 'no-cache, no-store, must-revalidate',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'geolocation=(self), microphone=(self), camera=(self)',
           },
         ],
       },

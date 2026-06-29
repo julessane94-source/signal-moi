@@ -44,6 +44,22 @@ export default function CitizenDashboard() {
       const timer = setTimeout(() => {
         requestCitizenLocation({ silent: true })
       }, 700)
+
+      if (typeof navigator !== 'undefined' && navigator.permissions?.query) {
+        navigator.permissions.query({ name: 'geolocation' }).then((status) => {
+          if (status.state === 'denied') {
+            setLocationStatus('denied')
+          }
+          status.onchange = () => {
+            if (status.state === 'granted' || status.state === 'prompt') {
+              requestCitizenLocation({ silent: true })
+            } else if (status.state === 'denied') {
+              setLocationStatus('denied')
+            }
+          }
+        }).catch(() => {})
+      }
+
       return () => clearTimeout(timer)
     }
   }, [authLoading, user?.id])
@@ -70,7 +86,7 @@ export default function CitizenDashboard() {
     }, (error) => {
       setLocationStatus(error.code === 1 ? 'denied' : 'failed')
       if (!silent) {
-        toast.info('Autorisez la localisation du navigateur pour envoyer votre vraie position')
+        toast.info('Autorisez la localisation dans les parametres du navigateur, puis cliquez encore sur Partager ma position')
       }
     }, {
       enableHighAccuracy: true,
@@ -295,7 +311,9 @@ export default function CitizenDashboard() {
 
           {locationStatus !== 'granted' && (
             <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm">
-              Autorisez le GPS dans votre navigateur pour que la carte et la police recoivent votre vraie position, pas une ville approximative.
+              {locationStatus === 'denied'
+                ? 'GPS bloque par le navigateur. Ouvrez les parametres du site, autorisez la localisation, puis cliquez sur Partager ma position.'
+                : 'Autorisez le GPS dans votre navigateur pour que la carte et la police recoivent votre vraie position, pas une ville approximative.'}
             </div>
           )}
 
