@@ -143,6 +143,14 @@ export const notifyRealtimeEvent = ({ role, event, payload = {}, toast }) => {
       urgent: false,
       url: '/collaborator/dashboard'
     }
+  } else if (event === 'signalement_status_updated' && (isAdmin || isCollaborateur)) {
+    alert = {
+      title: 'Statut de signalement mis a jour',
+      body: payload.message || payload.titre || 'Un dossier a change de statut.',
+      speech: 'Statut de signalement mis a jour.',
+      urgent: false,
+      url: isAdmin ? '/admin/dashboard' : '/collaborator/dashboard'
+    }
   } else if ((event === 'message_received' || event === 'notification') && isCitizen) {
     alert = {
       title: 'Signal-Moi',

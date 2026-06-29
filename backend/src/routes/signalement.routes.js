@@ -686,7 +686,22 @@ router.patch('/:id/statut', authMiddleware, async (req, res) => {
         }
 
         console.log(`[PATCH /:id/statut] Statut mis à jour pour ${id} à ${statut}`);
-        res.json({ success: true, signalement: result.rows[0] });
+        const updatedSignalement = result.rows[0];
+        if (global.io) {
+            const statusPayload = {
+                signalementId: id,
+                nouveauStatut: statut,
+                titre: updatedSignalement.titre,
+                message: `Le statut du signalement est maintenant: ${statut}`,
+                updatedAt: new Date()
+            };
+            if (updatedSignalement.user_id) {
+                global.io.to(`user_${updatedSignalement.user_id}`).emit('status_updated', statusPayload);
+            }
+            global.io.to('admin_room').emit('signalement_status_updated', statusPayload);
+            global.io.to('collaborateur_room').emit('followed_case_update', statusPayload);
+        }
+        res.json({ success: true, signalement: updatedSignalement });
     } catch (err) {
         console.error('Erreur PATCH statut:', err);
         res.status(500).json({ error: 'Erreur serveur', details: err.message });

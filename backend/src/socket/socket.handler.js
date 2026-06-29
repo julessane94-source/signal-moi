@@ -187,6 +187,11 @@ const setupSocket = (io) => {
         
         // Émettre au destinataire
         io.to(`user_${data.destinataireId}`).emit('new_message', messageData);
+        io.to(`user_${data.destinataireId}`).emit('message_received', {
+          ...messageData,
+          titre: 'Nouveau message',
+          message: `Message de ${messageData.expediteurNom}`
+        });
         
         // Confirmation à l'expéditeur
         socket.emit('message_sent', messageData);

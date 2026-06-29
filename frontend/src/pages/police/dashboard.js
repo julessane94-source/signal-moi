@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '../../context/AuthContext'
 import { useSocket } from '../../context/SocketContext'
@@ -37,25 +37,6 @@ export default function PoliceDashboard() {
   const [selectedLive, setSelectedLive] = useState(null)
   const [socketConnected, setSocketConnected] = useState(false)
   const [interventionLoading, setInterventionLoading] = useState({})
-  const announcedLiveSessionsRef = useRef(new Set())
-
-  const announceLiveAlert = (live) => {
-    if (!live?.sessionId || announcedLiveSessionsRef.current.has(live.sessionId)) return
-    announcedLiveSessionsRef.current.add(live.sessionId)
-    toast.warning(`Alerte live citoyen: ${live.titre || live.type || 'video en direct'}`)
-
-    if (typeof window === 'undefined' || !window.speechSynthesis || typeof SpeechSynthesisUtterance === 'undefined') return
-    try {
-      const message = new SpeechSynthesisUtterance('Alerte police. Un citoyen est en direct. Ouvrez le live maintenant.')
-      message.lang = 'fr-FR'
-      message.rate = 0.95
-      message.volume = 1
-      window.speechSynthesis.cancel()
-      window.speechSynthesis.speak(message)
-    } catch (error) {
-      console.warn('Alerte vocale indisponible:', error)
-    }
-  }
 
   useEffect(() => {
     if (authLoading) return
@@ -82,7 +63,6 @@ export default function PoliceDashboard() {
       const handleDisconnect = () => setSocketConnected(false)
 
       const handleNewSignalementNotification = (data) => {
-        toast.warning(`Nouveau signalement: ${data.title}`)
         if (data.isLiveRecording) return
         fetchSignalements()
       }
@@ -227,9 +207,6 @@ export default function PoliceDashboard() {
       })
       if (!res.ok) return
       const data = await res.json()
-      ;(data.sessions || []).forEach((live) => {
-        if ((live?.status || 'recording') === 'recording') announceLiveAlert(live)
-      })
       mergeLiveSessions(data.sessions || [])
     } catch (error) {
       console.warn('Erreur chargement lives:', error)
@@ -480,6 +457,17 @@ export default function PoliceDashboard() {
                     <span className={`rounded-full px-3 py-1 ${socketConnected ? 'bg-emerald-400/20 text-emerald-100' : 'bg-red-400/20 text-red-100'}`}>
                       {socketConnected ? 'Temps reel actif' : 'Connexion live en attente'}
                     </span>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await unlockNotificationSound?.()
+                        const permission = await requestNotificationPermission?.()
+                        toast.success(permission === 'granted' ? 'Alertes sonores et notifications activees' : 'Alertes sonores activees. Autorisez les notifications du navigateur si demande.')
+                      }}
+                      className="rounded-full bg-white px-3 py-1 text-slate-950 transition hover:bg-slate-100"
+                    >
+                      Activer les alertes
+                    </button>
                   </div>
                 </div>
               </div>
@@ -898,9 +886,10 @@ export default function PoliceDashboard() {
                 <Button
                   size="sm"
                   variant="warning"
-                  onClick={() => updateStatus(selectedSignal.id, 'en_cours')}
+                  onClick={() => handleIntervention(selectedSignal)}
+                  disabled={!!interventionLoading[selectedSignal.id]}
                 >
-                  En cours
+                  {interventionLoading[selectedSignal.id] ? 'En cours...' : 'En cours'}
                 </Button>
                 <Button
                   size="sm"

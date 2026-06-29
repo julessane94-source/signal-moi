@@ -102,12 +102,34 @@ export const SocketProvider = ({ children }) => {
       emitUserAlert('message_received', notification)
     })
 
+    nextSocket.on('new_message', (notification) => {
+      setNotifications(prev => [notification, ...prev].slice(0, 20))
+      emitUserAlert('message_received', notification)
+    })
+
+    nextSocket.on('status_updated', (notification) => {
+      setNotifications(prev => [notification, ...prev].slice(0, 20))
+      emitUserAlert('notification', {
+        ...notification,
+        titre: 'Statut mis a jour',
+        message: `Votre signalement est maintenant: ${notification.nouveauStatut || 'mis a jour'}`
+      })
+    })
+
+    nextSocket.on('signalement_status_updated', (notification) => {
+      setNotifications(prev => [notification, ...prev].slice(0, 20))
+      emitUserAlert('signalement_status_updated', notification)
+    })
+
     return () => {
       nextSocket.off('new_signalement_notification')
       nextSocket.off('signalement_received')
       nextSocket.off('live_recording_started')
       nextSocket.off('followed_case_update')
       nextSocket.off('message_received')
+      nextSocket.off('new_message')
+      nextSocket.off('status_updated')
+      nextSocket.off('signalement_status_updated')
       nextSocket.disconnect()
       if (socketRef.current === nextSocket) {
         socketRef.current = null
