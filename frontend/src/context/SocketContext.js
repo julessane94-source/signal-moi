@@ -2,6 +2,13 @@ import { createContext, useContext, useEffect, useState, useMemo, useCallback, u
 import io from 'socket.io-client'
 import { useAuth } from './AuthContext'
 import { API_BASE } from '../config/api'
+import { toast } from 'react-toastify'
+import {
+  notifyRealtimeEvent,
+  prepareRealtimeAlerts,
+  requestRealtimeNotificationPermission,
+  unlockRealtimeAudio
+} from '../utils/realtimeAlerts'
 
 const SocketContext = createContext()
 
@@ -29,6 +36,11 @@ export const SocketProvider = ({ children }) => {
   const { user } = useAuth()
 
   useEffect(() => {
+    const cleanup = prepareRealtimeAlerts()
+    return cleanup
+  }, [])
+
+  useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
 
     if (socketRef.current) {
@@ -52,22 +64,57 @@ export const SocketProvider = ({ children }) => {
     socketRef.current = nextSocket
     setSocket(nextSocket)
 
+    const emitUserAlert = (event, payload) => {
+      notifyRealtimeEvent({
+        role: user?.role,
+        event,
+        payload,
+        toast
+      })
+    }
+
     nextSocket.on('connect_error', (error) => {
       console.warn('Socket connection error:', error.message)
     })
 
     nextSocket.on('new_signalement_notification', (notification) => {
       setNotifications(prev => [notification, ...prev].slice(0, 20))
+      emitUserAlert('new_signalement_notification', notification)
+    })
+
+    nextSocket.on('signalement_received', (notification) => {
+      setNotifications(prev => [notification, ...prev].slice(0, 20))
+      emitUserAlert('signalement_received', notification)
+    })
+
+    nextSocket.on('live_recording_started', (notification) => {
+      setNotifications(prev => [notification, ...prev].slice(0, 20))
+      emitUserAlert('live_recording_started', notification)
+    })
+
+    nextSocket.on('followed_case_update', (notification) => {
+      setNotifications(prev => [notification, ...prev].slice(0, 20))
+      emitUserAlert('followed_case_update', notification)
+    })
+
+    nextSocket.on('message_received', (notification) => {
+      setNotifications(prev => [notification, ...prev].slice(0, 20))
+      emitUserAlert('message_received', notification)
     })
 
     return () => {
+      nextSocket.off('new_signalement_notification')
+      nextSocket.off('signalement_received')
+      nextSocket.off('live_recording_started')
+      nextSocket.off('followed_case_update')
+      nextSocket.off('message_received')
       nextSocket.disconnect()
       if (socketRef.current === nextSocket) {
         socketRef.current = null
       }
       setSocket(null)
     }
-  }, [user?.id])
+  }, [user?.id, user?.role])
 
   const sendMessage = useCallback((destinataireId, contenu, signalementId = null) => {
     if (socket) {
@@ -90,6 +137,8 @@ export const SocketProvider = ({ children }) => {
   const value = useMemo(() => ({
     socket,
     notifications,
+    requestNotificationPermission: requestRealtimeNotificationPermission,
+    unlockNotificationSound: unlockRealtimeAudio,
     sendMessage,
     markAsRead,
     sendTyping

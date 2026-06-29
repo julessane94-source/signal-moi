@@ -24,7 +24,7 @@ const canAccessPoliceDashboard = (role) => ['admin', 'administrateur', 'police',
 export default function PoliceDashboard() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
-  const { socket } = useSocket()
+  const { socket, unlockNotificationSound, requestNotificationPermission } = useSocket()
   const [signalements, setSignalements] = useState([])
   const [selectedSignal, setSelectedSignal] = useState(null)
   const [filter, setFilter] = useState('all')
@@ -36,6 +36,7 @@ export default function PoliceDashboard() {
   const [liveRecordings, setLiveRecordings] = useState({})
   const [selectedLive, setSelectedLive] = useState(null)
   const [socketConnected, setSocketConnected] = useState(false)
+  const [interventionLoading, setInterventionLoading] = useState({})
   const announcedLiveSessionsRef = useRef(new Set())
 
   const announceLiveAlert = (live) => {
@@ -77,21 +78,20 @@ export default function PoliceDashboard() {
     
     if (socket) {
       setSocketConnected(socket.connected)
-      socket.on('connect', () => setSocketConnected(true))
-      socket.on('disconnect', () => setSocketConnected(false))
+      const handleConnect = () => setSocketConnected(true)
+      const handleDisconnect = () => setSocketConnected(false)
 
-      socket.on('new_signalement_notification', (data) => {
+      const handleNewSignalementNotification = (data) => {
         toast.warning(`Nouveau signalement: ${data.title}`)
         if (data.isLiveRecording) return
         fetchSignalements()
-      })
+      }
       
-      socket.on('signalement_received', () => {
+      const handleSignalementReceived = () => {
         fetchSignalements()
-      })
+      }
 
-      socket.on('live_recording_started', (data) => {
-        announceLiveAlert(data)
+      const handleLiveRecordingStarted = (data) => {
         setLiveRecordings(prev => ({
           ...prev,
           [data.sessionId]: {
@@ -100,9 +100,9 @@ export default function PoliceDashboard() {
             status: 'recording'
           }
         }))
-      })
+      }
 
-      socket.on('live_recording_location', (data) => {
+      const handleLiveRecordingLocation = (data) => {
         if (!data.sessionId) return
         setLiveRecordings(prev => ({
           ...prev,
@@ -113,9 +113,9 @@ export default function PoliceDashboard() {
             status: prev[data.sessionId]?.status || 'recording'
           }
         }))
-      })
+      }
 
-      socket.on('live_recording_frame', (data) => {
+      const handleLiveRecordingFrame = (data) => {
         if (!data.sessionId) return
         setLiveRecordings(prev => ({
           ...prev,
@@ -128,9 +128,9 @@ export default function PoliceDashboard() {
             status: prev[data.sessionId]?.status || 'recording'
           }
         }))
-      })
+      }
 
-      socket.on('live_recording_stopped', (data) => {
+      const handleLiveRecordingStopped = (data) => {
         if (!data.sessionId) return
         setLiveRecordings(prev => ({
           ...prev,
@@ -141,21 +141,32 @@ export default function PoliceDashboard() {
             status: 'stopped'
           }
         }))
-      })
+      }
+
+      socket.on('connect', handleConnect)
+      socket.on('disconnect', handleDisconnect)
+      socket.on('new_signalement_notification', handleNewSignalementNotification)
+      socket.on('signalement_received', handleSignalementReceived)
+      socket.on('live_recording_started', handleLiveRecordingStarted)
+      socket.on('live_recording_location', handleLiveRecordingLocation)
+      socket.on('live_recording_frame', handleLiveRecordingFrame)
+      socket.on('live_recording_stopped', handleLiveRecordingStopped)
+
+      return () => {
+        clearInterval(livePoll)
+        socket.off('connect', handleConnect)
+        socket.off('disconnect', handleDisconnect)
+        socket.off('new_signalement_notification', handleNewSignalementNotification)
+        socket.off('signalement_received', handleSignalementReceived)
+        socket.off('live_recording_started', handleLiveRecordingStarted)
+        socket.off('live_recording_location', handleLiveRecordingLocation)
+        socket.off('live_recording_frame', handleLiveRecordingFrame)
+        socket.off('live_recording_stopped', handleLiveRecordingStopped)
+      }
     }
     
     return () => {
       clearInterval(livePoll)
-      if (socket) {
-        socket.off('new_signalement_notification')
-        socket.off('signalement_received')
-        socket.off('live_recording_started')
-        socket.off('live_recording_location')
-        socket.off('live_recording_frame')
-        socket.off('live_recording_stopped')
-        socket.off('connect')
-        socket.off('disconnect')
-      }
     }
   }, [socket, user, authLoading])
 
@@ -225,10 +236,10 @@ export default function PoliceDashboard() {
     }
   }
 
-  const updateStatus = async (id, statut) => {
+  const updateStatus = async (id, statut, { silent = false } = {}) => {
     try {
       const token = localStorage.getItem('token')
-      await fetch(`${API_BASE}/api/signalements/${id}/statut`, {
+      const res = await fetch(`${API_BASE}/api/signalements/${id}/statut`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -236,11 +247,39 @@ export default function PoliceDashboard() {
         },
         body: JSON.stringify({ statut })
       })
-      toast.success(`Statut mis a jour: ${statut}`)
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Mise a jour impossible')
+      }
+      const data = await res.json().catch(() => ({}))
+      if (!silent) toast.success(`Statut mis a jour: ${statut}`)
       fetchSignalements()
       setSelectedSignal(null)
+      return data.signalement || null
     } catch (error) {
-      toast.error('Erreur lors de la mise a jour')
+      toast.error(error.message || 'Erreur lors de la mise a jour')
+      throw error
+    }
+  }
+
+  const handleIntervention = async (signal) => {
+    if (!signal?.id || interventionLoading[signal.id]) return
+    setInterventionLoading(prev => ({ ...prev, [signal.id]: true }))
+    try {
+      await unlockNotificationSound?.()
+      await requestNotificationPermission?.()
+      const updatedSignal = await updateStatus(signal.id, 'en_cours', { silent: true })
+      const nextSignal = { ...signal, ...(updatedSignal || {}), statut: 'en_cours' }
+      setSelectedSignal(nextSignal)
+      toast.success('Intervention demarree. Le dossier est marque en cours.')
+    } catch (error) {
+      console.error('Intervention impossible:', error)
+    } finally {
+      setInterventionLoading(prev => {
+        const next = { ...prev }
+        delete next[signal.id]
+        return next
+      })
     }
   }
 
@@ -393,10 +432,11 @@ export default function PoliceDashboard() {
                 <Button
                   size="sm"
                   variant="secondary"
-                  onClick={() => updateStatus(topSignal.id, 'en_cours')}
+                  onClick={() => handleIntervention(topSignal)}
+                  disabled={!!interventionLoading[topSignal.id]}
                   className="text-red-600 hover:bg-red-50"
                 >
-                  Intervenir
+                  {interventionLoading[topSignal.id] ? 'En cours...' : 'Intervenir'}
                 </Button>
                 <Button
                   size="sm"
@@ -669,9 +709,10 @@ export default function PoliceDashboard() {
                         <Button
                           size="sm"
                           variant="danger"
-                          onClick={() => updateStatus(s.id, 'en_cours')}
+                          onClick={() => handleIntervention(s)}
+                          disabled={!!interventionLoading[s.id]}
                         >
-                          Intervenir
+                          {interventionLoading[s.id] ? 'En cours...' : 'Intervenir'}
                         </Button>
                         <Button
                           size="sm"

@@ -6,7 +6,7 @@ const db = require('../config/database');
 const { protect } = require('../middleware/auth.middleware');
 const SiteConfig = require('../models/SiteConfig');
 const { persistHomePageImages } = require('../utils/imageStorage');
-const { sendSimpleEmail } = require('../services/email.service');
+const { sendSimpleEmail, isSmtpConfigured } = require('../services/email.service');
 
 const normalizeLogoUrl = (value) => {
   if (!value || typeof value !== 'string') return '/icons/icon-192x192.png';
@@ -30,6 +30,9 @@ const buildLogoUrl = (logoRecord) => {
   const version = logoRecord.updated_at ? new Date(logoRecord.updated_at).getTime() : Date.now();
   return `/uploads/logo?v=${version}`;
 };
+
+const cleanEmail = (value) => String(value || '').trim().toLowerCase();
+const cleanPhone = (value) => String(value || '').trim().replace(/\s+/g, '');
 
 // GET /api/auth/site-config - Récupère la configuration du site (PUBLIC - sans auth)
 router.get('/site-config', async (req, res) => {
@@ -136,9 +139,9 @@ router.post('/register', async (req, res) => {
     // Support des formats: camelCase, snake_case, et français
     const prenom = req.body.firstName || req.body.first_name || req.body.prenom;
     const nom = req.body.lastName || req.body.last_name || req.body.nom;
-    const email = req.body.email;
+    const email = cleanEmail(req.body.email);
     const password = req.body.password;
-    const telephone = req.body.phone || req.body.telephone;
+    const telephone = cleanPhone(req.body.phone || req.body.telephone);
     const ville = req.body.city || req.body.ville;
     const quartier = req.body.quartier || req.body.district || 'Inconnu';
     const dataNaissance = req.body.dateNaissance || req.body.date_naissance || req.body.dob || '2000-01-01';
@@ -168,10 +171,21 @@ router.post('/register', async (req, res) => {
     }
 
     // Vérifier si l'email existe déjà
-    const result = await db.query('SELECT id FROM signal_moi.users WHERE email = $1', [email]);
+    const result = await db.query(
+      `SELECT id, email, telephone
+       FROM signal_moi.users
+       WHERE LOWER(email) = LOWER($1)
+          OR REPLACE(COALESCE(telephone, ''), ' ', '') = $2
+       LIMIT 1`,
+      [email, telephone]
+    );
     const existing = result.rows || [];
     if (existing.length > 0) {
-      return res.status(400).json({ success: false, message: 'Cet email est déjà utilisé' });
+      const existingUser = existing[0];
+      if (cleanEmail(existingUser.email) === email) {
+        return res.status(400).json({ success: false, message: 'Cet email est deja utilise' });
+      }
+      return res.status(400).json({ success: false, message: 'Ce numero de telephone est deja utilise' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -388,7 +402,7 @@ router.post('/google', async (req, res) => {
       return res.status(401).json({ success: false, message: 'Email Google non verifie' });
     }
 
-    const userEmail = googleProfile.email;
+    const userEmail = cleanEmail(googleProfile.email);
     const displayName = googleProfile.name || `${googleProfile.given_name || ''} ${googleProfile.family_name || ''}`.trim() || 'Utilisateur Google';
     
     const userRes = await db.query(
@@ -402,6 +416,7 @@ router.post('/google', async (req, res) => {
       // Utilisateur existant
       userId = userRes.rows[0].id;
       userRole = userRes.rows[0].role || 'citoyen';
+      await db.query('UPDATE signal_moi.users SET email_verified = true WHERE id = $1', [userId]);
       console.log('[AUTH POST /google] ✅ Utilisateur existant connecté via Google:', userEmail);
     } else {
       // Créer un nouvel utilisateur (citoyen par défaut)
@@ -457,19 +472,25 @@ router.post('/google', async (req, res) => {
 // POST /api/auth/forgot-password - Demander un code de réinitialisation
 router.post('/forgot-password', async (req, res) => {
   try {
-    const { email } = req.body;
+    const email = cleanEmail(req.body.email);
 
     if (!email) {
       return res.status(400).json({ success: false, message: 'Email requis' });
     }
 
     // Vérifier que l'utilisateur existe
-    const userResult = await db.query('SELECT id, email FROM signal_moi.users WHERE email = $1', [email]);
+    const userResult = await db.query('SELECT id, email, email_verified FROM signal_moi.users WHERE LOWER(email) = LOWER($1)', [email]);
     if (userResult.rows.length === 0) {
       // Ne pas révéler si l'email existe ou non (sécurité)
       return res.json({ success: true, message: 'Si cet email existe, un code a été envoyé' });
     }
 
+    if (!isSmtpConfigured) {
+      return res.status(503).json({
+        success: false,
+        message: 'Le service email SMTP n est pas encore configure. Le code ne peut pas etre envoye.'
+      });
+    }
     // Générer un code aléatoire
     const crypto = require('crypto');
     const code = crypto.randomInt(100000, 999999).toString();

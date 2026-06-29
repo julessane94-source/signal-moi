@@ -158,6 +158,22 @@ router.post('/users', authMiddleware, async (req, res) => {
   }
 
   try {
+    const duplicateRes = await db.query(
+      `SELECT id, email, telephone
+       FROM signal_moi.users
+       WHERE LOWER(email) = LOWER($1)
+          OR REPLACE(COALESCE(telephone, ''), ' ', '') = $2
+       LIMIT 1`,
+      [cleanedUser.email, cleanedUser.telephone.replace(/\s+/g, '')]
+    );
+    if (duplicateRes.rows.length > 0) {
+      const existingUser = duplicateRes.rows[0];
+      if (String(existingUser.email || '').trim().toLowerCase() === cleanedUser.email) {
+        return res.status(400).json({ error: 'Cet email est deja utilise' });
+      }
+      return res.status(400).json({ error: 'Ce numero de telephone est deja utilise' });
+    }
+
     const hashed = await require('bcrypt').hash(cleanedUser.password, 10);
     const insertQuery = `
       INSERT INTO signal_moi.users (prenom, nom, email, telephone, password, ville, quartier, role, is_active, email_verified)
