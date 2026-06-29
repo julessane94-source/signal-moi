@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Button, FormField, Input } from '../components/ui'
 import { EnvelopeIcon as Envelope, CheckCircleIcon as CheckCircle, ArrowLeftIcon as ArrowLeft } from '@heroicons/react/24/outline'
 import { motion } from 'framer-motion'
+import { API_BASE } from '../config/api'
 
 export default function ForgotPassword() {
   const router = useRouter()
@@ -20,23 +21,24 @@ export default function ForgotPassword() {
 
   // Initialize Google Sign-In
   useEffect(() => {
+    const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+    if (!googleClientId) return
     if (typeof window !== 'undefined' && window.google) {
       window.google.accounts.id.initialize({
-        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+        client_id: googleClientId,
         callback: async (response) => {
           try {
-            const res = await fetch('/api/auth/google', {
+            const res = await fetch(`${API_BASE}/api/auth/google`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ token: response.credential })
+              body: JSON.stringify({ idToken: response.credential })
             })
             if (res.ok) {
               const body = await res.json()
               const token = body.token
               if (token) {
                 localStorage.setItem('token', token)
-                // Redirect to login or home since we're on forgot-password
-                router.push('/login')
+                router.push('/')
               }
             }
           } catch (err) {
@@ -55,20 +57,20 @@ export default function ForgotPassword() {
       script.onload = () => {
         if (window.google) {
           window.google.accounts.id.initialize({
-            client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+            client_id: googleClientId,
             callback: async (response) => {
               try {
-                const res = await fetch('/api/auth/google', {
+                const res = await fetch(`${API_BASE}/api/auth/google`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ token: response.credential })
+                  body: JSON.stringify({ idToken: response.credential })
                 })
                 if (res.ok) {
                   const body = await res.json()
                   const token = body.token
                   if (token) {
                     localStorage.setItem('token', token)
-                    router.push('/login')
+                    router.push('/')
                   }
                 }
               } catch (err) {
@@ -100,7 +102,7 @@ export default function ForgotPassword() {
 
     setLoading(true)
     try {
-      const response = await fetch('/api/auth/forgot-password', {
+      const response = await fetch(`${API_BASE}/api/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: formData.email })
@@ -129,7 +131,7 @@ export default function ForgotPassword() {
 
     setLoading(true)
     try {
-      const response = await fetch('/api/auth/verify-reset-code', {
+      const response = await fetch(`${API_BASE}/api/auth/verify-reset-code`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -171,7 +173,7 @@ export default function ForgotPassword() {
 
     setLoading(true)
     try {
-      const response = await fetch('/api/auth/reset-password', {
+      const response = await fetch(`${API_BASE}/api/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

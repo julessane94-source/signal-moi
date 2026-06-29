@@ -373,7 +373,7 @@ export default function PoliceDashboard() {
 
   return (
     <>
-      <div className="min-h-screen bg-slate-100 pt-20 pb-12">
+      <div className="min-h-screen overflow-x-hidden bg-slate-100 pt-20 pb-12">
         {/* Alert bar pour signalement prioritaire */}
         {topSignal && (
           <motion.div
@@ -422,29 +422,35 @@ export default function PoliceDashboard() {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+            className="mb-8 overflow-hidden rounded-[2rem] border border-slate-200 bg-slate-950 text-white shadow-2xl"
           >
-            <div className="grid gap-6 p-6 lg:grid-cols-[1.4fr_1fr] lg:p-8">
-              <div className="flex items-start gap-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm">
+            <div className="grid min-w-0 gap-6 p-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.9fr)] lg:p-8">
+              <div className="flex min-w-0 items-start gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-slate-950 shadow-sm">
                   <ShieldCheck className="h-7 w-7" />
                 </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">Espace forces de l'ordre</p>
-                  <h1 className="mt-1 text-3xl font-bold text-slate-950 md:text-4xl">Centre de coordination police</h1>
-                  <p className="mt-2 max-w-2xl text-sm text-slate-600 md:text-base">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-300">Espace forces de l'ordre</p>
+                  <h1 className="mt-2 text-3xl font-black leading-tight text-white md:text-5xl">Centre de coordination police</h1>
+                  <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300 md:text-base">
                     Bienvenue {user?.prenom} {user?.nom}. Suivez les alertes, les preuves video et les positions en temps reel.
                   </p>
+                  <div className="mt-5 flex flex-wrap gap-2 text-xs font-bold">
+                    <span className="rounded-full bg-white/10 px-3 py-1 text-slate-100">Signalements securite</span>
+                    <span className={`rounded-full px-3 py-1 ${socketConnected ? 'bg-emerald-400/20 text-emerald-100' : 'bg-red-400/20 text-red-100'}`}>
+                      {socketConnected ? 'Temps reel actif' : 'Connexion live en attente'}
+                    </span>
+                  </div>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs font-medium text-slate-500">A traiter</p>
-                  <p className="mt-1 text-2xl font-bold text-slate-950">{stats.nouveaux + stats.enCours}</p>
+              <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl border border-white/10 bg-white/10 p-4">
+                  <p className="text-xs font-medium text-slate-300">A traiter</p>
+                  <p className="mt-1 text-3xl font-black text-white">{stats.nouveaux + stats.enCours}</p>
                 </div>
-                <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-                  <p className="text-xs font-medium text-red-700">Prioritaires</p>
-                  <p className="mt-1 text-2xl font-bold text-red-700">{signalements.filter(s => ['urgente', 'haute'].includes((s.priorite || '').toLowerCase())).length}</p>
+                <div className="rounded-2xl border border-red-300/20 bg-red-500/15 p-4">
+                  <p className="text-xs font-medium text-red-100">Prioritaires</p>
+                  <p className="mt-1 text-3xl font-black text-red-100">{signalements.filter(s => ['urgente', 'haute'].includes((s.priorite || '').toLowerCase())).length}</p>
                 </div>
                 <button
                   type="button"
@@ -452,11 +458,11 @@ export default function PoliceDashboard() {
                     if (liveRecordingsList.length > 0) setSelectedLive(liveRecordingsList[0])
                     else toast.info('Aucun live citoyen en cours')
                   }}
-                  className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-left transition hover:border-indigo-400 hover:bg-indigo-100"
+                  className="rounded-2xl border border-indigo-300/20 bg-indigo-500/15 p-4 text-left transition hover:bg-indigo-500/25"
                 >
-                  <p className="text-xs font-medium text-indigo-700">Lives</p>
-                  <p className="mt-1 text-2xl font-bold text-indigo-700">{liveRecordingsList.length}</p>
-                  <p className="mt-1 text-xs font-semibold text-indigo-600">{socketConnected ? 'Voir le live' : 'Socket hors ligne'}</p>
+                  <p className="text-xs font-medium text-indigo-100">Lives</p>
+                  <p className="mt-1 text-3xl font-black text-indigo-100">{liveRecordingsList.length}</p>
+                  <p className="mt-1 text-xs font-semibold text-indigo-200">{socketConnected ? 'Voir le live' : 'Socket hors ligne'}</p>
                 </button>
               </div>
             </div>
@@ -466,10 +472,10 @@ export default function PoliceDashboard() {
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-8 overflow-hidden rounded-2xl border border-red-200 bg-white shadow-lg"
+              className="mb-8 overflow-hidden rounded-[1.75rem] border border-red-200 bg-white shadow-xl"
             >
-              <div className="flex items-center gap-3 border-b border-red-100 bg-red-50 p-5">
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-red-600 text-white">
+              <div className="flex flex-col gap-3 border-b border-red-100 bg-red-50 p-5 sm:flex-row sm:items-center">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-600 text-white shadow-lg shadow-red-600/20">
                   <VideoCamera className="h-6 w-6" />
                 </div>
                 <div>
@@ -482,7 +488,7 @@ export default function PoliceDashboard() {
 
               <div className="grid gap-5 p-5 lg:grid-cols-2">
                 {liveRecordingsList.map((live) => (
-                  <div key={live.sessionId} className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm ring-1 ring-red-100">
+                  <div key={live.sessionId} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md ring-1 ring-red-100">
                     <div className="bg-slate-950">
                       {live.frame ? (
                         <img src={live.frame} alt="Apercu video en direct" className="h-56 w-full object-cover" />
@@ -510,38 +516,25 @@ export default function PoliceDashboard() {
                           </p>
                         )}
                       </div>
-                      <Button
-                        size="sm"
-                        variant="danger"
-                        icon={VideoCamera}
-                        onClick={() => setSelectedLive(live)}
-                      >
-                        Voir le live
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        icon={PaperClip}
-                        onClick={() => downloadLiveFrame(live)}
-                        disabled={!live.frame}
-                      >
-                        Enregistrer
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        icon={MapPin}
-                        onClick={() => {
-                          if (live.latitude && live.longitude) {
-                            window.open(`https://www.google.com/maps/?q=${live.latitude},${live.longitude}`, '_blank')
-                          } else if (live.localisation) {
-                            window.open(`https://www.google.com/maps/search/${encodeURIComponent(live.localisation)}`, '_blank')
-                          }
-                        }}
-                        disabled={!live.latitude && !live.longitude && !live.localisation}
-                      >
-                        Localiser
-                      </Button>
+                      <div className="grid gap-2 sm:grid-cols-3">
+                        <Button size="sm" variant="danger" icon={VideoCamera} onClick={() => setSelectedLive(live)}>Voir le live</Button>
+                        <Button size="sm" variant="secondary" icon={PaperClip} onClick={() => downloadLiveFrame(live)} disabled={!live.frame}>Enregistrer</Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          icon={MapPin}
+                          onClick={() => {
+                            if (live.latitude && live.longitude) {
+                              window.open(`https://www.google.com/maps/?q=${live.latitude},${live.longitude}`, '_blank')
+                            } else if (live.localisation) {
+                              window.open(`https://www.google.com/maps/search/${encodeURIComponent(live.localisation)}`, '_blank')
+                            }
+                          }}
+                          disabled={!live.latitude && !live.longitude && !live.localisation}
+                        >
+                          Localiser
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -638,9 +631,9 @@ export default function PoliceDashboard() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
                 >
-                  <Card className="p-6 border border-slate-200 hover:shadow-lg transition">
-                    <div className="flex justify-between items-start gap-4">
-                      <div className="flex-1">
+                  <Card className="border border-slate-200 p-5 transition hover:-translate-y-0.5 hover:shadow-xl sm:p-6">
+                    <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
+                      <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <Badge variant={getStatusVariant(s.statut)}>
                             {s.statut || 'Nouveau'}
@@ -662,7 +655,7 @@ export default function PoliceDashboard() {
                           <span className="inline-flex items-center gap-1"><CalendarDays className="h-4 w-4" /> {new Date(s.createdAt).toLocaleDateString()}</span>
                         </div>
                       </div>
-                      <div className="flex flex-col gap-2">
+                      <div className="grid gap-2 sm:grid-cols-3 lg:w-36 lg:grid-cols-1">
                         <Button
                           size="sm"
                           icon={DocumentText}

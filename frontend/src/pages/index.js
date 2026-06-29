@@ -147,7 +147,7 @@ export default function Home() {
         )}
       </Head>
 
-      <main className="min-h-screen pt-16 bg-white">
+      <main className="min-h-screen overflow-x-hidden pt-16 bg-white">
         <section className="relative overflow-hidden bg-slate-950 text-white">
           {slideshowImages.length > 0 && (
             <Image
@@ -156,32 +156,32 @@ export default function Home() {
               alt=""
               fill
               sizes="100vw"
-              className="object-contain opacity-45"
+              className="object-cover opacity-75"
               priority={slideIndex === 0}
             />
           )}
-          <div className="absolute inset-0 bg-slate-950/60" />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,6,23,0.95)_0%,rgba(2,6,23,0.72)_46%,rgba(2,6,23,0.36)_100%)]" />
+          <div className="absolute inset-0 bg-slate-950/35" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,6,23,0.88)_0%,rgba(2,6,23,0.58)_48%,rgba(2,6,23,0.22)_100%)]" />
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 lg:py-16">
-            <div className="grid items-center gap-10 lg:grid-cols-[1fr_0.92fr]">
-              <div className="max-w-3xl">
-                <div className="inline-flex items-center gap-3 border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-emerald-100">
+            <div className="grid min-w-0 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.92fr)] lg:gap-10">
+              <div className="min-w-0 max-w-3xl">
+                <div className="inline-flex max-w-full items-center gap-3 border border-white/15 bg-white/15 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-50 sm:px-4 sm:text-xs sm:tracking-[0.24em]">
                   <img src={getImageUrl(config.logoUrl)} alt="Logo Signal-Moi" className="h-7 w-7 rounded object-cover" />
-                  Signal-Moi Sédhiou
+                  <span className="truncate">Signal-Moi Sédhiou</span>
                 </div>
-                <h1 className="mt-6 text-4xl md:text-5xl lg:text-6xl font-black leading-tight">
+                <h1 className="mt-6 max-w-full text-4xl font-black leading-tight break-words md:text-5xl lg:text-6xl">
                   {config.home_page?.title || 'Un signalement clair pour une réponse plus rapide'}
                 </h1>
                 <p className="mt-5 text-lg md:text-xl text-slate-200 max-w-2xl">
                   {config.home_page?.heroText || 'Aidez les quartiers de Sédhiou à remonter les urgences, les preuves et les besoins de terrain aux équipes concernées.'}
                 </p>
 
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                  <Link href={user ? "/citizen/signalement" : "/login"}>
-                    <Button className="bg-emerald-500 text-slate-950 px-7 py-3 font-bold hover:bg-emerald-400 transition" size="md">Faire un signalement</Button>
+                <div className="mt-8 flex max-w-full flex-col gap-3 sm:flex-row">
+                  <Link href={user ? "/citizen/signalement" : "/login"} className="min-w-0">
+                    <Button className="w-full bg-emerald-500 text-slate-950 px-7 py-3 font-bold hover:bg-emerald-400 transition sm:w-auto" size="md">Faire un signalement</Button>
                   </Link>
-                  <Link href="/signalements">
-                    <Button className="border border-white/25 bg-white/10 px-7 py-3 font-semibold text-white hover:bg-white/15 transition" size="md">Voir les signalements</Button>
+                  <Link href="/signalements" className="min-w-0">
+                    <Button className="w-full border border-white/25 bg-white/10 px-7 py-3 font-semibold text-white hover:bg-white/15 transition sm:w-auto" size="md">Voir les signalements</Button>
                   </Link>
                 </div>
 
@@ -191,9 +191,9 @@ export default function Home() {
                   </button>
                 )}
 
-                <div className="mt-8 grid max-w-2xl grid-cols-3 border border-white/10 bg-white/5">
+                <div className="mt-8 grid max-w-2xl grid-cols-1 border border-white/10 bg-white/10 sm:grid-cols-3">
                   {localStats.map((item) => (
-                    <div key={item.label} className="p-4">
+                    <div key={item.label} className="min-w-0 p-4">
                       <p className="text-xl font-black text-white">{item.value}</p>
                       <p className="mt-1 text-xs uppercase tracking-wide text-slate-400">{item.label}</p>
                     </div>
@@ -201,7 +201,7 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="w-full">
+              <div className="min-w-0 w-full">
                 <div className="overflow-hidden border border-white/10 bg-white/10 shadow-2xl">
                   {slideshowImages.length > 0 ? (
                     <div className="relative">
@@ -271,13 +271,13 @@ export default function Home() {
 
         <section className="bg-slate-50 py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-700">Pourquoi Signal-Moi</p>
+            <div className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-emerald-700 sm:tracking-[0.25em]">Pourquoi Signal-Moi</p>
                 <h2 className="mt-3 text-3xl font-black text-slate-950 md:text-4xl">Une plateforme structurée pour agir localement.</h2>
                 <p className="mt-4 text-slate-600">Chaque signalement rassemble les informations utiles: description, localisation, pièces jointes et suivi. Les équipes peuvent alors prioriser sans perdre de temps.</p>
               </div>
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid min-w-0 gap-4 md:grid-cols-3">
                 {features.map((feature) => (
                   <article key={feature.title} className="border border-slate-200 bg-white p-5 shadow-sm">
                     <div className="text-sm font-black text-emerald-700">{feature.icon}</div>
@@ -292,9 +292,9 @@ export default function Home() {
 
         <section className="bg-white py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="grid gap-8 lg:grid-cols-2">
-              <div className="border border-slate-200 p-6">
-                <p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Parcours citoyen</p>
+            <div className="grid min-w-0 gap-8 lg:grid-cols-2">
+              <div className="min-w-0 border border-slate-200 p-6">
+                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-500 sm:tracking-[0.25em]">Parcours citoyen</p>
                 <h2 className="mt-3 text-2xl font-black text-slate-950">Signaler en moins de quelques minutes</h2>
                 <div className="mt-6 space-y-4">
                   {['Choisir le type d’incident', 'Décrire ce qui se passe', 'Ajouter une photo, vidéo ou un live', 'Confirmer la localisation à Sédhiou', 'Suivre le traitement du dossier'].map((step, index) => (
@@ -305,8 +305,8 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-              <div className="border border-emerald-200 bg-emerald-50 p-6">
-                <p className="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-700">Priorités locales</p>
+              <div className="min-w-0 border border-emerald-200 bg-emerald-50 p-6">
+                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-emerald-700 sm:tracking-[0.25em]">Priorités locales</p>
                 <h2 className="mt-3 text-2xl font-black text-slate-950">Des données utiles pour Sédhiou</h2>
                 <p className="mt-4 text-slate-700">Les tableaux de bord aident à repérer les zones récurrentes, les urgences de sécurité et les besoins d’intervention. Les statistiques d’âge ignorent les profils sans date de naissance afin de garder des analyses propres.</p>
                 <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -322,14 +322,14 @@ export default function Home() {
         {/* Blog */}
         <section className="py-12 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
+            <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0">
                 <h2 className="text-2xl font-bold text-gray-900">Blog Signal-Moi</h2>
                 <p className="text-sm text-gray-600">Actualités, guides pratiques et témoignages de notre communauté</p>
               </div>
-              <div className="flex gap-2 items-center text-sm text-gray-500">
+              <div className="flex min-w-0 flex-col gap-2 text-sm text-gray-500 sm:flex-row sm:items-center">
                 <span className="hidden sm:inline">Filtrer :</span>
-                <div className="flex gap-1">
+                <div className="flex flex-wrap gap-1">
                   {['Tous','Guides','Tutoriels','Témoignages','Actualités','Sécurité'].map((tab) => (
                     <button
                       key={tab}
@@ -396,12 +396,12 @@ export default function Home() {
             <h2 className="text-3xl font-bold mb-4">Rejoignez notre communauté</h2>
             <p className="text-xl text-green-50 mb-8 max-w-2xl mx-auto">Des milliers de citoyens engagés améliorent déjà leur quartier ensemble.</p>
 
-            <div className="flex flex-col md:flex-row gap-4 justify-center">
-              <Link href={user ? "/citizen/dashboard" : "/register"}>
-                <button className="bg-white text-teal-600 px-8 py-3 rounded-xl font-semibold hover:bg-gray-100 transition">{user ? "✓ Aller au dashboard" : "👥 Rejoindre maintenant"}</button>
+            <div className="flex flex-col gap-4 md:flex-row md:justify-center">
+              <Link href={user ? "/citizen/dashboard" : "/register"} className="min-w-0">
+                <button className="w-full rounded-xl bg-white px-6 py-3 font-semibold text-teal-600 transition hover:bg-gray-100 md:w-auto">{user ? "✓ Aller au dashboard" : "👥 Rejoindre maintenant"}</button>
               </Link>
-              <Link href="/signalements">
-                <button className="bg-teal-700 text-white px-8 py-3 rounded-xl font-semibold hover:bg-teal-800 transition border-2 border-white">📊 Voir les signalements</button>
+              <Link href="/signalements" className="min-w-0">
+                <button className="w-full rounded-xl border-2 border-white bg-teal-700 px-6 py-3 font-semibold text-white transition hover:bg-teal-800 md:w-auto">📊 Voir les signalements</button>
               </Link>
             </div>
           </div>

@@ -6,6 +6,7 @@ const db = require('../config/database');
 const { protect } = require('../middleware/auth.middleware');
 const SiteConfig = require('../models/SiteConfig');
 const { persistHomePageImages } = require('../utils/imageStorage');
+const { sendSimpleEmail } = require('../services/email.service');
 
 const normalizeLogoUrl = (value) => {
   if (!value || typeof value !== 'string') return '/icons/icon-192x192.png';
@@ -359,9 +360,10 @@ router.post('/change-password', protect, async (req, res) => {
 // POST /api/auth/google - Authentification via Google OAuth (STUB - à intégrer avec Google Cloud)
 router.post('/google', async (req, res) => {
   try {
-    const { token, idToken, email, name, picture } = req.body;
+    const { token, idToken } = req.body;
+    const googleToken = idToken || token;
 
-    if (!idToken && !token) {
+    if (!googleToken) {
       return res.status(400).json({
         success: false,
         message: 'Token Google requis'
@@ -372,7 +374,22 @@ router.post('/google', async (req, res) => {
     // Pour l'instant, c'est un stub qui simule l'authentification
 
     // Chercher ou créer l'utilisateur avec l'email Google
-    const userEmail = email || 'unknown@google.com';
+    const googleResponse = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(googleToken)}`);
+    if (!googleResponse.ok) {
+      return res.status(401).json({ success: false, message: 'Token Google invalide' });
+    }
+
+    const googleProfile = await googleResponse.json();
+    const expectedClientId = process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (expectedClientId && googleProfile.aud !== expectedClientId) {
+      return res.status(401).json({ success: false, message: 'Application Google non autorisee' });
+    }
+    if (googleProfile.email_verified !== true && googleProfile.email_verified !== 'true') {
+      return res.status(401).json({ success: false, message: 'Email Google non verifie' });
+    }
+
+    const userEmail = googleProfile.email;
+    const displayName = googleProfile.name || `${googleProfile.given_name || ''} ${googleProfile.family_name || ''}`.trim() || 'Utilisateur Google';
     
     const userRes = await db.query(
       'SELECT id, email, prenom, nom, role FROM signal_moi.users WHERE email = $1',
@@ -380,13 +397,15 @@ router.post('/google', async (req, res) => {
     );
 
     let userId;
+    let userRole = 'citoyen';
     if (userRes.rows.length > 0) {
       // Utilisateur existant
       userId = userRes.rows[0].id;
+      userRole = userRes.rows[0].role || 'citoyen';
       console.log('[AUTH POST /google] ✅ Utilisateur existant connecté via Google:', userEmail);
     } else {
       // Créer un nouvel utilisateur (citoyen par défaut)
-      const nomComplet = name || 'Utilisateur Google';
+      const nomComplet = displayName;
       const nomParts = nomComplet.split(' ');
       const prenom = nomParts[0] || 'Citoyen';
       const nom = nomParts.slice(1).join(' ') || 'Google';
@@ -397,8 +416,8 @@ router.post('/google', async (req, res) => {
 
       const newUserRes = await db.query(
         `INSERT INTO signal_moi.users 
-        (email, password, prenom, nom, role, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, 'citoyen', NOW(), NOW())
+        (email, password, prenom, nom, role, is_active, email_verified, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, 'citoyen', true, true, NOW(), NOW())
         RETURNING id`,
         [userEmail, hashedPassword, prenom, nom]
       );
@@ -409,7 +428,7 @@ router.post('/google', async (req, res) => {
 
     // Générer un JWT
     const jwtToken = jwt.sign(
-      { id: userId, email: userEmail },
+      { id: userId, email: userEmail, role: userRole },
       process.env.JWT_SECRET || 'default_secret_key',
       { expiresIn: '7d' }
     );
@@ -420,7 +439,8 @@ router.post('/google', async (req, res) => {
       token: jwtToken,
       user: {
         id: userId,
-        email: userEmail
+        email: userEmail,
+        role: userRole
       }
     });
 
@@ -479,7 +499,25 @@ router.post('/forgot-password', async (req, res) => {
     );
 
     // Envoyer l'email avec le code (simulation - à intégrer avec Nodemailer)
-    console.log(`[FORGOT PASSWORD] Code pour ${email}: ${code}`);
+    try {
+      await sendSimpleEmail({
+        to: email,
+        subject: 'Code de reinitialisation Signal-Moi',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #111827;">
+            <h2 style="color: #4f46e5;">Code de reinitialisation</h2>
+            <p>Bonjour,</p>
+            <p>Votre code pour reinitialiser le mot de passe Signal-Moi est :</p>
+            <div style="font-size: 28px; font-weight: 800; letter-spacing: 6px; background: #f3f4f6; padding: 16px; text-align: center; border-radius: 12px;">${code}</div>
+            <p>Ce code expire dans 15 minutes.</p>
+            <p>Si vous n'avez pas demande cette action, ignorez cet email.</p>
+          </div>
+        `
+      });
+    } catch (mailError) {
+      console.warn('[FORGOT PASSWORD] Email non envoye, code journalise:', mailError.message);
+      console.log(`[FORGOT PASSWORD] Code pour ${email}: ${code}`);
+    }
     
     // Réponse sécurisée
     res.json({ 
