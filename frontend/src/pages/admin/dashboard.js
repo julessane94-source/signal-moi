@@ -18,22 +18,33 @@ import {
   ArrowUpTrayIcon as ArrowUpTray
 } from '@heroicons/react/24/outline'
 
-const getImageUrl = (url) => {
+const getImageUrl = (url, { preferApi = true } = {}) => {
   if (!url) return null
   if (url.startsWith('data:')) return url
 
   if (url.startsWith('http://') || url.startsWith('https://')) {
     try {
       const parsed = new URL(url)
-      if (parsed.pathname.startsWith('/uploads/')) return `${API_BASE}${parsed.pathname}`
-      return parsed.pathname || '/icons/icon-192x192.png'
+      if (parsed.pathname.startsWith('/uploads/')) return preferApi ? `${API_BASE}${parsed.pathname}` : parsed.pathname
+      return url || '/icons/icon-192x192.png'
     } catch (err) {
       return '/icons/icon-192x192.png'
     }
   }
 
-  if (url.startsWith('/uploads/')) return `${API_BASE}${url}`
+  if (url.startsWith('/uploads/')) return preferApi ? `${API_BASE}${url}` : url
+  if (url.startsWith('uploads/')) return preferApi ? `${API_BASE}/${url}` : `/${url}`
   return url
+}
+
+const handleImageFallback = (event, originalUrl) => {
+  const current = event.currentTarget
+  const fallback = getImageUrl(originalUrl, { preferApi: false })
+  if (current.src !== fallback && !originalUrl?.startsWith('data:')) {
+    current.src = fallback
+  } else {
+    current.src = '/icons/icon-192x192.png'
+  }
 }
 
 export default function AdminDashboard() {
@@ -414,7 +425,9 @@ export default function AdminDashboard() {
         address: siteConfig.address,
         contactPage: siteConfig.contactPage,
         aboutPage: siteConfig.aboutPage,
-        homePage: siteConfig.homePage
+        homePage: siteConfig.homePage,
+        emergencyPolice: siteConfig.emergencyPolice,
+        emergencyFire: siteConfig.emergencyFire
       }
       // Include social links if present
       if (siteConfig.socialLinks) payload.socialLinks = siteConfig.socialLinks
@@ -832,7 +845,7 @@ export default function AdminDashboard() {
                           </div>
                           <div className="flex flex-col items-end gap-2">
                             {getImageUrl(c.image_url || c.image) && (
-                              <img src={getImageUrl(c.image_url || c.image)} alt="aperçu" className="w-20 h-20 object-cover rounded-lg" />
+                              <img src={getImageUrl(c.image_url || c.image)} onError={(event) => handleImageFallback(event, c.image_url || c.image)} alt="aperçu" className="w-20 h-20 object-cover rounded-lg" />
                             )}
                             <motion.button
                               whileHover={{ scale: 1.05 }}

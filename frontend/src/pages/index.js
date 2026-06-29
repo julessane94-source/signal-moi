@@ -152,7 +152,7 @@ export default function Home() {
           {slideshowImages.length > 0 && (
             <Image
               key={`hero-bg-${slideIndex}`}
-              src={getImageUrl(slideshowImages[slideIndex])}
+              src={getImageUrl(slideshowImages[slideIndex], { preferApi: true })}
               alt=""
               fill
               sizes="100vw"
@@ -207,7 +207,7 @@ export default function Home() {
                     <div className="relative">
                       <div className="relative h-[360px] w-full sm:h-[440px]">
                         <Image
-                          src={getImageUrl(slideshowImages[slideIndex])}
+                          src={getImageUrl(slideshowImages[slideIndex], { preferApi: true })}
                           alt={`Aperçu Signal-Moi ${slideIndex + 1}`}
                           fill
                           sizes="(max-width: 768px) 100vw, 620px"
@@ -374,7 +374,7 @@ export default function Home() {
                 {collaboratorCampaigns.map(c => (
                   <div key={c.id} className="rounded-xl shadow overflow-hidden bg-white">
                     {c.image_url ? (
-                      <img src={getImageUrl(c.image_url)} alt={c.titre} loading="lazy" decoding="async" className="w-full h-44 object-cover" />
+                      <img src={getImageUrl(c.image_url)} onError={(event) => handleImageFallback(event, c.image_url)} alt={c.titre} loading="lazy" decoding="async" className="w-full h-44 object-cover" />
                     ) : (
                       <div className="w-full h-44 bg-gray-100 flex items-center justify-center text-gray-400">Pas d'image</div>
                     )}

@@ -402,16 +402,22 @@ router.get('/campagnes', authMiddleware, async (req, res) => {
 router.post('/site-config', authMiddleware, async (req, res) => {
   try {
     const { siteName, contactEmail, contactPhone, address, logoUrl, contactPage, aboutPage, homePage, socialLinks, emergencyPolice, emergencyFire } = req.body;
+    const currentConfig = await SiteConfig.getAll();
 
-    if (!siteName || !contactEmail || !contactPhone || !address) {
+    const nextSiteName = siteName ?? currentConfig.siteName;
+    const nextContactEmail = contactEmail ?? currentConfig.contactEmail;
+    const nextContactPhone = contactPhone ?? currentConfig.contactPhone;
+    const nextAddress = address ?? currentConfig.address;
+
+    if (!nextSiteName || !nextContactEmail || !nextContactPhone || !nextAddress) {
       return res.status(400).json({ error: 'Les champs de base (siteName, contactEmail, contactPhone, address) sont requis' });
     }
 
     const tasks = [
-      SiteConfig.set('siteName', siteName),
-      SiteConfig.set('contactEmail', contactEmail),
-      SiteConfig.set('contactPhone', contactPhone),
-      SiteConfig.set('address', address)
+      SiteConfig.set('siteName', nextSiteName),
+      SiteConfig.set('contactEmail', nextContactEmail),
+      SiteConfig.set('contactPhone', nextContactPhone),
+      SiteConfig.set('address', nextAddress)
     ];
 
     if (logoUrl !== undefined) tasks.push(SiteConfig.set('logoUrl', logoUrl));
