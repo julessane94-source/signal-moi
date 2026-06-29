@@ -63,6 +63,7 @@ export default function NewSignalement() {
   const recordedVideoNameRef = useRef(null)
   const skipVideoRef = useRef(false)
   const recognitionRef = useRef(null)
+  const emergencyAutostartRef = useRef(false)
   const [isListening, setIsListening] = useState(false)
   const [formData, setFormData] = useState({
     titre: '',
@@ -166,10 +167,14 @@ export default function NewSignalement() {
   const emitLiveLocation = (locationData) => {
     const activeSocket = socketRef.current
     if (!liveSessionIdRef.current || !locationData) return
+    const lat = Number(locationData.latitude)
+    const lng = Number(locationData.longitude)
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
+
     sendLiveSessionFallback({
       action: 'location',
-      latitude: locationData.latitude,
-      longitude: locationData.longitude,
+      latitude: lat,
+      longitude: lng,
       localisation: locationData.localisation
     })
     if (!activeSocket) return
@@ -177,8 +182,8 @@ export default function NewSignalement() {
       sessionId: liveSessionIdRef.current,
       type: pendingLiveMetaRef.current.type || formData.type,
       titre: pendingLiveMetaRef.current.titre || formData.titre || `Signalement : ${getTypeLabel(formData.type)}`,
-      latitude: locationData.latitude,
-      longitude: locationData.longitude,
+      latitude: lat,
+      longitude: lng,
       localisation: locationData.localisation
     })
   }
@@ -392,6 +397,26 @@ export default function NewSignalement() {
   }
 
   useEffect(() => {
+    try {
+      const storedLocation = JSON.parse(localStorage.getItem('signal_moi_last_location') || 'null')
+      const capturedAt = storedLocation?.capturedAt ? new Date(storedLocation.capturedAt).getTime() : 0
+      const isFresh = capturedAt && Date.now() - capturedAt < 10 * 60 * 1000
+      const lat = Number(storedLocation?.latitude)
+      const lng = Number(storedLocation?.longitude)
+      if (isFresh && Number.isFinite(lat) && Number.isFinite(lng)) {
+        setLatitude(lat)
+        setLongitude(lng)
+        setFormData(prev => ({
+          ...prev,
+          localisation: shouldReplaceAutoLocation(prev.localisation) ? `GPS: ${lat.toFixed(6)}, ${lng.toFixed(6)}` : prev.localisation,
+          latitude: lat,
+          longitude: lng
+        }))
+      }
+    } catch (error) {
+      localStorage.removeItem('signal_moi_last_location')
+    }
+
     // If the user already granted geolocation permission, or if the browser would prompt,
     // attempt to obtain it automatically on page load so the user sees the permission prompt.
     if (typeof navigator !== 'undefined' && navigator.permissions && navigator.permissions.query) {
@@ -469,6 +494,22 @@ export default function NewSignalement() {
       startVideoRecording({ type, title: formData.titre || `Signalement : ${label}` })
     }
   }
+
+  useEffect(() => {
+    if (!router.isReady || router.query.alerte !== '1' || emergencyAutostartRef.current) return
+    emergencyAutostartRef.current = true
+    const emergencyType = 'violence'
+    const emergencyLabel = 'Alerte urgente'
+    setFormData(prev => ({
+      ...prev,
+      type: emergencyType,
+      titre: prev.titre || 'Alerte citoyenne urgente',
+      description: prev.description || SIMPLE_DESCRIPTIONS[emergencyType]
+    }))
+    setShowVideoPrompt(true)
+    getAutomaticLocation({ silent: true })
+    startVideoRecording({ type: emergencyType, title: emergencyLabel })
+  }, [router.isReady, router.query.alerte])
 
   const handleFileChange = (e) => {
     setFiles(prev => [...prev, ...Array.from(e.target.files)])

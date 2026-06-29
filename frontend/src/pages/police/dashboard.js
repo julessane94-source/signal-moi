@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '../../context/AuthContext'
 import { useSocket } from '../../context/SocketContext'
@@ -36,6 +36,25 @@ export default function PoliceDashboard() {
   const [liveRecordings, setLiveRecordings] = useState({})
   const [selectedLive, setSelectedLive] = useState(null)
   const [socketConnected, setSocketConnected] = useState(false)
+  const announcedLiveSessionsRef = useRef(new Set())
+
+  const announceLiveAlert = (live) => {
+    if (!live?.sessionId || announcedLiveSessionsRef.current.has(live.sessionId)) return
+    announcedLiveSessionsRef.current.add(live.sessionId)
+    toast.warning(`Alerte live citoyen: ${live.titre || live.type || 'video en direct'}`)
+
+    if (typeof window === 'undefined' || !window.speechSynthesis || typeof SpeechSynthesisUtterance === 'undefined') return
+    try {
+      const message = new SpeechSynthesisUtterance('Alerte police. Un citoyen est en direct. Ouvrez le live maintenant.')
+      message.lang = 'fr-FR'
+      message.rate = 0.95
+      message.volume = 1
+      window.speechSynthesis.cancel()
+      window.speechSynthesis.speak(message)
+    } catch (error) {
+      console.warn('Alerte vocale indisponible:', error)
+    }
+  }
 
   useEffect(() => {
     if (authLoading) return
@@ -72,7 +91,7 @@ export default function PoliceDashboard() {
       })
 
       socket.on('live_recording_started', (data) => {
-        toast.warning(`Video en direct: ${data.titre || data.type}`)
+        announceLiveAlert(data)
         setLiveRecordings(prev => ({
           ...prev,
           [data.sessionId]: {
@@ -197,6 +216,9 @@ export default function PoliceDashboard() {
       })
       if (!res.ok) return
       const data = await res.json()
+      ;(data.sessions || []).forEach((live) => {
+        if ((live?.status || 'recording') === 'recording') announceLiveAlert(live)
+      })
       mergeLiveSessions(data.sessions || [])
     } catch (error) {
       console.warn('Erreur chargement lives:', error)

@@ -10,7 +10,8 @@ import {
   CheckCircleIcon as CheckCircle,
   PencilSquareIcon as PencilSquare,
   UserGroupIcon as UserGroup,
-  PlusIcon as Plus
+  PlusIcon as Plus,
+  MapPinIcon as MapPin
 } from '@heroicons/react/24/outline'
 
 export default function CitizenDashboard() {
@@ -25,6 +26,8 @@ export default function CitizenDashboard() {
   const [signingPetition, setSigningPetition] = useState(null)
   const [joiningCampaign, setJoiningCampaign] = useState(null)
   const [joinedCampaignIds, setJoinedCampaignIds] = useState([])
+  const [locationStatus, setLocationStatus] = useState('idle')
+  const [lastLocationLabel, setLastLocationLabel] = useState('')
 
   // ✅ FIX: Déclencher le fetch APRÈS que auth soit chargé ET user existe
   useEffect(() => {
@@ -35,6 +38,46 @@ export default function CitizenDashboard() {
       setLoading(false)
     }
   }, [authLoading, user])
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      const timer = setTimeout(() => {
+        requestCitizenLocation({ silent: true })
+      }, 700)
+      return () => clearTimeout(timer)
+    }
+  }, [authLoading, user?.id])
+
+  const requestCitizenLocation = ({ silent = false } = {}) => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setLocationStatus('unsupported')
+      if (!silent) toast.error('Votre navigateur ne prend pas en charge la localisation GPS')
+      return
+    }
+
+    setLocationStatus('requesting')
+    navigator.geolocation.getCurrentPosition((position) => {
+      const payload = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+        capturedAt: new Date().toISOString()
+      }
+      localStorage.setItem('signal_moi_last_location', JSON.stringify(payload))
+      setLastLocationLabel(`${payload.latitude.toFixed(5)}, ${payload.longitude.toFixed(5)}`)
+      setLocationStatus('granted')
+      if (!silent) toast.success('Position GPS partagee avec Signal-Moi')
+    }, (error) => {
+      setLocationStatus(error.code === 1 ? 'denied' : 'failed')
+      if (!silent) {
+        toast.info('Autorisez la localisation du navigateur pour envoyer votre vraie position')
+      }
+    }, {
+      enableHighAccuracy: true,
+      timeout: 25000,
+      maximumAge: 0
+    })
+  }
 
   const fetchData = async () => {
     try {
@@ -232,13 +275,35 @@ export default function CitizenDashboard() {
                   Retrouvez vos signalements, campagnes et plaidoyers dans un tableau de bord clair, rapide a parcourir.
                 </p>
               </div>
-              <Link href="/citizen/signalement">
-                <Button size="lg" icon={Plus} className="w-full bg-red-600 text-white shadow-lg hover:bg-red-700 lg:w-auto">
-                  Signaler un incident
-                </Button>
-              </Link>
+              <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
+                <Link href="/citizen/signalement?alerte=1">
+                  <Button size="lg" icon={Plus} className="w-full bg-red-600 text-white shadow-lg hover:bg-red-700 lg:w-auto">
+                    Lancer l'alerte
+                  </Button>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => requestCitizenLocation()}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/20 lg:w-auto"
+                >
+                  <MapPin className="h-5 w-5" />
+                  {locationStatus === 'granted' ? 'Position partagee' : locationStatus === 'requesting' ? 'Localisation...' : 'Partager ma position'}
+                </button>
+              </div>
             </div>
           </motion.div>
+
+          {locationStatus !== 'granted' && (
+            <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm">
+              Autorisez le GPS dans votre navigateur pour que la carte et la police recoivent votre vraie position, pas une ville approximative.
+            </div>
+          )}
+
+          {locationStatus === 'granted' && lastLocationLabel && (
+            <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800 shadow-sm">
+              Position GPS active: {lastLocationLabel}
+            </div>
+          )}
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}

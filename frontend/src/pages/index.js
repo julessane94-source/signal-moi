@@ -156,7 +156,7 @@ export default function Home() {
               alt=""
               fill
               sizes="100vw"
-              className="object-cover opacity-45"
+              className="object-contain opacity-45"
               priority={slideIndex === 0}
             />
           )}
@@ -205,13 +205,13 @@ export default function Home() {
                 <div className="overflow-hidden border border-white/10 bg-white/10 shadow-2xl">
                   {slideshowImages.length > 0 ? (
                     <div className="relative">
-                      <div className="relative h-[360px] w-full sm:h-[440px]">
+                      <div className="relative h-[360px] w-full bg-slate-950 sm:h-[440px]">
                         <Image
                           src={getImageUrl(slideshowImages[slideIndex], { preferApi: true })}
                           alt={`Aperçu Signal-Moi ${slideIndex + 1}`}
                           fill
                           sizes="(max-width: 768px) 100vw, 620px"
-                          className="object-cover"
+                          className="object-contain"
                           priority={slideIndex === 0}
                         />
                       </div>
