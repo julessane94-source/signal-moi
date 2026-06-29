@@ -170,7 +170,7 @@ export default function AdminDashboard() {
       const base = API_BASE
       const [signalementsRes, campagnesRes, statsRes] = await Promise.all([
         fetch(`${base}/api/admin/signalements`, { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch(`${base}/api/campagnes`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch(`${base}/api/campagnes?limit=80`, { headers: { 'Authorization': `Bearer ${token}` } }),
         fetch(`${base}/api/admin/statistics`, { headers: { 'Authorization': `Bearer ${token}` } })
       ])
       const signalementsData = signalementsRes.ok ? await signalementsRes.json() : []

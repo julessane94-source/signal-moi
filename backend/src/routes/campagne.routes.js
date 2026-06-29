@@ -44,7 +44,10 @@ const authMiddleware = async (req, res, next) => {
 // GET toutes les campagnes
 router.get('/', async (req, res) => {
   try {
-    const result = await db.query('SELECT * FROM signal_moi.campagnes ORDER BY date_debut ASC');
+    const parsedLimit = Number.parseInt(req.query.limit, 10);
+    const limit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? Math.min(parsedLimit, 100) : 50;
+    const result = await db.query('SELECT * FROM signal_moi.campagnes ORDER BY date_debut ASC LIMIT $1', [limit]);
+    res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
     res.json(result.rows);
   } catch (err) {
     console.error(err);

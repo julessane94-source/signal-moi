@@ -162,7 +162,7 @@ export default function PoliceDashboard() {
   const fetchSignalements = async () => {
     try {
       const token = localStorage.getItem('token')
-      const res = await fetch(`${API_BASE}/api/signalements`, {
+      const res = await fetch(`${API_BASE}/api/signalements?limit=120`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()

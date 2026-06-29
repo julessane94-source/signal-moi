@@ -82,11 +82,11 @@ export default function About() {
     try {
       const token = localStorage.getItem('token')
       const authHeaders = token ? { 'Authorization': `Bearer ${token}` } : {}
-      const signalementsEndpoint = token ? `${API_BASE}/api/admin/signalements` : `${API_BASE}/api/signalements/public`
+      const signalementsEndpoint = token ? `${API_BASE}/api/admin/signalements` : `${API_BASE}/api/signalements/public?limit=80`
 
       const [sigRes, campRes, usersRes] = await Promise.all([
         fetch(signalementsEndpoint, { headers: authHeaders }),
-        fetch(`${API_BASE}/api/campagnes`, { headers: authHeaders }),
+        fetch(`${API_BASE}/api/campagnes?limit=50`, { headers: authHeaders }),
         token ? fetch(`${API_BASE}/api/admin/users`, { headers: authHeaders }) : Promise.resolve({ ok: false })
       ])
 

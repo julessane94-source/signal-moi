@@ -11,6 +11,7 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const { getCompleteStatistics, sendStatisticsExport } = require('../utils/statisticsReport');
+const { persistHomePageImages, storeOptimizedImage } = require('../utils/imageStorage');
 
 // Configuration multer pour le logo
 const logoStorage = multer.diskStorage({
@@ -453,17 +454,23 @@ router.put('/site-config/slideshow-images', authMiddleware, uploadSlideshowImage
 
     const currentConfig = await SiteConfig.getAll();
     const homePage = typeof currentConfig.home_page === 'string' ? JSON.parse(currentConfig.home_page) : (currentConfig.home_page || {});
-    const existingImages = Array.isArray(homePage.images) ? homePage.images.filter(Boolean) : [];
+    const persistedHomePage = await persistHomePageImages(homePage, { uploadedBy: req.user.id });
+    const existingImages = Array.isArray(persistedHomePage.homePage.images) ? persistedHomePage.homePage.images.filter(Boolean) : [];
 
-    const uploadedImages = req.files.map((file) => {
-      const buffer = fs.readFileSync(file.path);
-      return `data:${file.mimetype || 'image/png'};base64,${buffer.toString('base64')}`;
-    });
+    const uploadedImages = await Promise.all(req.files.map(async (file) => {
+      const buffer = await fs.promises.readFile(file.path);
+      return storeOptimizedImage({
+        buffer,
+        originalName: file.originalname || file.filename,
+        folder: 'slideshow',
+        uploadedBy: req.user.id
+      });
+    }));
 
     const nextImages = [...existingImages, ...uploadedImages];
-    homePage.images = nextImages;
+    persistedHomePage.homePage.images = nextImages;
 
-    await SiteConfig.set('home_page', JSON.stringify(homePage));
+    await SiteConfig.set('home_page', JSON.stringify(persistedHomePage.homePage));
 
     req.files.forEach((file) => {
       try {

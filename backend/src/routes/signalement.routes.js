@@ -7,6 +7,13 @@ const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const path = require('path');
 const activeLiveSessions = new Map();
+const mediaCacheHeader = 'public, max-age=31536000, immutable';
+const publicListCacheHeader = 'public, max-age=30, stale-while-revalidate=120';
+const parseLimit = (value, fallback = 100, max = 500) => {
+    const parsed = Number.parseInt(value, 10);
+    if (!Number.isFinite(parsed) || parsed < 1) return fallback;
+    return Math.min(parsed, max);
+};
 
 const normalizeRole = (role) => String(role || '').trim().toLowerCase();
 const isPoliceLikeRole = (role) => ['police', 'policier', 'gendarmerie', 'force_ordre'].includes(normalizeRole(role));
@@ -179,11 +186,13 @@ router.get('/fichiers/:id', async (req, res) => {
             res.setHeader('Content-Type', file.mime_type || 'application/octet-stream');
             res.setHeader('Content-Length', file.taille || 0);
             res.setHeader('Content-Disposition', `inline; filename="${file.nom_fichier}"`);
+            res.setHeader('Cache-Control', mediaCacheHeader);
             return res.send(file.file_data);
         }
 
         if (file.chemin) {
             const localPath = path.resolve(__dirname, '..', '..', file.chemin);
+            res.setHeader('Cache-Control', mediaCacheHeader);
             return res.sendFile(localPath, err => {
                 if (err) {
                     console.error('[GET /fichiers/:id] Erreur envoi fichier local:', err);
@@ -234,9 +243,10 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     // GET public: liste publique des signalements (ANONYMISÉE - pas de user_id)
         router.get('/public', async (req, res) => {
             try {
+                const limit = parseLimit(req.query.limit, 100, 200);
                 const result = await db.query(`SELECT id, titre, description, type, statut, localisation, latitude, longitude, created_at, updated_at
                                                FROM signal_moi.signalements 
-                                               ORDER BY created_at DESC LIMIT 200`);
+                                               ORDER BY created_at DESC LIMIT $1`, [limit]);
                 const rows = result.rows.map(r => ({
                     id: r.id,
                     titre: r.titre,
@@ -249,6 +259,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                     createdAt: r.created_at,
                     updatedAt: r.updated_at
                 }));
+                res.set('Cache-Control', publicListCacheHeader);
                 res.json(rows);
             } catch (err) {
                 console.error('Erreur GET /public signalements:', err);
@@ -355,9 +366,10 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 
         router.get('/', optionalAuthMiddleware, async (req, res) => {
             try {
+                const limit = parseLimit(req.query.limit, 100, 500);
                 if (req.user && req.user.role === 'citoyen') {
                     const result = await db.query(`SELECT id, user_id, titre, description, type, statut, localisation, latitude, longitude, created_at, updated_at
-                                                   FROM signal_moi.signalements WHERE user_id = $1 ORDER BY created_at DESC LIMIT 200`, [req.user.id]);
+                                                   FROM signal_moi.signalements WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2`, [req.user.id, limit]);
                     const rows = result.rows.map(r => ({
                         id: r.id,
                         userId: r.user_id,
@@ -380,7 +392,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                                                    FROM signal_moi.signalements s
                                                    LEFT JOIN signal_moi.users u ON u.id = s.user_id
                                                    WHERE LOWER(s.type) = ANY($1::text[])
-                                                   ORDER BY s.created_at DESC LIMIT 500`, [allowed]);
+                                                   ORDER BY s.created_at DESC LIMIT $2`, [allowed, limit]);
                     const signalementIds = result.rows.map(r => r.id);
                     const filesBySignalement = {};
 
@@ -442,7 +454,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                     const result = await db.query(`SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, s.latitude, s.longitude, s.created_at, s.updated_at, u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone
                                                    FROM signal_moi.signalements s
                                                    LEFT JOIN signal_moi.users u ON u.id = s.user_id
-                                                   ORDER BY s.created_at DESC LIMIT 500`);
+                                                   ORDER BY s.created_at DESC LIMIT $1`, [limit]);
                     
                     // Calculer les statistiques par type et localisation
                     const statsByType = {};
@@ -489,7 +501,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                     const result = await db.query(`SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, s.latitude, s.longitude, s.created_at, s.updated_at, u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone
                                                    FROM signal_moi.signalements s
                                                    LEFT JOIN signal_moi.users u ON u.id = s.user_id
-                                                   ORDER BY s.created_at DESC LIMIT 500`);
+                                                   ORDER BY s.created_at DESC LIMIT $1`, [limit]);
                     const rows = result.rows.map(r => ({
                         id: r.id,
                         titre: r.titre,

@@ -111,8 +111,8 @@ export default function CitizenDashboard() {
       
       const base = API_BASE
       const [signalRes, campRes, plaidRes, signedRes, inscriptionsRes] = await Promise.all([
-        fetch(`${base}/api/signalements`, { headers }),
-        fetch(`${base}/api/campagnes`, { headers }),
+        fetch(`${base}/api/signalements?limit=80`, { headers }),
+        fetch(`${base}/api/campagnes?limit=50`, { headers }),
         fetch(`${base}/api/plaidoyers`, { headers }),
         fetch(`${base}/api/plaidoyers/signed/user/${user.id}`, { headers }),
         fetch(`${base}/api/citizen/inscriptions`, { headers })

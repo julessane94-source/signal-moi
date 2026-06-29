@@ -5,6 +5,7 @@ const router = express.Router();
 const db = require('../config/database');
 const { protect } = require('../middleware/auth.middleware');
 const SiteConfig = require('../models/SiteConfig');
+const { persistHomePageImages } = require('../utils/imageStorage');
 
 const normalizeLogoUrl = (value) => {
   if (!value || typeof value !== 'string') return '/icons/icon-192x192.png';
@@ -22,17 +23,22 @@ const normalizeLogoUrl = (value) => {
   return value;
 };
 
+const publicConfigCache = 'public, max-age=60, stale-while-revalidate=300';
+
 // GET /api/auth/site-config - Récupère la configuration du site (PUBLIC - sans auth)
 router.get('/site-config', async (req, res) => {
   try {
     const config = await SiteConfig.getAll();
+    if (config.home_page && typeof config.home_page === 'object') {
+      const persisted = await persistHomePageImages(config.home_page);
+      if (persisted.changed) {
+        config.home_page = persisted.homePage;
+        await SiteConfig.set('home_page', JSON.stringify(persisted.homePage));
+      }
+    }
     
     // Récupérer le logo en base64 s'il existe
     let logoUrl = normalizeLogoUrl(config.logoUrl || config.logo_url || '/icons/icon-192x192.png');
-    const logoBase64 = await SiteConfig.getLogoBase64();
-    if (logoBase64) {
-      logoUrl = logoBase64;
-    }
     
     // Coerce certains champs pour éviter les erreurs côté client
     const safeConfig = {
@@ -73,11 +79,11 @@ router.get('/site-config', async (req, res) => {
         creator: { id: c.creator_id, prenom: c.prenom, nom: c.nom, role: c.role }
       }));
       // Ensure clients don't serve a stale cached copy for site-config
-      res.set('Cache-Control', 'no-store, max-age=0');
+      res.set('Cache-Control', publicConfigCache);
       res.json({ ...safeConfig, collaboratorCampaigns });
     } catch (err) {
       console.error('[GET /site-config] Erreur campagnes:', err);
-      res.set('Cache-Control', 'no-store, max-age=0');
+      res.set('Cache-Control', publicConfigCache);
       res.json(safeConfig);
     }
   } catch (err) {
@@ -89,7 +95,7 @@ router.get('/site-config', async (req, res) => {
       theme: 'default',
       collaboratorCampaigns: []
     };
-    res.set('Cache-Control', 'no-store, max-age=0');
+    res.set('Cache-Control', publicConfigCache);
     res.json(defaultConfig);
   }
 });
