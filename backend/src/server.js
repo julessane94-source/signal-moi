@@ -1,11 +1,13 @@
 ﻿require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const compression = require('compression');
 const http = require('http');
 const socketIO = require('socket.io');
 const db = require('./config/database');
 const { setupSocket } = require('./socket/socket.handler');
 const { initializeDatabase } = require('./config/database-init');
+const SiteConfig = require('./models/SiteConfig');
 
 // ✅ Vérifier les variables d'environnement essentielles
 console.log('🔍 Vérification des variables d\'environnement...');
@@ -45,6 +47,13 @@ app.use(cors({
     ],
     credentials: true,
     allowedHeaders: ['Authorization', 'Content-Type', 'X-Refresh-Token']
+}));
+app.use(compression({
+    threshold: 1024,
+    filter: (req, res) => {
+        if (req.headers['x-no-compression']) return false;
+        return compression.filter(req, res);
+    }
 }));
 app.use(express.json({ limit: '2mb' }));
 
@@ -116,7 +125,40 @@ app.head('/', (req, res) => {
 
 // Servir les fichiers statiques (uploads)
 const path = require('path');
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+const mediaCacheHeader = 'public, max-age=31536000, immutable';
+
+const getLogoMimeType = (filename = '') => {
+    const lower = String(filename).toLowerCase();
+    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.jfif') || lower.endsWith('.jpe')) return 'image/jpeg';
+    if (lower.endsWith('.gif')) return 'image/gif';
+    if (lower.endsWith('.webp')) return 'image/webp';
+    if (lower.endsWith('.svg')) return 'image/svg+xml';
+    return 'image/png';
+};
+
+app.get('/uploads/logo', async (req, res, next) => {
+    try {
+        const logo = await SiteConfig.getLogoBinary();
+        if (!logo?.logo_data) return next();
+        res.setHeader('Content-Type', getLogoMimeType(logo.logo_filename));
+        res.setHeader('Content-Length', logo.logo_data.length);
+        res.setHeader('Cache-Control', mediaCacheHeader);
+        return res.send(logo.logo_data);
+    } catch (err) {
+        console.error('[UPLOAD LOGO] Erreur de récupération du logo:', err);
+        next(err);
+    }
+});
+
+app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
+    maxAge: '365d',
+    immutable: true,
+    etag: true,
+    lastModified: true,
+    setHeaders: (res) => {
+        res.setHeader('Cache-Control', mediaCacheHeader);
+    }
+}));
 
 // Fallback: si le fichier n'existe pas dans le dossier local, servir depuis la base de données
 app.get('/uploads/*', async (req, res, next) => {
@@ -139,6 +181,7 @@ app.get('/uploads/*', async (req, res, next) => {
         if (file.mime_type) {
             res.type(file.mime_type);
         }
+        res.setHeader('Cache-Control', mediaCacheHeader);
         return res.send(file.file_data);
     } catch (err) {
         console.error('[UPLOAD FALLBACK] Erreur de récupération du fichier depuis la base de données:', err);

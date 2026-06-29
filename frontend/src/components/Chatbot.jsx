@@ -125,6 +125,20 @@ const PAGE_HELP = {
   '/campagnes': 'Vous consultez les campagnes. Ouvrez une campagne pour voir les details et participer.'
 }
 
+const SupermanAvatar = ({ className = 'h-10 w-10' }) => (
+  <div className={`${className} relative shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-red-500 via-blue-700 to-slate-950 p-0.5 shadow-lg`}>
+    <div className="flex h-full w-full items-center justify-center rounded-full bg-slate-950">
+      <div className="relative h-[82%] w-[82%] overflow-hidden rounded-full bg-gradient-to-b from-sky-100 to-slate-200">
+        <div className="absolute left-1/2 top-[18%] h-[34%] w-[34%] -translate-x-1/2 rounded-full bg-amber-200 shadow-sm" />
+        <div className="absolute left-[30%] top-[15%] h-[18%] w-[40%] -rotate-12 rounded-full bg-slate-950" />
+        <div className="absolute bottom-0 left-1/2 h-[46%] w-[62%] -translate-x-1/2 rounded-t-full bg-blue-700" />
+        <div className="absolute bottom-[8%] left-1/2 h-[18%] w-[44%] -translate-x-1/2 rounded-sm bg-red-600" />
+        <span className="absolute bottom-[9%] left-1/2 -translate-x-1/2 text-[9px] font-black leading-none text-white">S</span>
+      </div>
+    </div>
+  </div>
+)
+
 const normalizeText = (text) =>
   String(text || '')
     .toLowerCase()
@@ -293,9 +307,12 @@ export default function Chatbot() {
           <div className="w-[21rem] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl sm:w-96">
             <div className="bg-slate-950 px-4 py-3 text-white">
               <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-bold">SUPERMAN</p>
-                  <p className="text-xs text-slate-300">{CHAT_API ? 'IA connectee' : 'IA integree prete a brancher'}</p>
+                <div className="flex items-center gap-3">
+                  <SupermanAvatar />
+                  <div>
+                    <p className="text-sm font-bold">SUPERMAN</p>
+                    <p className="text-xs text-slate-300">{CHAT_API ? 'IA connectee' : 'IA integree prete a brancher'}</p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={clearHistory} className="text-xs text-slate-300 hover:text-white">Effacer</button>
@@ -324,23 +341,26 @@ export default function Chatbot() {
             <div ref={listRef} className="max-h-80 space-y-3 overflow-y-auto bg-white p-3">
               {messages.map((message, index) => (
                 <div key={index} className={`flex ${message.from === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] rounded-2xl p-3 text-sm shadow-sm ${message.from === 'user' ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-900'}`}>
-                    <div className="whitespace-pre-line">{message.text}</div>
-                    {Array.isArray(message.links) && message.links.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {message.links.map((link) => (
-                          <button
-                            key={`${link.label}-${link.href || link.action}`}
-                            onClick={() => handleLink(link)}
-                            className="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-800 ring-1 ring-slate-200 hover:bg-slate-50"
-                          >
-                            {link.label}
-                          </button>
-                        ))}
+                  <div className={`flex max-w-[92%] items-end gap-2 ${message.from === 'user' ? 'flex-row-reverse' : ''}`}>
+                    {message.from === 'bot' && <SupermanAvatar className="h-8 w-8" />}
+                    <div className={`max-w-[85%] rounded-2xl p-3 text-sm shadow-sm ${message.from === 'user' ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-900'}`}>
+                      <div className="whitespace-pre-line">{message.text}</div>
+                      {Array.isArray(message.links) && message.links.length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {message.links.map((link) => (
+                            <button
+                              key={`${link.label}-${link.href || link.action}`}
+                              onClick={() => handleLink(link)}
+                              className="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-800 ring-1 ring-slate-200 hover:bg-slate-50"
+                            >
+                              {link.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      <div className={`mt-2 text-right text-[10px] ${message.from === 'user' ? 'text-slate-300' : 'text-slate-400'}`}>
+                        {message.ts ? new Date(message.ts).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''}
                       </div>
-                    )}
-                    <div className={`mt-2 text-right text-[10px] ${message.from === 'user' ? 'text-slate-300' : 'text-slate-400'}`}>
-                      {message.ts ? new Date(message.ts).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''}
                     </div>
                   </div>
                 </div>
@@ -376,7 +396,7 @@ export default function Chatbot() {
           className="ml-3 flex h-14 w-14 items-center justify-center rounded-full bg-slate-950 text-xl font-black text-white shadow-lg ring-4 ring-white transition hover:scale-105"
           aria-label="Ouvrir SUPERMAN, assistant Signal-Moi"
         >
-          IA
+          <SupermanAvatar className="h-12 w-12" />
         </button>
       </div>
     </div>
