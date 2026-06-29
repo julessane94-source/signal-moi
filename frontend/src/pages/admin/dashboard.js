@@ -220,10 +220,12 @@ export default function AdminDashboard() {
 
   const validateForm = () => {
     const newErrors = {}
-    if (!formData.prenom) newErrors.prenom = 'Prénom requis'
-    if (!formData.nom) newErrors.nom = 'Nom requis'
-    if (!formData.email) newErrors.email = 'Email requis'
-    if (!formData.telephone) newErrors.telephone = 'Téléphone requis'
+    if (!formData.prenom?.trim()) newErrors.prenom = 'Prénom requis'
+    if (!formData.nom?.trim()) newErrors.nom = 'Nom requis'
+    if (!formData.email?.trim()) newErrors.email = 'Email requis'
+    if (!formData.telephone?.trim()) newErrors.telephone = 'Téléphone requis'
+    if (!formData.ville?.trim()) newErrors.ville = 'Ville requise'
+    if (!formData.quartier?.trim()) newErrors.quartier = 'Quartier ou zone requis'
     if (!editingUser && !formData.password) newErrors.password = 'Mot de passe requis'
     return newErrors
   }
@@ -515,10 +517,19 @@ export default function AdminDashboard() {
   const openModal = (userData = null) => {
     if (userData) {
       setEditingUser(userData)
-      setFormData(userData)
+      setFormData({
+        prenom: userData.prenom || '',
+        nom: userData.nom || '',
+        email: userData.email || '',
+        telephone: userData.telephone || '',
+        password: '',
+        ville: userData.ville || 'Sedhiou',
+        quartier: userData.quartier || '',
+        role: userData.role || 'citoyen'
+      })
     } else {
       setEditingUser(null)
-      setFormData({ prenom: '', nom: '', email: '', telephone: '', password: '', ville: '', quartier: '', role: 'citoyen' })
+      setFormData({ prenom: '', nom: '', email: '', telephone: '', password: '', ville: 'Sedhiou', quartier: '', role: 'police' })
     }
     setErrors({})
     setShowModal(true)
@@ -1380,6 +1391,27 @@ export default function AdminDashboard() {
                 <option value="collaborateur">Collaborateur</option>
                 <option value="admin">Admin</option>
               </select>
+            </FormField>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField label="Ville" error={errors.ville} required>
+              <Input
+                name="ville"
+                placeholder="Sedhiou"
+                value={formData.ville}
+                onChange={handleInputChange}
+                error={!!errors.ville}
+              />
+            </FormField>
+            <FormField label="Quartier ou zone d'affectation" error={errors.quartier} required>
+              <Input
+                name="quartier"
+                placeholder="Centre-ville, Diannah, Moricounda..."
+                value={formData.quartier}
+                onChange={handleInputChange}
+                error={!!errors.quartier}
+              />
             </FormField>
           </div>
 

@@ -141,20 +141,41 @@ router.get('/users', authMiddleware, async (req, res) => {
 router.post('/users', authMiddleware, async (req, res) => {
   console.log('[ADMIN POST /users] Body reçu:', req.body);
   const { prenom, nom, email, telephone, password, ville, quartier, role } = req.body;
+  const cleanedUser = {
+    prenom: String(prenom || '').trim(),
+    nom: String(nom || '').trim(),
+    email: String(email || '').trim().toLowerCase(),
+    telephone: String(telephone || '').trim(),
+    password: String(password || ''),
+    ville: String(ville || 'Sedhiou').trim() || 'Sedhiou',
+    quartier: String(quartier || 'Non renseigne').trim() || 'Non renseigne',
+    role: String(role || 'citoyen').trim() || 'citoyen'
+  };
 
   // Validation basique des champs obligatoires
-  if (!prenom || !nom || !email || !telephone || !password || !ville || !quartier) {
+  if (!cleanedUser.prenom || !cleanedUser.nom || !cleanedUser.email || !cleanedUser.telephone || !cleanedUser.password) {
     return res.status(400).json({ error: 'Tous les champs sont requis' });
   }
 
   try {
-    const hashed = await require('bcrypt').hash(password, 10);
+    const hashed = await require('bcrypt').hash(cleanedUser.password, 10);
     const insertQuery = `
       INSERT INTO signal_moi.users (prenom, nom, email, telephone, password, ville, quartier, role, is_active, email_verified)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING id, prenom, nom, email, role
     `;
-    const values = [prenom, nom, email, telephone, hashed, ville, quartier, role || 'citoyen', true, true];
+    const values = [
+      cleanedUser.prenom,
+      cleanedUser.nom,
+      cleanedUser.email,
+      cleanedUser.telephone,
+      hashed,
+      cleanedUser.ville,
+      cleanedUser.quartier,
+      cleanedUser.role,
+      true,
+      true
+    ];
     const result = await db.query(insertQuery, values);
     console.log('[ADMIN POST /users] Utilisateur créé:', result.rows[0]);
     res.status(201).json(result.rows[0]);
