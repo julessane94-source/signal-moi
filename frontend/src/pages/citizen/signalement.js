@@ -267,11 +267,35 @@ export default function NewSignalement() {
   }
 
   const getLocationFromIpFallback = async ({ silent = false } = {}) => {
-    const localisation = formData.localisation || 'Sedhiou - localisation a preciser'
-    setGeoError('GPS indisponible ou refuse. La localisation IP est desactivee pour eviter une ville incorrecte. Precisez le lieu manuellement ou autorisez le GPS.')
-    if (!silent) toast.info('Precisez votre lieu a Sedhiou ou autorisez le GPS')
-    setFormData(prev => ({ ...prev, localisation: prev.localisation || localisation }))
-    return { latitude: null, longitude: null, localisation }
+    try {
+      const response = await fetch('https://ipapi.co/json/')
+      if (!response.ok) throw new Error('IP lookup failed')
+      const data = await response.json()
+      if (!data.latitude || !data.longitude) throw new Error('IP coordinates missing')
+
+      const lat = Number(data.latitude)
+      const lng = Number(data.longitude)
+      const city = [data.city, data.region, data.country_name].filter(Boolean).join(', ')
+      const localisation = city
+        ? `Position approximative IP: ${city}`
+        : `Position approximative IP: ${lat.toFixed(6)}, ${lng.toFixed(6)}`
+
+      setLatitude(lat)
+      setLongitude(lng)
+      setFormData(prev => ({ ...prev, localisation: prev.localisation || localisation, latitude: lat, longitude: lng }))
+      setGeoError('GPS refuse ou indisponible. Une position approximative par IP est utilisee; corrigez le lieu si necessaire.')
+      if (!silent) toast.info('Position approximative IP recuperee')
+
+      const locationData = { latitude: lat, longitude: lng, localisation }
+      emitLiveLocation(locationData)
+      return locationData
+    } catch (error) {
+      const localisation = formData.localisation || 'Sedhiou - localisation a preciser'
+      setGeoError('GPS et localisation IP indisponibles. Precisez le quartier ou un repere manuellement.')
+      if (!silent) toast.info('Precisez votre lieu a Sedhiou')
+      setFormData(prev => ({ ...prev, localisation: prev.localisation || localisation }))
+      return { latitude: null, longitude: null, localisation }
+    }
   }
 
   const requestGeolocation = async () => {

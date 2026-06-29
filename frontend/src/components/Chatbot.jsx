@@ -184,7 +184,7 @@ export default function Chatbot() {
       else {
         setMessages([{
           from: 'bot',
-          text: 'Bonjour. Je suis l assistant Signal-Moi. Posez votre question avec vos mots: signalement, campagne, compte, police, statistiques ou don.',
+          text: 'Bonjour. Je suis SUPERMAN, l assistant IA de Signal-Moi. Posez votre question avec vos mots: signalement, campagne, compte, police, statistiques ou don.',
           links: pageHelp ? [{ label: 'Aide de cette page', action: 'page_help' }] : [],
           ts: Date.now()
         }])
@@ -203,7 +203,7 @@ export default function Chatbot() {
     const clean = normalizeText(text)
     if (/^(bonjour|salut|bonsoir|hello|salam)/.test(clean)) {
       return {
-        text: 'Bonjour. Je peux vous guider pas a pas. Dites simplement ce que vous voulez faire: signaler, participer a une campagne, suivre un dossier, contacter l equipe ou telecharger des statistiques.',
+        text: 'Bonjour. Je suis SUPERMAN. Je peux vous guider pas a pas sur Signal-Moi. Dites simplement ce que vous voulez faire: signaler, participer a une campagne, suivre un dossier, contacter l equipe ou telecharger des statistiques.',
         links: [{ label: 'Faire un signalement', href: '/citizen/signalement' }]
       }
     }
@@ -256,7 +256,7 @@ export default function Chatbot() {
       const reply = findBestAnswer(text)
       setMessages((current) => [...current, {
         from: 'bot',
-        text: `${reply.text}\n\nNote: l IA externe n est pas joignable pour le moment, donc je reponds avec l assistant integre.`,
+        text: `${reply.text}\n\nNote: l IA externe n est pas joignable pour le moment, donc SUPERMAN repond avec l assistant integre.`,
         links: reply.links,
         ts: Date.now()
       }])
@@ -294,7 +294,7 @@ export default function Chatbot() {
             <div className="bg-slate-950 px-4 py-3 text-white">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm font-bold">Assistant Signal-Moi</p>
+                  <p className="text-sm font-bold">SUPERMAN</p>
                   <p className="text-xs text-slate-300">{CHAT_API ? 'IA connectee' : 'IA integree prete a brancher'}</p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -374,7 +374,7 @@ export default function Chatbot() {
         <button
           onClick={() => setOpen((value) => !value)}
           className="ml-3 flex h-14 w-14 items-center justify-center rounded-full bg-slate-950 text-xl font-black text-white shadow-lg ring-4 ring-white transition hover:scale-105"
-          aria-label="Ouvrir l assistant Signal-Moi"
+          aria-label="Ouvrir SUPERMAN, assistant Signal-Moi"
         >
           IA
         </button>
