@@ -699,24 +699,35 @@ export default function CollaboratorDashboard() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.05 }}
-                    className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:border-indigo-200 transition overflow-hidden flex flex-col h-full"
+                  className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:border-emerald-200 transition overflow-hidden flex flex-col h-full"
                   >
-                    <div className="bg-gradient-to-r from-indigo-500 to-purple-600 h-2"></div>
+                    <div className="bg-gradient-to-r from-emerald-500 to-teal-600 h-2"></div>
                     <div className="p-6 flex flex-col h-full">
-                      <div className="flex justify-between items-start mb-3">
+                      <div className="mb-3 flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                          Dossier à accompagner
+                        </span>
+                        {s.type && (
+                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">{s.type}</span>
+                        )}
+                      </div>
+                      <div className="flex justify-between items-start mb-3 gap-3">
                         <h3 className="font-bold text-lg text-gray-900 line-clamp-2 flex-1">{s.titre}</h3>
-                        <span className="text-xs font-semibold text-gray-500 ml-2 flex-shrink-0">
-                          {new Date(s.createdAt).toLocaleDateString('fr-FR')}
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full flex-shrink-0 ${
+                          s.statut === 'traite' ? 'bg-green-100 text-green-700' :
+                          s.statut === 'en_cours' ? 'bg-blue-100 text-blue-700' :
+                          'bg-amber-100 text-amber-700'
+                        }`}>
+                          {s.statut || 'N/A'}
                         </span>
                       </div>
-                      
                       <p className="text-sm text-gray-600 flex-1 line-clamp-3 mb-4">{s.description}</p>
                       
-                      <div className="flex items-center gap-2 mb-4">
+                      <div className="grid gap-2 rounded-xl bg-slate-50 p-3 text-xs text-slate-700 mb-4">
+                        <span>📍 Zone: {s.localisation || 'Non renseignée'}</span>
+                        <span>🕒 Reçu le {new Date(s.createdAt).toLocaleDateString('fr-FR')}</span>
                         {s.author && (
-                          <span className="inline-block text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full font-medium">
-                            👤 {s.author.prenom}
-                          </span>
+                          <span>👤 Auteur: {s.author.prenom} {s.author.nom || ''}</span>
                         )}
                       </div>
 

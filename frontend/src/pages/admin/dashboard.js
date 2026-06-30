@@ -786,35 +786,43 @@ export default function AdminDashboard() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
                     >
-                      <Card className="p-6 glass-card">
-                        <div className="flex justify-between items-start gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h3 className="font-semibold text-lg">{s.titre}</h3>
-                              <Badge variant="success">{s.statut}</Badge>
+                      <Card className="overflow-hidden border border-slate-200 bg-white shadow-sm">
+                        <div className="grid gap-0 lg:grid-cols-[1fr_260px]">
+                          <div className="p-5">
+                            <div className="mb-3 flex flex-wrap items-center gap-2">
+                              <span className="rounded-full bg-slate-950 px-3 py-1 text-xs font-black uppercase text-white">Supervision admin</span>
+                              <Badge variant={s.statut === 'traite' ? 'success' : s.statut === 'en_cours' ? 'warning' : 'info'}>{s.statut || 'nouveau'}</Badge>
+                              {s.type && <Badge variant="gray">{s.type}</Badge>}
                             </div>
-                            <p className="text-gray-600 mb-3">{s.description}</p>
-                            <div className="flex items-center gap-4 text-sm text-gray-600">
-                              <span>📍 {s.localisation}</span>
-                              <span>👤 {s.author?.prenom} {s.author?.nom}</span>
+                            <h3 className="font-semibold text-lg text-slate-950">{s.titre}</h3>
+                            <p className="mt-2 text-gray-600">{s.description}</p>
+                            <div className="mt-4 grid gap-2 text-sm text-gray-600 sm:grid-cols-2">
+                              <span>📍 Zone: {s.localisation || 'Non renseignée'}</span>
+                              <span>👤 Auteur: {s.author?.prenom || 'Inconnu'} {s.author?.nom || ''}</span>
+                              <span>🕒 Créé: {s.createdAt ? new Date(s.createdAt).toLocaleDateString('fr-FR') : 'Date inconnue'}</span>
+                              <span>🗂️ ID: {s.id}</span>
                             </div>
                           </div>
-                          <div className="flex flex-col items-end gap-2">
+                          <div className="flex flex-col justify-between gap-3 border-t border-slate-200 bg-slate-50 p-5 lg:border-l lg:border-t-0">
                             {Array.isArray(s.fichiers) && s.fichiers[0] && (
-                              <img src={s.fichiers[0]} alt="aperçu" className="w-20 h-20 object-cover rounded-lg" />
+                              <img src={s.fichiers[0]} alt="aperçu" className="h-28 w-full rounded-xl object-cover" />
                             )}
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
+                            <div className="rounded-xl bg-white p-3 text-xs text-slate-600">
+                              Vue admin: contrôle, audit et modération du dossier.
+                            </div>
+                            <button
+                              type="button"
                               onClick={() => {
                                 setItemToDelete(s.id)
                                 setDeleteType('signalement')
                                 setDeleteReason('')
                               }}
-                              className="p-2 hover:bg-red-50 rounded-lg transition"
+                              className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-bold text-red-600 transition hover:bg-red-50"
                               title="Supprimer ce signalement"
                             >
-                              <Trash className="h-5 w-5 text-red-600" />
-                            </motion.button>
+                              <Trash className="h-4 w-4" />
+                              Supprimer
+                            </button>
                           </div>
                         </div>
                       </Card>

@@ -392,26 +392,48 @@ export default function CitizenDashboard() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
                     >
-                      <Card className="p-6 hover:shadow-lg transition cursor-pointer">
+                      <Card className="overflow-hidden border border-slate-200 bg-white hover:shadow-lg transition cursor-pointer">
                         <Link href={`/citizen/signalement/${s.id}`}>
-                          <div className="flex justify-between items-start gap-4">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
+                          <div className="grid gap-0 md:grid-cols-[220px_1fr]">
+                            <div className={`p-5 text-white ${
+                              s.statut === 'traite' ? 'bg-emerald-600' :
+                              s.statut === 'en_cours' ? 'bg-amber-600' :
+                              s.statut === 'transfere' ? 'bg-indigo-600' :
+                              'bg-slate-900'
+                            }`}>
+                              <p className="text-xs font-bold uppercase tracking-wide opacity-80">Suivi personnel</p>
+                              <p className="mt-3 text-2xl font-black">
+                                {s.statut === 'traite' ? 'Résolu' :
+                                 s.statut === 'en_cours' ? 'En traitement' :
+                                 s.statut === 'transfere' ? 'Transféré' :
+                                 'Reçu'}
+                              </p>
+                              <p className="mt-2 text-sm opacity-90">
+                                {new Date(s.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                              </p>
+                            </div>
+                            <div className="flex flex-col gap-4 p-5 md:flex-row md:items-start md:justify-between">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex flex-wrap items-center gap-2 mb-2">
                                 {getStatusBadge(s.statut)}
-                                <span className="text-xs text-gray-400">
-                                  {new Date(s.createdAt).toLocaleDateString()}
-                                </span>
+                                {s.type && <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">{s.type}</span>}
                               </div>
                               <h3 className="font-semibold text-lg text-gray-900">{s.titre}</h3>
                               <p className="text-gray-600 mt-1 line-clamp-2">{s.description}</p>
-                              <div className="flex items-center gap-4 mt-3 text-sm text-gray-600">
+                              <div className="flex flex-wrap items-center gap-3 mt-3 text-sm text-gray-600">
                                 <span>📍 {s.localisation}</span>
                                 <span>📎 {s.fichiers?.length || 0} pièce(s)</span>
                               </div>
+                              <p className="mt-3 text-xs font-semibold text-slate-500">
+                                {s.statut === 'traite'
+                                  ? 'Votre dossier est traité. Consultez les détails et les preuves conservées.'
+                                  : 'Suivez l’évolution du dossier et ajoutez des informations si nécessaire.'}
+                              </p>
                             </div>
-                            <span className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-sm font-semibold text-indigo-700 shadow-sm">
-                              Voir l'état
-                            </span>
+                              <span className="inline-flex shrink-0 items-center justify-center rounded-full bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 shadow-sm">
+                                Voir mon suivi
+                              </span>
+                            </div>
                           </div>
                         </Link>
                       </Card>

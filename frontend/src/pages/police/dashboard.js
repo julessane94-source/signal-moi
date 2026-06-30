@@ -377,7 +377,7 @@ export default function PoliceDashboard() {
     traites: signalements.filter(s => s.statut === 'traite').length
   }
 
-  const topSignal = getHighestPrioriteSignalement()
+  const topSignal = filter === 'archives' ? null : getHighestPrioriteSignalement()
   const liveRecordingsList = Object.values(liveRecordings)
     .filter(item => item && item.status === 'recording')
     .sort((a, b) => new Date(b.startedAt || b.updatedAt || 0) - new Date(a.startedAt || a.updatedAt || 0))
