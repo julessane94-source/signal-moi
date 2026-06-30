@@ -5,6 +5,14 @@ import Link from 'next/link'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL
 
+const getDashboardPath = (role) => {
+  const normalizedRole = String(role || '').trim().toLowerCase()
+  if (['admin', 'administrateur'].includes(normalizedRole)) return '/admin/dashboard'
+  if (['collaborateur', 'collaborator'].includes(normalizedRole)) return '/collaborator/dashboard'
+  if (['police', 'policier', 'gendarmerie', 'force_ordre'].includes(normalizedRole)) return '/police/dashboard'
+  return '/citizen/dashboard'
+}
+
 export default function SignalementDetail() {
   const router = useRouter()
   const { id } = router.query
@@ -146,7 +154,7 @@ export default function SignalementDetail() {
       }
 
       alert('Signalement supprimé avec succès')
-      router.push('/citizen/dashboard')
+      router.push(getDashboardPath(currentUser?.role))
     } catch (e) {
       console.error(e)
       alert('Impossible de supprimer le signalement : ' + (e.message || 'Erreur'))
@@ -296,7 +304,7 @@ export default function SignalementDetail() {
 
             <div className="flex gap-3 flex-wrap">
               <button onClick={handleAlert} disabled={alerting} className="flex-1 bg-red-600 text-white py-2 rounded hover:bg-red-700">{alerting ? 'Envoi...' : 'Lancer alerte'}</button>
-              <Link href="/citizen/dashboard"><button className="flex-1 border border-gray-300 py-2 rounded hover:bg-gray-50">Retour au tableau</button></Link>
+              <Link href={getDashboardPath(currentUser?.role)}><button className="flex-1 border border-gray-300 py-2 rounded hover:bg-gray-50">Retour au tableau</button></Link>
               {currentUser && signal.user && currentUser.id === signal.user.id && (
                 <button
                   onClick={handleDelete}
