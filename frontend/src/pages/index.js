@@ -180,6 +180,9 @@ export default function Home() {
                   <Link href={user ? "/citizen/signalement" : "/login"} className="min-w-0">
                     <Button className="w-full bg-emerald-500 text-slate-950 px-7 py-3 font-bold hover:bg-emerald-400 transition sm:w-auto" size="md">Faire un signalement</Button>
                   </Link>
+                  <Link href="/download" className="min-w-0">
+                    <Button className="w-full border border-emerald-300 bg-emerald-50 px-7 py-3 font-bold text-slate-950 hover:bg-white transition sm:w-auto" size="md">Télécharger l'application</Button>
+                  </Link>
                   <Link href="/signalements" className="min-w-0">
                     <Button className="w-full border border-white/25 bg-white/10 px-7 py-3 font-semibold text-white hover:bg-white/15 transition sm:w-auto" size="md">Voir les signalements</Button>
                   </Link>
@@ -241,6 +244,30 @@ export default function Home() {
                       />
                     ))}
                   </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-white py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="grid items-center gap-6 border border-emerald-200 bg-emerald-50 p-6 md:grid-cols-[1.2fr_0.8fr] md:p-8">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-emerald-700 sm:tracking-[0.25em]">Application mobile</p>
+                <h2 className="mt-3 text-3xl font-black text-slate-950">Télécharger Signal-Moi sur téléphone</h2>
+                <p className="mt-3 max-w-2xl text-slate-700">
+                  Installez l'application depuis votre navigateur pour signaler plus vite, partager la position GPS et lancer un live en cas d'urgence.
+                </p>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row md:justify-end">
+                <Link href="/download" className="min-w-0">
+                  <Button className="w-full bg-slate-950 px-6 py-3 font-bold text-white hover:bg-slate-800 sm:w-auto" size="md">Ouvrir la page de téléchargement</Button>
+                </Link>
+                {showInstallButton && (
+                  <button onClick={handleInstall} className="min-h-[48px] bg-emerald-600 px-6 py-3 font-bold text-white hover:bg-emerald-700">
+                    Installer maintenant
+                  </button>
                 )}
               </div>
             </div>
