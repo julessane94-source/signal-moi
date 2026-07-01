@@ -11,7 +11,6 @@ export default function Document() {
         <meta name="apple-mobile-web-app-title" content="Signal-Moi" />
         <meta name="theme-color" content="#dc2626" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="description" content="Plateforme de signalement citoyen" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
       </Head>
       <body>
