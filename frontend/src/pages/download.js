@@ -41,7 +41,14 @@ export default function DownloadApp() {
       <main className="min-h-screen bg-slate-50 pt-16">
         <div className="mx-auto max-w-5xl px-4 py-12">
           <section className="border border-emerald-200 bg-white p-6 text-center shadow-sm md:p-10">
-            <img src="/icons/icon-192x192.png" alt="Logo Signal-Moi" className="mx-auto h-20 w-20 rounded-2xl object-cover shadow" />
+            <img
+              src="/icons/icon-192x192.png"
+              onError={(event) => {
+                event.currentTarget.src = '/icons/icon.svg'
+              }}
+              alt="Logo Signal-Moi"
+              className="mx-auto h-20 w-20 rounded-2xl object-cover shadow"
+            />
             <h1 className="mt-5 text-3xl font-black text-slate-950 md:text-4xl">Télécharger l'application Signal-Moi</h1>
             <p className="mx-auto mt-3 max-w-2xl text-slate-600">
               Installez Signal-Moi sur votre téléphone pour signaler plus rapidement, partager votre GPS et suivre vos alertes.
@@ -56,12 +63,9 @@ export default function DownloadApp() {
                   Installer l'application
                 </button>
               ) : (
-                <a
-                  href="/manifest.json"
-                  className="min-h-[52px] bg-emerald-600 px-7 py-3 font-bold text-white shadow-lg transition hover:bg-emerald-700"
-                >
-                  Application web installable
-                </a>
+                <span className="min-h-[52px] bg-emerald-100 px-7 py-3 font-bold text-emerald-900">
+                  Utilisez le menu du navigateur pour installer
+                </span>
               )}
               {apkAvailable ? (
                 <a
