@@ -40,6 +40,11 @@ export default function NotificationsPage() {
       })
       const data = await res.json()
       setNotifications(data.notifications || [])
+      await fetch(`${API_BASE}/api/auth/notifications/read-all`, {
+        method: 'PATCH',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      })
+      window.dispatchEvent(new Event('signal-moi-notifications-read'))
     } catch (err) {
       console.error('Erreur lors du chargement des notifications:', err)
       setError('Impossible de charger les notifications')

@@ -34,6 +34,33 @@ const buildLogoUrl = (logoRecord) => {
 const cleanEmail = (value) => String(value || '').trim().toLowerCase();
 const cleanPhone = (value) => String(value || '').trim().replace(/\s+/g, '');
 
+const getUnreadNotificationCount = async (userId) => {
+  const queries = [
+    `SELECT COUNT(*)::int as unread_count
+     FROM signal_moi.notifications
+     WHERE user_id = $1 AND est_lu = false`,
+    `SELECT COUNT(*)::int as unread_count
+     FROM signal_moi.notifications
+     WHERE user_id = $1 AND is_read = false`
+  ];
+
+  for (const sql of queries) {
+    try {
+      const result = await db.query(sql, [userId]);
+      return Number(result.rows?.[0]?.unread_count || 0);
+    } catch (error) {
+      const code = error.code || error.parent?.code;
+      const message = error.message || '';
+      if (code === '42703' || code === '42P01' || message.includes('does not exist')) {
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  return 0;
+};
+
 // GET /api/auth/site-config - Récupère la configuration du site (PUBLIC - sans auth)
 router.get('/site-config', async (req, res) => {
   try {
@@ -108,6 +135,50 @@ router.get('/site-config', async (req, res) => {
     };
     res.set('Cache-Control', publicConfigCache);
     res.json(defaultConfig);
+  }
+});
+
+// GET /api/auth/notifications/count - compteur non lu pour tous les espaces connectes
+router.get('/notifications/count', protect, async (req, res) => {
+  try {
+    const unreadCount = await getUnreadNotificationCount(req.user.id);
+    res.json({ success: true, unreadCount });
+  } catch (error) {
+    console.error('[AUTH NOTIFICATIONS COUNT] Erreur:', error.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+});
+
+// PATCH /api/auth/notifications/read-all - marque les notifications de l'utilisateur comme lues
+router.patch('/notifications/read-all', protect, async (req, res) => {
+  const queries = [
+    `UPDATE signal_moi.notifications
+     SET est_lu = true
+     WHERE user_id = $1 AND est_lu = false`,
+    `UPDATE signal_moi.notifications
+     SET is_read = true
+     WHERE user_id = $1 AND is_read = false`
+  ];
+
+  try {
+    for (const sql of queries) {
+      try {
+        await db.query(sql, [req.user.id]);
+        return res.json({ success: true });
+      } catch (error) {
+        const code = error.code || error.parent?.code;
+        const message = error.message || '';
+        if (code === '42703' || code === '42P01' || message.includes('does not exist')) {
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('[AUTH NOTIFICATIONS READ ALL] Erreur:', error.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
   }
 });
 

@@ -4,6 +4,114 @@ import { motion } from 'framer-motion'
 import { ArrowLeftIcon as ArrowLeft } from '@heroicons/react/24/outline'
 import { useRouter } from 'next/router'
 
+const sections = [
+  {
+    title: '1. Objet',
+    body: [
+      "Les présentes Conditions Générales d'Utilisation encadrent l'accès et l'utilisation de la plateforme Signal-Moi, accessible notamment depuis le site signal-moi.sn.",
+      "Signal-Moi est une plateforme citoyenne permettant de signaler des situations, incidents ou besoins de terrain, de transmettre des éléments de preuve, de partager une localisation et de suivre l'évolution d'un dossier."
+    ]
+  },
+  {
+    title: '2. Acceptation des conditions',
+    body: [
+      "En créant un compte, en cochant la case d'acceptation ou en utilisant la plateforme, l'utilisateur reconnaît avoir lu, compris et accepté les présentes conditions ainsi que la Politique de Confidentialité.",
+      "Cette acceptation constitue un accord entre l'utilisateur et l'éditeur de la plateforme, dans les limites prévues par la loi applicable. Si l'utilisateur refuse ces conditions, il doit cesser d'utiliser Signal-Moi."
+    ]
+  },
+  {
+    title: '3. Nature du service',
+    body: [
+      "Signal-Moi est un outil de transmission, de coordination et de suivi. Il ne garantit pas une intervention, un résultat, une qualification juridique des faits ou un délai de traitement.",
+      "La plateforme ne remplace pas les numéros d'urgence, les services de secours, la police, la gendarmerie, les juridictions, les avocats ou les autorités administratives. En cas de danger immédiat, l'utilisateur doit contacter directement les services d'urgence compétents."
+    ]
+  },
+  {
+    title: '4. Compte utilisateur',
+    body: [
+      "L'utilisateur s'engage à fournir des informations exactes, à jour et non trompeuses lors de son inscription et pendant l'utilisation de la plateforme.",
+      "Il est responsable de la confidentialité de ses identifiants et de toute action effectuée depuis son compte. Tout accès non autorisé doit être signalé rapidement à l'équipe Signal-Moi."
+    ]
+  },
+  {
+    title: '5. Obligations de l'utilisateur',
+    body: [
+      "L'utilisateur s'engage à utiliser Signal-Moi de bonne foi, dans le respect des lois, des droits des tiers, de la vie privée et de la dignité des personnes.",
+      "Sont strictement interdits: les faux signalements, les signalements malveillants, les accusations mensongères, la diffamation, les menaces, le harcèlement, l'usurpation d'identité, la publication de contenus illégaux ou la transmission volontaire d'informations trompeuses."
+    ]
+  },
+  {
+    title: '6. Responsabilité des contenus',
+    body: [
+      "L'utilisateur est seul responsable des textes, images, vidéos, audios, localisations, documents et informations qu'il transmet sur la plateforme.",
+      "Il garantit disposer des droits et autorisations nécessaires pour communiquer ces contenus. Il s'engage à indemniser Signal-Moi, ses concepteurs, administrateurs, développeurs, partenaires et prestataires contre toute réclamation résultant d'un usage fautif, abusif ou illégal de la plateforme."
+    ]
+  },
+  {
+    title: '7. Traitement et modération des signalements',
+    body: [
+      "Signal-Moi peut modérer, masquer, archiver, supprimer, transmettre ou conserver un contenu lorsqu'une obligation légale, une exigence de sécurité, une demande d'autorité compétente ou une violation des présentes conditions le justifie.",
+      "Les contenus publiés par les utilisateurs ne reflètent pas nécessairement l'opinion de Signal-Moi, de ses concepteurs, de ses administrateurs ou de ses partenaires."
+    ]
+  },
+  {
+    title: '8. Données personnelles',
+    body: [
+      "Les données personnelles sont traitées conformément à la Politique de Confidentialité de Signal-Moi.",
+      "L'utilisateur reconnaît que certains signalements peuvent contenir des informations sensibles. Il s'engage à ne transmettre que les données nécessaires au traitement du signalement et à respecter les droits des personnes concernées."
+    ],
+    link: { href: '/privacy', label: 'Lire la Politique de Confidentialité' }
+  },
+  {
+    title: '9. Localisation, vidéo et preuves',
+    body: [
+      "Certaines fonctionnalités utilisent la localisation GPS, l'appareil photo, le micro, la vidéo ou l'envoi de fichiers. L'utilisateur reste libre d'autoriser ou non ces accès depuis son navigateur ou son appareil.",
+      "Les coordonnées GPS peuvent être imprécises selon le terminal, le réseau, le navigateur, l'environnement ou les services de cartographie. Signal-Moi ne garantit pas l'exactitude absolue d'une localisation."
+    ]
+  },
+  {
+    title: '10. Propriété intellectuelle',
+    body: [
+      "Le nom Signal-Moi, les logos, interfaces, textes, graphismes, bases de données, développements, architecture technique, documentation et éléments visuels sont protégés par les règles applicables à la propriété intellectuelle.",
+      "Aucun droit de propriété intellectuelle n'est transféré à l'utilisateur. Toute reproduction, extraction, modification, distribution, revente ou exploitation non autorisée est interdite."
+    ]
+  },
+  {
+    title: '11. Rôle des concepteurs et prestataires techniques',
+    body: [
+      "Les concepteurs, développeurs, mainteneurs, hébergeurs et prestataires techniques interviennent pour créer, maintenir, sécuriser ou améliorer l'outil informatique.",
+      "Ils ne sont pas les auteurs des contenus publiés par les utilisateurs et ne sont pas responsables des comportements, signalements, décisions, omissions ou interventions des utilisateurs, autorités, collaborateurs ou tiers, sauf faute personnelle prouvée et directement imputable conformément à la loi."
+    ]
+  },
+  {
+    title: '12. Limitation de responsabilité',
+    body: [
+      "Dans toute la mesure permise par la loi, Signal-Moi, ses concepteurs, administrateurs, développeurs, mainteneurs, hébergeurs, prestataires et partenaires ne peuvent être tenus responsables des dommages indirects, pertes de données, pertes de chance, préjudices moraux, atteintes à la réputation ou conséquences d'un usage non conforme de la plateforme.",
+      "Signal-Moi ne peut notamment pas être tenu responsable des interruptions de service, erreurs techniques, informations inexactes transmises par les utilisateurs, fausses alertes, retards d'intervention, refus d'intervention ou décisions prises par des tiers."
+    ]
+  },
+  {
+    title: '13. Suspension ou suppression de compte',
+    body: [
+      "Signal-Moi peut suspendre, limiter ou supprimer un compte, retirer un contenu ou restreindre une fonctionnalité en cas d'usage abusif, risque de sécurité, violation des présentes conditions, demande d'autorité compétente ou comportement contraire aux lois applicables."
+    ]
+  },
+  {
+    title: '14. Modification des conditions',
+    body: [
+      "Signal-Moi peut modifier les présentes conditions afin de tenir compte de l'évolution du service, de la réglementation, de la sécurité ou des besoins opérationnels.",
+      "La version publiée sur la plateforme est celle applicable. L'utilisation continue de Signal-Moi après publication d'une nouvelle version vaut acceptation des conditions mises à jour."
+    ]
+  },
+  {
+    title: '15. Droit applicable et règlement des différends',
+    body: [
+      "Les présentes conditions sont régies par le droit sénégalais, sous réserve des règles impératives applicables.",
+      "Tout différend doit d'abord faire l'objet d'une tentative de règlement amiable. À défaut d'accord, les juridictions compétentes du Sénégal pourront être saisies, sauf règle légale contraire."
+    ]
+  }
+]
+
 export default function Terms() {
   const router = useRouter()
 
@@ -11,169 +119,60 @@ export default function Terms() {
     <>
       <Head>
         <title>Conditions Générales d'Utilisation - Signal-Moi</title>
-        <meta name="description" content="Conditions générales d'utilisation de Signal-Moi" />
+        <meta name="description" content="Conditions générales d'utilisation de la plateforme Signal-Moi." />
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 pt-20 pb-12">
-        <div className="max-w-4xl mx-auto px-4">
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-            <button onClick={() => router.back()} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6">
+      <main className="min-h-screen bg-slate-50 pt-20 pb-12">
+        <div className="mx-auto max-w-4xl px-4">
+          <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+            <button onClick={() => router.back()} className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-950">
               <ArrowLeft className="h-5 w-5" />
               Retour
             </button>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Conditions Générales d'Utilisation</h1>
-            <p className="text-gray-600">Dernière mise à jour : {new Date().toLocaleDateString('fr-FR')}</p>
+            <div className="rounded-3xl bg-slate-950 p-6 text-white shadow-xl md:p-8">
+              <p className="text-sm font-bold uppercase tracking-[0.2em] text-emerald-300">Signal-Moi</p>
+              <h1 className="mt-3 text-3xl font-black md:text-4xl">Conditions Générales d'Utilisation</h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
+                Ces conditions expliquent les droits, devoirs et responsabilités liés à l'utilisation de la plateforme.
+              </p>
+              <p className="mt-4 text-sm font-semibold text-slate-200">Dernière mise à jour : {new Date().toLocaleDateString('fr-FR')}</p>
+            </div>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-lg shadow-sm p-8 border border-gray-200 space-y-8">
-            <section>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">1. Acceptation des conditions</h2>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                En accédant à Signal-Moi ou en utilisant ses services, l'utilisateur accepte les présentes Conditions Générales d'Utilisation.
-                Lors de la création d'un compte, la case d'acceptation des CGU et de la Politique de Confidentialité vaut consentement exprès
-                et forme un accord contractuel entre l'utilisateur et l'éditeur de la plateforme, dans les limites prévues par la loi.
-              </p>
-              <p className="text-gray-700 leading-relaxed">
-                Si l'utilisateur n'accepte pas ces conditions, il doit cesser d'utiliser la plateforme. Signal-Moi peut modifier les CGU;
-                les nouvelles conditions prennent effet dès leur publication, sauf règle légale contraire.
-              </p>
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+            <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-950">
+              <strong>Note importante.</strong> Ces conditions renforcent le cadre contractuel de Signal-Moi, mais elles ne constituent pas un avis juridique personnalisé. Une validation par un juriste compétent au Sénégal reste recommandée avant lancement officiel.
             </section>
 
-            <section>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">2. Nature du service</h2>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                Signal-Moi est un outil numérique de signalement, de suivi et de coordination entre citoyens, administrateurs,
-                collaborateurs autorisés et forces compétentes. La plateforme facilite la transmission d'informations mais ne garantit
-                ni intervention, ni résultat, ni délai de traitement.
-              </p>
-              <p className="text-gray-700 leading-relaxed">
-                Signal-Moi ne remplace pas les numéros d'urgence officiels, les services de secours, la police, les juridictions,
-                les avocats ou les autorités administratives. En cas de danger immédiat, l'utilisateur doit contacter directement
-                les services d'urgence compétents.
-              </p>
-            </section>
+            {sections.map((section) => (
+              <section key={section.title} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h2 className="text-xl font-black text-slate-950">{section.title}</h2>
+                <div className="mt-4 space-y-3">
+                  {section.body.map((paragraph) => (
+                    <p key={paragraph} className="leading-7 text-slate-700">{paragraph}</p>
+                  ))}
+                </div>
+                {section.link && (
+                  <Link href={section.link.href} className="mt-4 inline-flex font-bold text-emerald-700 hover:text-emerald-800">
+                    {section.link.label}
+                  </Link>
+                )}
+              </section>
+            ))}
 
-            <section>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">3. Compte utilisateur</h2>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                L'utilisateur doit fournir des informations exactes, à jour et non trompeuses. Il est responsable de la confidentialité
-                de ses identifiants et de toute activité réalisée depuis son compte.
-              </p>
-              <ul className="list-disc list-inside text-gray-700 space-y-2">
-                <li>Ne pas créer un compte sous une fausse identité.</li>
-                <li>Ne pas partager ses identifiants avec un tiers.</li>
-                <li>Notifier immédiatement tout accès non autorisé.</li>
-                <li>Respecter les rôles attribués par la plateforme.</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">4. Responsabilité de l'utilisateur</h2>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                L'utilisateur est seul responsable des faits, textes, photos, vidéos, sons, positions GPS et documents qu'il transmet.
-                Il garantit que les informations publiées sont sincères au meilleur de sa connaissance et qu'il dispose des droits
-                nécessaires pour les communiquer.
-              </p>
-              <ul className="list-disc list-inside text-gray-700 space-y-2">
-                <li>Tout faux signalement, signalement malveillant ou abusif est interdit.</li>
-                <li>La diffamation, les menaces, le harcèlement et l'atteinte à la vie privée sont interdits.</li>
-                <li>L'utilisateur doit respecter les lois, les droits des tiers et la dignité des personnes.</li>
-                <li>L'utilisateur s'engage à indemniser Signal-Moi et ses concepteurs en cas de réclamation liée à son usage fautif.</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">5. Contenus publiés</h2>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                Les contenus transmis par les utilisateurs restent sous leur responsabilité et ne reflètent pas nécessairement l'opinion
-                de Signal-Moi, de ses concepteurs, développeurs, administrateurs ou partenaires.
-              </p>
-              <p className="text-gray-700 leading-relaxed">
-                Signal-Moi peut modérer, masquer, archiver, supprimer ou transmettre un contenu aux autorités compétentes lorsqu'une
-                obligation légale, une exigence de sécurité ou une violation des présentes conditions le justifie.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">6. Limitation de responsabilité</h2>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                Dans toute la mesure autorisée par la loi, Signal-Moi, ses concepteurs, développeurs, administrateurs, mainteneurs,
-                hébergeurs, prestataires et partenaires ne peuvent être tenus responsables des dommages indirects, pertes de données,
-                pertes de chance, préjudices moraux, atteintes à la réputation ou conséquences d'un usage non conforme de la plateforme.
-              </p>
-              <ul className="list-disc list-inside text-gray-700 space-y-2">
-                <li>Interruptions, ralentissements, erreurs techniques ou indisponibilités du service.</li>
-                <li>Fausses alertes, données inexactes ou contenus transmis par les utilisateurs.</li>
-                <li>Décisions, retards, refus d'intervention ou actions des autorités, collaborateurs, forces de police ou tiers.</li>
-                <li>Erreurs de localisation liées au GPS, au réseau, au navigateur, au terminal ou aux cartes.</li>
-              </ul>
-              <p className="text-gray-700 leading-relaxed mt-4">
-                Aucune clause ne limite une responsabilité qui ne pourrait pas être exclue par la loi applicable.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">7. Propriété intellectuelle</h2>
-              <p className="text-gray-700 leading-relaxed">
-                Le nom Signal-Moi, les logos, interfaces, textes, bases de données, développements, architecture, documentation et
-                éléments graphiques sont protégés. Aucune licence, cession ou transfert de propriété intellectuelle n'est accordé
-                à l'utilisateur, sauf droit d'accès personnel et limité à la plateforme. Toute reproduction, modification,
-                extraction, distribution ou exploitation non autorisée est interdite.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">8. Rôle des concepteurs et prestataires techniques</h2>
-              <p className="text-gray-700 leading-relaxed">
-                Les concepteurs, développeurs, mainteneurs, hébergeurs et prestataires techniques interviennent pour créer, maintenir
-                ou améliorer l'outil informatique. Ils ne sont pas les auteurs des contenus publiés par les utilisateurs et ne sont
-                pas responsables des comportements, déclarations, signalements, omissions ou décisions des utilisateurs, autorités,
-                collaborateurs ou tiers, sauf faute personnelle prouvée et directement imputable conformément à la loi applicable.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">9. Données personnelles</h2>
-              <p className="text-gray-700 leading-relaxed">
-                Les données personnelles sont traitées conformément à la <Link href="/privacy" className="text-indigo-600 hover:underline">Politique de Confidentialité</Link>.
-                L'utilisateur reconnaît que certains signalements peuvent contenir des données sensibles et s'engage à ne transmettre
-                que les informations nécessaires au traitement du dossier.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">10. Suspension et résiliation</h2>
-              <p className="text-gray-700 leading-relaxed">
-                Signal-Moi peut suspendre ou fermer un compte, limiter une fonctionnalité, retirer un contenu ou refuser un accès
-                en cas d'usage abusif, risque de sécurité, demande d'autorité compétente, violation des CGU ou comportement contraire
-                aux lois applicables.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">11. Droit applicable et règlement des différends</h2>
-              <p className="text-gray-700 leading-relaxed">
-                Les présentes conditions sont régies par le droit sénégalais, sous réserve des règles impératives applicables.
-                Tout différend doit d'abord faire l'objet d'une tentative de règlement amiable. À défaut, les tribunaux compétents
-                du Sénégal pourront être saisis, sauf règle légale contraire.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">12. Contact</h2>
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <p className="text-gray-700"><strong>Email :</strong> contact@signal-moi.sn</p>
-                <p className="text-gray-700 mt-2"><strong>Téléphone :</strong> +221 77 885 16 91</p>
-                <p className="text-gray-700 mt-2"><strong>Formulaire :</strong> <Link href="/contact" className="text-indigo-600 hover:underline">Contactez-nous</Link></p>
+            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-xl font-black text-slate-950">16. Contact</h2>
+              <div className="mt-4 rounded-xl bg-slate-50 p-4 text-slate-700">
+                <p><strong>Email :</strong> contact@signal-moi.sn</p>
+                <p className="mt-2"><strong>Téléphone :</strong> +221 77 885 16 91</p>
+                <p className="mt-2"><strong>Formulaire :</strong> <Link href="/contact" className="font-bold text-emerald-700 hover:underline">contacter Signal-Moi</Link></p>
               </div>
             </section>
 
-            <div className="border-t border-gray-200 pt-6 mt-8">
-              <p className="text-gray-600 text-sm">© {new Date().getFullYear()} Signal-Moi. Tous les droits réservés.</p>
-            </div>
+            <p className="text-center text-sm text-slate-500">© {new Date().getFullYear()} Signal-Moi. Tous droits réservés.</p>
           </motion.div>
         </div>
-      </div>
+      </main>
     </>
   )
 }

@@ -69,9 +69,17 @@ export default function NewSignalement() {
   const [liveStream, setLiveStream] = useState(null)
   const [recordedVideoUrl, setRecordedVideoUrl] = useState(null)
   const [recordedVideoName, setRecordedVideoName] = useState(null)
+  const [audioRecordingState, setAudioRecordingState] = useState('idle')
+  const [audioRecordingError, setAudioRecordingError] = useState(null)
+  const [audioPreviewUrl, setAudioPreviewUrl] = useState(null)
+  const [audioRecordingName, setAudioRecordingName] = useState(null)
   const socketRef = useRef(socket)
   const mediaRecorderRef = useRef(null)
   const recordingChunksRef = useRef([])
+  const audioRecorderRef = useRef(null)
+  const audioChunksRef = useRef([])
+  const audioStreamRef = useRef(null)
+  const audioRecordingNameRef = useRef(null)
   const recordingTimerRef = useRef(null)
   const liveFrameTimerRef = useRef(null)
   const liveSessionIdRef = useRef(null)
@@ -486,8 +494,12 @@ export default function NewSignalement() {
       if (recordedVideoUrl) {
         URL.revokeObjectURL(recordedVideoUrl)
       }
+      if (audioPreviewUrl) {
+        URL.revokeObjectURL(audioPreviewUrl)
+      }
+      stopAudioStream()
     }
-  }, [recordedVideoUrl])
+  }, [recordedVideoUrl, audioPreviewUrl])
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -568,6 +580,100 @@ export default function NewSignalement() {
       liveStreamRef.current = null
       return null
     })
+  }
+
+  const stopAudioStream = () => {
+    if (audioStreamRef.current) {
+      audioStreamRef.current.getTracks().forEach(track => track.stop())
+      audioStreamRef.current = null
+    }
+  }
+
+  const getAudioMimeType = () => {
+    if (typeof MediaRecorder === 'undefined') return ''
+    const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/mpeg']
+    return candidates.find(type => MediaRecorder.isTypeSupported(type)) || ''
+  }
+
+  const startAudioRecording = async () => {
+    setAudioRecordingError(null)
+
+    if (audioRecordingState === 'recording') return
+
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      setAudioRecordingError('Votre navigateur ne permet pas l enregistrement vocal direct.')
+      return
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mimeType = getAudioMimeType()
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
+
+      audioChunksRef.current = []
+      audioStreamRef.current = stream
+      audioRecorderRef.current = recorder
+      setAudioRecordingState('recording')
+
+      recorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          audioChunksRef.current.push(event.data)
+        }
+      }
+
+      recorder.onstop = () => {
+        const finalMimeType = recorder.mimeType || mimeType || 'audio/webm'
+        const blob = new Blob(audioChunksRef.current, { type: finalMimeType })
+        const extension = finalMimeType.includes('mp4') || finalMimeType.includes('mpeg') ? 'm4a' : 'webm'
+        const proofName = `preuve-audio-${Date.now()}.${extension}`
+        const proofFile = new File([blob], proofName, { type: finalMimeType })
+
+        if (audioPreviewUrl) {
+          URL.revokeObjectURL(audioPreviewUrl)
+        }
+
+        const previousProofName = audioRecordingNameRef.current
+        audioRecordingNameRef.current = proofName
+        setAudioRecordingName(proofName)
+        setAudioPreviewUrl(URL.createObjectURL(blob))
+        setFiles(prev => [...prev.filter(file => file.name !== previousProofName), proofFile])
+        setAudioRecordingState('saved')
+        stopAudioStream()
+        toast.success('Audio ajoute au signalement')
+      }
+
+      recorder.start()
+    } catch (error) {
+      console.error('[AudioRecording] Error:', error)
+      setAudioRecordingState('idle')
+      setAudioRecordingError('Impossible d acceder au micro. Autorisez le micro puis reessayez.')
+      stopAudioStream()
+    }
+  }
+
+  const stopAudioRecording = () => {
+    const recorder = audioRecorderRef.current
+    if (recorder && recorder.state !== 'inactive') {
+      setAudioRecordingState('saving')
+      recorder.stop()
+    } else {
+      stopAudioStream()
+      setAudioRecordingState('idle')
+    }
+  }
+
+  const removeAudioRecording = () => {
+    const previousProofName = audioRecordingNameRef.current
+    if (audioPreviewUrl) {
+      URL.revokeObjectURL(audioPreviewUrl)
+    }
+    audioRecordingNameRef.current = null
+    audioChunksRef.current = []
+    setAudioPreviewUrl(null)
+    setAudioRecordingName(null)
+    setAudioRecordingState('idle')
+    setFiles(prev => prev.filter(file => file.name !== previousProofName))
+    stopAudioStream()
   }
 
   const getRecordingMimeType = () => {
@@ -735,6 +841,12 @@ export default function NewSignalement() {
       if (!user || !user.id) {
         toast.error('Veuillez vous reconnecter')
         router.push('/login')
+        return
+      }
+
+      if (audioRecordingState === 'recording' || audioRecordingState === 'saving') {
+        toast.info('Arretez l enregistrement vocal avant d envoyer.')
+        setLoading(false)
         return
       }
 
@@ -948,6 +1060,61 @@ export default function NewSignalement() {
                 </div>
                 <textarea name="description" rows="5" value={formData.description} onChange={handleChange} className="w-full rounded-2xl border border-slate-300 px-5 py-4 text-lg outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100" placeholder="Dites simplement ce qui se passe..."></textarea>
                 <p className="mt-2 text-sm text-slate-500">Vous pouvez laisser vide: le bouton choisi mettra une phrase simple pour vous.</p>
+              </section>
+
+              <section className="overflow-hidden rounded-[1.75rem] border border-cyan-200 bg-gradient-to-br from-cyan-50 via-white to-blue-50 p-5 shadow-sm sm:p-7">
+                <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-sm font-black uppercase tracking-wide text-cyan-700">Signalement vocal</p>
+                    <h2 className="mt-1 text-2xl font-black text-slate-950">Parler, ecouter, envoyer</h2>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                      Appuyez, racontez ce qui se passe, puis envoyez. L audio sera ajoute automatiquement aux preuves.
+                    </p>
+                  </div>
+                  <div className={`rounded-full px-4 py-2 text-xs font-black ${audioRecordingState === 'recording' ? 'bg-red-600 text-white' : audioRecordingState === 'saved' ? 'bg-emerald-600 text-white' : 'bg-white text-slate-700 ring-1 ring-slate-200'}`}>
+                    {audioRecordingState === 'recording' ? 'Micro actif' : audioRecordingState === 'saved' ? 'Audio pret' : 'Pret'}
+                  </div>
+                </div>
+
+                <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+                  <div className="rounded-3xl border border-white/80 bg-white/85 p-4 shadow-sm">
+                    {audioPreviewUrl ? (
+                      <div className="space-y-3">
+                        <audio src={audioPreviewUrl} controls className="w-full" />
+                        <p className="truncate text-sm font-bold text-slate-700">{audioRecordingName}</p>
+                      </div>
+                    ) : (
+                      <div className="flex min-h-24 items-center gap-4">
+                        <div className={`flex h-16 w-16 items-center justify-center rounded-2xl text-3xl font-black ${audioRecordingState === 'recording' ? 'animate-pulse bg-red-600 text-white' : 'bg-cyan-100 text-cyan-700'}`}>
+                          {audioRecordingState === 'recording' ? 'REC' : 'MIC'}
+                        </div>
+                        <div>
+                          <p className="font-black text-slate-900">{audioRecordingState === 'recording' ? 'Enregistrement en cours...' : 'Aucun audio enregistre'}</p>
+                          <p className="mt-1 text-sm text-slate-500">Le micro peut aider les personnes qui ne savent pas ecrire.</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row lg:w-56 lg:flex-col">
+                    {audioRecordingState === 'recording' ? (
+                      <button type="button" onClick={stopAudioRecording} className="rounded-2xl bg-red-600 px-5 py-4 font-black text-white shadow-lg shadow-red-600/20 transition hover:bg-red-700">
+                        Arreter l audio
+                      </button>
+                    ) : (
+                      <button type="button" onClick={startAudioRecording} disabled={audioRecordingState === 'saving'} className="rounded-2xl bg-cyan-700 px-5 py-4 font-black text-white shadow-lg shadow-cyan-700/20 transition hover:bg-cyan-800 disabled:opacity-60">
+                        {audioRecordingState === 'saved' ? 'Recommencer' : audioRecordingState === 'saving' ? 'Sauvegarde...' : 'Enregistrer ma voix'}
+                      </button>
+                    )}
+                    {audioPreviewUrl && (
+                      <button type="button" onClick={removeAudioRecording} className="rounded-2xl border border-slate-300 bg-white px-5 py-4 font-black text-slate-700 transition hover:bg-slate-50">
+                        Supprimer
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {audioRecordingError && <p className="mt-4 rounded-2xl bg-red-50 p-3 text-sm font-semibold text-red-700">{audioRecordingError}</p>}
               </section>
 
               <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">

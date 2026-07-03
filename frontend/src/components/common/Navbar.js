@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { useAuth } from '../../context/AuthContext'
+import { useSocket } from '../../context/SocketContext'
 import { API_BASE } from '../../config/api'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '../ui'
@@ -32,6 +33,7 @@ const normalizeRole = (role) => {
 export default function Navbar() {
   const router = useRouter()
   const { user, loading, logout } = useAuth()
+  const { notifications: realtimeNotifications } = useSocket()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
   const [logoUrl, setLogoUrl] = useState('/icons/icon-192x192.png')
@@ -63,7 +65,7 @@ export default function Navbar() {
     const fetchNotificationCount = async () => {
       try {
         const token = localStorage.getItem('token')
-        const res = await fetch(`${API_BASE}/api/citizen/notifications/count`, {
+        const res = await fetch(`${API_BASE}/api/auth/notifications/count`, {
           headers: token ? { 'Authorization': `Bearer ${token}` } : {}
         })
         const data = await res.json()
@@ -78,6 +80,17 @@ export default function Navbar() {
     const interval = setInterval(fetchNotificationCount, 30000)
     return () => clearInterval(interval)
   }, [user])
+
+  useEffect(() => {
+    if (!user || !realtimeNotifications?.length) return
+    setNotificationCount((count) => count + 1)
+  }, [user, realtimeNotifications?.length])
+
+  useEffect(() => {
+    const resetNotificationCount = () => setNotificationCount(0)
+    window.addEventListener('signal-moi-notifications-read', resetNotificationCount)
+    return () => window.removeEventListener('signal-moi-notifications-read', resetNotificationCount)
+  }, [])
 
   const getImageUrl = (url) => {
     if (!url) return '/icons/icon-192x192.png'
@@ -343,6 +356,17 @@ export default function Navbar() {
                     <motion.a className="flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-700 transition hover:bg-slate-100">
                       <Cog className="h-5 w-5" />
                       Parametres
+                    </motion.a>
+                  </Link>
+                  <Link href="/notifications" onClick={() => setMobileMenuOpen(false)}>
+                    <motion.a className="flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-700 transition hover:bg-slate-100">
+                      <Bell className="h-5 w-5" />
+                      <span className="flex-1">Notifications</span>
+                      {notificationCount > 0 && (
+                        <span className="inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-red-600 px-2 py-0.5 text-xs font-black text-white">
+                          {notificationCount > 99 ? '99+' : notificationCount}
+                        </span>
+                      )}
                     </motion.a>
                   </Link>
                   <motion.button
