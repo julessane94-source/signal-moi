@@ -69,6 +69,53 @@ const mapFileRecord = (f) => ({
     url: signalementFileUrl(f.id, f.chemin)
 });
 
+const buildVerificationInfo = (signalement, fichiers = []) => {
+    const reasons = [];
+    let score = 100;
+    const fileCount = Array.isArray(fichiers) ? fichiers.length : Number(signalement.file_count || 0);
+    const hasGps = signalement.latitude !== null && signalement.latitude !== undefined && signalement.longitude !== null && signalement.longitude !== undefined;
+    const duplicateCount = Number(signalement.recent_same_user_count || 0);
+    const createdAt = signalement.user_created_at ? new Date(signalement.user_created_at).getTime() : null;
+    const accountAgeHours = createdAt ? Math.max(0, (Date.now() - createdAt) / 36e5) : null;
+
+    if (!hasGps) {
+        score -= 25;
+        reasons.push('Localisation GPS absente ou incomplete');
+    }
+    if (fileCount === 0) {
+        score -= 20;
+        reasons.push('Aucune preuve jointe');
+    }
+    if (duplicateCount >= 3) {
+        score -= 25;
+        reasons.push('Plusieurs signalements recents depuis ce compte');
+    } else if (duplicateCount >= 2) {
+        score -= 10;
+        reasons.push('Signalements rapproches depuis ce compte');
+    }
+    if (accountAgeHours !== null && accountAgeHours < 24) {
+        score -= 15;
+        reasons.push('Compte cree recemment');
+    }
+    if (signalement.statut === 'fausse_alerte') {
+        score = Math.min(score, 20);
+        reasons.push('Dossier marque comme fausse alerte');
+    }
+
+    const safeScore = Math.max(0, Math.min(100, score));
+    const level = safeScore >= 75 ? 'fiable' : safeScore >= 45 ? 'a_verifier' : 'suspect';
+
+    return {
+        score: safeScore,
+        niveau: level,
+        raisons: reasons.length ? reasons : ['Aucun signal faible majeur detecte'],
+        preuves: fileCount,
+        gps: hasGps,
+        doublonsRecents: duplicateCount,
+        compteRecent: accountAgeHours !== null && accountAgeHours < 24
+    };
+};
+
 // Middleware d'authentification optionnelle
 const optionalAuthMiddleware = (req, res, next) => {
     const token = req.headers.authorization?.replace('Bearer ', '');
@@ -246,7 +293,8 @@ router.delete('/:id', authMiddleware, async (req, res) => {
             try {
                 const limit = parseLimit(req.query.limit, 100, 200);
                 const result = await db.query(`SELECT id, titre, description, type, statut, localisation, latitude, longitude, created_at, updated_at
-                                               FROM signal_moi.signalements 
+                                               FROM signal_moi.signalements
+                                               WHERE COALESCE(statut, 'nouveau') <> 'fausse_alerte'
                                                ORDER BY created_at DESC LIMIT $1`, [limit]);
                 const rows = result.rows.map(r => ({
                     id: r.id,
@@ -390,11 +438,13 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                 if (req.user && req.user.role === 'police') {
                     const allowed = ['violence', 'vol', 'theft', 'accident'];
                     const showArchive = String(req.query.archive || '').toLowerCase() === 'true';
-                    const result = await db.query(`SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, s.latitude, s.longitude, s.priorite, s.est_anonyme, s.created_at, s.updated_at, u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone, u.email AS user_email
+                    const result = await db.query(`SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, s.latitude, s.longitude, s.priorite, s.est_anonyme, s.created_at, s.updated_at,
+                                                          u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone, u.email AS user_email, u.created_at AS user_created_at,
+                                                          (SELECT COUNT(*)::int FROM signal_moi.signalements sx WHERE sx.user_id = s.user_id AND sx.created_at >= NOW() - INTERVAL '24 hours') AS recent_same_user_count
                                                    FROM signal_moi.signalements s
                                                    LEFT JOIN signal_moi.users u ON u.id = s.user_id
                                                    WHERE LOWER(s.type) = ANY($1::text[])
-                                                     AND ${showArchive ? "s.statut IN ('traite', 'closed')" : "COALESCE(s.statut, 'nouveau') NOT IN ('traite', 'closed')"}
+                                                     AND ${showArchive ? "s.statut IN ('traite', 'closed', 'fausse_alerte')" : "COALESCE(s.statut, 'nouveau') NOT IN ('traite', 'closed', 'fausse_alerte')"}
                                                    ORDER BY LOWER(s.type) ASC, s.created_at DESC LIMIT $2`, [allowed, limit]);
                     const signalementIds = result.rows.map(r => r.id);
                     const filesBySignalement = {};
@@ -446,7 +496,8 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                                 telephone: r.user_telephone,
                                 email: r.user_email
                             },
-                            fichiers: filesBySignalement[r.id] || []
+                            fichiers: filesBySignalement[r.id] || [],
+                            verification: buildVerificationInfo(r, filesBySignalement[r.id] || [])
                         };
                     });
                     return res.json(rows);
@@ -572,7 +623,8 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                 const signalementResult = await db.query(`
                     SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, s.est_anonyme, s.priorite,
                            s.latitude, s.longitude, s.assigned_to, s.created_at, s.updated_at,
-                           u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone, u.email AS user_email,
+                           u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone, u.email AS user_email, u.created_at AS user_created_at,
+                           (SELECT COUNT(*)::int FROM signal_moi.signalements sx WHERE sx.user_id = s.user_id AND sx.created_at >= NOW() - INTERVAL '24 hours') AS recent_same_user_count,
                            officer.prenom AS officer_prenom, officer.nom AS officer_nom, officer.telephone AS officer_telephone, officer.email AS officer_email
                     FROM signal_moi.signalements s
                     LEFT JOIN signal_moi.users u ON u.id = s.user_id
@@ -678,7 +730,8 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                     historique,
                     createdAt: signalement.created_at,
                     updatedAt: signalement.updated_at,
-                    estAnonyme: signalement.est_anonyme
+                    estAnonyme: signalement.est_anonyme,
+                    verification: buildVerificationInfo(signalement, fichiers)
                 };
 
                 // Ajouter les infos de l'auteur que si: propriétaire, admin, police, collaborateur, ou anonyme
@@ -714,7 +767,7 @@ router.patch('/:id/statut', authMiddleware, async (req, res) => {
         }
 
         // Valider le statut
-        const statuts_valides = ['nouveau', 'en_cours', 'traite', 'transfere', 'closed'];
+        const statuts_valides = ['nouveau', 'en_cours', 'traite', 'transfere', 'closed', 'fausse_alerte'];
         if (!statuts_valides.includes(statut)) {
             return res.status(400).json({ error: 'Statut invalide' });
         }

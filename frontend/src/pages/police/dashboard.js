@@ -347,6 +347,13 @@ export default function PoliceDashboard() {
     })
   }
 
+  const getVerificationTone = (verification) => {
+    const level = verification?.niveau
+    if (level === 'fiable') return { label: 'Fiable', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' }
+    if (level === 'suspect') return { label: 'Suspect', className: 'bg-red-50 text-red-700 border-red-200' }
+    return { label: 'A verifier', className: 'bg-amber-50 text-amber-700 border-amber-200' }
+  }
+
   const getHourGroup = (signalement) => {
     const date = new Date(signalement.createdAt || signalement.updatedAt || Date.now())
     return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' - ' +
@@ -366,6 +373,7 @@ export default function PoliceDashboard() {
       case 'en_cours': return 'info'
       case 'traite': return 'success'
       case 'transfere': return 'primary'
+      case 'fausse_alerte': return 'danger'
       default: return 'gray'
     }
   }
@@ -724,6 +732,7 @@ export default function PoliceDashboard() {
                 const groupKey = getSignalGroupKey(s)
                 const previousGroupKey = idx > 0 ? getSignalGroupKey(list[idx - 1]) : null
                 const showGroupHeader = groupKey !== previousGroupKey
+                const verificationTone = getVerificationTone(s.verification)
 
                 return (
                   <div key={s.id} className="space-y-3">
@@ -749,9 +758,19 @@ export default function PoliceDashboard() {
                             {s.priorite || 'Normal'}
                           </Badge>
                           {s.type && <Badge variant="gray">{s.type}</Badge>}
+                          {s.verification && (
+                            <span className={`rounded-full border px-3 py-1 text-xs font-black ${verificationTone.className}`}>
+                              {verificationTone.label} {s.verification.score}%
+                            </span>
+                          )}
                         </div>
                         <h3 className="font-semibold text-lg text-gray-900">{s.titre}</h3>
                         <p className="text-gray-600 mt-1 line-clamp-2">{s.description}</p>
+                        {s.verification?.raisons?.length > 0 && s.verification.niveau !== 'fiable' && (
+                          <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
+                            Verification: {s.verification.raisons.slice(0, 2).join(' • ')}
+                          </p>
+                        )}
                         <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-gray-600">
                           <span className="flex items-center gap-1">
                             <MapPin className="h-4 w-4" /> {s.localisation}
@@ -853,6 +872,20 @@ export default function PoliceDashboard() {
               </Badge>
               {selectedSignal.type && <Badge variant="gray">Type: {selectedSignal.type}</Badge>}
             </div>
+
+            {selectedSignal.verification && (
+              <div className={`rounded-xl border p-4 ${getVerificationTone(selectedSignal.verification).className}`}>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="font-black">Indice anti-fausse alerte: {getVerificationTone(selectedSignal.verification).label}</p>
+                  <span className="rounded-full bg-white/70 px-3 py-1 text-sm font-black">{selectedSignal.verification.score}%</span>
+                </div>
+                <ul className="mt-3 space-y-1 text-sm font-semibold">
+                  {selectedSignal.verification.raisons.map((reason) => (
+                    <li key={reason}>- {reason}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Localisation - avec bouton Localiser */}
             <div className="bg-indigo-50 p-5 rounded-lg border border-indigo-200">
@@ -1003,6 +1036,13 @@ export default function PoliceDashboard() {
                   }}
                 >
                   Transferer
+                </Button>
+                <Button
+                  size="sm"
+                  variant="danger"
+                  onClick={() => updateStatus(selectedSignal.id, 'fausse_alerte')}
+                >
+                  Fausse alerte
                 </Button>
               </div>
             </div>

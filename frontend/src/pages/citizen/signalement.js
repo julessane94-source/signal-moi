@@ -1217,6 +1217,11 @@ export default function NewSignalement() {
                 </span>
               </label>
 
+              <div className="rounded-[1.5rem] border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950 shadow-sm">
+                <p className="font-black">Signalement responsable</p>
+                <p className="mt-1">Envoyez seulement des faits reels. Une fausse alerte peut retarder l'aide aux vraies victimes et sera signalee aux equipes autorisees.</p>
+              </div>
+
               <div className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm">
                 <button type="submit" disabled={loading} className="w-full rounded-2xl bg-red-600 px-5 py-4 text-base font-black text-white shadow-lg shadow-red-600/25 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-70">{loading ? 'Envoi en cours...' : 'Envoyer le signalement'}</button>
                 <button type="button" onClick={() => router.back()} className="mt-3 w-full rounded-2xl border border-slate-300 px-5 py-3 font-bold text-slate-700 transition hover:bg-slate-100">Annuler</button>

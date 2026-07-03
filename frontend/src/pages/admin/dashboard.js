@@ -73,6 +73,13 @@ const getProofKind = (file) => {
   return 'document'
 }
 
+const getVerificationTone = (verification) => {
+  const level = verification?.niveau
+  if (level === 'fiable') return { label: 'Fiable', className: 'border-emerald-200 bg-emerald-50 text-emerald-700' }
+  if (level === 'suspect') return { label: 'Suspect', className: 'border-red-200 bg-red-50 text-red-700' }
+  return { label: 'A verifier', className: 'border-amber-200 bg-amber-50 text-amber-700' }
+}
+
 export default function AdminDashboard() {
   const { user, loading } = useAuth()
   const [users, setUsers] = useState([])
@@ -813,6 +820,9 @@ export default function AdminDashboard() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
                     >
+                      {(() => {
+                        const verificationTone = getVerificationTone(s.verification)
+                        return (
                       <Card className="overflow-hidden border border-slate-200 bg-white shadow-sm">
                         <div className="grid gap-0 lg:grid-cols-[1fr_260px]">
                           <div className="p-5">
@@ -820,9 +830,19 @@ export default function AdminDashboard() {
                               <span className="rounded-full bg-slate-950 px-3 py-1 text-xs font-black uppercase text-white">Supervision admin</span>
                               <Badge variant={s.statut === 'traite' ? 'success' : s.statut === 'en_cours' ? 'warning' : 'info'}>{s.statut || 'nouveau'}</Badge>
                               {s.type && <Badge variant="gray">{s.type}</Badge>}
+                              {s.verification && (
+                                <span className={`rounded-full border px-3 py-1 text-xs font-black ${verificationTone.className}`}>
+                                  {verificationTone.label} {s.verification.score}%
+                                </span>
+                              )}
                             </div>
                             <h3 className="font-semibold text-lg text-slate-950">{s.titre}</h3>
                             <p className="mt-2 text-gray-600">{s.description}</p>
+                            {s.verification?.raisons?.length > 0 && (
+                              <div className={`mt-3 rounded-2xl border p-3 text-sm font-semibold ${verificationTone.className}`}>
+                                {s.verification.raisons.slice(0, 3).join(' • ')}
+                              </div>
+                            )}
                             <div className="mt-4 grid gap-2 text-sm text-gray-600 sm:grid-cols-2">
                               <span>📍 Zone: {s.localisation || 'Non renseignée'}</span>
                               <span>👤 Auteur: {s.author?.prenom || 'Inconnu'} {s.author?.nom || ''}{s.estAnonyme ? ' (anonyme public)' : ''}</span>
@@ -895,6 +915,8 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                       </Card>
+                        )
+                      })()}
                     </motion.div>
                   ))}
                 </div>

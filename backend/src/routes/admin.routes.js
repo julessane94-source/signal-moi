@@ -82,6 +82,51 @@ const uploadSlideshowImages = multer({
   }
 });
 
+const buildVerificationInfo = (signalement, fichiers = []) => {
+  const reasons = [];
+  let score = 100;
+  const fileCount = Array.isArray(fichiers) ? fichiers.length : Number(signalement.file_count || 0);
+  const hasGps = signalement.latitude !== null && signalement.latitude !== undefined && signalement.longitude !== null && signalement.longitude !== undefined;
+  const duplicateCount = Number(signalement.recent_same_user_count || 0);
+  const createdAt = signalement.user_created_at ? new Date(signalement.user_created_at).getTime() : null;
+  const accountAgeHours = createdAt ? Math.max(0, (Date.now() - createdAt) / 36e5) : null;
+
+  if (!hasGps) {
+    score -= 25;
+    reasons.push('Localisation GPS absente ou incomplete');
+  }
+  if (fileCount === 0) {
+    score -= 20;
+    reasons.push('Aucune preuve jointe');
+  }
+  if (duplicateCount >= 3) {
+    score -= 25;
+    reasons.push('Plusieurs signalements recents depuis ce compte');
+  } else if (duplicateCount >= 2) {
+    score -= 10;
+    reasons.push('Signalements rapproches depuis ce compte');
+  }
+  if (accountAgeHours !== null && accountAgeHours < 24) {
+    score -= 15;
+    reasons.push('Compte cree recemment');
+  }
+  if (signalement.statut === 'fausse_alerte') {
+    score = Math.min(score, 20);
+    reasons.push('Dossier marque comme fausse alerte');
+  }
+
+  const safeScore = Math.max(0, Math.min(100, score));
+  return {
+    score: safeScore,
+    niveau: safeScore >= 75 ? 'fiable' : safeScore >= 45 ? 'a_verifier' : 'suspect',
+    raisons: reasons.length ? reasons : ['Aucun signal faible majeur detecte'],
+    preuves: fileCount,
+    gps: hasGps,
+    doublonsRecents: duplicateCount,
+    compteRecent: accountAgeHours !== null && accountAgeHours < 24
+  };
+};
+
 // ? Middleware d'authentification admin
 const authMiddleware = async (req, res, next) => {
     try {
@@ -335,7 +380,8 @@ router.delete('/users/:id', authMiddleware, async (req, res) => {
 // Ajoutez cette route apr�s les autres routes GET (par exemple apr�s `/users`)
 router.get('/signalements', authMiddleware, async (req, res) => {
   try {
-    const result = await db.query(`SELECT s.*, u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone, u.email AS user_email
+    const result = await db.query(`SELECT s.*, u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone, u.email AS user_email, u.created_at AS user_created_at,
+                                          (SELECT COUNT(*)::int FROM signal_moi.signalements sx WHERE sx.user_id = s.user_id AND sx.created_at >= NOW() - INTERVAL '24 hours') AS recent_same_user_count
                                    FROM signal_moi.signalements s
                                    LEFT JOIN signal_moi.users u ON u.id = s.user_id
                                    ORDER BY s.created_at DESC LIMIT 200`);
@@ -379,6 +425,7 @@ router.get('/signalements', authMiddleware, async (req, res) => {
       latitude: r.latitude !== null ? parseFloat(r.latitude) : null,
       longitude: r.longitude !== null ? parseFloat(r.longitude) : null,
       fichiers: filesBySignalement[r.id] || [],
+      verification: buildVerificationInfo(r, filesBySignalement[r.id] || []),
       createdAt: r.created_at,
       updatedAt: r.updated_at,
       author: {
