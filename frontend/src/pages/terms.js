@@ -34,7 +34,7 @@ const sections = [
     ]
   },
   {
-    title: '5. Obligations de l'utilisateur',
+    title: "5. Obligations de l'utilisateur",
     body: [
       "L'utilisateur s'engage à utiliser Signal-Moi de bonne foi, dans le respect des lois, des droits des tiers, de la vie privée et de la dignité des personnes.",
       "Sont strictement interdits: les faux signalements, les signalements malveillants, les accusations mensongères, la diffamation, les menaces, le harcèlement, l'usurpation d'identité, la publication de contenus illégaux ou la transmission volontaire d'informations trompeuses."
