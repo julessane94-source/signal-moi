@@ -140,8 +140,17 @@ export default function Home() {
     <>
       <Head>
         <title>Signal-Moi - Plateforme de Signalement Citoyen</title>
-        <meta name="description" content="Signalez les incidents dans votre quartier" />
+        <meta name="description" content="Signal-Moi est une plateforme citoyenne de signalement à Sédhiou, Sénégal: alertes, GPS, preuves, suivi police, collaborateurs et campagnes." />
+        <meta name="keywords" content="Signal-Moi, signalement citoyen, Sédhiou, Sénégal, sécurité, police, alerte GPS, signal-moi.sn" />
+        <meta name="robots" content="index, follow, max-image-preview:large" />
+        <link rel="canonical" href="https://signal-moi.sn/" />
         <link rel="manifest" href="/manifest.json" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://signal-moi.sn/" />
+        <meta property="og:title" content="Signal-Moi - Plateforme de Signalement Citoyen" />
+        <meta property="og:description" content="Signaler, localiser et suivre les incidents citoyens à Sédhiou avec Signal-Moi." />
+        <meta property="og:image" content="https://signal-moi.sn/icons/icon-512x512.png" />
+        <meta name="twitter:card" content="summary_large_image" />
         {slideshowImages.length > 0 && (
           <link rel="preload" as="image" href={getImageUrl(slideshowImages[0])} />
         )}

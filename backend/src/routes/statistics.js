@@ -130,24 +130,38 @@ router.get('/by-age', authMiddleware, checkAdminOrCollaborator, async (req, res)
     }
 
     const result = await db.query(`
+      WITH cleaned AS (
+        SELECT
+          s.type,
+          CASE
+            WHEN NULLIF(TRIM(u.date_naissance::text), '') IS NULL THEN NULL
+            WHEN u.date_naissance::text ~ '^\\d{4}-\\d{2}-\\d{2}' THEN LEFT(u.date_naissance::text, 10)::date
+            ELSE NULL
+          END AS birth_date
+        FROM signal_moi.signalements s
+        LEFT JOIN signal_moi.users u ON u.id = s.user_id
+      ),
+      valid_birth_dates AS (
+        SELECT type, birth_date
+        FROM cleaned
+        WHERE birth_date IS NOT NULL
+          AND birth_date <= CURRENT_DATE
+          AND birth_date >= CURRENT_DATE - INTERVAL '120 years'
+      )
       SELECT
         CASE
-          WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, u.date_naissance)) < 18 THEN 'Moins de 18 ans'
-          WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, u.date_naissance)) < 25 THEN '18-25 ans'
-          WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, u.date_naissance)) < 35 THEN '25-35 ans'
-          WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, u.date_naissance)) < 45 THEN '35-45 ans'
-          WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, u.date_naissance)) < 55 THEN '45-55 ans'
-          WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, u.date_naissance)) < 65 THEN '55-65 ans'
+          WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, birth_date)) < 18 THEN 'Moins de 18 ans'
+          WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, birth_date)) < 25 THEN '18-25 ans'
+          WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, birth_date)) < 35 THEN '25-35 ans'
+          WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, birth_date)) < 45 THEN '35-45 ans'
+          WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, birth_date)) < 55 THEN '45-55 ans'
+          WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, birth_date)) < 65 THEN '55-65 ans'
           ELSE 'Plus de 65 ans'
         END AS age_group,
-        s.type,
+        type,
         COUNT(*)::int AS count
-      FROM signal_moi.signalements s
-      LEFT JOIN signal_moi.users u ON u.id = s.user_id
-      WHERE u.date_naissance IS NOT NULL
-        AND u.date_naissance <= CURRENT_DATE
-        AND u.date_naissance >= CURRENT_DATE - INTERVAL '120 years'
-      GROUP BY age_group, s.type
+      FROM valid_birth_dates
+      GROUP BY age_group, type
       ORDER BY
         CASE age_group
           WHEN 'Moins de 18 ans' THEN 1
@@ -158,7 +172,7 @@ router.get('/by-age', authMiddleware, checkAdminOrCollaborator, async (req, res)
           WHEN '55-65 ans' THEN 6
           WHEN 'Plus de 65 ans' THEN 7
         END,
-        s.type ASC
+        type ASC
     `)
 
     res.json({ success: true, data: result.rows.map(row => ({ ...row, count: toInt(row.count) })) })
