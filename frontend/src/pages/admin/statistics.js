@@ -91,22 +91,23 @@ export default function Statistics() {
         credentials: 'include',
         headers: { Authorization: `Bearer ${token}`, 'Accept': 'application/json' }
       }
-      const apiGet = async (url) => {
+      const apiGet = async (url, fallback) => {
         const response = await fetch(url, fetchOpts)
-        const payload = await response.json()
+        const payload = await response.json().catch(() => ({}))
         if (!response.ok || payload.error) {
-          throw new Error(payload.error || 'Erreur API statistiques')
+          console.warn('[Statistics] Endpoint indisponible:', url, payload.error || response.status)
+          return fallback
         }
         return payload
       }
 
       const [overview, byType, byMonth, byGender, byAge, exportDat] = await Promise.all([
-        apiGet(`${API_BASE}/api/statistics/overview`),
-        apiGet(`${API_BASE}/api/statistics/by-type`),
-        apiGet(`${API_BASE}/api/statistics/by-month?year=${new Date().getFullYear()}`),
-        apiGet(`${API_BASE}/api/statistics/by-gender`),
-        apiGet(`${API_BASE}/api/statistics/by-age`),
-        apiGet(`${API_BASE}/api/statistics/export-data?startDate=${filters.startDate}&endDate=${filters.endDate}&type=${filters.type}`)
+        apiGet(`${API_BASE}/api/statistics/overview`, { success: true, totalSignalements: 0, statusDistribution: [], topTypes: [], priorityDistribution: [], monthlyTrend: [] }),
+        apiGet(`${API_BASE}/api/statistics/by-type`, { success: true, data: [] }),
+        apiGet(`${API_BASE}/api/statistics/by-month?year=${new Date().getFullYear()}`, { success: true, data: [] }),
+        apiGet(`${API_BASE}/api/statistics/by-gender`, { success: true, data: [] }),
+        apiGet(`${API_BASE}/api/statistics/by-age`, { success: true, data: [] }),
+        apiGet(`${API_BASE}/api/statistics/export-data?startDate=${filters.startDate}&endDate=${filters.endDate}&type=${filters.type}`, { success: true, stats: {}, signalements: [] })
       ])
 
       setData({

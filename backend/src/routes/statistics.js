@@ -240,7 +240,13 @@ router.get('/export-data', authMiddleware, checkAdminOrCollaborator, async (req,
     const hasBirthDate = await hasColumn('users', 'date_naissance')
     const hasPriorite = await hasColumn('signalements', 'priorite')
     const hasStatut = await hasColumn('signalements', 'statut')
-    const birthDateSelect = hasBirthDate ? 'u.date_naissance' : 'NULL AS date_naissance'
+    const birthDateSelect = hasBirthDate
+      ? `CASE
+          WHEN NULLIF(TRIM(u.date_naissance::text), '') IS NULL THEN NULL
+          WHEN u.date_naissance::text ~ '^\\d{4}-\\d{2}-\\d{2}' THEN LEFT(u.date_naissance::text, 10)::date
+          ELSE NULL
+        END AS date_naissance`
+      : 'NULL AS date_naissance'
     const prioriteSelect = hasPriorite ? "COALESCE(s.priorite, 'normale')" : "'normale'"
     const statutSelect = hasStatut ? "COALESCE(s.statut, 'nouveau')" : "'nouveau'"
 
