@@ -29,6 +29,12 @@ const SIMPLE_DESCRIPTIONS = {
   autre: 'Je signale un probleme dans mon quartier. Merci de verifier la situation.'
 }
 
+const STARTER_ACTIONS = [
+  { type: 'violence', title: 'Je suis en danger', text: 'Alerte rapide avec GPS et video', button: 'Lancer SOS', tone: 'bg-red-600 text-white hover:bg-red-700' },
+  { type: 'accident', title: 'Accident ou blessure', text: 'Prevenir avec la position exacte', button: 'Signaler accident', tone: 'bg-orange-500 text-white hover:bg-orange-600' },
+  { type: 'autre', title: 'Probleme du quartier', text: 'Route, lumiere, vol ou autre', button: 'Signaler simplement', tone: 'bg-slate-950 text-white hover:bg-slate-800' }
+]
+
 const VIDEO_PROMPT_TYPES = ['violence', 'accident', 'vol']
 const MAX_RECORDING_MS = 3 * 60 * 1000
 
@@ -515,6 +521,12 @@ export default function NewSignalement() {
     }
   }
 
+  const startSimpleReport = (type) => {
+    const label = getTypeLabel(type)
+    handleQuickType(type, label)
+    getAutomaticLocation({ silent: true })
+  }
+
   useEffect(() => {
     if (!router.isReady || router.query.alerte !== '1' || emergencyAutostartRef.current) return
     emergencyAutostartRef.current = true
@@ -530,6 +542,15 @@ export default function NewSignalement() {
     getAutomaticLocation({ silent: true })
     startVideoRecording({ type: emergencyType, title: emergencyLabel })
   }, [router.isReady, router.query.alerte])
+
+  useEffect(() => {
+    if (!router.isReady || !router.query.type) return
+    const requestedType = String(router.query.type)
+    const quickType = QUICK_TYPES.find(item => item.value === requestedType)
+    if (!quickType) return
+    handleQuickType(quickType.value, quickType.label)
+    getAutomaticLocation({ silent: true })
+  }, [router.isReady, router.query.type])
 
   const handleFileChange = (e) => {
     setFiles(prev => [...prev, ...Array.from(e.target.files)])
@@ -717,8 +738,12 @@ export default function NewSignalement() {
         return
       }
 
-      if (!formData.titre.trim() || !formData.description.trim() || !formData.type) {
-        toast.error('Veuillez renseigner le titre, la description et le type.')
+      const selectedLabel = getTypeLabel(formData.type)
+      const titreValue = formData.titre.trim() || `Signalement : ${selectedLabel}`
+      const descriptionValue = formData.description.trim() || SIMPLE_DESCRIPTIONS[formData.type] || `Je signale: ${selectedLabel}`
+
+      if (!formData.type) {
+        toast.error('Choisissez le type de probleme.')
         return
       }
 
@@ -742,8 +767,8 @@ export default function NewSignalement() {
       }
 
       const fd = new FormData()
-      fd.append('titre', formData.titre)
-      fd.append('description', formData.description)
+      fd.append('titre', titreValue)
+      fd.append('description', descriptionValue)
       fd.append('type', formData.type)
       fd.append('localisation', localisationValue)
       fd.append('estAnonyme', String(formData.estAnonyme === true))
@@ -844,16 +869,32 @@ export default function NewSignalement() {
 
           <form onSubmit={handleSubmit} noValidate className="grid gap-6 lg:grid-cols-[1fr_340px]">
             <div className="space-y-6">
+              <section className="grid gap-4 md:grid-cols-3">
+                {STARTER_ACTIONS.map((action) => (
+                  <button
+                    key={action.type}
+                    type="button"
+                    onClick={() => startSimpleReport(action.type)}
+                    className={`min-h-40 rounded-[1.75rem] p-5 text-left shadow-lg transition hover:-translate-y-1 ${action.tone}`}
+                  >
+                    <span className="text-xs font-black uppercase tracking-[0.16em] opacity-80">Action rapide</span>
+                    <span className="mt-4 block text-2xl font-black leading-tight">{action.title}</span>
+                    <span className="mt-2 block text-sm font-semibold opacity-85">{action.text}</span>
+                    <span className="mt-5 inline-flex rounded-full bg-white/15 px-4 py-2 text-sm font-black">{action.button}</span>
+                  </button>
+                ))}
+              </section>
+
               <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
                 <div className="mb-5 flex items-start justify-between gap-4">
                   <div>
                     <p className="text-sm font-bold uppercase tracking-wide text-red-600">Etape facile</p>
                     <h2 className="mt-1 text-2xl font-black text-slate-950">Donnez un petit nom au probleme</h2>
                   </div>
-                  <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-700">Obligatoire</span>
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">Facultatif</span>
                 </div>
-                <input type="text" name="titre" required value={formData.titre} onChange={handleChange} className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-lg font-semibold text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-100" placeholder="Ex: Accident au marche" />
-                <p className="mt-3 text-sm text-slate-500">Cliquez d abord sur un gros bouton si vous voulez remplir plus vite.</p>
+                <input type="text" name="titre" value={formData.titre} onChange={handleChange} className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-lg font-semibold text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-100" placeholder="Ex: Accident au marche" />
+                <p className="mt-3 text-sm text-slate-500">Si vous ne savez pas quoi ecrire, laissez vide: Signal-Moi remplira automatiquement.</p>
               </section>
 
               <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
@@ -905,8 +946,8 @@ export default function NewSignalement() {
                     {isListening ? 'Je vous ecoute...' : 'Parler au telephone'}
                   </button>
                 </div>
-                <textarea name="description" required rows="5" value={formData.description} onChange={handleChange} className="w-full rounded-2xl border border-slate-300 px-5 py-4 text-lg outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100" placeholder="Dites simplement ce qui se passe..."></textarea>
-                <p className="mt-2 text-sm text-slate-500">Vous pouvez aussi ajouter une photo ou une video au lieu de beaucoup ecrire.</p>
+                <textarea name="description" rows="5" value={formData.description} onChange={handleChange} className="w-full rounded-2xl border border-slate-300 px-5 py-4 text-lg outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100" placeholder="Dites simplement ce qui se passe..."></textarea>
+                <p className="mt-2 text-sm text-slate-500">Vous pouvez laisser vide: le bouton choisi mettra une phrase simple pour vous.</p>
               </section>
 
               <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
