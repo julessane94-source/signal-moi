@@ -15,7 +15,13 @@ import {
   TrashIcon as Trash,
   KeyIcon as Key,
   UserIcon as User,
-  ArrowUpTrayIcon as ArrowUpTray
+  ArrowUpTrayIcon as ArrowUpTray,
+  PhotoIcon as Photo,
+  VideoCameraIcon as VideoCamera,
+  MusicalNoteIcon as MusicalNote,
+  PaperClipIcon as PaperClip,
+  PhoneIcon as Phone,
+  EnvelopeIcon as Envelope
 } from '@heroicons/react/24/outline'
 
 const getImageUrl = (url, { preferApi = true } = {}) => {
@@ -45,6 +51,26 @@ const handleImageFallback = (event, originalUrl) => {
   } else {
     current.src = '/icons/icon-192x192.png'
   }
+}
+
+const getSignalementFileUrl = (file) => {
+  if (!file) return null
+  const raw = file.url || file.chemin || file
+  if (!raw || typeof raw !== 'string') return null
+  if (raw.startsWith('http://') || raw.startsWith('https://')) return raw
+  if (raw.startsWith('/api/')) return `${API_BASE}${raw}`
+  if (raw.startsWith('api/')) return `${API_BASE}/${raw}`
+  if (raw.startsWith('/uploads/')) return `${API_BASE}${raw}`
+  if (raw.startsWith('uploads/')) return `${API_BASE}/${raw}`
+  return raw
+}
+
+const getProofKind = (file) => {
+  const mime = String(file?.mime_type || file?.type || '').toLowerCase()
+  if (mime.startsWith('image')) return 'image'
+  if (mime.startsWith('video')) return 'video'
+  if (mime.startsWith('audio')) return 'audio'
+  return 'document'
 }
 
 export default function AdminDashboard() {
@@ -799,15 +825,57 @@ export default function AdminDashboard() {
                             <p className="mt-2 text-gray-600">{s.description}</p>
                             <div className="mt-4 grid gap-2 text-sm text-gray-600 sm:grid-cols-2">
                               <span>📍 Zone: {s.localisation || 'Non renseignée'}</span>
-                              <span>👤 Auteur: {s.author?.prenom || 'Inconnu'} {s.author?.nom || ''}</span>
+                              <span>👤 Auteur: {s.author?.prenom || 'Inconnu'} {s.author?.nom || ''}{s.estAnonyme ? ' (anonyme public)' : ''}</span>
+                              {s.author?.telephone && <span className="inline-flex items-center gap-1"><Phone className="h-4 w-4" /> {s.author.telephone}</span>}
+                              {s.author?.email && <span className="inline-flex items-center gap-1"><Envelope className="h-4 w-4" /> {s.author.email}</span>}
                               <span>🕒 Créé: {s.createdAt ? new Date(s.createdAt).toLocaleDateString('fr-FR') : 'Date inconnue'}</span>
                               <span>🗂️ ID: {s.id}</span>
                             </div>
+                            {Array.isArray(s.fichiers) && s.fichiers.length > 0 && (
+                              <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                <div className="mb-3 flex items-center justify-between gap-3">
+                                  <p className="text-sm font-black text-slate-900">Preuves jointes ({s.fichiers.length})</p>
+                                  <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">Visible admin</span>
+                                </div>
+                                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                                  {s.fichiers.map((file) => {
+                                    const fileUrl = getSignalementFileUrl(file)
+                                    const kind = getProofKind(file)
+                                    return (
+                                      <a key={file.id || fileUrl} href={fileUrl} target="_blank" rel="noopener noreferrer" className="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                                        <div className="flex h-36 items-center justify-center bg-slate-100">
+                                          {kind === 'image' && (
+                                            <img src={fileUrl} alt={file.nom_fichier || 'Preuve'} className="h-full w-full object-cover transition group-hover:scale-105" />
+                                          )}
+                                          {kind === 'video' && (
+                                            <video src={fileUrl} controls className="h-full w-full bg-black object-cover" />
+                                          )}
+                                          {kind === 'audio' && (
+                                            <div className="w-full p-4 text-center">
+                                              <MusicalNote className="mx-auto h-9 w-9 text-cyan-700" />
+                                              <audio src={fileUrl} controls className="mt-3 w-full" />
+                                            </div>
+                                          )}
+                                          {kind === 'document' && <PaperClip className="h-10 w-10 text-slate-500" />}
+                                        </div>
+                                        <div className="flex items-center gap-2 border-t border-slate-200 p-3">
+                                          {kind === 'image' && <Photo className="h-4 w-4 text-blue-600" />}
+                                          {kind === 'video' && <VideoCamera className="h-4 w-4 text-red-600" />}
+                                          {kind === 'audio' && <MusicalNote className="h-4 w-4 text-cyan-700" />}
+                                          {kind === 'document' && <PaperClip className="h-4 w-4 text-slate-600" />}
+                                          <span className="truncate text-xs font-bold text-slate-700">{file.nom_fichier || 'Ouvrir la preuve'}</span>
+                                        </div>
+                                      </a>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                            )}
                           </div>
                           <div className="flex flex-col justify-between gap-3 border-t border-slate-200 bg-slate-50 p-5 lg:border-l lg:border-t-0">
-                            {Array.isArray(s.fichiers) && s.fichiers[0] && (
-                              <img src={s.fichiers[0]} alt="aperçu" className="h-28 w-full rounded-xl object-cover" />
-                            )}
+                            <div className="rounded-xl bg-white p-3 text-sm font-bold text-slate-700">
+                              {Array.isArray(s.fichiers) ? `${s.fichiers.length} preuve(s) jointe(s)` : '0 preuve jointe'}
+                            </div>
                             <div className="rounded-xl bg-white p-3 text-xs text-slate-600">
                               Vue admin: contrôle, audit et modération du dossier.
                             </div>

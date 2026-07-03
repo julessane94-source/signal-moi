@@ -339,16 +339,46 @@ router.get('/signalements', authMiddleware, async (req, res) => {
                                    FROM signal_moi.signalements s
                                    LEFT JOIN signal_moi.users u ON u.id = s.user_id
                                    ORDER BY s.created_at DESC LIMIT 200`);
+    const signalementIds = result.rows.map(r => r.id);
+    const filesBySignalement = {};
+
+    if (signalementIds.length > 0) {
+      const filesResult = await db.query(
+        `SELECT id, signalement_id, nom_fichier, chemin, type, taille, mime_type, description, created_at
+         FROM signal_moi.fichiers
+         WHERE signalement_id = ANY($1::uuid[])
+         ORDER BY created_at DESC`,
+        [signalementIds]
+      );
+
+      filesResult.rows.forEach((f) => {
+        if (!filesBySignalement[f.signalement_id]) filesBySignalement[f.signalement_id] = [];
+        filesBySignalement[f.signalement_id].push({
+          id: f.id,
+          signalementId: f.signalement_id,
+          nom_fichier: f.nom_fichier,
+          chemin: f.chemin,
+          type: f.type,
+          taille: f.taille,
+          mime_type: f.mime_type,
+          description: f.description,
+          created_at: f.created_at,
+          url: `/api/signalements/fichiers/${f.id}`
+        });
+      });
+    }
+
     const rows = result.rows.map(r => ({
       id: r.id,
       titre: r.titre,
       description: r.description,
       type: r.type,
       statut: r.statut,
+      estAnonyme: r.est_anonyme,
       localisation: r.localisation,
       latitude: r.latitude !== null ? parseFloat(r.latitude) : null,
       longitude: r.longitude !== null ? parseFloat(r.longitude) : null,
-      fichiers: r.fichiers || {},
+      fichiers: filesBySignalement[r.id] || [],
       createdAt: r.created_at,
       updatedAt: r.updated_at,
       author: {

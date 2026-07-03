@@ -822,9 +822,10 @@ export default function PoliceDashboard() {
               <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-3">Informations du signalant</p>
               <div className="space-y-2">
                 <p className="text-lg font-bold text-gray-900">
-                  {selectedSignal.estAnonyme ? 'Signalement anonyme' : `${selectedSignal.user?.prenom || 'Inconnu'} ${selectedSignal.user?.nom || ''}`}
+                  {`${selectedSignal.user?.prenom || 'Inconnu'} ${selectedSignal.user?.nom || ''}`}
+                  {selectedSignal.estAnonyme && <span className="ml-2 rounded-full bg-amber-100 px-2 py-1 text-xs font-bold text-amber-700">anonyme public</span>}
                 </p>
-                {!selectedSignal.estAnonyme && selectedSignal.user?.telephone && (
+                {selectedSignal.user?.telephone && (
                   <p className="flex items-center gap-2 text-sm text-gray-700"><Phone className="h-4 w-4" /> {selectedSignal.user.telephone}</p>
                 )}
                 {selectedSignal.user?.email && (
@@ -891,10 +892,15 @@ export default function PoliceDashboard() {
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {selectedSignal.fichiers.map((f, i) => {
                     const isImage = f.mime_type?.startsWith('image/') || f.type?.startsWith('image/')
+                    const isVideo = f.mime_type?.startsWith('video/') || f.type?.startsWith('video/')
+                    const isAudio = f.mime_type?.startsWith('audio/') || f.type?.startsWith('audio/')
                     // Normaliser le chemin: enlever les slashes en debut et fin, et les chemins absolus
-                    let normalizedPath = f.chemin || `uploads/signalements/${f.id}`
-                    if (normalizedPath.startsWith('/')) normalizedPath = normalizedPath.substring(1)
-                    const fileUrl = `${API_BASE}/${normalizedPath}`
+                    const rawPath = f.url || f.chemin || `/api/signalements/fichiers/${f.id}`
+                    let fileUrl = rawPath
+                    if (rawPath.startsWith('/api/')) fileUrl = `${API_BASE}${rawPath}`
+                    else if (rawPath.startsWith('api/')) fileUrl = `${API_BASE}/${rawPath}`
+                    else if (rawPath.startsWith('/uploads/')) fileUrl = `${API_BASE}${rawPath}`
+                    else if (rawPath.startsWith('uploads/')) fileUrl = `${API_BASE}/${rawPath}`
                     return (
                       <a
                         key={i}
@@ -919,6 +925,15 @@ export default function PoliceDashboard() {
                               <span className="text-white text-xs font-semibold opacity-0 group-hover:opacity-100 transition">Ouvrir</span>
                             </div>
                           </div>
+                        ) : isVideo ? (
+                          <div className="relative bg-black h-32">
+                            <video src={fileUrl} controls className="h-full w-full object-cover" />
+                          </div>
+                        ) : isAudio ? (
+                          <div className="bg-cyan-50 h-32 flex flex-col items-center justify-center gap-3 p-3">
+                            <PaperClip className="h-7 w-7 text-cyan-700" />
+                            <audio src={fileUrl} controls className="w-full" />
+                          </div>
                         ) : (
                           <div className="bg-gray-100 h-32 flex items-center justify-center group-hover:bg-gray-200 transition">
                             <PaperClip className="h-8 w-8 text-slate-400" />
@@ -935,7 +950,7 @@ export default function PoliceDashboard() {
             )}
 
             {/* Contacter la victime - Section Actions */}
-            {!selectedSignal.estAnonyme && selectedSignal.user?.telephone && (
+            {selectedSignal.user?.telephone && (
               <div className="border-t pt-4">
                 <p className="text-sm font-semibold mb-3 text-gray-700">Contacter la victime</p>
                 <div className="grid grid-cols-2 gap-2">

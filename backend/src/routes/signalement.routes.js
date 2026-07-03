@@ -677,11 +677,12 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                     policeStatus,
                     historique,
                     createdAt: signalement.created_at,
-                    updatedAt: signalement.updated_at
+                    updatedAt: signalement.updated_at,
+                    estAnonyme: signalement.est_anonyme
                 };
 
                 // Ajouter les infos de l'auteur que si: propriétaire, admin, police, collaborateur, ou anonyme
-                if (isOwner || isAdmin || isPolice || isCollaborateur || signalement.est_anonyme) {
+                if (isOwner || isAdmin || isPolice || isCollaborateur) {
                     response.user = {
                         id: signalement.user_id,
                         prenom: signalement.user_prenom,

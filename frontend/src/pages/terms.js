@@ -140,10 +140,6 @@ export default function Terms() {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
-            <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-950">
-              <strong>Note importante.</strong> Ces conditions renforcent le cadre contractuel de Signal-Moi, mais elles ne constituent pas un avis juridique personnalisé. Une validation par un juriste compétent au Sénégal reste recommandée avant lancement officiel.
-            </section>
-
             {sections.map((section) => (
               <section key={section.title} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h2 className="text-xl font-black text-slate-950">{section.title}</h2>
