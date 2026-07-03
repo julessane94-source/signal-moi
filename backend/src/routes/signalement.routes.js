@@ -4,6 +4,7 @@ const db = require('../config/database');
 const jwt = require('jsonwebtoken');
 const { uploadMultiple } = require('../middlewares/upload');
 const { v4: uuidv4 } = require('uuid');
+const FollowedCase = require('../models/FollowedCase');
 const fs = require('fs');
 const path = require('path');
 const activeLiveSessions = new Map();
@@ -570,10 +571,12 @@ router.delete('/:id', authMiddleware, async (req, res) => {
             try {
                 const signalementResult = await db.query(`
                     SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, s.est_anonyme, s.priorite,
-                           s.latitude, s.longitude, s.created_at, s.updated_at,
-                           u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone, u.email AS user_email
+                           s.latitude, s.longitude, s.assigned_to, s.created_at, s.updated_at,
+                           u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone, u.email AS user_email,
+                           officer.prenom AS officer_prenom, officer.nom AS officer_nom, officer.telephone AS officer_telephone, officer.email AS officer_email
                     FROM signal_moi.signalements s
                     LEFT JOIN signal_moi.users u ON u.id = s.user_id
+                    LEFT JOIN signal_moi.users officer ON officer.id::text = s.assigned_to::text
                     WHERE s.id = $1
                 `, [id]);
 
@@ -621,6 +624,42 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                     url: signalementFileUrl(f.id, f.chemin)
                 }));
 
+                const collaborators = (isOwner || isAdmin || isPolice || isCollaborateur)
+                    ? await FollowedCase.followersDetailsByCase(id)
+                    : [];
+
+                let historique = [];
+                try {
+                    const historyResult = await db.query(`
+                        SELECT action, ancien_statut, nouveau_statut, created_at
+                        FROM signal_moi.historiques_signalements
+                        WHERE signalement_id = $1
+                        ORDER BY created_at ASC
+                    `, [id]);
+                    historique = historyResult.rows.map(row => ({
+                        action: row.action,
+                        ancienStatut: row.ancien_statut,
+                        nouveauStatut: row.nouveau_statut,
+                        createdAt: row.created_at
+                    }));
+                } catch (historyError) {
+                    console.warn(`[GET /:id] Historique non disponible pour ${id}: ${historyError.message}`);
+                }
+
+                const policeStatus = {
+                    assigned: Boolean(signalement.assigned_to),
+                    assignedTo: signalement.assigned_to ? {
+                        id: signalement.assigned_to,
+                        prenom: signalement.officer_prenom,
+                        nom: signalement.officer_nom,
+                        telephone: signalement.officer_telephone,
+                        email: signalement.officer_email
+                    } : null,
+                    currentStatus: signalement.statut,
+                    receivedAt: signalement.created_at,
+                    lastUpdateAt: signalement.updated_at
+                };
+
                 // Construire la réponse en fonction du rôle
                 const response = {
                     id: signalement.id,
@@ -633,6 +672,10 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                     latitude: signalement.latitude !== null ? parseFloat(signalement.latitude) : null,
                     longitude: signalement.longitude !== null ? parseFloat(signalement.longitude) : null,
                     fichiers: fichiers,
+                    collaborators,
+                    followers: collaborators,
+                    policeStatus,
+                    historique,
                     createdAt: signalement.created_at,
                     updatedAt: signalement.updated_at
                 };
