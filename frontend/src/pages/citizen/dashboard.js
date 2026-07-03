@@ -243,6 +243,34 @@ export default function CitizenDashboard() {
     return <Badge variant={statusMap[statut] || 'info'}>{textMap[statut] || statut}</Badge>
   }
 
+  const quickActions = [
+    {
+      title: 'Urgence maintenant',
+      text: 'Ouvre le signalement avec GPS et video.',
+      href: '/citizen/signalement?alerte=1',
+      tone: 'bg-red-600 text-white hover:bg-red-700'
+    },
+    {
+      title: 'Accident ou blessure',
+      text: 'Prépare un signalement accident simple.',
+      href: '/citizen/signalement?type=accident',
+      tone: 'bg-orange-500 text-white hover:bg-orange-600'
+    },
+    {
+      title: 'Problème du quartier',
+      text: 'Route, lumière, vol ou autre situation.',
+      href: '/citizen/signalement?type=autre',
+      tone: 'bg-slate-950 text-white hover:bg-slate-800'
+    },
+    {
+      title: 'Voir mes suivis',
+      text: 'Contrôler les dossiers déjà envoyés.',
+      href: '#signalements',
+      onClick: () => setActiveTab('signalements'),
+      tone: 'bg-white text-slate-950 border border-slate-200 hover:bg-slate-50'
+    }
+  ]
+
   // ✅ Afficher le loader pendant le chargement de l'auth OU des données
   if (authLoading || loading) {
     return (
@@ -323,6 +351,37 @@ export default function CitizenDashboard() {
             </div>
           )}
 
+          <section className="mb-8">
+            <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-sm font-bold uppercase tracking-wide text-red-600">Action rapide</p>
+                <h2 className="text-2xl font-black text-slate-950">Que voulez-vous faire maintenant ?</h2>
+              </div>
+              <p className="max-w-xl text-sm font-semibold text-slate-500">Touchez un gros bouton. Le formulaire se remplit automatiquement pour vous guider.</p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {quickActions.map((action) => {
+                const content = (
+                  <div className={`min-h-36 rounded-[1.5rem] p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg ${action.tone}`}>
+                    <p className="text-xl font-black">{action.title}</p>
+                    <p className="mt-2 text-sm font-semibold opacity-80">{action.text}</p>
+                    <span className="mt-5 inline-flex rounded-full bg-black/10 px-4 py-2 text-sm font-black">Ouvrir</span>
+                  </div>
+                )
+
+                if (action.onClick) {
+                  return (
+                    <button key={action.title} type="button" onClick={action.onClick} className="text-left">
+                      {content}
+                    </button>
+                  )
+                }
+
+                return <Link key={action.title} href={action.href}>{content}</Link>
+              })}
+            </div>
+          </section>
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -369,6 +428,7 @@ export default function CitizenDashboard() {
           {/* Signalements Tab */}
           {activeTab === 'signalements' && (
             <motion.div
+              id="signalements"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               className="space-y-4"
