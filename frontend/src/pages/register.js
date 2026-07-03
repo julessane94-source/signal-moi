@@ -21,13 +21,14 @@ export default function Register() {
     ville: '',
     quartier: '',
     dateNaissance: '',
-    lieuNaissance: ''
+    lieuNaissance: '',
+    acceptTerms: false
   })
   const [errors, setErrors] = useState({})
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    const { name, value, type, checked } = e.target
+    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }))
     }
@@ -52,6 +53,7 @@ export default function Register() {
       if (!formData.telephone) newErrors.telephone = 'Téléphone requis'
       if (!formData.ville) newErrors.ville = 'Ville requise'
       if (!formData.quartier) newErrors.quartier = 'Quartier requis'
+      if (!formData.acceptTerms) newErrors.acceptTerms = 'Vous devez accepter les conditions pour créer un compte'
     }
     return newErrors
   }
@@ -80,7 +82,7 @@ export default function Register() {
     }
 
     setLoading(true)
-    const { confirmPassword, ...submitData } = formData
+    const { confirmPassword, acceptTerms, ...submitData } = formData
     const success = await register(submitData)
     setLoading(false)
     if (success) router.push('/')
@@ -311,6 +313,22 @@ export default function Register() {
                     </FormField>
                   </motion.div>
                 </div>
+
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+                  <label className="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      name="acceptTerms"
+                      checked={formData.acceptTerms}
+                      onChange={handleChange}
+                      className="mt-1 h-4 w-4 rounded border-gray-300 text-indigo-600"
+                    />
+                    <span>
+                      J'accepte les <Link href="/terms" className="font-bold text-indigo-600 hover:underline">Conditions Générales d'Utilisation</Link> et la <Link href="/privacy" className="font-bold text-indigo-600 hover:underline">Politique de Confidentialité</Link>. Je comprends que tout faux signalement ou usage abusif engage ma responsabilité.
+                    </span>
+                  </label>
+                  {errors.acceptTerms && <p className="mt-2 text-sm text-red-600">{errors.acceptTerms}</p>}
+                </motion.div>
               </motion.div>
             )}
 
