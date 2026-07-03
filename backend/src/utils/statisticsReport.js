@@ -71,6 +71,7 @@ const getCompleteStatistics = async ({ scope = 'admin', userId = null } = {}) =>
     byZoneRows,
     monthlyRows,
     usersByRoleRows,
+    usersTotalsRows,
     campaignRows,
     plaidoyerRows,
     recentRows
@@ -94,12 +95,19 @@ const getCompleteStatistics = async ({ scope = 'admin', userId = null } = {}) =>
     queryRows(`SELECT COALESCE(NULLIF(split_part(localisation, ',', 1), ''), 'Zone inconnue') AS zone, COUNT(*) AS count FROM signal_moi.signalements s ${collaboratorFilter} GROUP BY zone ORDER BY count DESC LIMIT 20`),
     queryRows(`SELECT TO_CHAR(date_trunc('month', created_at), 'YYYY-MM') AS month, COUNT(*) AS count FROM signal_moi.signalements s ${collaboratorFilter} GROUP BY month ORDER BY month DESC LIMIT 12`),
     scope === 'admin' ? queryRows("SELECT COALESCE(role, 'non_renseigne') AS role, COUNT(*) AS count FROM signal_moi.users GROUP BY role ORDER BY count DESC") : Promise.resolve([]),
+    scope === 'admin' ? queryRows(`
+      SELECT
+        COUNT(*) AS total,
+        COUNT(*) FILTER (WHERE COALESCE(is_active, true) = true) AS active
+      FROM signal_moi.users
+    `) : Promise.resolve([]),
     queryRows(`SELECT COUNT(*) AS total, COUNT(*) FILTER (WHERE est_actif = true) AS actives FROM signal_moi.campagnes ${campaignFilter}`, campaignParams),
     queryRows('SELECT COUNT(*) AS total FROM signal_moi.plaidoyers'),
     queryRows(`SELECT titre, type, statut, localisation, created_at FROM signal_moi.signalements s ${collaboratorFilter} ORDER BY created_at DESC LIMIT 10`)
   ]);
 
   const totals = totalsRows[0] || {};
+  const usersTotals = usersTotalsRows[0] || {};
   return {
     generatedAt: new Date().toISOString(),
     scope,
@@ -113,6 +121,8 @@ const getCompleteStatistics = async ({ scope = 'admin', userId = null } = {}) =>
       last7d: num(totals.last_7d),
       avecGps: num(totals.avec_gps),
       anonymes: num(totals.anonymes),
+      users: num(usersTotals.total),
+      usersActifs: num(usersTotals.active),
       campagnes: num(campaignRows[0]?.total),
       campagnesActives: num(campaignRows[0]?.actives),
       plaidoyers: num(plaidoyerRows[0]?.total)

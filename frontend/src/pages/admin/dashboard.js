@@ -128,7 +128,13 @@ export default function AdminDashboard() {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()
-      setUsers(Array.isArray(data) ? data : [])
+      const userRows = Array.isArray(data) ? data : []
+      setUsers(userRows)
+      setStats(prev => ({
+        ...prev,
+        totalUsers: prev.totalUsers || userRows.length,
+        activeUsers: prev.activeUsers || userRows.filter(item => item.is_active !== false).length
+      }))
     } catch (error) {
       console.error('Erreur fetchUsers:', error)
       toast.error('Erreur de chargement des utilisateurs')
@@ -181,8 +187,10 @@ export default function AdminDashboard() {
       setCompleteStats(completeStatsData)
       setStats(prev => ({
         ...prev,
+        totalUsers: completeStatsData?.totals?.users ?? (Array.isArray(users) ? users.length : prev.totalUsers),
+        activeUsers: completeStatsData?.totals?.usersActifs ?? (Array.isArray(users) ? users.filter(u => u.is_active !== false).length : prev.activeUsers),
         totalSignalements: completeStatsData?.totals?.signalements ?? (Array.isArray(signalementsData) ? signalementsData.length : 0),
-        totalCampagnes: completeStatsData?.totals?.campagnes ?? (Array.isArray(campagnesData) ? campagnesData.length : 0)
+        totalCampagnes: completeStatsData?.totals?.campagnesActives ?? completeStatsData?.totals?.campagnes ?? (Array.isArray(campagnesData) ? campagnesData.length : 0)
       }))
     } catch (error) {
       console.error('Erreur fetchStats:', error)
@@ -505,13 +513,6 @@ export default function AdminDashboard() {
       // Réinitialiser l'input
       if (e.target) e.target.value = ''
     }
-  }
-
-  const statsData = {
-    totalUsers: users.length,
-    totalSignalements: stats.totalSignalements,
-    totalCampagnes: stats.totalCampagnes,
-    activeUsers: users.filter(u => u.is_active !== false).length
   }
 
   const openModal = (userData = null) => {
