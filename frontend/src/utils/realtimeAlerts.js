@@ -4,6 +4,7 @@ let audioContext = null
 let audioUnlocked = false
 let lastAlertAt = 0
 let urgentAlertTimer = null
+let urgentSpeechTimer = null
 
 const getAudioContext = () => {
   if (typeof window === 'undefined') return null
@@ -107,6 +108,21 @@ const speak = (text) => {
   }
 }
 
+const repeatUrgentSpeech = (text) => {
+  if (urgentSpeechTimer) {
+    clearTimeout(urgentSpeechTimer)
+    urgentSpeechTimer = null
+  }
+
+  const repeat = (count) => {
+    speak(text)
+    if (count <= 1) return
+    urgentSpeechTimer = setTimeout(() => repeat(count - 1), 3500)
+  }
+
+  repeat(4)
+}
+
 const showBrowserNotification = ({ title, body, urgent = false, url }) => {
   if (typeof window === 'undefined' || !('Notification' in window)) return
   if (Notification.permission !== 'granted') return
@@ -189,7 +205,11 @@ export const notifyRealtimeEvent = ({ role, event, payload = {}, toast }) => {
   if (alert.urgent && typeof navigator !== 'undefined' && navigator.vibrate) {
     navigator.vibrate([250, 120, 250])
   }
-  speak(alert.speech)
+  if (alert.urgent && (isPolice || isAdmin)) {
+    repeatUrgentSpeech(alert.speech)
+  } else {
+    speak(alert.speech)
+  }
   showBrowserNotification(alert)
 
   if (toast) {

@@ -40,28 +40,58 @@ export default function PoliceDashboard() {
   const [selectedLive, setSelectedLive] = useState(null)
   const [socketConnected, setSocketConnected] = useState(false)
   const [interventionLoading, setInterventionLoading] = useState({})
+  const [alertsReady, setAlertsReady] = useState(false)
+  const [livePlaybackUrls, setLivePlaybackUrls] = useState({})
   const liveVideoChunksRef = useRef({})
+  const livePlaybackUrlsRef = useRef({})
 
   useEffect(() => {
     if (authLoading || !user || !canAccessPoliceDashboard(user.role)) return
 
-    requestNotificationPermission?.()
+    localStorage.setItem('signal_moi_police_alerts_enabled', 'true')
 
-    const unlockPoliceAlerts = () => {
-      unlockNotificationSound?.()
-      requestNotificationPermission?.()
+    const activatePoliceAlerts = async ({ notify = false } = {}) => {
+      const [soundReady, permission] = await Promise.all([
+        unlockNotificationSound?.(),
+        requestNotificationPermission?.()
+      ])
+      const ready = Boolean(soundReady) || permission === 'granted'
+      setAlertsReady(ready)
+      if (notify && ready) {
+        toast.success(permission === 'granted' ? 'Alertes police actives' : 'Son active. Autorisez les notifications du navigateur.')
+      }
+      return ready
     }
 
+    const unlockPoliceAlerts = () => {
+      activatePoliceAlerts()
+    }
+
+    activatePoliceAlerts()
     window.addEventListener('pointerdown', unlockPoliceAlerts)
     window.addEventListener('keydown', unlockPoliceAlerts)
     window.addEventListener('touchstart', unlockPoliceAlerts)
+    window.addEventListener('focus', unlockPoliceAlerts)
 
     return () => {
       window.removeEventListener('pointerdown', unlockPoliceAlerts)
       window.removeEventListener('keydown', unlockPoliceAlerts)
       window.removeEventListener('touchstart', unlockPoliceAlerts)
+      window.removeEventListener('focus', unlockPoliceAlerts)
     }
   }, [authLoading, user?.role, unlockNotificationSound, requestNotificationPermission])
+
+  useEffect(() => {
+    livePlaybackUrlsRef.current = livePlaybackUrls
+  }, [livePlaybackUrls])
+
+  useEffect(() => {
+    return () => {
+      Object.values(livePlaybackUrlsRef.current).forEach((url) => {
+        if (url) URL.revokeObjectURL(url)
+      })
+    }
+  }, [])
 
   useEffect(() => {
     if (authLoading) return
@@ -141,6 +171,17 @@ export default function PoliceDashboard() {
           liveVideoChunksRef.current[data.sessionId] = []
         }
         liveVideoChunksRef.current[data.sessionId].push(data.chunk)
+        Promise.all(liveVideoChunksRef.current[data.sessionId].map(dataUrlToBlob))
+          .then((blobs) => {
+            const mimeType = data.mimeType || blobs[0]?.type || 'video/webm'
+            const playbackBlob = new Blob(blobs, { type: mimeType })
+            const playbackUrl = URL.createObjectURL(playbackBlob)
+            setLivePlaybackUrls(prev => {
+              if (prev[data.sessionId]) URL.revokeObjectURL(prev[data.sessionId])
+              return { ...prev, [data.sessionId]: playbackUrl }
+            })
+          })
+          .catch((error) => console.warn('Lecture live impossible:', error))
         setLiveRecordings(prev => ({
           ...prev,
           [data.sessionId]: {
@@ -557,13 +598,16 @@ export default function PoliceDashboard() {
                     <button
                       type="button"
                       onClick={async () => {
-                        await unlockNotificationSound?.()
+                        const soundReady = await unlockNotificationSound?.()
                         const permission = await requestNotificationPermission?.()
-                        toast.success(permission === 'granted' ? 'Alertes sonores et notifications activees' : 'Alertes sonores activees. Autorisez les notifications du navigateur si demande.')
+                        const ready = Boolean(soundReady) || permission === 'granted'
+                        setAlertsReady(ready)
+                        localStorage.setItem('signal_moi_police_alerts_enabled', 'true')
+                        toast.success(permission === 'granted' ? 'Alertes police actives' : 'Son active. Autorisez les notifications du navigateur.')
                       }}
-                      className="rounded-full bg-white px-3 py-1 text-slate-950 transition hover:bg-slate-100"
+                      className={`rounded-full px-3 py-1 transition ${alertsReady ? 'bg-emerald-300 text-emerald-950 hover:bg-emerald-200' : 'bg-white text-slate-950 hover:bg-slate-100'}`}
                     >
-                      Activer les alertes
+                      {alertsReady ? 'Alertes toujours actives' : 'Activer les alertes'}
                     </button>
                   </div>
                 </div>
@@ -1130,7 +1174,16 @@ export default function PoliceDashboard() {
         {activeLive && (
           <div className="space-y-5">
             <div className="overflow-hidden rounded-xl bg-slate-950">
-              {activeLive.frame ? (
+              {livePlaybackUrls[activeLive.sessionId] ? (
+                <video
+                  key={livePlaybackUrls[activeLive.sessionId]}
+                  src={livePlaybackUrls[activeLive.sessionId]}
+                  autoPlay
+                  controls
+                  playsInline
+                  className="h-[28rem] w-full bg-black object-contain"
+                />
+              ) : activeLive.frame ? (
                 <img
                   key={activeLive.frameAt || activeLive.frame}
                   src={activeLive.frame}
@@ -1162,6 +1215,9 @@ export default function PoliceDashboard() {
                 )}
                 <p className="mt-2 text-xs font-semibold text-slate-600">
                   Video recue: {activeLive.videoChunkCount || 0} fragment(s)
+                </p>
+                <p className="mt-1 text-xs font-semibold text-slate-600">
+                  Audio live: {livePlaybackUrls[activeLive.sessionId] ? 'disponible dans le lecteur' : 'en attente de fragments video/audio'}
                 </p>
               </div>
 

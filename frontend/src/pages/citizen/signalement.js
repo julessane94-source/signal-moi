@@ -257,13 +257,13 @@ export default function NewSignalement() {
       if (!video || video.readyState < 2 || !liveSessionIdRef.current) return
 
       const canvas = document.createElement('canvas')
-      canvas.width = 320
-      canvas.height = 180
+      canvas.width = 640
+      canvas.height = 360
       const ctx = canvas.getContext('2d')
       if (!ctx) return
 
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-      const frame = canvas.toDataURL('image/jpeg', 0.45)
+      const frame = canvas.toDataURL('image/jpeg', 0.72)
       const activeSocket = socketRef.current
       if (activeSocket) {
         activeSocket.emit('live_recording_frame', {
@@ -275,7 +275,7 @@ export default function NewSignalement() {
         action: 'frame',
         frame
       })
-    }, 1000)
+    }, 700)
   }
 
   const stopLiveFrameBroadcast = () => {
@@ -701,11 +701,16 @@ export default function NewSignalement() {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30, max: 30 } },
         audio: true
       })
       const mimeType = getRecordingMimeType()
-      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
+      const recorderOptions = {
+        ...(mimeType ? { mimeType } : {}),
+        videoBitsPerSecond: 2500000,
+        audioBitsPerSecond: 128000
+      }
+      const recorder = new MediaRecorder(stream, recorderOptions)
 
       recordingChunksRef.current = []
       mediaRecorderRef.current = recorder
@@ -804,7 +809,7 @@ export default function NewSignalement() {
         stopCameraStream()
       }
 
-      recorder.start(2500)
+      recorder.start(1000)
       startLiveFrameBroadcast(stream)
       recordingTimerRef.current = setTimeout(() => {
         stopVideoRecording()
