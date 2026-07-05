@@ -153,7 +153,7 @@ export const notifyRealtimeEvent = ({ role, event, payload = {}, toast }) => {
 
   let alert = null
 
-  if (event === 'live_recording_started' && (isPolice || isAdmin)) {
+  if ((event === 'live_recording_started' || payload.isLiveRecording) && (isPolice || isAdmin)) {
     alert = {
       title: 'Alerte live citoyen',
       body: payload.titre || payload.title || 'Un citoyen filme une urgence en direct.',

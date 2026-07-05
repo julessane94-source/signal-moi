@@ -6,6 +6,7 @@ import { Button, Card, Badge, Modal, StatBox } from '../../components/ui'
 import { toast } from 'react-toastify'
 import { motion } from 'framer-motion'
 import { API_BASE } from '../../config/api'
+import { notifyRealtimeEvent } from '../../utils/realtimeAlerts'
 import {
   MapPinIcon as MapPin,
   DocumentTextIcon as DocumentText,
@@ -44,6 +45,7 @@ export default function PoliceDashboard() {
   const [livePlaybackUrls, setLivePlaybackUrls] = useState({})
   const liveVideoChunksRef = useRef({})
   const livePlaybackUrlsRef = useRef({})
+  const liveAlertedRef = useRef({})
 
   useEffect(() => {
     if (authLoading || !user || !canAccessPoliceDashboard(user.role)) return
@@ -85,6 +87,27 @@ export default function PoliceDashboard() {
     livePlaybackUrlsRef.current = livePlaybackUrls
   }, [livePlaybackUrls])
 
+  const triggerLiveSoundAlert = async (data = {}) => {
+    const alertKey = data.sessionId || data.id || `live-${Date.now()}`
+    const lastAlert = liveAlertedRef.current[alertKey] || 0
+    if (Date.now() - lastAlert < 15000) return
+    liveAlertedRef.current[alertKey] = Date.now()
+
+    await unlockNotificationSound?.()
+    await requestNotificationPermission?.()
+    setAlertsReady(true)
+    notifyRealtimeEvent({
+      role: user?.role,
+      event: 'live_recording_started',
+      payload: {
+        ...data,
+        isLiveRecording: true,
+        titre: data.titre || data.title || 'Live citoyen en cours'
+      },
+      toast
+    })
+  }
+
   useEffect(() => {
     return () => {
       Object.values(livePlaybackUrlsRef.current).forEach((url) => {
@@ -118,7 +141,10 @@ export default function PoliceDashboard() {
       const handleDisconnect = () => setSocketConnected(false)
 
       const handleNewSignalementNotification = (data) => {
-        if (data.isLiveRecording) return
+        if (data.isLiveRecording) {
+          triggerLiveSoundAlert(data)
+          return
+        }
         fetchSignalements()
       }
       
@@ -127,6 +153,7 @@ export default function PoliceDashboard() {
       }
 
       const handleLiveRecordingStarted = (data) => {
+        triggerLiveSoundAlert(data)
         setLiveRecordings(prev => ({
           ...prev,
           [data.sessionId]: {
