@@ -3,6 +3,7 @@ const normalizeRole = (role) => String(role || '').trim().toLowerCase()
 let audioContext = null
 let audioUnlocked = false
 let lastAlertAt = 0
+let urgentAlertTimer = null
 
 const getAudioContext = () => {
   if (typeof window === 'undefined') return null
@@ -77,6 +78,21 @@ const playTone = ({ urgent = false } = {}) => {
   })
 }
 
+const playUrgentBurst = () => {
+  if (urgentAlertTimer) {
+    clearTimeout(urgentAlertTimer)
+    urgentAlertTimer = null
+  }
+
+  const repeat = (count) => {
+    playTone({ urgent: true })
+    if (count <= 1) return
+    urgentAlertTimer = setTimeout(() => repeat(count - 1), 1800)
+  }
+
+  repeat(5)
+}
+
 const speak = (text) => {
   if (typeof window === 'undefined' || !window.speechSynthesis || typeof SpeechSynthesisUtterance === 'undefined') return
   try {
@@ -100,7 +116,9 @@ const showBrowserNotification = ({ title, body, urgent = false, url }) => {
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-192x192.png',
     requireInteraction: urgent,
-    tag: urgent ? 'signal-moi-urgent' : 'signal-moi-notification'
+    renotify: urgent,
+    silent: false,
+    tag: urgent ? `signal-moi-urgent-${Date.now()}` : 'signal-moi-notification'
   })
 
   notification.onclick = () => {
@@ -163,7 +181,11 @@ export const notifyRealtimeEvent = ({ role, event, payload = {}, toast }) => {
 
   if (!alert) return
 
-  playTone({ urgent: alert.urgent })
+  if (alert.urgent && (isPolice || isAdmin)) {
+    playUrgentBurst()
+  } else {
+    playTone({ urgent: alert.urgent })
+  }
   if (alert.urgent && typeof navigator !== 'undefined' && navigator.vibrate) {
     navigator.vibrate([250, 120, 250])
   }

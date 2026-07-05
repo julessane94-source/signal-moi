@@ -828,6 +828,8 @@ export default function NewSignalement() {
     if (recorder && recorder.state !== 'inactive') {
       setRecordingState('saving')
       recorder.stop()
+      stopLiveFrameBroadcast()
+      stopCameraStream()
     } else {
       stopCameraStream()
     }

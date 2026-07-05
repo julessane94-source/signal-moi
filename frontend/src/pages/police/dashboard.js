@@ -40,6 +40,27 @@ export default function PoliceDashboard() {
   const liveVideoChunksRef = useRef({})
 
   useEffect(() => {
+    if (authLoading || !user || !canAccessPoliceDashboard(user.role)) return
+
+    requestNotificationPermission?.()
+
+    const unlockPoliceAlerts = () => {
+      unlockNotificationSound?.()
+      requestNotificationPermission?.()
+    }
+
+    window.addEventListener('pointerdown', unlockPoliceAlerts)
+    window.addEventListener('keydown', unlockPoliceAlerts)
+    window.addEventListener('touchstart', unlockPoliceAlerts)
+
+    return () => {
+      window.removeEventListener('pointerdown', unlockPoliceAlerts)
+      window.removeEventListener('keydown', unlockPoliceAlerts)
+      window.removeEventListener('touchstart', unlockPoliceAlerts)
+    }
+  }, [authLoading, user?.role, unlockNotificationSound, requestNotificationPermission])
+
+  useEffect(() => {
     if (authLoading) return
     if (!user) {
       router.replace('/login')
