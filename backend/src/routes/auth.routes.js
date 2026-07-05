@@ -608,9 +608,14 @@ router.post('/forgot-password', async (req, res) => {
       });
     } catch (mailError) {
       console.warn('[FORGOT PASSWORD] Email non envoye:', mailError.message);
+      await db.query('DELETE FROM signal_moi.password_reset_tokens WHERE email = $1 AND code = $2 AND used = false', [email, code]).catch(() => {});
       if (process.env.NODE_ENV === 'development') {
         console.log(`[FORGOT PASSWORD] Code pour ${email}: ${code}`);
       }
+      return res.status(502).json({
+        success: false,
+        message: 'Le code n a pas pu etre envoye par email. Verifiez la configuration SMTP puis reessayez.'
+      });
     }
     
     // Réponse sécurisée

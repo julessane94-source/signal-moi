@@ -21,6 +21,21 @@ const nextConfig = {
       return defaults
     })(),
   },
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'www.signal-moi.sn',
+          },
+        ],
+        destination: 'https://signal-moi.sn/:path*',
+        permanent: true,
+      },
+    ]
+  },
   async headers() {
     return [
       // Home page: no-cache
