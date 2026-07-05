@@ -16,7 +16,10 @@ import {
   UsersIcon as Users,
   ArrowRightIcon as ArrowRight,
   BookmarkIcon as Bookmark,
-  SparklesIcon as Sparkles
+  SparklesIcon as Sparkles,
+  ChartBarIcon as ChartBar,
+  MegaphoneIcon as Megaphone,
+  ClipboardDocumentCheckIcon as ClipboardDocumentCheck
 } from '@heroicons/react/24/outline'
 
 export default function CollaboratorDashboard() {
@@ -284,6 +287,52 @@ export default function CollaboratorDashboard() {
             </div>
           </motion.div>
 
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 grid gap-4 lg:grid-cols-3"
+          >
+            {[
+              {
+                title: 'Dossiers suivis',
+                value: followedList.length,
+                detail: 'Cas actifs avec accompagnement',
+                icon: ClipboardDocumentCheck,
+                tone: 'border-indigo-100 bg-indigo-50 text-indigo-700'
+              },
+              {
+                title: 'Mobilisation',
+                value: recentCampaigns.length,
+                detail: 'Campagnes recentes a animer',
+                icon: Megaphone,
+                tone: 'border-emerald-100 bg-emerald-50 text-emerald-700'
+              },
+              {
+                title: 'Analyse terrain',
+                value: completeStats?.totals?.last7d || 0,
+                detail: 'Signalements des 7 derniers jours',
+                icon: ChartBar,
+                tone: 'border-amber-100 bg-amber-50 text-amber-700'
+              }
+            ].map((item) => {
+              const Icon = item.icon
+              return (
+                <div key={item.title} className={`rounded-[1.5rem] border p-5 shadow-sm ${item.tone}`}>
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-black uppercase tracking-wide">{item.title}</p>
+                      <p className="mt-2 text-4xl font-black">{item.value}</p>
+                      <p className="mt-1 text-sm font-semibold opacity-80">{item.detail}</p>
+                    </div>
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm">
+                      <Icon className="h-7 w-7" />
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </motion.div>
+
           {/* === STATISTIQUES PRINCIPALES === */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -400,43 +449,48 @@ export default function CollaboratorDashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {[
                 {
-                  icon: '🎯',
+                  icon: Megaphone,
                   label: 'Créer une campagne',
                   href: '/collaborator/campagne/new',
                   color: 'from-blue-600 to-blue-700',
                   bg: 'from-blue-50 to-blue-100'
                 },
                 {
-                  icon: '📋',
+                  icon: Sparkles,
                   label: 'Mes campagnes',
                   href: '/collaborator/campagne/mes-campagnes',
                   color: 'from-slate-600 to-slate-700',
                   bg: 'from-slate-50 to-slate-100'
                 },
                 {
-                  icon: '✍️',
+                  icon: HandThumbsUp,
                   label: 'Créer un plaidoyer',
                   href: '/collaborator/plaidoyer/new',
                   color: 'from-teal-600 to-teal-700',
                   bg: 'from-teal-50 to-teal-100'
                 },
                 {
-                  icon: '📝',
+                  icon: Bookmark,
                   label: 'Mes plaidoyers',
                   href: '/collaborator/plaidoyer/mes-plaidoyers',
                   color: 'from-amber-600 to-amber-700',
                   bg: 'from-amber-50 to-amber-100'
                 }
-              ].map((action, idx) => (
+              ].map((action, idx) => {
+                const ActionIcon = action.icon
+                return (
                 <motion.div key={idx} whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }}>
                   <Link href={action.href}>
                     <button className="w-full rounded-3xl border border-slate-200 bg-white px-6 py-5 text-left font-bold text-slate-950 shadow-sm transition hover:-translate-y-1 hover:border-emerald-300 hover:shadow-lg">
-                      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-xl text-white">{action.icon}</div>
+                      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-white">
+                        <ActionIcon className="h-6 w-6" />
+                      </div>
                       <span>{action.label}</span>
                     </button>
                   </Link>
                 </motion.div>
-              ))}
+                )
+              })}
             </div>
 
             {/* Boutons exports */}

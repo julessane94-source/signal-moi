@@ -15,7 +15,10 @@ import {
   PaperClipIcon as PaperClip,
   CalendarDaysIcon as CalendarDays,
   PhoneIcon as Phone,
-  EnvelopeIcon as Envelope
+  EnvelopeIcon as Envelope,
+  BellAlertIcon as BellAlert,
+  QueueListIcon as QueueList,
+  ArchiveBoxIcon as ArchiveBox
 } from '@heroicons/react/24/outline'
 
 const normalizeRole = (role) => String(role || '').trim().toLowerCase()
@@ -590,6 +593,52 @@ export default function PoliceDashboard() {
             </div>
           </motion.div>
 
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 grid gap-4 lg:grid-cols-3"
+          >
+            {[
+              {
+                title: 'File active',
+                value: stats.nouveaux + stats.enCours,
+                detail: 'Dossiers a qualifier ou suivre',
+                icon: QueueList,
+                tone: 'border-blue-100 bg-blue-50 text-blue-700'
+              },
+              {
+                title: 'Alertes critiques',
+                value: signalements.filter(s => ['urgente', 'haute'].includes((s.priorite || '').toLowerCase())).length,
+                detail: 'Priorite haute ou urgente',
+                icon: BellAlert,
+                tone: 'border-red-100 bg-red-50 text-red-700'
+              },
+              {
+                title: 'Archives police',
+                value: filter === 'archives' ? signalements.length : stats.traites,
+                detail: 'Traites ou fausses alertes',
+                icon: ArchiveBox,
+                tone: 'border-emerald-100 bg-emerald-50 text-emerald-700'
+              }
+            ].map((item) => {
+              const Icon = item.icon
+              return (
+                <div key={item.title} className={`rounded-[1.5rem] border p-5 shadow-sm ${item.tone}`}>
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-black uppercase tracking-wide">{item.title}</p>
+                      <p className="mt-2 text-4xl font-black">{item.value}</p>
+                      <p className="mt-1 text-sm font-semibold opacity-80">{item.detail}</p>
+                    </div>
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm">
+                      <Icon className="h-7 w-7" />
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </motion.div>
+
           {liveRecordingsList.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -768,7 +817,8 @@ export default function PoliceDashboard() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
                     >
-                      <Card className="border border-slate-200 p-5 transition hover:-translate-y-0.5 hover:shadow-xl sm:p-6">
+                      <Card className="relative overflow-hidden border border-slate-200 bg-white p-5 transition hover:-translate-y-0.5 hover:shadow-xl sm:p-6">
+                    <div className={`absolute inset-y-0 left-0 w-1.5 ${['urgente', 'haute'].includes((s.priorite || '').toLowerCase()) ? 'bg-red-600' : s.statut === 'en_cours' ? 'bg-amber-500' : 'bg-blue-500'}`} />
                     <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
