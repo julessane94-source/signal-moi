@@ -21,7 +21,9 @@ import {
   MusicalNoteIcon as MusicalNote,
   PaperClipIcon as PaperClip,
   PhoneIcon as Phone,
-  EnvelopeIcon as Envelope
+  EnvelopeIcon as Envelope,
+  BuildingOffice2Icon as BuildingOffice2,
+  ShieldCheckIcon as ShieldCheck
 } from '@heroicons/react/24/outline'
 
 const getImageUrl = (url, { preferApi = true } = {}) => {
@@ -140,6 +142,18 @@ export default function AdminDashboard() {
     totalCampagnes: 0,
     activeUsers: 0
   })
+
+  const policeUsers = users.filter((item) => ['police', 'policier', 'gendarmerie', 'force_ordre'].includes(String(item.role || '').toLowerCase()))
+  const commissariatCount = new Set(policeUsers.map((item) => item.quartier || 'Commissariat central de Sedhiou')).size
+
+  const getRoleLabel = (role) => {
+    const normalized = String(role || '').toLowerCase()
+    if (normalized === 'police') return 'Agent de commissariat'
+    if (normalized === 'gendarmerie') return 'Agent de gendarmerie'
+    if (normalized === 'collaborateur') return 'Collaborateur'
+    if (normalized === 'admin') return 'Admin'
+    return 'Citoyen'
+  }
   const [completeStats, setCompleteStats] = useState(null)
 
   useEffect(() => {
@@ -253,7 +267,11 @@ export default function AdminDashboard() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+      ...(name === 'role' && value === 'police' && !prev.quartier ? { quartier: 'Commissariat central de Sedhiou' } : {})
+    }))
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }))
     }
@@ -558,12 +576,12 @@ export default function AdminDashboard() {
         telephone: userData.telephone || '',
         password: '',
         ville: userData.ville || 'Sedhiou',
-        quartier: userData.quartier || '',
+        quartier: userData.quartier || (String(userData.role || '').toLowerCase() === 'police' ? 'Commissariat central de Sedhiou' : ''),
         role: userData.role || 'citoyen'
       })
     } else {
       setEditingUser(null)
-      setFormData({ prenom: '', nom: '', email: '', telephone: '', password: '', ville: 'Sedhiou', quartier: '', role: 'police' })
+      setFormData({ prenom: '', nom: '', email: '', telephone: '', password: '', ville: 'Sedhiou', quartier: 'Commissariat central de Sedhiou', role: 'police' })
     }
     setErrors({})
     setShowModal(true)
@@ -748,9 +766,36 @@ export default function AdminDashboard() {
               animate={{ opacity: 1, x: 0 }}
               className="space-y-6"
             >
+              <div className="overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-950 to-slate-950 p-6 text-white shadow-xl">
+                <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-blue-900 shadow-sm">
+                      <BuildingOffice2 className="h-7 w-7" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-200">Commissariats</p>
+                      <h2 className="mt-1 text-2xl font-black">Agents rattachés aux commissariats</h2>
+                      <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100">
+                        Les comptes police sont maintenant présentés comme des agents de commissariat. La zone d'affectation sert de rattachement direct au commissariat.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 sm:min-w-[300px]">
+                    <div className="rounded-2xl border border-white/10 bg-white/10 p-4">
+                      <p className="text-xs font-semibold text-blue-100">Agents</p>
+                      <p className="mt-1 text-3xl font-black">{policeUsers.length}</p>
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-white/10 p-4">
+                      <p className="text-xs font-semibold text-blue-100">Commissariats</p>
+                      <p className="mt-1 text-3xl font-black">{commissariatCount}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="flex justify-end">
                 <Button icon={Plus} onClick={() => openModal()}>
-                  Ajouter un utilisateur
+                  Ajouter un agent ou utilisateur
                 </Button>
               </div>
 
@@ -758,7 +803,19 @@ export default function AdminDashboard() {
                 columns={[
                   { key: 'prenom', label: 'Prénom' },
                   { key: 'email', label: 'Email' },
-                  { key: 'role', label: 'Rôle', render: (role) => <Badge variant="info">{role}</Badge> },
+                  { key: 'role', label: 'Rôle', render: (role) => <Badge variant="info">{getRoleLabel(role)}</Badge> },
+                  {
+                    key: 'quartier',
+                    label: 'Rattachement',
+                    render: (zone, item) => (
+                      <div className="text-sm">
+                        <p className="font-semibold text-slate-900">
+                          {String(item.role || '').toLowerCase() === 'police' ? (zone || 'Commissariat central de Sedhiou') : (zone || 'Non renseigné')}
+                        </p>
+                        <p className="text-xs text-slate-500">{item.ville || 'Sedhiou'}</p>
+                      </div>
+                    )
+                  },
                   {
                     key: 'actions',
                     label: 'Actions',
@@ -1436,6 +1493,22 @@ export default function AdminDashboard() {
         size="lg"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
+          {formData.role === 'police' && (
+            <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-700 text-white">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-bold text-blue-950">Compte agent de commissariat</p>
+                  <p className="mt-1 text-sm leading-6 text-blue-800">
+                    Cet utilisateur aura accès à l'espace Commissariat. Le champ de rattachement indique son commissariat ou sa brigade.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField label="Prénom" error={errors.prenom} required>
               <Input
@@ -1486,7 +1559,7 @@ export default function AdminDashboard() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="citoyen">Citoyen</option>
-                <option value="police">Police</option>
+                <option value="police">Agent de commissariat</option>
                 <option value="collaborateur">Collaborateur</option>
                 <option value="admin">Admin</option>
               </select>
@@ -1503,10 +1576,10 @@ export default function AdminDashboard() {
                 error={!!errors.ville}
               />
             </FormField>
-            <FormField label="Quartier ou zone d'affectation" error={errors.quartier} required>
+            <FormField label={formData.role === 'police' ? 'Commissariat ou brigade de rattachement' : 'Quartier ou zone d’affectation'} error={errors.quartier} required>
               <Input
                 name="quartier"
-                placeholder="Centre-ville, Diannah, Moricounda..."
+                placeholder={formData.role === 'police' ? 'Commissariat central de Sedhiou' : 'Centre-ville, Diannah, Moricounda...'}
                 value={formData.quartier}
                 onChange={handleInputChange}
                 error={!!errors.quartier}

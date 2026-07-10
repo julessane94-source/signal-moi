@@ -324,7 +324,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                 }
 
                 const result = await db.query(
-                    `SELECT id, prenom, nom, email, telephone
+                    `SELECT id, prenom, nom, email, telephone, ville, quartier
                      FROM signal_moi.users
                      WHERE role = 'police'
                        AND is_active = true

@@ -344,6 +344,9 @@ router.post('/login', async (req, res) => {
         prenom: user.prenom,
         nom: user.nom,
         email: user.email,
+        telephone: user.telephone,
+        ville: user.ville,
+        quartier: user.quartier,
         role: user.role
       }
     });

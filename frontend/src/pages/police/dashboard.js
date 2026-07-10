@@ -19,7 +19,9 @@ import {
   EnvelopeIcon as Envelope,
   BellAlertIcon as BellAlert,
   QueueListIcon as QueueList,
-  ArchiveBoxIcon as ArchiveBox
+  ArchiveBoxIcon as ArchiveBox,
+  BuildingOffice2Icon as BuildingOffice2,
+  UsersIcon as Users
 } from '@heroicons/react/24/outline'
 
 const normalizeRole = (role) => String(role || '').trim().toLowerCase()
@@ -485,6 +487,14 @@ export default function PoliceDashboard() {
     .filter(Boolean)
     .sort((a, b) => new Date(b.frameAt || b.updatedAt || b.startedAt || b.stoppedAt || 0) - new Date(a.frameAt || a.updatedAt || a.startedAt || a.stoppedAt || 0))[0]
   const activeLive = selectedLive ? liveRecordings[selectedLive.sessionId] || selectedLive : liveRecordingsList[0]
+  const commissariatName = user?.quartier || user?.commissariat || 'Commissariat central de Sedhiou'
+  const agentsCommissariat = [user, ...policiers]
+    .filter(Boolean)
+    .filter((agent, index, list) => list.findIndex((item) => item?.id === agent?.id) === index)
+  const agentsMemeCommissariat = agentsCommissariat.filter((agent) => {
+    const zone = agent?.quartier || agent?.commissariat || 'Commissariat central de Sedhiou'
+    return String(zone).toLowerCase() === String(commissariatName).toLowerCase()
+  })
 
   const dataUrlToBlob = async (dataUrl) => {
     const response = await fetch(dataUrl)
@@ -612,13 +622,14 @@ export default function PoliceDashboard() {
                   <ShieldCheck className="h-7 w-7" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-300">Espace forces de l'ordre</p>
-                  <h1 className="mt-2 text-3xl font-black leading-tight text-white md:text-5xl">Centre de coordination police</h1>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-300">Espace commissariat</p>
+                  <h1 className="mt-2 text-3xl font-black leading-tight text-white md:text-5xl">Commissariat Signal-Moi</h1>
                   <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300 md:text-base">
-                    Bienvenue {user?.prenom} {user?.nom}. Suivez les alertes, les preuves video et les positions en temps reel.
+                    Bienvenue {user?.prenom} {user?.nom}. Vous intervenez depuis {commissariatName}, avec les alertes, preuves video et positions en temps reel.
                   </p>
                   <div className="mt-5 flex flex-wrap gap-2 text-xs font-bold">
-                    <span className="rounded-full bg-white/10 px-3 py-1 text-slate-100">Signalements securite</span>
+                    <span className="rounded-full bg-white/10 px-3 py-1 text-slate-100">{commissariatName}</span>
+                    <span className="rounded-full bg-white/10 px-3 py-1 text-slate-100">{agentsMemeCommissariat.length || 1} agent(s) rattache(s)</span>
                     <span className={`rounded-full px-3 py-1 ${socketConnected ? 'bg-emerald-400/20 text-emerald-100' : 'bg-red-400/20 text-red-100'}`}>
                       {socketConnected ? 'Temps reel actif' : 'Connexion live en attente'}
                     </span>
@@ -671,7 +682,7 @@ export default function PoliceDashboard() {
           >
             {[
               {
-                title: 'File active',
+                title: 'File commissariat',
                 value: stats.nouveaux + stats.enCours,
                 detail: 'Dossiers a qualifier ou suivre',
                 icon: QueueList,
@@ -685,7 +696,7 @@ export default function PoliceDashboard() {
                 tone: 'border-red-100 bg-red-50 text-red-700'
               },
               {
-                title: 'Archives police',
+                title: 'Archives commissariat',
                 value: filter === 'archives' ? signalements.length : stats.traites,
                 detail: 'Traites ou fausses alertes',
                 icon: ArchiveBox,
@@ -708,6 +719,51 @@ export default function PoliceDashboard() {
                 </div>
               )
             })}
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]"
+          >
+            <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-900 text-white">
+                  <BuildingOffice2 className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wide text-blue-700">Rattachement operationnel</p>
+                  <h2 className="mt-1 text-xl font-black text-slate-950">{commissariatName}</h2>
+                  <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
+                    Les agents de ce commissariat partagent la file des signalements, les lives citoyens et les dossiers transferes.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wide text-slate-500">Agents rattaches</p>
+                  <h2 className="text-lg font-black text-slate-950">{agentsMemeCommissariat.length || 1} agent(s)</h2>
+                </div>
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-800">
+                  <Users className="h-6 w-6" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                {agentsMemeCommissariat.slice(0, 4).map((agent) => (
+                  <div key={agent.id || agent.email} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-slate-900">{agent.prenom} {agent.nom}</p>
+                      <p className="truncate text-xs text-slate-500">{agent.email || agent.telephone || 'Agent commissariat'}</p>
+                    </div>
+                    <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-black text-blue-700">
+                      {agent.id === user?.id ? 'Vous' : 'Agent'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </motion.div>
 
           {liveRecordingsList.length > 0 && (
@@ -1299,7 +1355,7 @@ export default function PoliceDashboard() {
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            Selectionnez l'officier de police qui doit recevoir ce dossier :
+            Selectionnez l'agent du commissariat qui doit recevoir ce dossier :
           </p>
           
           {policiers.length === 0 ? (
@@ -1322,6 +1378,7 @@ export default function PoliceDashboard() {
                     {p.prenom} {p.nom}
                   </div>
                   <div className="text-sm text-gray-500">{p.email}</div>
+                  <div className="mt-1 text-xs font-semibold text-blue-700">{p.quartier || 'Commissariat central de Sedhiou'}</div>
                 </button>
               ))}
             </div>

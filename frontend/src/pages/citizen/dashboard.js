@@ -11,7 +11,12 @@ import {
   PencilSquareIcon as PencilSquare,
   UserGroupIcon as UserGroup,
   PlusIcon as Plus,
-  MapPinIcon as MapPin
+  MapPinIcon as MapPin,
+  ShieldCheckIcon as ShieldCheck,
+  BellAlertIcon as BellAlert,
+  ClockIcon as Clock,
+  ArrowRightIcon as ArrowRight,
+  MicrophoneIcon as Microphone
 } from '@heroicons/react/24/outline'
 
 export default function CitizenDashboard() {
@@ -221,10 +226,54 @@ export default function CitizenDashboard() {
   ]
 
   const dashboardStats = [
-    { label: 'Signalements', value: signalements.length, tone: 'text-red-700 bg-red-50 border-red-100' },
-    { label: 'En cours', value: signalements.filter((item) => item.statut === 'en_cours').length, tone: 'text-amber-700 bg-amber-50 border-amber-100' },
-    { label: 'Traites', value: signalements.filter((item) => item.statut === 'traite').length, tone: 'text-emerald-700 bg-emerald-50 border-emerald-100' },
-    { label: 'Actions locales', value: campagnes.length + plaidoyers.length, tone: 'text-blue-700 bg-blue-50 border-blue-100' }
+    { label: 'Signalements', value: signalements.length, note: 'dossiers envoyes', icon: DocumentText, tone: 'text-red-700 bg-red-50 border-red-100' },
+    { label: 'En cours', value: signalements.filter((item) => item.statut === 'en_cours').length, note: 'suivis actifs', icon: Clock, tone: 'text-amber-700 bg-amber-50 border-amber-100' },
+    { label: 'Traites', value: signalements.filter((item) => item.statut === 'traite').length, note: 'dossiers resolus', icon: CheckCircle, tone: 'text-emerald-700 bg-emerald-50 border-emerald-100' },
+    { label: 'Actions locales', value: campagnes.length + plaidoyers.length, note: 'campagnes et plaidoyers', icon: UserGroup, tone: 'text-blue-700 bg-blue-50 border-blue-100' }
+  ]
+
+  const latestSignalements = [...signalements]
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+    .slice(0, 3)
+
+  const formatDate = (date) => {
+    if (!date) return 'Date non precisee'
+    return new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+  }
+
+  const getStatusText = (statut) => ({
+    nouveau: 'Recu',
+    en_cours: 'En traitement',
+    traite: 'Traite',
+    transfere: 'Transfere'
+  }[statut] || 'Recu')
+
+  const getStatusTone = (statut) => ({
+    traite: 'bg-emerald-600',
+    en_cours: 'bg-amber-500',
+    transfere: 'bg-indigo-600',
+    nouveau: 'bg-red-600'
+  }[statut] || 'bg-slate-900')
+
+  const citizenHighlights = [
+    {
+      title: 'Signaler sans se perdre',
+      text: 'Boutons simples, GPS, audio, video et photos selon la situation.',
+      icon: ShieldCheck,
+      tone: 'from-red-50 to-white text-red-700 border-red-100'
+    },
+    {
+      title: 'Suivi visible',
+      text: 'Chaque dossier garde son statut, ses pieces et son historique.',
+      icon: Clock,
+      tone: 'from-blue-50 to-white text-blue-700 border-blue-100'
+    },
+    {
+      title: 'Aide locale',
+      text: 'Campagnes, plaidoyers et collaborateurs restent accessibles.',
+      icon: UserGroup,
+      tone: 'from-emerald-50 to-white text-emerald-700 border-emerald-100'
+    }
   ]
 
   const getStatusBadge = (statut) => {
@@ -248,18 +297,21 @@ export default function CitizenDashboard() {
       title: 'Urgence maintenant',
       text: 'Ouvre le signalement avec GPS et video.',
       href: '/citizen/signalement?alerte=1',
+      icon: BellAlert,
       tone: 'bg-red-600 text-white hover:bg-red-700'
     },
     {
       title: 'Accident ou blessure',
       text: 'Prépare un signalement accident simple.',
       href: '/citizen/signalement?type=accident',
+      icon: ShieldCheck,
       tone: 'bg-orange-500 text-white hover:bg-orange-600'
     },
     {
       title: 'Problème du quartier',
       text: 'Route, lumière, vol ou autre situation.',
       href: '/citizen/signalement?type=autre',
+      icon: Microphone,
       tone: 'bg-slate-950 text-white hover:bg-slate-800'
     },
     {
@@ -267,6 +319,7 @@ export default function CitizenDashboard() {
       text: 'Contrôler les dossiers déjà envoyés.',
       href: '#signalements',
       onClick: () => setActiveTab('signalements'),
+      icon: ArrowRight,
       tone: 'bg-white text-slate-950 border border-slate-200 hover:bg-slate-50'
     }
   ]
@@ -351,6 +404,21 @@ export default function CitizenDashboard() {
             </div>
           )}
 
+          <section className="mb-8 grid gap-4 lg:grid-cols-3">
+            {citizenHighlights.map((item) => {
+              const HighlightIcon = item.icon
+              return (
+                <div key={item.title} className={`rounded-2xl border bg-gradient-to-br p-5 shadow-sm ${item.tone}`}>
+                  <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-sm">
+                    <HighlightIcon className="h-6 w-6" />
+                  </div>
+                  <h2 className="text-lg font-black text-slate-950">{item.title}</h2>
+                  <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">{item.text}</p>
+                </div>
+              )
+            })}
+          </section>
+
           <section className="mb-8">
             <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
@@ -361,11 +429,17 @@ export default function CitizenDashboard() {
             </div>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               {quickActions.map((action) => {
+                const Icon = action.icon
                 const content = (
-                  <div className={`min-h-36 rounded-[1.5rem] p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg ${action.tone}`}>
-                    <p className="text-xl font-black">{action.title}</p>
+                  <div className={`group min-h-40 rounded-2xl p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl ${action.tone}`}>
+                    <div className="mb-5 flex items-center justify-between gap-3">
+                      <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-black/10 text-current">
+                        <Icon className="h-6 w-6" />
+                      </span>
+                      <ArrowRight className="h-5 w-5 opacity-70 transition group-hover:translate-x-1" />
+                    </div>
+                    <p className="text-xl font-black leading-tight">{action.title}</p>
                     <p className="mt-2 text-sm font-semibold opacity-80">{action.text}</p>
-                    <span className="mt-5 inline-flex rounded-full bg-black/10 px-4 py-2 text-sm font-black">Ouvrir</span>
                   </div>
                 )
 
@@ -388,13 +462,70 @@ export default function CitizenDashboard() {
             transition={{ delay: 0.1 }}
             className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
           >
-            {dashboardStats.map((stat) => (
-              <div key={stat.label} className={`rounded-2xl border p-5 shadow-sm ${stat.tone}`}>
-                <p className="text-sm font-semibold">{stat.label}</p>
-                <p className="mt-2 text-3xl font-bold">{stat.value}</p>
-              </div>
-            ))}
+            {dashboardStats.map((stat) => {
+              const StatIcon = stat.icon
+              return (
+                <div key={stat.label} className={`rounded-2xl border p-5 shadow-sm ${stat.tone}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-bold uppercase tracking-wide">{stat.label}</p>
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/80 shadow-sm">
+                      <StatIcon className="h-5 w-5" />
+                    </span>
+                  </div>
+                  <p className="mt-3 text-3xl font-black">{stat.value}</p>
+                  <p className="mt-1 text-xs font-semibold opacity-75">{stat.note}</p>
+                </div>
+              )
+            })}
           </motion.div>
+
+          {latestSignalements.length > 0 && (
+            <section className="mb-8">
+              <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-sm font-bold uppercase tracking-wide text-slate-500">Suivi citoyen</p>
+                  <h2 className="text-2xl font-black text-slate-950">Vos derniers dossiers</h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('signalements')}
+                  className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800"
+                >
+                  Tout voir
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="grid gap-4 lg:grid-cols-3">
+                {latestSignalements.map((item) => (
+                  <Link key={item.id} href={`/citizen/signalement/${item.id}`}>
+                    <div className="group h-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+                      <div className={`h-2 ${getStatusTone(item.statut)}`} />
+                      <div className="p-5">
+                        <div className="mb-4 flex items-center justify-between gap-3">
+                          <span className={`rounded-full px-3 py-1 text-xs font-black text-white ${getStatusTone(item.statut)}`}>
+                            {getStatusText(item.statut)}
+                          </span>
+                          <span className="text-xs font-bold text-slate-500">{formatDate(item.createdAt)}</span>
+                        </div>
+                        <h3 className="line-clamp-2 text-lg font-black text-slate-950">{item.titre || 'Signalement citoyen'}</h3>
+                        <p className="mt-2 line-clamp-2 text-sm font-medium leading-6 text-slate-600">
+                          {item.description || 'Details disponibles dans le dossier.'}
+                        </p>
+                        <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-bold text-slate-500">
+                          <span className="rounded-full bg-slate-100 px-3 py-1">{item.type || 'General'}</span>
+                          <span className="rounded-full bg-slate-100 px-3 py-1">{item.fichiers?.length || 0} piece(s)</span>
+                        </div>
+                        <div className="mt-5 inline-flex items-center gap-2 text-sm font-black text-red-700">
+                          Voir mon suivi
+                          <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
           {/* Error Message */}
           {error && (
             <motion.div
