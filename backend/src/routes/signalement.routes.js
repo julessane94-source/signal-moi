@@ -17,7 +17,7 @@ const parseLimit = (value, fallback = 100, max = 500) => {
 };
 
 const normalizeRole = (role) => String(role || '').trim().toLowerCase();
-const isPoliceLikeRole = (role) => ['police', 'policier', 'gendarmerie', 'force_ordre'].includes(normalizeRole(role));
+const isPoliceLikeRole = (role) => ['commissariat', 'police', 'policier', 'gendarmerie', 'force_ordre'].includes(normalizeRole(role));
 const canViewLiveSessions = (role) => ['admin', 'administrateur'].includes(normalizeRole(role)) || isPoliceLikeRole(role);
 const liveSessionPayload = (session) => ({
     ...session,
@@ -319,7 +319,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
         // GET g�n�rique: signalements selon le r�le / utilisateur
         router.get('/policiers', authMiddleware, async (req, res) => {
             try {
-                if (!['police', 'admin', 'collaborateur'].includes(req.user.role)) {
+                if (!['commissariat', 'police', 'admin', 'collaborateur'].includes(req.user.role)) {
                     return res.status(403).json({ error: 'Acces refuse' });
                 }
 
@@ -435,7 +435,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                     return res.json(rows);
                 }
                 // Si c'est la police, ne retourner que les types pertinents (violence, vol)
-                if (req.user && req.user.role === 'police') {
+                if (req.user && ['commissariat', 'police'].includes(req.user.role)) {
                     const allowed = ['violence', 'vol', 'theft', 'accident'];
                     const showArchive = String(req.query.archive || '').toLowerCase() === 'true';
                     const result = await db.query(`SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, s.latitude, s.longitude, s.priorite, s.est_anonyme, s.created_at, s.updated_at,
@@ -642,7 +642,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                 const signalement = signalementResult.rows[0];
                 const isOwner = req.user && req.user.id === signalement.user_id;
                 const isAdmin = req.user && req.user.role === 'admin';
-                const isPolice = req.user && req.user.role === 'police';
+                const isPolice = req.user && ['commissariat', 'police'].includes(req.user.role);
                 const isCollaborateur = req.user && req.user.role === 'collaborateur';
 
                 console.log(`[GET /:id] Accès: isOwner=${isOwner}, isAdmin=${isAdmin}, isPolice=${isPolice}, isCollaborateur=${isCollaborateur}, estAnonyme=${signalement.est_anonyme}`);
@@ -762,7 +762,7 @@ router.patch('/:id/statut', authMiddleware, async (req, res) => {
         const { statut } = req.body;
 
         // Vérifier le rôle
-        if (req.user.role !== 'police' && req.user.role !== 'collaborateur' && req.user.role !== 'admin') {
+        if (req.user.role !== 'commissariat' && req.user.role !== 'police' && req.user.role !== 'collaborateur' && req.user.role !== 'admin') {
             return res.status(403).json({ error: 'Accès refusé' });
         }
 
@@ -814,7 +814,7 @@ router.post('/:id/transfert', authMiddleware, async (req, res) => {
         const { police_id } = req.body;
 
         // Vérifier le rôle
-        if (req.user.role !== 'police' && req.user.role !== 'collaborateur' && req.user.role !== 'admin') {
+        if (req.user.role !== 'commissariat' && req.user.role !== 'police' && req.user.role !== 'collaborateur' && req.user.role !== 'admin') {
             return res.status(403).json({ error: 'Accès refusé' });
         }
 

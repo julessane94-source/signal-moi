@@ -25,7 +25,8 @@ import {
 } from '@heroicons/react/24/outline'
 
 const normalizeRole = (role) => String(role || '').trim().toLowerCase()
-const canAccessPoliceDashboard = (role) => ['admin', 'administrateur', 'police', 'policier', 'gendarmerie', 'force_ordre'].includes(normalizeRole(role))
+const canAccessPoliceDashboard = (role) => ['admin', 'administrateur', 'commissariat', 'police', 'policier', 'gendarmerie', 'force_ordre'].includes(normalizeRole(role))
+const isCommissariatRole = (role) => ['commissariat', 'admin', 'administrateur'].includes(normalizeRole(role))
 
 export default function PoliceDashboard() {
   const { user, loading: authLoading } = useAuth()
@@ -45,6 +46,8 @@ export default function PoliceDashboard() {
   const [interventionLoading, setInterventionLoading] = useState({})
   const [alertsReady, setAlertsReady] = useState(false)
   const [livePlaybackUrls, setLivePlaybackUrls] = useState({})
+  const [agentForm, setAgentForm] = useState({ prenom: '', nom: '', email: '', telephone: '', password: '' })
+  const [creatingAgent, setCreatingAgent] = useState(false)
   const liveVideoChunksRef = useRef({})
   const livePlaybackUrlsRef = useRef({})
   const liveAlertedRef = useRef({})
@@ -287,16 +290,46 @@ export default function PoliceDashboard() {
   const fetchPoliciers = async () => {
     try {
       const token = localStorage.getItem('token')
-      const res = await fetch(`${API_BASE}/api/signalements/policiers`, {
+      const endpoint = isCommissariatRole(user?.role) ? '/api/law-enforcement/agents' : '/api/signalements/policiers'
+      const res = await fetch(`${API_BASE}${endpoint}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()
-      const policiersList = Array.isArray(data) 
-        ? data.filter(u => u.id !== user?.id) 
+      const rawAgents = Array.isArray(data) ? data : (data.agents || [])
+      const policiersList = Array.isArray(rawAgents)
+        ? rawAgents.filter(u => u.id !== user?.id)
         : []
       setPoliciers(policiersList)
     } catch (error) {
       console.error('Erreur chargement policiers:', error)
+    }
+  }
+
+  const handleAgentFormChange = (e) => {
+    const { name, value } = e.target
+    setAgentForm(prev => ({ ...prev, [name]: value }))
+  }
+
+  const createAgent = async (e) => {
+    e.preventDefault()
+    if (!isCommissariatRole(user?.role)) return
+    setCreatingAgent(true)
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${API_BASE}/api/law-enforcement/agents`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(agentForm)
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Creation impossible')
+      toast.success('Agent cree et rattache au commissariat')
+      setAgentForm({ prenom: '', nom: '', email: '', telephone: '', password: '' })
+      fetchPoliciers()
+    } catch (error) {
+      toast.error(error.message || 'Impossible de creer cet agent')
+    } finally {
+      setCreatingAgent(false)
     }
   }
 
@@ -765,6 +798,75 @@ export default function PoliceDashboard() {
               </div>
             </div>
           </motion.div>
+
+          {isCommissariatRole(user?.role) && (
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8 rounded-[1.5rem] border border-blue-100 bg-white p-5 shadow-sm"
+            >
+              <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wide text-blue-700">Gestion du commissariat</p>
+                  <h2 className="text-2xl font-black text-slate-950">Créer un agent rattaché</h2>
+                  <p className="mt-1 text-sm font-semibold text-slate-600">
+                    L'agent sera automatiquement affecté à {commissariatName}.
+                  </p>
+                </div>
+              </div>
+              <form onSubmit={createAgent} className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+                <input
+                  name="prenom"
+                  value={agentForm.prenom}
+                  onChange={handleAgentFormChange}
+                  placeholder="Prénom"
+                  className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  required
+                />
+                <input
+                  name="nom"
+                  value={agentForm.nom}
+                  onChange={handleAgentFormChange}
+                  placeholder="Nom"
+                  className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  required
+                />
+                <input
+                  type="email"
+                  name="email"
+                  value={agentForm.email}
+                  onChange={handleAgentFormChange}
+                  placeholder="Email"
+                  className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  required
+                />
+                <input
+                  name="telephone"
+                  value={agentForm.telephone}
+                  onChange={handleAgentFormChange}
+                  placeholder="Téléphone"
+                  className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  required
+                />
+                <input
+                  type="password"
+                  name="password"
+                  value={agentForm.password}
+                  onChange={handleAgentFormChange}
+                  placeholder="Mot de passe"
+                  className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={creatingAgent}
+                  className="rounded-xl bg-blue-900 px-4 py-3 text-sm font-black text-white shadow-sm transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {creatingAgent ? 'Création...' : 'Créer agent'}
+                </button>
+              </form>
+            </motion.div>
+          )}
 
           {liveRecordingsList.length > 0 && (
             <motion.div

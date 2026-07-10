@@ -5,7 +5,12 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+const { v4: uuidv4 } = require('uuid');
 const FollowedCase = require('../models/FollowedCase');
+
+const normalizeRole = (role) => String(role || '').trim().toLowerCase();
+const lawRoles = ['commissariat', 'police', 'policier', 'gendarmerie', 'force_ordre'];
 
 // Middleware d'authentification police/gendarmerie
 const authMiddleware = async (req, res, next) => {
@@ -17,19 +22,14 @@ const authMiddleware = async (req, res, next) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret-key');
         
         // Vérifier le rôle
-        if (['police', 'gendarmerie'].includes(decoded.role)) {
-            req.user = decoded;
-            return next();
-        }
-        
         // Fallback: vérifier dans la base de données
         const userResult = await db.query(
-            'SELECT id, role FROM signal_moi.users WHERE id = $1',
+            'SELECT id, role, prenom, nom, email, telephone, ville, quartier FROM signal_moi.users WHERE id = $1',
             [decoded.id]
         );
         const user = (userResult.rows || [])[0];
-        if (user && ['police', 'gendarmerie'].includes(user.role)) {
-            req.user = { id: decoded.id, role: user.role };
+        if (user && lawRoles.includes(normalizeRole(user.role))) {
+            req.user = user;
             return next();
         }
         
@@ -145,6 +145,98 @@ router.get('/alerts', authMiddleware, async (req, res) => {
 });
 
 // GET /api/law-enforcement/case/:id - Détails d'un signalement
+// GET /api/law-enforcement/agents - Agents rattaches au commissariat connecte
+router.get('/agents', authMiddleware, async (req, res) => {
+  try {
+    const role = normalizeRole(req.user.role);
+    const commissariatName = req.user.quartier || req.query.commissariat || 'Commissariat central de Sedhiou';
+    const params = [];
+    let where = "WHERE LOWER(COALESCE(role, '')) IN ('police', 'policier', 'gendarmerie', 'force_ordre') AND is_active = true";
+
+    if (role === 'commissariat') {
+      params.push(commissariatName);
+      where += ` AND LOWER(COALESCE(quartier, '')) = LOWER($${params.length})`;
+    }
+
+    const result = await db.query(
+      `SELECT id, prenom, nom, email, telephone, ville, quartier, role, is_active
+       FROM signal_moi.users
+       ${where}
+       ORDER BY nom ASC, prenom ASC
+       LIMIT 200`,
+      params
+    );
+
+    res.json({ commissariat: commissariatName, agents: result.rows || [] });
+  } catch (err) {
+    console.error('[LAW-ENFORCEMENT GET /agents] Erreur:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
+  }
+});
+
+// POST /api/law-enforcement/agents - Creation d'un agent par le compte commissariat
+router.post('/agents', authMiddleware, async (req, res) => {
+  try {
+    const role = normalizeRole(req.user.role);
+    if (!['commissariat', 'admin', 'administrateur'].includes(role)) {
+      return res.status(403).json({ error: 'Seul un compte commissariat peut creer ses agents' });
+    }
+
+    const commissariatName = role === 'commissariat'
+      ? (req.user.quartier || 'Commissariat central de Sedhiou')
+      : (req.body.commissariat || req.body.quartier || 'Commissariat central de Sedhiou');
+
+    const agent = {
+      prenom: String(req.body.prenom || '').trim(),
+      nom: String(req.body.nom || '').trim(),
+      email: String(req.body.email || '').trim().toLowerCase(),
+      telephone: String(req.body.telephone || '').trim(),
+      password: String(req.body.password || ''),
+      ville: String(req.body.ville || req.user.ville || 'Sedhiou').trim() || 'Sedhiou',
+      quartier: String(commissariatName).trim() || 'Commissariat central de Sedhiou',
+      role: 'police'
+    };
+
+    if (!agent.prenom || !agent.nom || !agent.email || !agent.telephone || !agent.password) {
+      return res.status(400).json({ error: 'Prenom, nom, email, telephone et mot de passe sont requis' });
+    }
+
+    const duplicateRes = await db.query(
+      `SELECT id, email, telephone
+       FROM signal_moi.users
+       WHERE LOWER(email) = LOWER($1)
+          OR REPLACE(COALESCE(telephone, ''), ' ', '') = $2
+       LIMIT 1`,
+      [agent.email, agent.telephone.replace(/\s+/g, '')]
+    );
+
+    if (duplicateRes.rows.length > 0) {
+      const existing = duplicateRes.rows[0];
+      if (String(existing.email || '').toLowerCase() === agent.email) {
+        return res.status(400).json({ error: 'Cet email est deja utilise' });
+      }
+      return res.status(400).json({ error: 'Ce numero de telephone est deja utilise' });
+    }
+
+    const hashed = await bcrypt.hash(agent.password, 10);
+    const result = await db.query(
+      `INSERT INTO signal_moi.users (id, prenom, nom, email, telephone, password, ville, quartier, role, is_active, email_verified)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, true)
+       RETURNING id, prenom, nom, email, telephone, ville, quartier, role, is_active`,
+      [uuidv4(), agent.prenom, agent.nom, agent.email, agent.telephone, hashed, agent.ville, agent.quartier, agent.role]
+    );
+
+    res.status(201).json({
+      message: 'Agent cree et rattache au commissariat',
+      commissariat: agent.quartier,
+      agent: result.rows[0]
+    });
+  } catch (err) {
+    console.error('[LAW-ENFORCEMENT POST /agents] Erreur:', err);
+    res.status(500).json({ error: 'Erreur lors de la creation de l agent', details: err.message });
+  }
+});
+
 router.get('/case/:id', authMiddleware, async (req, res) => {
   try {
     const caseId = req.params.id;

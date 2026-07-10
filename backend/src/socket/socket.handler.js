@@ -5,7 +5,7 @@ const logger = require('../utils/logger');
 const setupSocket = (io) => {
   const activeLiveRecordings = new Map();
   const normalizeRole = (role) => String(role || '').trim().toLowerCase();
-  const isPoliceRole = (role) => ['police', 'policier', 'gendarmerie', 'force_ordre'].includes(normalizeRole(role));
+  const isPoliceRole = (role) => ['commissariat', 'police', 'policier', 'gendarmerie', 'force_ordre'].includes(normalizeRole(role));
   const isCollaborateurRole = (role) => ['collaborateur', 'collaborator'].includes(normalizeRole(role));
   const isAdminRole = (role) => ['admin', 'administrateur'].includes(normalizeRole(role));
 

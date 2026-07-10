@@ -10,6 +10,7 @@ export const useAuth = () => useContext(AuthContext)
 const normalizeRole = (role) => {
   const value = String(role || '').trim().toLowerCase()
   if (['admin', 'administrateur'].includes(value)) return 'admin'
+  if (['commissariat', 'commissaire'].includes(value)) return 'commissariat'
   if (['police', 'policier', 'force_ordre'].includes(value)) return 'police'
   if (['collaborateur', 'collaborator'].includes(value)) return 'collaborateur'
   if (['citoyen', 'citizen', 'user'].includes(value)) return 'citoyen'
@@ -64,7 +65,7 @@ export const AuthProvider = ({ children }) => {
       setUser(normalizeUser(userData))
       toast.success(`Bienvenue ${userData.prenom} !`)
       const role = normalizeRole(userData.role)
-      const routes = { admin: '/admin/dashboard', police: '/police/dashboard', collaborateur: '/collaborator/dashboard', citoyen: '/citizen/dashboard' }
+      const routes = { admin: '/admin/dashboard', commissariat: '/police/dashboard', police: '/police/dashboard', collaborateur: '/collaborator/dashboard', citoyen: '/citizen/dashboard' }
       // eslint-disable-next-line react-hooks/exhaustive-deps
       setTimeout(() => router.push(routes[role] || '/'), 100)
       return true

@@ -9,7 +9,7 @@ const getDashboardPath = (role) => {
   const normalizedRole = String(role || '').trim().toLowerCase()
   if (['admin', 'administrateur'].includes(normalizedRole)) return '/admin/dashboard'
   if (['collaborateur', 'collaborator'].includes(normalizedRole)) return '/collaborator/dashboard'
-  if (['police', 'policier', 'gendarmerie', 'force_ordre'].includes(normalizedRole)) return '/police/dashboard'
+  if (['commissariat', 'police', 'policier', 'gendarmerie', 'force_ordre'].includes(normalizedRole)) return '/police/dashboard'
   return '/citizen/dashboard'
 }
 

@@ -25,6 +25,7 @@ import {
 const normalizeRole = (role) => {
   const value = String(role || '').trim().toLowerCase()
   if (['admin', 'administrateur'].includes(value)) return 'admin'
+  if (['commissariat', 'commissaire'].includes(value)) return 'commissariat'
   if (['police', 'policier', 'force_ordre'].includes(value)) return 'police'
   if (['collaborateur', 'collaborator'].includes(value)) return 'collaborateur'
   if (['citoyen', 'citizen', 'user'].includes(value)) return 'citoyen'
@@ -112,6 +113,7 @@ export default function Navbar() {
 
   const role = normalizeRole(user?.role)
   const dashboardHref = role === 'admin' ? '/admin/dashboard' :
+    role === 'commissariat' ? '/police/dashboard' :
     role === 'police' ? '/police/dashboard' :
     role === 'collaborateur' ? '/collaborator/dashboard' : '/citizen/dashboard'
   const isLoggedIn = Boolean(user)

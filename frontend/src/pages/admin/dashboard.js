@@ -143,11 +143,12 @@ export default function AdminDashboard() {
     activeUsers: 0
   })
 
+  const commissariatUsers = users.filter((item) => String(item.role || '').toLowerCase() === 'commissariat')
   const policeUsers = users.filter((item) => ['police', 'policier', 'gendarmerie', 'force_ordre'].includes(String(item.role || '').toLowerCase()))
-  const commissariatCount = new Set(policeUsers.map((item) => item.quartier || 'Commissariat central de Sedhiou')).size
 
   const getRoleLabel = (role) => {
     const normalized = String(role || '').toLowerCase()
+    if (normalized === 'commissariat') return 'Compte commissariat'
     if (normalized === 'police') return 'Agent de commissariat'
     if (normalized === 'gendarmerie') return 'Agent de gendarmerie'
     if (normalized === 'collaborateur') return 'Collaborateur'
@@ -270,7 +271,7 @@ export default function AdminDashboard() {
     setFormData(prev => ({
       ...prev,
       [name]: value,
-      ...(name === 'role' && value === 'police' && !prev.quartier ? { quartier: 'Commissariat central de Sedhiou' } : {})
+      ...(name === 'role' && ['commissariat', 'police'].includes(value) && !prev.quartier ? { quartier: 'Commissariat central de Sedhiou' } : {})
     }))
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }))
@@ -576,12 +577,12 @@ export default function AdminDashboard() {
         telephone: userData.telephone || '',
         password: '',
         ville: userData.ville || 'Sedhiou',
-        quartier: userData.quartier || (String(userData.role || '').toLowerCase() === 'police' ? 'Commissariat central de Sedhiou' : ''),
+        quartier: userData.quartier || (['commissariat', 'police'].includes(String(userData.role || '').toLowerCase()) ? 'Commissariat central de Sedhiou' : ''),
         role: userData.role || 'citoyen'
       })
     } else {
       setEditingUser(null)
-      setFormData({ prenom: '', nom: '', email: '', telephone: '', password: '', ville: 'Sedhiou', quartier: 'Commissariat central de Sedhiou', role: 'police' })
+      setFormData({ prenom: '', nom: '', email: '', telephone: '', password: '', ville: 'Sedhiou', quartier: 'Commissariat central de Sedhiou', role: 'commissariat' })
     }
     setErrors({})
     setShowModal(true)
@@ -774,20 +775,20 @@ export default function AdminDashboard() {
                     </div>
                     <div>
                       <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-200">Commissariats</p>
-                      <h2 className="mt-1 text-2xl font-black">Agents rattachés aux commissariats</h2>
+                      <h2 className="mt-1 text-2xl font-black">Commissariats et agents rattachés</h2>
                       <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100">
-                        Les comptes police sont maintenant présentés comme des agents de commissariat. La zone d'affectation sert de rattachement direct au commissariat.
+                        L'admin crée les comptes commissariat. Chaque commissariat crée ensuite ses agents et les rattache à sa zone.
                       </p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3 sm:min-w-[300px]">
                     <div className="rounded-2xl border border-white/10 bg-white/10 p-4">
-                      <p className="text-xs font-semibold text-blue-100">Agents</p>
-                      <p className="mt-1 text-3xl font-black">{policeUsers.length}</p>
+                      <p className="text-xs font-semibold text-blue-100">Comptes commissariat</p>
+                      <p className="mt-1 text-3xl font-black">{commissariatUsers.length}</p>
                     </div>
                     <div className="rounded-2xl border border-white/10 bg-white/10 p-4">
-                      <p className="text-xs font-semibold text-blue-100">Commissariats</p>
-                      <p className="mt-1 text-3xl font-black">{commissariatCount}</p>
+                      <p className="text-xs font-semibold text-blue-100">Agents</p>
+                      <p className="mt-1 text-3xl font-black">{policeUsers.length}</p>
                     </div>
                   </div>
                 </div>
@@ -795,7 +796,7 @@ export default function AdminDashboard() {
 
               <div className="flex justify-end">
                 <Button icon={Plus} onClick={() => openModal()}>
-                  Ajouter un agent ou utilisateur
+                  Ajouter un commissariat ou utilisateur
                 </Button>
               </div>
 
@@ -810,7 +811,7 @@ export default function AdminDashboard() {
                     render: (zone, item) => (
                       <div className="text-sm">
                         <p className="font-semibold text-slate-900">
-                          {String(item.role || '').toLowerCase() === 'police' ? (zone || 'Commissariat central de Sedhiou') : (zone || 'Non renseigné')}
+                          {['commissariat', 'police'].includes(String(item.role || '').toLowerCase()) ? (zone || 'Commissariat central de Sedhiou') : (zone || 'Non renseigné')}
                         </p>
                         <p className="text-xs text-slate-500">{item.ville || 'Sedhiou'}</p>
                       </div>
@@ -1493,16 +1494,20 @@ export default function AdminDashboard() {
         size="lg"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
-          {formData.role === 'police' && (
+          {['commissariat', 'police'].includes(formData.role) && (
             <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-700 text-white">
                   <ShieldCheck className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="font-bold text-blue-950">Compte agent de commissariat</p>
+                  <p className="font-bold text-blue-950">
+                    {formData.role === 'commissariat' ? 'Compte commissariat' : 'Compte agent de commissariat'}
+                  </p>
                   <p className="mt-1 text-sm leading-6 text-blue-800">
-                    Cet utilisateur aura accès à l'espace Commissariat. Le champ de rattachement indique son commissariat ou sa brigade.
+                    {formData.role === 'commissariat'
+                      ? "L'admin crée ce compte. Il pourra ensuite créer et gérer ses agents depuis l'espace Commissariat."
+                      : "Ce compte agent doit normalement être créé par le commissariat auquel il est rattaché."}
                   </p>
                 </div>
               </div>
@@ -1559,6 +1564,7 @@ export default function AdminDashboard() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="citoyen">Citoyen</option>
+                <option value="commissariat">Commissariat</option>
                 <option value="police">Agent de commissariat</option>
                 <option value="collaborateur">Collaborateur</option>
                 <option value="admin">Admin</option>
@@ -1576,10 +1582,10 @@ export default function AdminDashboard() {
                 error={!!errors.ville}
               />
             </FormField>
-            <FormField label={formData.role === 'police' ? 'Commissariat ou brigade de rattachement' : 'Quartier ou zone d’affectation'} error={errors.quartier} required>
+            <FormField label={['commissariat', 'police'].includes(formData.role) ? 'Nom du commissariat ou brigade' : 'Quartier ou zone d’affectation'} error={errors.quartier} required>
               <Input
                 name="quartier"
-                placeholder={formData.role === 'police' ? 'Commissariat central de Sedhiou' : 'Centre-ville, Diannah, Moricounda...'}
+                placeholder={['commissariat', 'police'].includes(formData.role) ? 'Commissariat central de Sedhiou' : 'Centre-ville, Diannah, Moricounda...'}
                 value={formData.quartier}
                 onChange={handleInputChange}
                 error={!!errors.quartier}

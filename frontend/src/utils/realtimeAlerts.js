@@ -146,7 +146,7 @@ const showBrowserNotification = ({ title, body, urgent = false, url }) => {
 
 export const notifyRealtimeEvent = ({ role, event, payload = {}, toast }) => {
   const normalizedRole = normalizeRole(role)
-  const isPolice = ['police', 'policier', 'gendarmerie', 'force_ordre'].includes(normalizedRole)
+  const isPolice = ['commissariat', 'police', 'policier', 'gendarmerie', 'force_ordre'].includes(normalizedRole)
   const isAdmin = ['admin', 'administrateur'].includes(normalizedRole)
   const isCollaborateur = ['collaborateur', 'collaborator'].includes(normalizedRole)
   const isCitizen = normalizedRole === 'citoyen'
