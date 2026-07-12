@@ -521,6 +521,31 @@ export default function PoliceDashboard() {
     .sort((a, b) => new Date(b.frameAt || b.updatedAt || b.startedAt || b.stoppedAt || 0) - new Date(a.frameAt || a.updatedAt || a.startedAt || a.stoppedAt || 0))[0]
   const activeLive = selectedLive ? liveRecordings[selectedLive.sessionId] || selectedLive : liveRecordingsList[0]
   const commissariatName = user?.quartier || user?.commissariat || 'Commissariat central de Sedhiou'
+  const isCommissariat = isCommissariatRole(user?.role)
+  const openAgentCases = signalements.filter(s => ['nouveau', 'en_cours', 'transfere'].includes(s.statut)).length
+  const agentInterfaceCards = [
+    {
+      title: 'Mes interventions',
+      value: openAgentCases,
+      detail: 'Dossiers a prendre ou a suivre',
+      icon: QueueList,
+      tone: 'border-sky-100 bg-sky-50 text-sky-700'
+    },
+    {
+      title: 'Urgences terrain',
+      value: signalements.filter(s => ['urgente', 'haute'].includes((s.priorite || '').toLowerCase())).length,
+      detail: 'A traiter en priorite',
+      icon: BellAlert,
+      tone: 'border-red-100 bg-red-50 text-red-700'
+    },
+    {
+      title: 'Dossiers finalises',
+      value: stats.traites,
+      detail: 'Interventions cloturees',
+      icon: ArchiveBox,
+      tone: 'border-emerald-100 bg-emerald-50 text-emerald-700'
+    }
+  ]
   const agentsCommissariat = [user, ...policiers]
     .filter(Boolean)
     .filter((agent, index, list) => list.findIndex((item) => item?.id === agent?.id) === index)
@@ -655,14 +680,24 @@ export default function PoliceDashboard() {
                   <ShieldCheck className="h-7 w-7" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-300">Espace commissariat</p>
-                  <h1 className="mt-2 text-3xl font-black leading-tight text-white md:text-5xl">Commissariat Signal-Moi</h1>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-300">
+                    {isCommissariat ? 'Espace commissariat' : 'Interface agent'}
+                  </p>
+                  <h1 className="mt-2 text-3xl font-black leading-tight text-white md:text-5xl">
+                    {isCommissariat ? 'Coordination commissariat' : 'Poste agent terrain'}
+                  </h1>
                   <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300 md:text-base">
-                    Bienvenue {user?.prenom} {user?.nom}. Vous intervenez depuis {commissariatName}, avec les alertes, preuves video et positions en temps reel.
+                    {isCommissariat
+                      ? `Bienvenue ${user?.prenom || ''} ${user?.nom || ''}. Vous coordonnez ${commissariatName}, ses agents, les alertes et les lives en temps reel.`
+                      : `Bienvenue agent ${user?.prenom || ''} ${user?.nom || ''}. Vous etes rattache a ${commissariatName} pour intervenir sur les dossiers terrain.`}
                   </p>
                   <div className="mt-5 flex flex-wrap gap-2 text-xs font-bold">
                     <span className="rounded-full bg-white/10 px-3 py-1 text-slate-100">{commissariatName}</span>
-                    <span className="rounded-full bg-white/10 px-3 py-1 text-slate-100">{agentsMemeCommissariat.length || 1} agent(s) rattache(s)</span>
+                    {isCommissariat ? (
+                      <span className="rounded-full bg-white/10 px-3 py-1 text-slate-100">{agentsMemeCommissariat.length || 1} agent(s) rattache(s)</span>
+                    ) : (
+                      <span className="rounded-full bg-white/10 px-3 py-1 text-slate-100">Compte agent</span>
+                    )}
                     <span className={`rounded-full px-3 py-1 ${socketConnected ? 'bg-emerald-400/20 text-emerald-100' : 'bg-red-400/20 text-red-100'}`}>
                       {socketConnected ? 'Temps reel actif' : 'Connexion live en attente'}
                     </span>
@@ -713,7 +748,7 @@ export default function PoliceDashboard() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-8 grid gap-4 lg:grid-cols-3"
           >
-            {[
+            {(isCommissariat ? [
               {
                 title: 'File commissariat',
                 value: stats.nouveaux + stats.enCours,
@@ -735,7 +770,7 @@ export default function PoliceDashboard() {
                 icon: ArchiveBox,
                 tone: 'border-emerald-100 bg-emerald-50 text-emerald-700'
               }
-            ].map((item) => {
+            ] : agentInterfaceCards).map((item) => {
               const Icon = item.icon
               return (
                 <div key={item.title} className={`rounded-[1.5rem] border p-5 shadow-sm ${item.tone}`}>
@@ -754,50 +789,98 @@ export default function PoliceDashboard() {
             })}
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]"
-          >
-            <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-900 text-white">
-                  <BuildingOffice2 className="h-6 w-6" />
-                </div>
-                <div>
-                  <p className="text-xs font-black uppercase tracking-wide text-blue-700">Rattachement operationnel</p>
-                  <h2 className="mt-1 text-xl font-black text-slate-950">{commissariatName}</h2>
-                  <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
-                    Les agents de ce commissariat partagent la file des signalements, les lives citoyens et les dossiers transferes.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-wide text-slate-500">Agents rattaches</p>
-                  <h2 className="text-lg font-black text-slate-950">{agentsMemeCommissariat.length || 1} agent(s)</h2>
-                </div>
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-800">
-                  <Users className="h-6 w-6" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                {agentsMemeCommissariat.slice(0, 4).map((agent) => (
-                  <div key={agent.id || agent.email} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-bold text-slate-900">{agent.prenom} {agent.nom}</p>
-                      <p className="truncate text-xs text-slate-500">{agent.email || agent.telephone || 'Agent commissariat'}</p>
-                    </div>
-                    <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-black text-blue-700">
-                      {agent.id === user?.id ? 'Vous' : 'Agent'}
-                    </span>
+          {isCommissariat ? (
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]"
+            >
+              <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-900 text-white">
+                    <BuildingOffice2 className="h-6 w-6" />
                   </div>
-                ))}
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-wide text-blue-700">Coordination operationnelle</p>
+                    <h2 className="mt-1 text-xl font-black text-slate-950">{commissariatName}</h2>
+                    <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
+                      Le commissariat supervise les agents, affecte les dossiers, suit les lives citoyens et coordonne les interventions.
+                    </p>
+                  </div>
+                </div>
               </div>
-            </div>
-          </motion.div>
+              <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-wide text-slate-500">Agents rattaches</p>
+                    <h2 className="text-lg font-black text-slate-950">{agentsMemeCommissariat.length || 1} agent(s)</h2>
+                  </div>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-800">
+                    <Users className="h-6 w-6" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {agentsMemeCommissariat.slice(0, 4).map((agent) => (
+                    <div key={agent.id || agent.email} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-bold text-slate-900">{agent.prenom} {agent.nom}</p>
+                        <p className="truncate text-xs text-slate-500">{agent.email || agent.telephone || 'Agent commissariat'}</p>
+                      </div>
+                      <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-black text-blue-700">
+                        {agent.id === user?.id ? 'Vous' : 'Agent'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8 grid gap-4 lg:grid-cols-[0.9fr_1.1fr]"
+            >
+              <div className="rounded-[1.5rem] border border-sky-100 bg-white p-5 shadow-sm">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-700 text-white">
+                    <ShieldCheck className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-wide text-sky-700">Compte agent</p>
+                    <h2 className="mt-1 text-xl font-black text-slate-950">{user?.prenom} {user?.nom}</h2>
+                    <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
+                      Votre compte est separe du commissariat. Vous intervenez sur les dossiers et remontez les actions au centre de coordination.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-wide text-slate-500">Mission terrain</p>
+                    <h2 className="text-lg font-black text-slate-950">{commissariatName}</h2>
+                  </div>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-800">
+                    <MapPin className="h-6 w-6" />
+                  </div>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  <button type="button" onClick={() => setFilter('nouveau')} className="rounded-xl bg-slate-50 px-3 py-3 text-left transition hover:bg-slate-100">
+                    <p className="text-xs font-bold text-slate-500">A prendre</p>
+                    <p className="text-2xl font-black text-slate-950">{stats.nouveaux}</p>
+                  </button>
+                  <button type="button" onClick={() => setFilter('en_cours')} className="rounded-xl bg-slate-50 px-3 py-3 text-left transition hover:bg-slate-100">
+                    <p className="text-xs font-bold text-slate-500">En intervention</p>
+                    <p className="text-2xl font-black text-amber-700">{stats.enCours}</p>
+                  </button>
+                  <button type="button" onClick={() => setFilter('traite')} className="rounded-xl bg-slate-50 px-3 py-3 text-left transition hover:bg-slate-100">
+                    <p className="text-xs font-bold text-slate-500">Finalises</p>
+                    <p className="text-2xl font-black text-emerald-700">{stats.traites}</p>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           {isCommissariatRole(user?.role) && (
             <motion.div
@@ -1327,16 +1410,18 @@ export default function PoliceDashboard() {
                 >
                   Traite
                 </Button>
-                <Button
-                  size="sm"
-                  variant="primary"
-                  onClick={() => {
-                    setTransferingSignalId(selectedSignal.id)
-                    setShowTransferModal(true)
-                  }}
-                >
-                  Transferer
-                </Button>
+                {isCommissariat && (
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    onClick={() => {
+                      setTransferingSignalId(selectedSignal.id)
+                      setShowTransferModal(true)
+                    }}
+                  >
+                    Transferer
+                  </Button>
+                )}
                 <Button
                   size="sm"
                   variant="danger"

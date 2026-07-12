@@ -814,7 +814,7 @@ router.post('/:id/transfert', authMiddleware, async (req, res) => {
         const { police_id } = req.body;
 
         // Vérifier le rôle
-        if (req.user.role !== 'commissariat' && req.user.role !== 'police' && req.user.role !== 'collaborateur' && req.user.role !== 'admin') {
+        if (req.user.role !== 'commissariat' && req.user.role !== 'collaborateur' && req.user.role !== 'admin') {
             return res.status(403).json({ error: 'Accès refusé' });
         }
 
