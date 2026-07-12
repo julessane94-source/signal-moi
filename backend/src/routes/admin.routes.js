@@ -202,6 +202,10 @@ router.post('/users', authMiddleware, async (req, res) => {
     return res.status(400).json({ error: 'Tous les champs sont requis' });
   }
 
+  if (['police', 'policier', 'gendarmerie', 'force_ordre'].includes(cleanedUser.role.toLowerCase())) {
+    return res.status(403).json({ error: 'Creez d abord un compte commissariat. Les agents doivent etre crees par le commissariat.' });
+  }
+
   try {
     const duplicateRes = await db.query(
       `SELECT id, email, telephone

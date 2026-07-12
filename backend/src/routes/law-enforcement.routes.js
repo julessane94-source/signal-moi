@@ -178,13 +178,11 @@ router.get('/agents', authMiddleware, async (req, res) => {
 router.post('/agents', authMiddleware, async (req, res) => {
   try {
     const role = normalizeRole(req.user.role);
-    if (!['commissariat', 'admin', 'administrateur'].includes(role)) {
+    if (role !== 'commissariat') {
       return res.status(403).json({ error: 'Seul un compte commissariat peut creer ses agents' });
     }
 
-    const commissariatName = role === 'commissariat'
-      ? (req.user.quartier || 'Commissariat central de Sedhiou')
-      : (req.body.commissariat || req.body.quartier || 'Commissariat central de Sedhiou');
+    const commissariatName = req.user.quartier || 'Commissariat central de Sedhiou';
 
     const agent = {
       prenom: String(req.body.prenom || '').trim(),

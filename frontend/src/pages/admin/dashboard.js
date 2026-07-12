@@ -1494,20 +1494,16 @@ export default function AdminDashboard() {
         size="lg"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
-          {['commissariat', 'police'].includes(formData.role) && (
+          {formData.role === 'commissariat' && (
             <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-700 text-white">
                   <ShieldCheck className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="font-bold text-blue-950">
-                    {formData.role === 'commissariat' ? 'Compte commissariat' : 'Compte agent de commissariat'}
-                  </p>
+                  <p className="font-bold text-blue-950">Compte commissariat</p>
                   <p className="mt-1 text-sm leading-6 text-blue-800">
-                    {formData.role === 'commissariat'
-                      ? "L'admin crée ce compte. Il pourra ensuite créer et gérer ses agents depuis l'espace Commissariat."
-                      : "Ce compte agent doit normalement être créé par le commissariat auquel il est rattaché."}
+                    L'admin crée seulement le compte commissariat. Les comptes agents seront créés et gérés depuis l'espace Commissariat.
                   </p>
                 </div>
               </div>
@@ -1565,7 +1561,6 @@ export default function AdminDashboard() {
               >
                 <option value="citoyen">Citoyen</option>
                 <option value="commissariat">Commissariat</option>
-                <option value="police">Agent de commissariat</option>
                 <option value="collaborateur">Collaborateur</option>
                 <option value="admin">Admin</option>
               </select>
@@ -1582,10 +1577,10 @@ export default function AdminDashboard() {
                 error={!!errors.ville}
               />
             </FormField>
-            <FormField label={['commissariat', 'police'].includes(formData.role) ? 'Nom du commissariat ou brigade' : 'Quartier ou zone d’affectation'} error={errors.quartier} required>
+            <FormField label={formData.role === 'commissariat' ? 'Nom du commissariat ou brigade' : 'Quartier ou zone d’affectation'} error={errors.quartier} required>
               <Input
                 name="quartier"
-                placeholder={['commissariat', 'police'].includes(formData.role) ? 'Commissariat central de Sedhiou' : 'Centre-ville, Diannah, Moricounda...'}
+                placeholder={formData.role === 'commissariat' ? 'Commissariat central de Sedhiou' : 'Centre-ville, Diannah, Moricounda...'}
                 value={formData.quartier}
                 onChange={handleInputChange}
                 error={!!errors.quartier}

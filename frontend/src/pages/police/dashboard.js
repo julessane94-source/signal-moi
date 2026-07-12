@@ -26,7 +26,7 @@ import {
 
 const normalizeRole = (role) => String(role || '').trim().toLowerCase()
 const canAccessPoliceDashboard = (role) => ['admin', 'administrateur', 'commissariat', 'police', 'policier', 'gendarmerie', 'force_ordre'].includes(normalizeRole(role))
-const isCommissariatRole = (role) => ['commissariat', 'admin', 'administrateur'].includes(normalizeRole(role))
+const isCommissariatRole = (role) => normalizeRole(role) === 'commissariat'
 
 export default function PoliceDashboard() {
   const { user, loading: authLoading } = useAuth()
