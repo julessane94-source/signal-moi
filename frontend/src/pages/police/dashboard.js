@@ -21,7 +21,9 @@ import {
   QueueListIcon as QueueList,
   ArchiveBoxIcon as ArchiveBox,
   BuildingOffice2Icon as BuildingOffice2,
-  UsersIcon as Users
+  UsersIcon as Users,
+  IdentificationIcon as Identification,
+  ClipboardDocumentCheckIcon as ClipboardCheck
 } from '@heroicons/react/24/outline'
 
 const normalizeRole = (role) => String(role || '').trim().toLowerCase()
@@ -546,6 +548,11 @@ export default function PoliceDashboard() {
       tone: 'border-emerald-100 bg-emerald-50 text-emerald-700'
     }
   ]
+  const agentQuickActions = [
+    { label: 'Dossiers a prendre', value: 'nouveau', icon: QueueList, tone: 'bg-slate-950 text-white hover:bg-slate-800' },
+    { label: 'Interventions', value: 'en_cours', icon: ClipboardCheck, tone: 'bg-amber-500 text-white hover:bg-amber-600' },
+    { label: 'Archives terrain', value: 'traite', icon: ArchiveBox, tone: 'bg-emerald-600 text-white hover:bg-emerald-700' }
+  ]
   const agentsCommissariat = [user, ...policiers]
     .filter(Boolean)
     .filter((agent, index, list) => list.findIndex((item) => item?.id === agent?.id) === index)
@@ -672,7 +679,11 @@ export default function PoliceDashboard() {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8 overflow-hidden rounded-[2rem] border border-slate-200 bg-slate-950 text-white shadow-2xl"
+            className={`mb-8 overflow-hidden rounded-[2rem] border text-white shadow-2xl ${
+              isCommissariat
+                ? 'border-slate-200 bg-slate-950'
+                : 'border-sky-300/20 bg-gradient-to-br from-sky-950 via-blue-900 to-slate-950'
+            }`}
           >
             <div className="grid min-w-0 gap-6 p-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.9fr)] lg:p-8">
               <div className="flex min-w-0 items-start gap-4">
@@ -838,45 +849,72 @@ export default function PoliceDashboard() {
             <motion.div
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-8 grid gap-4 lg:grid-cols-[0.9fr_1.1fr]"
+              className="mb-8 grid gap-4 lg:grid-cols-[0.95fr_1.05fr]"
             >
-              <div className="rounded-[1.5rem] border border-sky-100 bg-white p-5 shadow-sm">
-                <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-700 text-white">
-                    <ShieldCheck className="h-6 w-6" />
+              <div className="overflow-hidden rounded-[1.5rem] border border-sky-100 bg-white shadow-sm">
+                <div className="bg-gradient-to-br from-sky-700 to-blue-950 p-5 text-white">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/20">
+                      <Identification className="h-8 w-8" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-black uppercase tracking-[0.18em] text-sky-100">Carte agent</p>
+                      <h2 className="mt-1 truncate text-2xl font-black">{user?.prenom} {user?.nom}</h2>
+                      <p className="mt-1 text-sm font-semibold text-sky-100">{commissariatName}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs font-black uppercase tracking-wide text-sky-700">Compte agent</p>
-                    <h2 className="mt-1 text-xl font-black text-slate-950">{user?.prenom} {user?.nom}</h2>
-                    <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
-                      Votre compte est separe du commissariat. Vous intervenez sur les dossiers et remontez les actions au centre de coordination.
-                    </p>
+                </div>
+                <div className="space-y-4 p-5">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-2xl bg-sky-50 p-4">
+                      <p className="text-xs font-black uppercase text-sky-700">Statut</p>
+                      <p className="mt-1 text-lg font-black text-slate-950">Disponible</p>
+                    </div>
+                    <div className="rounded-2xl bg-slate-50 p-4">
+                      <p className="text-xs font-black uppercase text-slate-500">Rôle</p>
+                      <p className="mt-1 text-lg font-black text-slate-950">Agent terrain</p>
+                    </div>
                   </div>
+                  <p className="text-sm font-semibold leading-6 text-slate-600">
+                    Votre compte agent est séparé du commissariat. Vous traitez les interventions, contactez la victime et remontez vos actions au centre de coordination.
+                  </p>
                 </div>
               </div>
               <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div>
                     <p className="text-xs font-black uppercase tracking-wide text-slate-500">Mission terrain</p>
-                    <h2 className="text-lg font-black text-slate-950">{commissariatName}</h2>
+                    <h2 className="text-xl font-black text-slate-950">Tableau d’intervention</h2>
                   </div>
                   <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-800">
                     <MapPin className="h-6 w-6" />
                   </div>
                 </div>
-                <div className="grid gap-2 sm:grid-cols-3">
-                  <button type="button" onClick={() => setFilter('nouveau')} className="rounded-xl bg-slate-50 px-3 py-3 text-left transition hover:bg-slate-100">
-                    <p className="text-xs font-bold text-slate-500">A prendre</p>
-                    <p className="text-2xl font-black text-slate-950">{stats.nouveaux}</p>
-                  </button>
-                  <button type="button" onClick={() => setFilter('en_cours')} className="rounded-xl bg-slate-50 px-3 py-3 text-left transition hover:bg-slate-100">
-                    <p className="text-xs font-bold text-slate-500">En intervention</p>
-                    <p className="text-2xl font-black text-amber-700">{stats.enCours}</p>
-                  </button>
-                  <button type="button" onClick={() => setFilter('traite')} className="rounded-xl bg-slate-50 px-3 py-3 text-left transition hover:bg-slate-100">
-                    <p className="text-xs font-bold text-slate-500">Finalises</p>
-                    <p className="text-2xl font-black text-emerald-700">{stats.traites}</p>
-                  </button>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {agentQuickActions.map((action) => {
+                    const ActionIcon = action.icon
+                    const value = action.value === 'nouveau' ? stats.nouveaux : action.value === 'en_cours' ? stats.enCours : stats.traites
+                    return (
+                      <button
+                        key={action.value}
+                        type="button"
+                        onClick={() => setFilter(action.value)}
+                        className={`rounded-2xl p-4 text-left shadow-sm transition hover:-translate-y-0.5 ${action.tone}`}
+                      >
+                        <div className="mb-3 flex items-center justify-between">
+                          <ActionIcon className="h-6 w-6" />
+                          <span className="text-2xl font-black">{value}</span>
+                        </div>
+                        <p className="text-sm font-black">{action.label}</p>
+                      </button>
+                    )
+                  })}
+                </div>
+                <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-xs font-black uppercase tracking-wide text-slate-500">Priorité actuelle</p>
+                  <p className="mt-1 text-sm font-semibold leading-6 text-slate-700">
+                    Ouvrez d'abord les urgences, utilisez Localiser pour rejoindre le lieu, puis marquez le dossier en cours ou traité.
+                  </p>
                 </div>
               </div>
             </motion.div>
