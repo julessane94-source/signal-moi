@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useAuth } from '../../context/AuthContext'
+import { useSocket } from '../../context/SocketContext'
 import { API_BASE } from '../../config/api'
 import { toast } from 'react-toastify'
 import { io as socketIOClient } from 'socket.io-client'
@@ -25,6 +26,7 @@ import {
 export default function CollaboratorDashboard() {
   const router = useRouter()
   const { user, loading } = useAuth()
+  const { unlockNotificationSound, requestNotificationPermission } = useSocket()
   
   // Déclarer tous les states avant les retours conditionnels
   const [signalements, setSignalements] = useState([])
@@ -36,6 +38,28 @@ export default function CollaboratorDashboard() {
   const [recentCampaigns, setRecentCampaigns] = useState([])
   const [recentPlaidoyers, setRecentPlaidoyers] = useState([])
   const socketRef = useRef(null)
+
+  useEffect(() => {
+    if (loading || user?.role !== 'collaborateur') return undefined
+
+    localStorage.setItem('signal_moi_collaborator_alerts_enabled', 'true')
+    const activateAlerts = async () => {
+      await unlockNotificationSound?.()
+      await requestNotificationPermission?.()
+    }
+
+    // Les navigateurs bloquent le son/la permission sans geste utilisateur :
+    // l'option est activée dès la première visite et finalisée au premier geste.
+    activateAlerts()
+    window.addEventListener('pointerdown', activateAlerts, { once: true })
+    window.addEventListener('keydown', activateAlerts, { once: true })
+    window.addEventListener('touchstart', activateAlerts, { once: true })
+    return () => {
+      window.removeEventListener('pointerdown', activateAlerts)
+      window.removeEventListener('keydown', activateAlerts)
+      window.removeEventListener('touchstart', activateAlerts)
+    }
+  }, [loading, user?.role, unlockNotificationSound, requestNotificationPermission])
 
   // TOUS les useEffect doivent être appelés AVANT les conditional returns
   useEffect(() => {
@@ -481,11 +505,12 @@ export default function CollaboratorDashboard() {
                 return (
                 <motion.div key={idx} whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }}>
                   <Link href={action.href}>
-                    <button className="w-full rounded-3xl border border-slate-200 bg-white px-6 py-5 text-left font-bold text-slate-950 shadow-sm transition hover:-translate-y-1 hover:border-emerald-300 hover:shadow-lg">
-                      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-white">
+                    <button className={`group relative w-full overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br ${action.bg} px-6 py-5 text-left font-bold text-slate-950 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-xl`}>
+                      <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${action.color} text-white shadow-lg transition duration-300 group-hover:scale-110 group-hover:rotate-3`}>
                         <ActionIcon className="h-6 w-6" />
                       </div>
-                      <span>{action.label}</span>
+                      <span className="block text-base">{action.label}</span>
+                      <span className="mt-2 flex items-center gap-1 text-xs font-semibold text-slate-500 transition group-hover:text-slate-800">Ouvrir <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" /></span>
                     </button>
                   </Link>
                 </motion.div>

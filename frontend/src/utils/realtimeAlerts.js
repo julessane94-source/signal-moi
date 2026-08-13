@@ -169,6 +169,14 @@ export const notifyRealtimeEvent = ({ role, event, payload = {}, toast }) => {
       urgent: payload.priorite === 'urgente' || payload.isLiveRecording,
       url: isPolice ? '/police/dashboard' : '/admin/dashboard'
     }
+  } else if ((event === 'signalement_received' || event === 'new_signalement_notification') && isCollaborateur) {
+    alert = {
+      title: 'Nouveau dossier',
+      body: payload.title || payload.titre || 'Un nouveau signalement correspond à vos types de suivi.',
+      speech: 'Nouveau signalement reçu dans votre espace collaborateur.',
+      urgent: false,
+      url: '/collaborator/dashboard'
+    }
   } else if ((event === 'followed_case_update' || event === 'message_received') && isCollaborateur) {
     alert = {
       title: 'Mise a jour collaborateur',

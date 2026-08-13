@@ -899,13 +899,14 @@ export default function PoliceDashboard() {
                         key={action.value}
                         type="button"
                         onClick={() => setFilter(action.value)}
-                        className={`rounded-2xl p-4 text-left shadow-sm transition hover:-translate-y-0.5 ${action.tone}`}
+                        className={`group relative overflow-hidden rounded-2xl p-5 text-left shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${action.tone}`}
                       >
                         <div className="mb-3 flex items-center justify-between">
-                          <ActionIcon className="h-6 w-6" />
-                          <span className="text-2xl font-black">{value}</span>
+                          <span className="rounded-xl bg-white/15 p-2 transition group-hover:scale-110 group-hover:rotate-3"><ActionIcon className="h-6 w-6" /></span>
+                          <span className="rounded-xl bg-black/10 px-3 py-1 text-2xl font-black">{value}</span>
                         </div>
                         <p className="text-sm font-black">{action.label}</p>
+                        <p className="mt-1 text-xs font-semibold opacity-75">Ouvrir la liste →</p>
                       </button>
                     )
                   })}

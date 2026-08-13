@@ -213,6 +213,32 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
             signalement.assigned_commissariat_distance_km = Number(assignedCommissariat.distance_km).toFixed(2);
         }
 
+        // Notify only collaborators configured by the administrator for this type.
+        try {
+            const recipients = await db.query(
+                `SELECT cst.collaborator_id
+                 FROM signal_moi.collaborator_signalement_types cst
+                 JOIN signal_moi.users u ON u.id = cst.collaborator_id
+                 WHERE cst.type_code = $1 AND u.is_active = true`,
+                [signalement.type]
+            );
+            if (global.io) {
+                recipients.rows.forEach(({ collaborator_id }) => {
+                    global.io.to(`user_${collaborator_id}`).emit('signalement_received', {
+                        id: signalement.id,
+                        titre: signalement.titre,
+                        title: signalement.titre,
+                        type: signalement.type,
+                        localisation: signalement.localisation,
+                        timestamp: new Date()
+                    });
+                });
+            }
+        } catch (notificationError) {
+            // The report is still valid when the optional routing migration is not applied yet.
+            if (notificationError.code !== '42P01') console.warn('[POST /signalements] Notification collaborateurs:', notificationError.message);
+        }
+
         // Gérer les fichiers uploadés (s'il y en a)
         if (req.files && req.files.length > 0) {
             for (const f of req.files) {
