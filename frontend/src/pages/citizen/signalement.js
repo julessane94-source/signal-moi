@@ -67,6 +67,8 @@ export default function NewSignalement() {
   const [recordingState, setRecordingState] = useState('idle')
   const [recordingError, setRecordingError] = useState(null)
   const [liveStream, setLiveStream] = useState(null)
+  const [cameraZoom, setCameraZoom] = useState(1)
+  const [zoomCapabilities, setZoomCapabilities] = useState(null)
   const [recordedVideoUrl, setRecordedVideoUrl] = useState(null)
   const [recordedVideoName, setRecordedVideoName] = useState(null)
   const [audioRecordingState, setAudioRecordingState] = useState('idle')
@@ -582,8 +584,22 @@ export default function NewSignalement() {
         stream.getTracks().forEach(track => track.stop())
       }
       liveStreamRef.current = null
+      setZoomCapabilities(null)
+      setCameraZoom(1)
       return null
     })
+  }
+
+  const applyCameraZoom = async (nextZoom) => {
+    const track = liveStreamRef.current?.getVideoTracks?.()[0]
+    if (!track || !zoomCapabilities) return
+    const zoom = Math.max(zoomCapabilities.min, Math.min(zoomCapabilities.max, Number(nextZoom)))
+    try {
+      await track.applyConstraints({ advanced: [{ zoom }] })
+      setCameraZoom(zoom)
+    } catch (error) {
+      toast.info('Le zoom n est pas pris en charge par cette camera')
+    }
   }
 
   const stopAudioStream = () => {
@@ -721,6 +737,16 @@ export default function NewSignalement() {
         audioBitsPerSecond: 192000
       }
       const recorder = new MediaRecorder(stream, recorderOptions)
+
+      const videoTrack = stream.getVideoTracks()[0]
+      const capabilities = videoTrack?.getCapabilities?.()
+      if (capabilities?.zoom) {
+        const zoom = Number(capabilities.zoom.min || 1)
+        setZoomCapabilities({ min: zoom, max: Number(capabilities.zoom.max), step: Number(capabilities.zoom.step || 0.1) })
+        setCameraZoom(zoom)
+      } else {
+        setZoomCapabilities(null)
+      }
 
       recordingChunksRef.current = []
       mediaRecorderRef.current = recorder
@@ -1264,6 +1290,20 @@ export default function NewSignalement() {
                   </div>
                 )}
               </div>
+
+              {recordingState === 'recording' && zoomCapabilities && (
+                <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm font-black text-slate-900">Zoom caméra</span>
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-700 shadow-sm">{cameraZoom.toFixed(1)}×</span>
+                  </div>
+                  <div className="mt-3 flex items-center gap-3">
+                    <button type="button" onClick={() => applyCameraZoom(cameraZoom - zoomCapabilities.step)} disabled={cameraZoom <= zoomCapabilities.min} className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-950 text-xl font-black text-white transition hover:bg-slate-800 disabled:opacity-40" aria-label="Réduire le zoom">−</button>
+                    <input type="range" min={zoomCapabilities.min} max={zoomCapabilities.max} step={zoomCapabilities.step} value={cameraZoom} onChange={(event) => applyCameraZoom(event.target.value)} className="h-2 flex-1 cursor-pointer accent-red-600" aria-label="Niveau de zoom" />
+                    <button type="button" onClick={() => applyCameraZoom(cameraZoom + zoomCapabilities.step)} disabled={cameraZoom >= zoomCapabilities.max} className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-600 text-xl font-black text-white transition hover:bg-red-700 disabled:opacity-40" aria-label="Augmenter le zoom">+</button>
+                  </div>
+                </div>
+              )}
 
               {recordingError && <p className="mt-3 rounded-2xl bg-red-50 p-3 text-sm font-semibold text-red-700">{recordingError}</p>}
 
