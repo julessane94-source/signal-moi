@@ -10,12 +10,16 @@ export default function PageReveal() {
     const root = document.querySelector('.site-page-shell')
     if (!root || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined
 
-    const targets = [...root.querySelectorAll('main > section, main > div > section, main > div > div > section')]
+    const targets = [...root.querySelectorAll('main > section, main > div > section, main > div > div > section, [data-reveal], .card-stagger > *')]
       .filter((element) => !element.closest('[data-no-reveal]'))
 
     targets.forEach((element, index) => {
       element.classList.add('content-reveal')
-      element.style.setProperty('--reveal-delay', `${Math.min(index * 55, 220)}ms`)
+      const siblings = element.parentElement?.classList.contains('card-stagger')
+        ? [...element.parentElement.children]
+        : null
+      const revealIndex = siblings ? siblings.indexOf(element) : index
+      element.style.setProperty('--reveal-delay', `${Math.min(revealIndex * (siblings ? 85 : 55), siblings ? 340 : 220)}ms`)
     })
 
     const observer = new IntersectionObserver((entries) => {
@@ -25,7 +29,7 @@ export default function PageReveal() {
           observer.unobserve(entry.target)
         }
       })
-    }, { threshold: 0.08, rootMargin: '0px 0px -32px' })
+    }, { threshold: 0.12, rootMargin: '0px 0px -48px' })
 
     targets.forEach((target) => observer.observe(target))
     return () => observer.disconnect()

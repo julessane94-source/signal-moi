@@ -31,7 +31,6 @@ body {
 
 .site-page-shell {
   min-height: 100vh;
-  padding-top: 4.75rem;
   isolation: isolate;
 }
 
@@ -66,8 +65,8 @@ body {
 
 .content-reveal {
   opacity: 0;
-  transform: translateY(24px) scale(0.992);
-  transition: opacity 640ms cubic-bezier(.22, 1, .36, 1), transform 640ms cubic-bezier(.22, 1, .36, 1);
+  transform: translateY(28px) scale(0.99);
+  transition: opacity 700ms cubic-bezier(.22, 1, .36, 1), transform 700ms cubic-bezier(.22, 1, .36, 1);
   transition-delay: var(--reveal-delay, 0ms);
 }
 
@@ -132,11 +131,6 @@ body {
 .hero-copy-enter { animation: card-arrival 720ms cubic-bezier(.22, 1, .36, 1) both; }
 .hero-visual-float { animation: gentle-float 5s ease-in-out infinite; }
 
-.card-stagger > * {
-  animation: card-arrival 620ms cubic-bezier(.22, 1, .36, 1) both;
-  animation-delay: calc(var(--card-index, 0) * 75ms);
-}
-
 .interactive-card {
   transition: transform 280ms cubic-bezier(.22, 1, .36, 1), box-shadow 280ms ease, border-color 280ms ease;
 }
@@ -157,9 +151,6 @@ body {
   .page-hero-animated::after,
   .hero-copy-enter,
   .hero-visual-float,
-  .card-stagger > * {
-    animation: none;
-  }
 }
 
 img,

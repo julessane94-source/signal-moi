@@ -36,7 +36,7 @@ export default function PlaidoyersPage() {
         <title>Plaidoyers - Signal-Moi</title>
       </Head>
 
-      <div className="min-h-screen bg-gray-50 pt-20">
+      <div data-reveal className="min-h-screen bg-gray-50 pt-20">
         <div className="max-w-6xl mx-auto px-4 py-8">
           <div className="page-hero-animated mb-8 rounded-3xl bg-gradient-to-r from-purple-700 via-fuchsia-600 to-indigo-700 p-10 text-white shadow-2xl shadow-fuchsia-500/20">
             <p className="text-sm uppercase tracking-[0.3em] text-cyan-200 mb-3">Plaidoyers</p>
