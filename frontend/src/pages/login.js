@@ -60,7 +60,6 @@ export default function Login() {
       if (rememberMe) {
         localStorage.setItem('rememberEmail', formData.email)
       }
-      router.push('/')
     }
   }
 
@@ -102,7 +101,19 @@ export default function Login() {
                 localStorage.setItem('token', token)
                 axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
                 await fetchUser()
-                router.push('/')
+                const role = String(body.user?.role || 'citoyen').toLowerCase()
+                const dashboards = {
+                  admin: '/admin/dashboard',
+                  administrateur: '/admin/dashboard',
+                  commissariat: '/police/dashboard',
+                  police: '/police/dashboard',
+                  policier: '/police/dashboard',
+                  gendarmerie: '/police/dashboard',
+                  collaborateur: '/collaborator/dashboard',
+                  collaborator: '/collaborator/dashboard',
+                  citoyen: '/citizen/dashboard'
+                }
+                router.replace(dashboards[role] || '/citizen/dashboard')
               }
             } catch (err) {
               console.error('Erreur Google sign-in:', err)

@@ -1,4 +1,4 @@
-﻿require('dotenv').config();
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const compression = require('compression');
@@ -99,7 +99,9 @@ app.use('/api/campagnes', campagneRoutes);
 app.use('/api/signalements', signalementRoutes);
 app.use('/api/plaidoyers', plaidoyerRoutes);
 app.use('/api/citizen', citizenRoutes);
-app.use('/api/init', initRoutes);
+if (process.env.NODE_ENV !== 'production') {
+    app.use('/api/init', initRoutes);
+}
 app.use('/api/pages', pagesRoutes); // Routes PUBLIQUES pour les pages du site
 app.use('/api/contact', contactRoutes); // Formulaire de contact PUBLIQUE
 app.use('/api/collaborator', collaboratorRoutes); // Dashboard collaborateur (ONG/Association)
@@ -108,8 +110,10 @@ app.use('/api/statistics', statisticsRoutes); // Statistiques pour admin et coll
 app.use('/api/posts', postsRoutes); // Blog posts
 
 // Debug routes (dev only)
-const debugRoutes = require('./routes/debug.routes');
-app.use('/api/debug', debugRoutes);
+if (process.env.NODE_ENV !== 'production') {
+    const debugRoutes = require('./routes/debug.routes');
+    app.use('/api/debug', debugRoutes);
+}
 
 // Health check endpoint (PUBLIC)
 app.get('/api/health', (req, res) => {

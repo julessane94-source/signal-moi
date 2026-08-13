@@ -89,8 +89,9 @@ export default function AdminDashboard() {
   const [showModal, setShowModal] = useState(false)
   const [editingUser, setEditingUser] = useState(null)
   const [formData, setFormData] = useState({
-    prenom: '', nom: '', email: '', telephone: '', password: '', ville: '', quartier: '', role: 'citoyen'
+    prenom: '', nom: '', email: '', telephone: '', password: '', ville: '', quartier: '', role: 'citoyen', signalementTypes: []
   })
+  const [signalementTypes, setSignalementTypes] = useState([])
   const [errors, setErrors] = useState({})
   const [signalements, setSignalements] = useState([])
   const [campagnes, setCampagnes] = useState([])
@@ -163,6 +164,7 @@ export default function AdminDashboard() {
     }
     if (!loading && user?.role === 'admin') {
       fetchUsers()
+      fetchSignalementTypes()
       fetchSiteConfig()
       fetchStats()
     }
@@ -245,6 +247,19 @@ export default function AdminDashboard() {
     }
   }
 
+  const fetchSignalementTypes = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${API_BASE}/api/admin/signalement-types`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!res.ok) throw new Error('Types indisponibles')
+      setSignalementTypes(await res.json())
+    } catch (error) {
+      toast.error('Impossible de charger les types de signalement')
+    }
+  }
+
   const exportStatistics = async (format = 'excel') => {
     try {
       const token = localStorage.getItem('token')
@@ -314,10 +329,22 @@ export default function AdminDashboard() {
         const errorBody = await response.json()
         throw new Error(errorBody.error || 'Erreur lors de la création')
       }
+      await response.json()
+      if (editingUser && formData.role === 'collaborateur') {
+        const assignmentResponse = await fetch(`${base}/api/admin/users/${editingUser.id}/signalement-types`, {
+          method: 'PUT',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ signalementTypes: formData.signalementTypes })
+        })
+        if (!assignmentResponse.ok) {
+          const errorBody = await assignmentResponse.json()
+          throw new Error(errorBody.error || 'Les types de signalement n’ont pas été enregistrés')
+        }
+      }
       toast.success(editingUser ? '✅ Utilisateur modifié' : '✅ Utilisateur créé')
       setShowModal(false)
       setEditingUser(null)
-      setFormData({ prenom: '', nom: '', email: '', telephone: '', password: '', ville: '', quartier: '', role: 'citoyen' })
+      setFormData({ prenom: '', nom: '', email: '', telephone: '', password: '', ville: '', quartier: '', role: 'citoyen', signalementTypes: [] })
       setErrors({})
       fetchUsers()
     } catch (error) {
@@ -578,11 +605,12 @@ export default function AdminDashboard() {
         password: '',
         ville: userData.ville || 'Sedhiou',
         quartier: userData.quartier || (['commissariat', 'police'].includes(String(userData.role || '').toLowerCase()) ? 'Commissariat central de Sedhiou' : ''),
-        role: userData.role || 'citoyen'
+        role: userData.role || 'citoyen',
+        signalementTypes: Array.isArray(userData.signalement_types) ? userData.signalement_types : []
       })
     } else {
       setEditingUser(null)
-      setFormData({ prenom: '', nom: '', email: '', telephone: '', password: '', ville: 'Sedhiou', quartier: 'Commissariat central de Sedhiou', role: 'commissariat' })
+      setFormData({ prenom: '', nom: '', email: '', telephone: '', password: '', ville: 'Sedhiou', quartier: 'Commissariat central de Sedhiou', role: 'commissariat', signalementTypes: [] })
     }
     setErrors({})
     setShowModal(true)
@@ -1487,7 +1515,7 @@ export default function AdminDashboard() {
         onClose={() => {
           setShowModal(false)
           setEditingUser(null)
-          setFormData({ prenom: '', nom: '', email: '', telephone: '', password: '', ville: '', quartier: '', role: 'citoyen' })
+          setFormData({ prenom: '', nom: '', email: '', telephone: '', password: '', ville: '', quartier: '', role: 'citoyen', signalementTypes: [] })
           setErrors({})
         }}
         title={editingUser ? 'Modifier l\'utilisateur' : 'Créer un utilisateur'}
@@ -1566,6 +1594,38 @@ export default function AdminDashboard() {
               </select>
             </FormField>
           </div>
+
+          {formData.role === 'collaborateur' && (
+            <FormField label="Types de signalements reçus">
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4">
+                <p className="mb-3 text-sm text-emerald-900">
+                  Choisissez les signalements qui apparaîtront dans le tableau de bord de ce collaborateur. Ce réglage reste modifiable à tout moment.
+                </p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {signalementTypes.map((type) => {
+                    const checked = formData.signalementTypes.includes(type.code)
+                    return (
+                      <label key={type.code} className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2 text-sm transition ${checked ? 'border-emerald-500 bg-white text-emerald-950 shadow-sm' : 'border-emerald-100 bg-white/60 text-slate-700 hover:border-emerald-300'}`}>
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => setFormData((prev) => ({
+                            ...prev,
+                            signalementTypes: checked
+                              ? prev.signalementTypes.filter((code) => code !== type.code)
+                              : [...prev.signalementTypes, type.code]
+                          }))}
+                          className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                        />
+                        <span className="text-base">{type.icon || '•'}</span>
+                        <span className="font-medium">{type.label}</span>
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
+            </FormField>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField label="Ville" error={errors.ville} required>

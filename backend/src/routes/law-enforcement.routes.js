@@ -19,7 +19,8 @@ const authMiddleware = async (req, res, next) => {
         if (!token) {
             return res.status(401).json({ error: 'Token d\'authentification manquant' });
         }
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret-key');
+        if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is not configured');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
         // Vérifier le rôle
         // Fallback: vérifier dans la base de données

@@ -32,7 +32,8 @@ const User = {
         const { prenom, nom, email, telephone, password, ville, quartier, role, emailVerificationToken } = userData;
         
         // Hasher le mot de passe avant de l'enregistrer
-        const hashedPassword = password ? await bcrypt.hash(password, 10) : await bcrypt.hash('Default123!', 10);
+        if (!password) throw new Error('Un mot de passe est requis pour créer un utilisateur');
+        const hashedPassword = await bcrypt.hash(password, 10);
         
         const res = await db.query(
             `INSERT INTO ${USERS_TABLE} (prenom, nom, email, telephone, password, ville, quartier, role, email_verification_token)
@@ -62,7 +63,8 @@ const User = {
         return res.rows[0];
     },
     
-    resetPassword: async (id, newPassword = 'Default123!') => {
+    resetPassword: async (id, newPassword) => {
+        if (!newPassword) throw new Error('Un nouveau mot de passe est requis');
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         await db.query(`UPDATE ${USERS_TABLE} SET password = $1 WHERE id = $2`, [hashedPassword, id]);
     }
@@ -102,7 +104,7 @@ class UserInstance {
                 email: this.email, 
                 role: this.role 
             },
-            process.env.JWT_SECRET || 'your-secret-key',
+            process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
     }
@@ -111,7 +113,7 @@ class UserInstance {
     generateRefreshToken() {
         return jwt.sign(
             { id: this.id },
-            process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key',
+            process.env.JWT_REFRESH_SECRET,
             { expiresIn: '7d' }
         );
     }

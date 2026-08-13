@@ -9,7 +9,8 @@ const optionalAuthMiddleware = (req, res, next) => {
     try {
         const token = req.headers.authorization?.replace('Bearer ', '');
         if (token) {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret-key');
+            if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is not configured');
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
             req.user = decoded;
         }
         next();
@@ -26,7 +27,8 @@ const authMiddleware = (req, res, next) => {
         if (!token) {
             return res.status(401).json({ error: 'Token d\'authentification manquant' });
         }
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret-key');
+            if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is not configured');
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.user = decoded;
         next();
     } catch (err) {

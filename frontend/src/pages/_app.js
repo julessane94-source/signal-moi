@@ -22,6 +22,7 @@ function MyApp({ Component, pageProps }) {
   
   const hideNavbar = noLayoutPages.includes(router.pathname)
   const hideFooter = noLayoutPages.includes(router.pathname) || dashboardPages.includes(router.pathname)
+  const hasPublicLayout = !noLayoutPages.includes(router.pathname)
   const pagesWithOwnChatbot = ['/', '/contact', '/profile', '/settings']
   const showGlobalChatbot = !noLayoutPages.includes(router.pathname) && !pagesWithOwnChatbot.includes(router.pathname)
 
@@ -40,7 +41,9 @@ function MyApp({ Component, pageProps }) {
         <SocketProvider>
           {!hideNavbar && <Navbar />}
           {!hideNavbar && <EmergencyButtons />}
-          <Component {...pageProps} />
+          <div className={hasPublicLayout ? 'site-page-shell' : undefined}>
+            <Component {...pageProps} />
+          </div>
           {!hideFooter && <Footer />}
           {showGlobalChatbot && <Chatbot />}
           <ToastContainer position="bottom-right" autoClose={5000} />

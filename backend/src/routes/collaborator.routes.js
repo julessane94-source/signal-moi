@@ -50,7 +50,8 @@ const authMiddleware = async (req, res, next) => {
         if (!token) {
             return res.status(401).json({ error: 'Token d\'authentification manquant' });
         }
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret-key');
+        if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is not configured');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
         // Vérifier le rôle
         if (decoded.role === 'collaborateur') {
@@ -104,7 +105,14 @@ router.get('/dashboard', authMiddleware, async (req, res) => {
     
     // Récupérer les stats
     const [signalementCount, campaignCount, notificationCount] = await Promise.all([
-      db.query('SELECT COUNT(*) as count FROM signal_moi.signalements WHERE user_id = $1', [userId]),
+      db.query(`
+        SELECT COUNT(*) as count
+        FROM signal_moi.signalements s
+        WHERE EXISTS (
+          SELECT 1 FROM signal_moi.collaborator_signalement_types cst
+          WHERE cst.collaborator_id = $1 AND cst.type_code = s.type
+        )
+      `, [userId]),
       db.query('SELECT COUNT(*) as count FROM signal_moi.campagnes WHERE created_by = $1', [userId]),
       getPendingNotificationCount(userId)
     ]);
@@ -144,10 +152,14 @@ router.get('/notifications', authMiddleware, async (req, res) => {
         'Un signalement a été enregistré' as message,
         created_at,
         false as is_read
-      FROM signal_moi.signalements
-      WHERE created_at > NOW() - INTERVAL '7 days'
+      FROM signal_moi.signalements s
+      WHERE s.created_at > NOW() - INTERVAL '7 days'
+        AND EXISTS (
+          SELECT 1 FROM signal_moi.collaborator_signalement_types cst
+          WHERE cst.collaborator_id = $1 AND cst.type_code = s.type
+        )
       LIMIT 20
-    `);
+    `, [userId]);
 
     const notifications = result.rows.map(n => ({
       id: n.notification_id,
@@ -177,9 +189,13 @@ router.get('/signalements', authMiddleware, async (req, res) => {
       FROM signal_moi.signalements s
       LEFT JOIN signal_moi.users u ON u.id = s.user_id
       WHERE s.statut != 'fermé'
+        AND EXISTS (
+          SELECT 1 FROM signal_moi.collaborator_signalement_types cst
+          WHERE cst.collaborator_id = $1 AND cst.type_code = s.type
+        )
       ORDER BY s.created_at DESC
       LIMIT 50
-    `);
+    `, [req.user.id]);
 
     const signalements = result.rows.map(s => ({
       id: s.id,

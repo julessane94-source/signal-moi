@@ -3,7 +3,7 @@ const { User } = require('../models');
 
 const authMiddleware = async (req, res, next) => {
   try {
-    // Récupérer le token depuis l'en-tête Authorization, ou depuis un cookie 'token' en fallback
+    // RÃ©cupÃ©rer le token depuis l'en-tÃªte Authorization, ou depuis un cookie 'token' en fallback
     const authHeader = req.header('Authorization');
     let token = null
 
@@ -26,9 +26,8 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // Vérifier le JWT
-    if (!process.env.JWT_SECRET) console.warn('[AuthMiddleware] JWT_SECRET not set');
-    console.log('[AuthMiddleware] token snippet:', token ? token.substring(0, 20) + '...' : 'no-token');
+    // VÃ©rifier le JWT
+    if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is not configured');
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     if (!decoded.id) {
       return res.status(401).json({ 
@@ -37,14 +36,14 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // Récupérer l'utilisateur
+    // RÃ©cupÃ©rer l'utilisateur
     const user = await User.findByPk(decoded.id, {
       attributes: { exclude: ['password'] }
     });
     
     if (!user) {
       return res.status(401).json({ 
-        error: 'Utilisateur non trouvé',
+        error: 'Utilisateur non trouvÃ©',
         code: 'USER_NOT_FOUND'
       });
     }
@@ -53,7 +52,7 @@ const authMiddleware = async (req, res, next) => {
 
     if (isActive === false) {
       return res.status(401).json({ 
-        error: 'Compte utilisateur désactivé',
+        error: 'Compte utilisateur dÃ©sactivÃ©',
         code: 'ACCOUNT_INACTIVE'
       });
     }
@@ -67,7 +66,7 @@ const authMiddleware = async (req, res, next) => {
     
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({ 
-        error: 'Token expiré',
+        error: 'Token expirÃ©',
         code: 'TOKEN_EXPIRED',
         expiredAt: error.expiredAt
       });
@@ -82,7 +81,7 @@ const authMiddleware = async (req, res, next) => {
     }
 
     res.status(401).json({ 
-      error: 'Authentification échouée',
+      error: 'Authentification Ã©chouÃ©e',
       code: 'AUTH_FAILED',
       details: error.message
     });
@@ -93,7 +92,7 @@ const roleMiddleware = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({ 
-        error: 'Accès non autorisé. Vous ne disposez pas des permissions nécessaires.',
+        error: 'AccÃ¨s non autorisÃ©. Vous ne disposez pas des permissions nÃ©cessaires.',
         code: 'FORBIDDEN'
       });
     }
@@ -139,7 +138,7 @@ const refreshTokenMiddleware = async (req, res, next) => {
     next();
   } catch (error) {
     res.status(401).json({ 
-      error: 'Refresh token invalide ou expiré',
+      error: 'Refresh token invalide ou expirÃ©',
       code: 'INVALID_REFRESH_TOKEN'
     });
   }

@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const db = require('../config/database');
@@ -13,8 +14,12 @@ router.post('/seed-users', async (req, res) => {
     const secretKey = req.headers['x-admin-secret'] || req.body.secret;
     const envSecret = process.env.ADMIN_SECRET_KEY;
 
-    // Si ADMIN_SECRET_KEY est configurée, vérifier la clé
-    if (envSecret && secretKey !== envSecret) {
+    if (!envSecret) {
+      return res.status(503).json({ success: false, message: 'Initialisation désactivée : ADMIN_SECRET_KEY manquante' });
+    }
+    const provided = Buffer.from(String(secretKey || ''));
+    const expected = Buffer.from(envSecret);
+    if (provided.length !== expected.length || !crypto.timingSafeEqual(provided, expected)) {
       return res.status(401).json({
         success: false,
         message: 'Clé secrète invalide'
@@ -97,7 +102,6 @@ router.post('/seed-users', async (req, res) => {
           id: created.id,
           email: created.email,
           role: created.role,
-          password: user.password,
           status: 'created',
           message: 'Utilisateur créé avec succès'
         });

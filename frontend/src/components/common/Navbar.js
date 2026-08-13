@@ -129,12 +129,12 @@ export default function Navbar() {
   ]
 
   return (
-    <nav className="fixed inset-x-0 top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-xl shadow-sm">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+    <nav className="fixed inset-x-0 top-0 z-50 border-b border-slate-200/80 bg-white/85 backdrop-blur-2xl shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
+      <div className="mx-auto flex max-w-[90rem] items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         <motion.div whileHover={{ scale: 1.05 }}>
           <Link href="/" className="flex items-center gap-2 transition hover:opacity-80">
-            <img src={getImageUrl(logoUrl)} alt="Logo Signal-Moi" className="h-10 w-10 rounded-lg object-cover shadow-md" />
-            <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Signal-Moi</span>
+            <img src={getImageUrl(logoUrl)} alt="Logo Signal-Moi" className="h-10 w-10 rounded-2xl object-cover shadow-lg shadow-emerald-900/10 ring-1 ring-slate-900/5" />
+            <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-slate-950 via-emerald-700 to-teal-600 bg-clip-text text-transparent">Signal-Moi</span>
           </Link>
         </motion.div>
 
@@ -147,7 +147,7 @@ export default function Navbar() {
                 <Link key={item.name} href={item.href}>
                   <motion.a
                     whileHover={{ y: -1 }}
-                    className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${isActive ? 'bg-slate-900 text-white shadow-sm shadow-slate-900/10' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'}`}
+                    className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${isActive ? 'bg-slate-950 text-white shadow-lg shadow-slate-900/15' : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-900'}`}
                     aria-current={isActive ? 'page' : undefined}
                   >
                     <Icon className="h-4 w-4" />
@@ -161,7 +161,7 @@ export default function Navbar() {
 
         <div className="hidden md:flex items-center gap-3">
           <Link href="/donate">
-            <motion.a whileHover={{ scale: 1.05 }} className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 font-semibold text-white shadow-sm shadow-emerald-600/20 transition hover:bg-emerald-700">
+            <motion.a whileHover={{ scale: 1.03 }} className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 font-semibold text-white shadow-lg shadow-emerald-700/20 transition hover:from-emerald-700 hover:to-teal-700">
               <Heart className="h-5 w-5" />
               Soutenir
             </motion.a>

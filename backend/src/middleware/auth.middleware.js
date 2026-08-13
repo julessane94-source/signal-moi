@@ -16,8 +16,7 @@ const protect = async (req, res, next) => {
   }
   
   try {
-    if (!process.env.JWT_SECRET) console.warn('[AuthMiddleware] JWT_SECRET not set');
-    console.log('[AuthMiddleware] token snippet:', token ? token.substring(0, 20) + '...' : 'no-token');
+    if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is not configured');
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // ✅ FIX: PostgreSQL syntax ($1) instead of MySQL (?)

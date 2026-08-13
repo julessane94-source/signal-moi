@@ -23,6 +23,45 @@ html {
 body {
   @apply min-h-screen bg-slate-50 text-slate-900 antialiased;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background:
+    radial-gradient(circle at 8% 8%, rgba(16, 185, 129, 0.12), transparent 24rem),
+    radial-gradient(circle at 92% 12%, rgba(79, 70, 229, 0.13), transparent 28rem),
+    #f8fafc;
+}
+
+.site-page-shell {
+  min-height: 100vh;
+  padding-top: 4.75rem;
+  isolation: isolate;
+}
+
+/* Provides a consistent, contemporary visual language across every menu page. */
+.site-page-shell > main,
+.site-page-shell > div > main {
+  position: relative;
+}
+
+.site-page-shell h1 {
+  letter-spacing: -0.035em;
+}
+
+.site-page-shell h2,
+.site-page-shell h3 {
+  letter-spacing: -0.02em;
+}
+
+.site-page-shell a {
+  text-underline-offset: 0.18em;
+}
+
+.site-page-shell button,
+.site-page-shell a[class*='bg-'] {
+  transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease, border-color 180ms ease;
+}
+
+.site-page-shell button:hover,
+.site-page-shell a[class*='bg-']:hover {
+  transform: translateY(-1px);
 }
 
 img,
@@ -73,7 +112,7 @@ select {
 }
 
 .card {
-  @apply bg-white rounded-3xl shadow-soft p-6;
+  @apply bg-white/95 rounded-3xl shadow-soft p-6 border border-slate-200/70 backdrop-blur;
 }
 
 .badge {
@@ -265,6 +304,36 @@ select {
 .link-enhanced::after {
   content: '';
   @apply absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 transition-all duration-300 hover:w-full;
+}
+
+.page-hero {
+  @apply relative overflow-hidden border border-slate-200/80 bg-white/90 px-6 py-10 shadow-soft backdrop-blur sm:px-10 sm:py-14;
+  border-radius: 2rem;
+}
+
+.page-hero::after {
+  content: '';
+  position: absolute;
+  right: -5rem;
+  top: -5rem;
+  width: 16rem;
+  height: 16rem;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.20), transparent 68%);
+  pointer-events: none;
+}
+
+.surface-card {
+  @apply rounded-3xl border border-slate-200/80 bg-white/90 p-6 shadow-soft backdrop-blur;
+}
+
+.surface-card:hover {
+  border-color: rgba(16, 185, 129, 0.38);
+  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.12);
+}
+
+.eyebrow {
+  @apply inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-emerald-700;
 }
 
 /* Focus states */

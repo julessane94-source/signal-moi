@@ -134,7 +134,10 @@ const authMiddleware = async (req, res, next) => {
         if (!token) {
             return res.status(401).json({ error: 'Token d\'authentification manquant' });
         }
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret-key');
+        if (!process.env.JWT_SECRET) {
+            return res.status(503).json({ error: 'Service d’authentification non configuré' });
+        }
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
         // Vérifier le rôle depuis le token OU depuis la base de données
         if (decoded.role === 'admin') {
@@ -160,7 +163,30 @@ const authMiddleware = async (req, res, next) => {
 };
 
 // --- Routes de test (à conserver pour le débogage) ---
-router.get('/test-db', async (req, res) => {
+const normalizeSignalementTypes = (types) => Array.isArray(types)
+  ? [...new Set(types.map((type) => String(type || '').trim()).filter(Boolean))]
+  : [];
+
+const validateSignalementTypes = async (types) => {
+  if (types.length === 0) return true;
+  const result = await db.query(
+    'SELECT code FROM signal_moi.signalement_types WHERE est_actif = true AND code = ANY($1::text[])',
+    [types]
+  );
+  return result.rows.length === types.length;
+};
+
+const replaceCollaboratorSignalementTypes = async (collaboratorId, types) => {
+  await db.query('DELETE FROM signal_moi.collaborator_signalement_types WHERE collaborator_id = $1', [collaboratorId]);
+  for (const typeCode of types) {
+    await db.query(
+      'INSERT INTO signal_moi.collaborator_signalement_types (collaborator_id, type_code) VALUES ($1, $2) ON CONFLICT (collaborator_id, type_code) DO NOTHING',
+      [collaboratorId, typeCode]
+    );
+  }
+};
+
+router.get('/test-db', authMiddleware, async (req, res) => {
   try {
     const result = await db.query('SELECT NOW() as now');
     res.json({ success: true, time: result.rows[0].now });
@@ -174,7 +200,15 @@ router.get('/test-db', async (req, res) => {
 // GET /api/admin/users - Récupére la liste de tous les utilisateurs actifs (protégé)
 router.get('/users', authMiddleware, async (req, res) => {
   try {
-    const result = await db.query('SELECT id, prenom, nom, email, telephone, ville, quartier, role, is_active FROM signal_moi.users WHERE is_active = true ORDER BY created_at DESC');
+    const result = await db.query(`
+      SELECT u.id, u.prenom, u.nom, u.email, u.telephone, u.ville, u.quartier, u.role, u.is_active,
+        COALESCE(ARRAY_AGG(cst.type_code) FILTER (WHERE cst.type_code IS NOT NULL), '{}') AS signalement_types
+      FROM signal_moi.users u
+      LEFT JOIN signal_moi.collaborator_signalement_types cst ON cst.collaborator_id = u.id
+      WHERE u.is_active = true
+      GROUP BY u.id
+      ORDER BY MAX(u.created_at) DESC
+    `);
     res.json(result.rows);
   } catch (err) {
     console.error('[ADMIN GET /users] Erreur:', err);
@@ -183,9 +217,18 @@ router.get('/users', authMiddleware, async (req, res) => {
 });
 
 // POST /api/admin/users - Crée un nouvel utilisateur (protégé)
+router.get('/signalement-types', authMiddleware, async (req, res) => {
+  try {
+    const result = await db.query('SELECT code, label, description, icon, color FROM signal_moi.signalement_types WHERE est_actif = true ORDER BY order_index ASC, label ASC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Impossible de charger les types de signalement' });
+  }
+});
+
 router.post('/users', authMiddleware, async (req, res) => {
   console.log('[ADMIN POST /users] Body reçu:', req.body);
-  const { prenom, nom, email, telephone, password, ville, quartier, role } = req.body;
+  const { prenom, nom, email, telephone, password, ville, quartier, role, signalementTypes } = req.body;
   const cleanedUser = {
     prenom: String(prenom || '').trim(),
     nom: String(nom || '').trim(),
@@ -206,7 +249,15 @@ router.post('/users', authMiddleware, async (req, res) => {
     return res.status(403).json({ error: 'Creez d abord un compte commissariat. Les agents doivent etre crees par le commissariat.' });
   }
 
+  const selectedTypes = normalizeSignalementTypes(signalementTypes);
+  if (cleanedUser.role.toLowerCase() !== 'collaborateur' && selectedTypes.length > 0) {
+    return res.status(400).json({ error: 'Les types de signalement sont réservés aux collaborateurs' });
+  }
+
   try {
+    if (!(await validateSignalementTypes(selectedTypes))) {
+      return res.status(400).json({ error: 'Un ou plusieurs types de signalement sont invalides' });
+    }
     const duplicateRes = await db.query(
       `SELECT id, email, telephone
        FROM signal_moi.users
@@ -242,6 +293,10 @@ router.post('/users', authMiddleware, async (req, res) => {
       true
     ];
     const result = await db.query(insertQuery, values);
+    if (cleanedUser.role.toLowerCase() === 'collaborateur') {
+      await replaceCollaboratorSignalementTypes(result.rows[0].id, selectedTypes);
+      result.rows[0].signalement_types = selectedTypes;
+    }
     console.log('[ADMIN POST /users] Utilisateur créé:', result.rows[0]);
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -251,6 +306,26 @@ router.post('/users', authMiddleware, async (req, res) => {
 });
 
 // PUT /api/admin/users/:id - Met � jour un utilisateur
+router.put('/users/:id/signalement-types', authMiddleware, async (req, res) => {
+  const collaboratorId = req.params.id;
+  const types = normalizeSignalementTypes(req.body.signalementTypes);
+  try {
+    const userResult = await db.query('SELECT id, role FROM signal_moi.users WHERE id = $1', [collaboratorId]);
+    if (userResult.rows.length === 0) return res.status(404).json({ error: 'Utilisateur introuvable' });
+    if (String(userResult.rows[0].role).toLowerCase() !== 'collaborateur') {
+      return res.status(400).json({ error: 'Cet utilisateur n’est pas un collaborateur' });
+    }
+    if (!(await validateSignalementTypes(types))) {
+      return res.status(400).json({ error: 'Un ou plusieurs types de signalement sont invalides' });
+    }
+    await replaceCollaboratorSignalementTypes(collaboratorId, types);
+    res.json({ success: true, collaboratorId, signalementTypes: types });
+  } catch (err) {
+    console.error('[ADMIN PUT /users/:id/signalement-types] Erreur:', err);
+    res.status(500).json({ error: 'Erreur lors de la mise à jour des types de signalement' });
+  }
+});
+
 router.put('/users/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
   const { prenom, nom, email, telephone, ville, quartier, role, is_active } = req.body;
@@ -299,7 +374,10 @@ router.delete('/users/:id', authMiddleware, async (req, res) => {
 router.post('/users/:id/reset-password', authMiddleware, async (req, res) => {
   const { id } = req.params;
   try {
-    const defaultPassword = process.env.DEFAULT_RESET_PASSWORD || 'Default123!';
+    const defaultPassword = process.env.DEFAULT_RESET_PASSWORD;
+    if (!defaultPassword) {
+      return res.status(503).json({ error: 'DEFAULT_RESET_PASSWORD doit être configurée avant toute réinitialisation.' });
+    }
     const hashed = await bcrypt.hash(defaultPassword, 10);
     const result = await db.query('UPDATE signal_moi.users SET password = $1 WHERE id = $2 RETURNING id', [hashed, id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Utilisateur introuvable' });
