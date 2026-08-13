@@ -150,7 +150,9 @@ body {
   .page-hero-animated::before,
   .page-hero-animated::after,
   .hero-copy-enter,
-  .hero-visual-float,
+  .hero-visual-float {
+    animation: none;
+  }
 }
 
 img,
