@@ -281,7 +281,10 @@ const io = socketIO(server, {
         origin: allowedOrigins,
         credentials: true
     },
-    transports: ['websocket', 'polling']
+    transports: ['websocket', 'polling'],
+    // High-definition live frames and short video chunks can exceed Socket.IO's
+    // default 1 MB payload limit.
+    maxHttpBufferSize: 8e6
 });
 
 // Configurer les handlers socket

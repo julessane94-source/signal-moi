@@ -256,14 +256,18 @@ export default function NewSignalement() {
       const video = videoPreviewRef.current || liveVideoRef.current
       if (!video || video.readyState < 2 || !liveSessionIdRef.current) return
 
+      const sourceWidth = video.videoWidth || 1280
+      const sourceHeight = video.videoHeight || 720
+      const frameWidth = Math.min(sourceWidth, 960)
+      const frameHeight = Math.round(frameWidth * (sourceHeight / sourceWidth))
       const canvas = document.createElement('canvas')
-      canvas.width = 640
-      canvas.height = 360
+      canvas.width = frameWidth
+      canvas.height = frameHeight
       const ctx = canvas.getContext('2d')
       if (!ctx) return
 
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-      const frame = canvas.toDataURL('image/jpeg', 0.72)
+      const frame = canvas.toDataURL('image/jpeg', 0.84)
       const activeSocket = socketRef.current
       if (activeSocket) {
         activeSocket.emit('live_recording_frame', {
@@ -275,7 +279,7 @@ export default function NewSignalement() {
         action: 'frame',
         frame
       })
-    }, 700)
+    }, 800)
   }
 
   const stopLiveFrameBroadcast = () => {
@@ -701,14 +705,20 @@ export default function NewSignalement() {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30, max: 30 } },
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          frameRate: { ideal: 30, max: 30 },
+          resizeMode: 'none'
+        },
         audio: true
       })
       const mimeType = getRecordingMimeType()
       const recorderOptions = {
         ...(mimeType ? { mimeType } : {}),
-        videoBitsPerSecond: 2500000,
-        audioBitsPerSecond: 128000
+        videoBitsPerSecond: 4500000,
+        audioBitsPerSecond: 192000
       }
       const recorder = new MediaRecorder(stream, recorderOptions)
 
