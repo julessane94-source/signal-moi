@@ -1537,7 +1537,7 @@ export default function AdminDashboard() {
                 <div>
                   <p className="font-bold text-blue-950">Compte commissariat</p>
                   <p className="mt-1 text-sm leading-6 text-blue-800">
-                    L'admin crée seulement le compte commissariat. Les comptes agents seront créés et gérés depuis l'espace Commissariat.
+                    L'admin crée seulement le compte commissariat. À sa première connexion, le commissariat autorise sa position : la plateforme l’utilise automatiquement pour orienter les signalements proches.
                   </p>
                 </div>
               </div>
@@ -1631,18 +1631,6 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </FormField>
-          )}
-
-          {formData.role === 'commissariat' && (
-            <div className="grid grid-cols-1 gap-4 rounded-2xl border border-blue-100 bg-blue-50 p-4 md:grid-cols-2">
-              <FormField label="Latitude du commissariat">
-                <Input name="stationLatitude" type="number" step="any" placeholder="Ex. 12.7081" value={formData.stationLatitude} onChange={handleInputChange} />
-              </FormField>
-              <FormField label="Longitude du commissariat">
-                <Input name="stationLongitude" type="number" step="any" placeholder="Ex. -15.5569" value={formData.stationLongitude} onChange={handleInputChange} />
-              </FormField>
-              <p className="md:col-span-2 text-sm text-blue-800">Ces coordonnées permettent d’orienter les signalements GPS vers le commissariat le plus proche.</p>
-            </div>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

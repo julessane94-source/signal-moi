@@ -49,6 +49,38 @@ const getUrgencyLevel = (type, description) => {
     return isHighRisk ? 'high' : 'medium';
 };
 
+// Le commissariat transmet sa position depuis son propre appareil. L'admin ne
+// saisit donc jamais de coordonnées sensibles ou imprécises à sa place.
+router.put('/station-location', authMiddleware, async (req, res) => {
+  try {
+    if (normalizeRole(req.user.role) !== 'commissariat') {
+      return res.status(403).json({ error: 'Seul le compte commissariat peut enregistrer sa position' });
+    }
+
+    const latitude = Number(req.body?.latitude);
+    const longitude = Number(req.body?.longitude);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+      return res.status(400).json({ error: 'Coordonnées GPS invalides' });
+    }
+
+    await db.query(
+      `INSERT INTO signal_moi.police_station_locations (commissariat_id, latitude, longitude, updated_at)
+       VALUES ($1, $2, $3, NOW())
+       ON CONFLICT (commissariat_id) DO UPDATE
+       SET latitude = EXCLUDED.latitude, longitude = EXCLUDED.longitude, updated_at = NOW()`,
+      [req.user.id, latitude, longitude]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    if (err.code === '42P01') {
+      return res.status(503).json({ error: 'La migration de géolocalisation doit être exécutée avant l’activation.' });
+    }
+    console.error('[LAW-ENFORCEMENT PUT /station-location] Erreur:', err);
+    res.status(500).json({ error: 'Impossible d’enregistrer la position du commissariat' });
+  }
+});
+
 // GET /api/law-enforcement/dashboard - Alertes urgentes
 router.get('/dashboard', authMiddleware, async (req, res) => {
   try {

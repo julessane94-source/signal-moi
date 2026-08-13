@@ -240,6 +240,26 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
         }
 
         // Gérer les fichiers uploadés (s'il y en a)
+        // Le formulaire citoyen utilise l'API REST : émettre l'événement ici
+        // garantit que le tableau de bord police se rafraîchit immédiatement.
+        if (global.io) {
+            const policeNotification = {
+                id: signalement.id,
+                titre: signalement.titre,
+                title: signalement.titre,
+                type: signalement.type,
+                localisation: signalement.localisation,
+                priorite: signalement.priorite,
+                timestamp: new Date()
+            };
+            if (assignedCommissariat) {
+                global.io.to(`user_${assignedCommissariat.id}`).emit('signalement_received', policeNotification);
+            } else {
+                global.io.to('police_room').emit('signalement_received', policeNotification);
+            }
+            global.io.to('admin_room').emit('new_signalement_notification', policeNotification);
+        }
+
         if (req.files && req.files.length > 0) {
             for (const f of req.files) {
                 const fileType = f.mimetype.startsWith('image') ? 'image' : f.mimetype.startsWith('video') ? 'video' : f.mimetype.startsWith('audio') ? 'audio' : 'document';
@@ -499,21 +519,44 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                     return res.json(rows);
                 }
                 // Si c'est la police, ne retourner que les types pertinents (violence, vol)
-                if (req.user && ['commissariat', 'police'].includes(req.user.role)) {
+                if (req.user && isPoliceLikeRole(req.user.role)) {
                     const showArchive = String(req.query.archive || '').toLowerCase() === 'true';
-                    const result = await db.query(`SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, s.latitude, s.longitude, s.priorite, s.est_anonyme, s.created_at, s.updated_at,
+                    const statusFilter = showArchive
+                        ? "s.statut IN ('traite', 'closed', 'fausse_alerte')"
+                        : "COALESCE(s.statut, 'nouveau') NOT IN ('traite', 'closed', 'fausse_alerte')";
+                    const baseSelect = `SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, s.latitude, s.longitude, s.priorite, s.est_anonyme, s.created_at, s.updated_at,
                                                           u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone, u.email AS user_email, u.created_at AS user_created_at,
                                                           (SELECT COUNT(*)::int FROM signal_moi.signalements sx WHERE sx.user_id = s.user_id AND sx.created_at >= NOW() - INTERVAL '24 hours') AS recent_same_user_count
                                                    FROM signal_moi.signalements s
-                                                   LEFT JOIN signal_moi.users u ON u.id = s.user_id
-                                                   WHERE s.assigned_to = COALESCE(
+                                                   LEFT JOIN signal_moi.users u ON u.id = s.user_id`;
+                    // Les signalements plus anciens, ceux sans GPS et ceux créés avant la
+                    // migration n'ont pas encore de commissariat attribué. Ils doivent rester
+                    // visibles dans la file de police au lieu de disparaître.
+                    const recipientFilter = `(
+                      s.assigned_to = COALESCE(
                                                      (SELECT CASE WHEN LOWER(me.role) = 'commissariat' THEN me.id
                                                        ELSE (SELECT c.id FROM signal_moi.users c WHERE LOWER(c.role) = 'commissariat' AND LOWER(COALESCE(c.quartier, '')) = LOWER(COALESCE(me.quartier, '')) LIMIT 1)
                                                      END FROM signal_moi.users me WHERE me.id = $1), $1::uuid)
+                      OR s.assigned_to IS NULL
+                    )`;
+
+                    let result;
+                    try {
+                        result = await db.query(`${baseSelect}
+                                                   WHERE ${recipientFilter}
                                                      AND (NOT EXISTS (SELECT 1 FROM signal_moi.police_signalement_types pst WHERE pst.recipient_id = s.assigned_to)
                                                        OR EXISTS (SELECT 1 FROM signal_moi.police_signalement_types pst WHERE pst.recipient_id = s.assigned_to AND pst.type_code = s.type))
-                                                     AND ${showArchive ? "s.statut IN ('traite', 'closed', 'fausse_alerte')" : "COALESCE(s.statut, 'nouveau') NOT IN ('traite', 'closed', 'fausse_alerte')"}
+                                                     AND ${statusFilter}
                                                    ORDER BY s.created_at DESC LIMIT $2`, [req.user.id, limit]);
+                    } catch (routingError) {
+                        // La migration 015 peut ne pas être encore exécutée en production.
+                        // Dans ce cas, afficher la file existante plutôt que retourner une page vide.
+                        if (routingError.code !== '42P01') throw routingError;
+                        result = await db.query(`${baseSelect}
+                                                   WHERE ${recipientFilter}
+                                                     AND ${statusFilter}
+                                                   ORDER BY s.created_at DESC LIMIT $2`, [req.user.id, limit]);
+                    }
                     const signalementIds = result.rows.map(r => r.id);
                     const filesBySignalement = {};
 

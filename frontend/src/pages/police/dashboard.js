@@ -53,6 +53,38 @@ export default function PoliceDashboard() {
   const liveVideoChunksRef = useRef({})
   const livePlaybackUrlsRef = useRef({})
   const liveAlertedRef = useRef({})
+  const stationLocationSentRef = useRef(false)
+
+  useEffect(() => {
+    if (authLoading || !user || !isCommissariatRole(user.role) || stationLocationSentRef.current) return
+    if (!navigator.geolocation) {
+      toast.info('La géolocalisation n’est pas disponible sur cet appareil.')
+      return
+    }
+
+    stationLocationSentRef.current = true
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const token = localStorage.getItem('token')
+          const response = await fetch(`${API_BASE}/api/law-enforcement/station-location`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ latitude: coords.latitude, longitude: coords.longitude })
+          })
+          if (!response.ok) throw new Error('Position non enregistrée')
+        } catch (error) {
+          stationLocationSentRef.current = false
+          console.warn('Enregistrement de la position du commissariat impossible:', error)
+        }
+      },
+      () => {
+        stationLocationSentRef.current = false
+        toast.info('Autorisez la position pour orienter les signalements vers votre commissariat.')
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 300000 }
+    )
+  }, [authLoading, user?.id, user?.role])
 
   useEffect(() => {
     if (authLoading || !user || !canAccessPoliceDashboard(user.role)) return
