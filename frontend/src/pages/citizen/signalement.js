@@ -971,9 +971,7 @@ export default function NewSignalement() {
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.22em] text-red-300">Signalement citoyen</p>
                 <h1 className="mt-3 max-w-3xl text-3xl font-black leading-tight sm:text-5xl">Alerter vite, clairement, avec la bonne position</h1>
-                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-200">
-                  Choisissez le probleme, confirmez la localisation et ajoutez une preuve si possible.
-                </p>
+                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-200">Choisissez, localisez, envoyez.</p>
               </div>
               <div className="grid gap-3 rounded-3xl border border-white/10 bg-white/10 p-4">
                 {['Choisir le probleme', 'Partager la position', 'Envoyer la preuve'].map((step, index) => (
@@ -1007,22 +1005,17 @@ export default function NewSignalement() {
 
               <section data-reveal className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
                 <div className="mb-5 flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-bold uppercase tracking-wide text-red-600">Etape facile</p>
-                    <h2 className="mt-1 text-2xl font-black text-slate-950">Donnez un petit nom au probleme</h2>
-                  </div>
+                  <div><h2 className="text-2xl font-black text-slate-950">Titre du signalement</h2></div>
                   <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">Facultatif</span>
                 </div>
                 <input type="text" name="titre" value={formData.titre} onChange={handleChange} className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-lg font-semibold text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-100" placeholder="Ex: Accident au marche" />
-                <p className="mt-3 text-sm text-slate-500">Si vous ne savez pas quoi ecrire, laissez vide: Signal-Moi remplira automatiquement.</p>
+                <p className="mt-3 text-sm text-slate-500">Facultatif.</p>
               </section>
 
               <section data-reveal className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-sm font-semibold uppercase tracking-wide text-red-600">Choisir avec un gros bouton</p>
-                    <h2 className="text-2xl font-black text-slate-950">Qu est-ce qui se passe ?</h2>
-                    <p className="mt-1 text-sm text-slate-500">Cliquez seulement sur l image qui ressemble au probleme.</p>
+                    <h2 className="text-2xl font-black text-slate-950">Quel est le problème ?</h2>
                   </div>
                   <button
                     type="button"
@@ -1067,7 +1060,7 @@ export default function NewSignalement() {
                   </button>
                 </div>
                 <textarea name="description" rows="5" value={formData.description} onChange={handleChange} className="w-full rounded-2xl border border-slate-300 px-5 py-4 text-lg outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100" placeholder="Dites simplement ce qui se passe..."></textarea>
-                <p className="mt-2 text-sm text-slate-500">Vous pouvez laisser vide: le bouton choisi mettra une phrase simple pour vous.</p>
+                <p className="mt-2 text-sm text-slate-500">Une phrase suffit.</p>
               </section>
 
               <section data-reveal className="overflow-hidden rounded-[1.75rem] border border-cyan-200 bg-gradient-to-br from-cyan-50 via-white to-blue-50 p-5 shadow-sm sm:p-7">

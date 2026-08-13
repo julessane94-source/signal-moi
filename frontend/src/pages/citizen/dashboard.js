@@ -314,14 +314,6 @@ export default function CitizenDashboard() {
       icon: Microphone,
       tone: 'bg-slate-950 text-white hover:bg-slate-800'
     },
-    {
-      title: 'Voir mes suivis',
-      text: 'Mes dossiers envoyés.',
-      href: '#signalements',
-      onClick: () => setActiveTab('signalements'),
-      icon: ArrowRight,
-      tone: 'bg-white text-slate-950 border border-slate-200 hover:bg-slate-50'
-    }
   ]
 
   // ✅ Afficher le loader pendant le chargement de l'auth OU des données
@@ -368,9 +360,6 @@ export default function CitizenDashboard() {
                 <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
                   Bonjour {user?.prenom || 'citoyen'}
                 </h1>
-                <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-200">
-                  Vos actions en un coup d’œil.
-                </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
                 <Link href="/citizen/signalement?alerte=1">
@@ -404,30 +393,14 @@ export default function CitizenDashboard() {
             </div>
           )}
 
-          <section className="mb-8 grid gap-4 lg:grid-cols-3">
-            {citizenHighlights.map((item) => {
-              const HighlightIcon = item.icon
-              return (
-                <div key={item.title} className={`rounded-2xl border bg-gradient-to-br p-5 shadow-sm ${item.tone}`}>
-                  <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-sm">
-                    <HighlightIcon className="h-6 w-6" />
-                  </div>
-                  <h2 className="text-lg font-black text-slate-950">{item.title}</h2>
-                  <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">{item.text}</p>
-                </div>
-              )
-            })}
-          </section>
-
           <section className="mb-8">
             <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-sm font-bold uppercase tracking-wide text-red-600">Action rapide</p>
-                <h2 className="text-2xl font-black text-slate-950">Que voulez-vous faire maintenant ?</h2>
+                <h2 className="text-2xl font-black text-slate-950">Que souhaitez-vous signaler ?</h2>
               </div>
-              <p className="max-w-xl text-sm font-semibold text-slate-500">Choisissez une action.</p>
             </div>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-3">
               {quickActions.map((action) => {
                 const Icon = action.icon
                 const content = (
@@ -455,29 +428,6 @@ export default function CitizenDashboard() {
               })}
             </div>
           </section>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
-          >
-            {dashboardStats.map((stat) => {
-              const StatIcon = stat.icon
-              return (
-                <div key={stat.label} className={`rounded-2xl border p-5 shadow-sm ${stat.tone}`}>
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-bold uppercase tracking-wide">{stat.label}</p>
-                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/80 shadow-sm">
-                      <StatIcon className="h-5 w-5" />
-                    </span>
-                  </div>
-                  <p className="mt-3 text-3xl font-black">{stat.value}</p>
-                  <p className="mt-1 text-xs font-semibold opacity-75">{stat.note}</p>
-                </div>
-              )
-            })}
-          </motion.div>
 
           {latestSignalements.length > 0 && (
             <section className="mb-8">
