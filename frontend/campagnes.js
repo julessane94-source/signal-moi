@@ -164,7 +164,8 @@ export default function Campagnes() {
                   <motion.article
                     key={campagne.id}
                     initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.18 }}
                     transition={{ delay: index * 0.08 }}
                     className="interactive-card group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
                   >

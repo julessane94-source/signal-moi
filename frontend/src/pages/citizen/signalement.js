@@ -964,10 +964,10 @@ export default function NewSignalement() {
 
   return (
     <>
-      <div className="min-h-screen bg-slate-100 pt-16">
+      <div data-reveal className="min-h-screen bg-slate-100 pt-16">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="mb-6 overflow-hidden rounded-[2rem] bg-slate-950 text-white shadow-2xl">
-            <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[1fr_320px] lg:items-end">
+          <div className="page-hero-animated mb-6 overflow-hidden rounded-[2rem] bg-slate-950 text-white shadow-2xl">
+            <div className="hero-copy-enter grid gap-8 p-6 sm:p-8 lg:grid-cols-[1fr_320px] lg:items-end">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.22em] text-red-300">Signalement citoyen</p>
                 <h1 className="mt-3 max-w-3xl text-3xl font-black leading-tight sm:text-5xl">Alerter vite, clairement, avec la bonne position</h1>
@@ -988,13 +988,14 @@ export default function NewSignalement() {
 
           <form onSubmit={handleSubmit} noValidate className="grid gap-6 lg:grid-cols-[1fr_340px]">
             <div className="space-y-6">
-              <section className="grid gap-4 md:grid-cols-3">
-                {STARTER_ACTIONS.map((action) => (
+              <section data-reveal className="card-stagger grid gap-4 md:grid-cols-3">
+                {STARTER_ACTIONS.map((action, index) => (
                   <button
                     key={action.type}
                     type="button"
                     onClick={() => startSimpleReport(action.type)}
-                    className={`min-h-40 rounded-[1.75rem] p-5 text-left shadow-lg transition hover:-translate-y-1 ${action.tone}`}
+                    style={{ '--card-index': index }}
+                    className={`interactive-card min-h-40 rounded-[1.75rem] p-5 text-left shadow-lg transition hover:-translate-y-1 ${action.tone}`}
                   >
                     <span className="text-xs font-black uppercase tracking-[0.16em] opacity-80">Action rapide</span>
                     <span className="mt-4 block text-2xl font-black leading-tight">{action.title}</span>
@@ -1004,7 +1005,7 @@ export default function NewSignalement() {
                 ))}
               </section>
 
-              <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+              <section data-reveal className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
                 <div className="mb-5 flex items-start justify-between gap-4">
                   <div>
                     <p className="text-sm font-bold uppercase tracking-wide text-red-600">Etape facile</p>
@@ -1016,7 +1017,7 @@ export default function NewSignalement() {
                 <p className="mt-3 text-sm text-slate-500">Si vous ne savez pas quoi ecrire, laissez vide: Signal-Moi remplira automatiquement.</p>
               </section>
 
-              <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+              <section data-reveal className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-sm font-semibold uppercase tracking-wide text-red-600">Choisir avec un gros bouton</p>
@@ -1058,7 +1059,7 @@ export default function NewSignalement() {
                 </select>
               </section>
 
-              <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+              <section data-reveal className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
                 <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <label className="block text-lg font-black text-slate-900">Expliquez avec vos mots</label>
                   <button type="button" onClick={startDescriptionDictation} className={`rounded-2xl px-4 py-3 text-sm font-bold transition ${isListening ? 'bg-red-600 text-white' : 'bg-slate-950 text-white hover:bg-slate-800'}`}>
@@ -1069,7 +1070,7 @@ export default function NewSignalement() {
                 <p className="mt-2 text-sm text-slate-500">Vous pouvez laisser vide: le bouton choisi mettra une phrase simple pour vous.</p>
               </section>
 
-              <section className="overflow-hidden rounded-[1.75rem] border border-cyan-200 bg-gradient-to-br from-cyan-50 via-white to-blue-50 p-5 shadow-sm sm:p-7">
+              <section data-reveal className="overflow-hidden rounded-[1.75rem] border border-cyan-200 bg-gradient-to-br from-cyan-50 via-white to-blue-50 p-5 shadow-sm sm:p-7">
                 <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <p className="text-sm font-black uppercase tracking-wide text-cyan-700">Signalement vocal</p>
@@ -1124,7 +1125,7 @@ export default function NewSignalement() {
                 {audioRecordingError && <p className="mt-4 rounded-2xl bg-red-50 p-3 text-sm font-semibold text-red-700">{audioRecordingError}</p>}
               </section>
 
-              <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+              <section data-reveal className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-sm font-bold uppercase tracking-wide text-blue-700">Position</p>
@@ -1142,7 +1143,7 @@ export default function NewSignalement() {
                 </div>
               </section>
 
-              <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+              <section data-reveal className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
                 <div className="mb-4">
                   <p className="text-sm font-bold uppercase tracking-wide text-emerald-700">Preuves</p>
                   <h2 className="text-2xl font-black text-slate-950">Ajouter photo, video ou audio</h2>

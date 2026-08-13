@@ -124,8 +124,8 @@ export default function About() {
 
       <main className="min-h-screen bg-gray-50 pt-16">
         {/* Hero Section */}
-        <section className="bg-gradient-to-r from-indigo-700 via-violet-700 to-purple-700 text-white py-20 shadow-xl">
-          <div className="max-w-5xl mx-auto px-4 text-center">
+        <section className="page-hero-animated overflow-hidden bg-gradient-to-r from-indigo-700 via-violet-700 to-purple-700 text-white py-20 shadow-xl">
+          <div className="hero-copy-enter max-w-5xl mx-auto px-4 text-center">
             <motion.div
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
@@ -155,18 +155,16 @@ export default function About() {
         {/* Statistiques */}
         <section className="py-16 bg-white">
           <div className="max-w-6xl mx-auto px-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="card-stagger grid grid-cols-2 md:grid-cols-4 gap-8">
               {stats.map((stat, index) => (
-                <motion.div
+                <div
                   key={index}
-                  initial={{ opacity: 0, scale: 0.96 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="section-card p-8 text-center"
+                  style={{ '--card-index': index }}
+                  className="interactive-card section-card p-8 text-center"
                 >
                   <div className="text-3xl md:text-4xl font-bold text-indigo-600">{stat.value}</div>
                   <div className="text-slate-600 mt-2">{stat.label}</div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
@@ -222,18 +220,18 @@ export default function About() {
         <section className="py-16 bg-white">
           <div className="max-w-4xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-center text-slate-900 mb-8">Nos valeurs</h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="section-card p-8 text-center">
+            <div className="card-stagger grid md:grid-cols-3 gap-8">
+              <div className="interactive-card section-card p-8 text-center">
                 <div className="text-5xl mb-4">🔒</div>
                 <h3 className="text-xl font-semibold mb-2">Confidentialite</h3>
                 <p className="text-slate-600">Vos donnees sont protegees. Signalez anonymement si vous le souhaitez.</p>
               </div>
-              <div className="section-card p-8 text-center">
+              <div className="interactive-card section-card p-8 text-center">
                 <div className="text-5xl mb-4">⚡</div>
                 <h3 className="text-xl font-semibold mb-2">Rapidite</h3>
                 <p className="text-slate-600">Notifications en temps reel pour une intervention rapide.</p>
               </div>
-              <div className="section-card p-8 text-center">
+              <div className="interactive-card section-card p-8 text-center">
                 <div className="text-5xl mb-4">🤝</div>
                 <h3 className="text-xl font-semibold mb-2">Transparence</h3>
                 <p className="text-slate-600">Suivez l'evolution de vos signalements a chaque etape.</p>
@@ -260,21 +258,19 @@ export default function About() {
                 Aucun partenaire collaborateur enregistre pour le moment.
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="card-stagger grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {collaborators.map((collab, idx) => (
-                  <motion.div
+                  <div
                     key={collab.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition"
+                    style={{ '--card-index': idx }}
+                    className="interactive-card bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition"
                   >
                     <div className="text-4xl mb-3">🏢</div>
                     <h3 className="font-semibold text-lg text-gray-900">{collab.prenom} {collab.nom}</h3>
                     <p className="text-sm text-gray-600 mt-1">{collab.email}</p>
                     {collab.telephone && <p className="text-sm text-gray-600">📞 {collab.telephone}</p>}
                     {collab.ville && <p className="text-sm text-gray-600">📍 {collab.ville}</p>}
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             )}
@@ -301,21 +297,19 @@ export default function About() {
                 Aucun agent d'autorite enregistre pour le moment.
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="card-stagger grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {police.map((agent, idx) => (
-                  <motion.div
+                  <div
                     key={agent.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className="section-card p-6 text-center"
+                    style={{ '--card-index': idx }}
+                    className="interactive-card section-card p-6 text-center"
                   >
                     <div className="text-4xl mb-3">👮</div>
                     <h3 className="font-semibold text-lg text-slate-900">{agent.prenom} {agent.nom}</h3>
                     <p className="text-sm text-slate-600 mt-1">{agent.email}</p>
                     {agent.telephone && <p className="text-sm text-slate-600">📞 {agent.telephone}</p>}
                     {agent.ville && <p className="text-sm text-slate-600">📍 {agent.ville}</p>}
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             )}
@@ -328,20 +322,18 @@ export default function About() {
               <h2 className="mt-3 text-3xl font-bold text-slate-900">Les personnes qui portent la vision de Signal-Moi</h2>
               <p className="mt-3 text-slate-600">Une équipe engagée, humaine et orientée impact pour renforcer la confiance entre citoyens, institutions et partenaires.</p>
             </div>
-            <div className="grid gap-8 md:grid-cols-3">
+            <div className="card-stagger grid gap-8 md:grid-cols-3">
               {team.map((member, index) => (
-                <motion.div
+                <div
                   key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="section-card rounded-3xl p-8 text-center shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
+                  style={{ '--card-index': index }}
+                  className="interactive-card section-card rounded-3xl p-8 text-center shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
                 >
                   <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-100 to-violet-100 text-4xl shadow-inner">{member.image}</div>
                   <h3 className="mt-5 text-xl font-semibold text-slate-900">{member.name}</h3>
                   <p className="mt-1 text-indigo-600 font-semibold">{member.role}</p>
                   <p className="mt-3 text-slate-600 text-sm leading-6">{member.description}</p>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
