@@ -699,8 +699,8 @@ export default function PoliceDashboard() {
                   </h1>
                   <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300 md:text-base">
                     {isCommissariat
-                      ? `Bienvenue ${user?.prenom || ''} ${user?.nom || ''}. Vous coordonnez ${commissariatName}, ses agents, les alertes et les lives en temps reel.`
-                      : `Bienvenue agent ${user?.prenom || ''} ${user?.nom || ''}. Vous etes rattache a ${commissariatName} pour intervenir sur les dossiers terrain.`}
+                      ? `${user?.prenom || ''} ${user?.nom || ''} · ${commissariatName}`
+                      : `${user?.prenom || ''} ${user?.nom || ''} · ${commissariatName}`}
                   </p>
                   <div className="mt-5 flex flex-wrap gap-2 text-xs font-bold">
                     <span className="rounded-full bg-white/10 px-3 py-1 text-slate-100">{commissariatName}</span>
@@ -815,7 +815,7 @@ export default function PoliceDashboard() {
                     <p className="text-xs font-black uppercase tracking-wide text-blue-700">Coordination operationnelle</p>
                     <h2 className="mt-1 text-xl font-black text-slate-950">{commissariatName}</h2>
                     <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
-                      Le commissariat supervise les agents, affecte les dossiers, suit les lives citoyens et coordonne les interventions.
+                      Agents, dossiers et interventions.
                     </p>
                   </div>
                 </div>
@@ -876,7 +876,7 @@ export default function PoliceDashboard() {
                     </div>
                   </div>
                   <p className="text-sm font-semibold leading-6 text-slate-600">
-                    Votre compte agent est séparé du commissariat. Vous traitez les interventions, contactez la victime et remontez vos actions au centre de coordination.
+                    Interventions et suivi terrain.
                   </p>
                 </div>
               </div>
@@ -913,7 +913,7 @@ export default function PoliceDashboard() {
                 <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                   <p className="text-xs font-black uppercase tracking-wide text-slate-500">Priorité actuelle</p>
                   <p className="mt-1 text-sm font-semibold leading-6 text-slate-700">
-                    Ouvrez d'abord les urgences, utilisez Localiser pour rejoindre le lieu, puis marquez le dossier en cours ou traité.
+                    Traitez d’abord les urgences.
                   </p>
                 </div>
               </div>

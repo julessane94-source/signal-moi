@@ -38,7 +38,7 @@ export default function PlaidoyersPage() {
 
       <div className="min-h-screen bg-gray-50 pt-20">
         <div className="max-w-6xl mx-auto px-4 py-8">
-          <div className="mb-8 rounded-3xl bg-gradient-to-r from-purple-700 via-fuchsia-600 to-indigo-700 p-10 text-white shadow-2xl shadow-fuchsia-500/20">
+          <div className="page-hero-animated mb-8 rounded-3xl bg-gradient-to-r from-purple-700 via-fuchsia-600 to-indigo-700 p-10 text-white shadow-2xl shadow-fuchsia-500/20">
             <p className="text-sm uppercase tracking-[0.3em] text-cyan-200 mb-3">Plaidoyers</p>
             <h1 className="text-4xl md:text-5xl font-extrabold mb-4">Plaidoyers en action</h1>
             <p className="text-base md:text-lg text-slate-100 max-w-3xl leading-relaxed mb-8">
@@ -61,12 +61,12 @@ export default function PlaidoyersPage() {
           ) : error ? (
             <div className="bg-red-100 border border-red-300 rounded-lg p-4 text-red-700">{error}</div>
           ) : (
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="card-stagger grid md:grid-cols-2 gap-6">
               {plaidoyers.length === 0 ? (
                 <div className="bg-white rounded-xl shadow-md p-8 text-center">Aucun plaidoyer pour le moment</div>
               ) : (
-                plaidoyers.map(p => (
-                  <div key={p.id} className="bg-white rounded-xl shadow p-6">
+                plaidoyers.map((p, index) => (
+                  <div key={p.id} style={{ '--card-index': index }} className="interactive-card bg-white rounded-xl shadow p-6">
                     <div className="flex flex-col gap-4">
                       <div>
                         <h3 className="font-semibold text-xl text-gray-900">{p.titre}</h3>

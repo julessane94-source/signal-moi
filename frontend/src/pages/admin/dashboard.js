@@ -644,7 +644,7 @@ export default function AdminDashboard() {
               <BarChart className="h-10 w-10 text-indigo-600" />
               Tableau de bord administrateur
             </h1>
-            <p className="text-gray-600 mt-2">Gérez les utilisateurs, les signalements et la configuration du site</p>
+            <p className="text-gray-600 mt-2">Utilisateurs, contenus et réglages.</p>
           </motion.div>
 
           {/* Tabs Navigation */}
@@ -1603,7 +1603,7 @@ export default function AdminDashboard() {
             <FormField label="Types de signalements reçus">
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4">
                 <p className="mb-3 text-sm text-emerald-900">
-                  Choisissez les signalements qui apparaîtront dans le tableau de bord de ce collaborateur. Ce réglage reste modifiable à tout moment.
+                  Types visibles pour ce collaborateur. Modifiable à tout moment.
                 </p>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {signalementTypes.map((type) => {

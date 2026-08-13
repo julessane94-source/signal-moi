@@ -91,9 +91,9 @@ export default function Campagnes() {
 
       <main className="min-h-screen bg-gradient-to-b from-slate-900 via-indigo-900 to-slate-800 pt-16">
         {/* Hero */}
-        <section className="relative overflow-hidden bg-slate-950 text-white py-12 sm:py-16">
+        <section className="page-hero-animated relative overflow-hidden bg-slate-950 text-white py-12 sm:py-16">
           <div className="pointer-events-none absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.18),_transparent_18%),radial-gradient(circle_at_top_right,_rgba(168,85,247,0.18),_transparent_20%),radial-gradient(circle_at_bottom,_rgba(14,165,233,0.14),_transparent_22%)]" />
-          <div className="relative max-w-6xl mx-auto px-4 sm:px-6 text-center">
+          <div className="hero-copy-enter relative max-w-6xl mx-auto px-4 sm:px-6 text-center">
             <p className="mb-4 text-sm uppercase tracking-[0.35em] text-cyan-200">Mobilisation citoyenne</p>
             <h1 className="mx-auto max-w-4xl text-3xl md:text-4xl font-black tracking-tight text-white">Campagnes engagées pour un quartier plus solidaire</h1>
             <p className="mx-auto mt-4 max-w-3xl text-base md:text-lg text-slate-200 leading-7">
@@ -107,13 +107,13 @@ export default function Campagnes() {
                 📩 Nous contacter
               </a>
             </div>
-            <div className="mt-6 grid gap-3 text-left md:grid-cols-3">
+            <div className="card-stagger mt-6 grid gap-3 text-left md:grid-cols-3">
               {[
                 ['+120', 'Actions mobilisées'],
                 ['24/7', 'Suivi des initiatives'],
                 ['100%', 'Participation citoyenne']
-              ].map(([value, label]) => (
-                <div key={label} className="rounded-2xl border border-white/10 bg-white/10 p-3 shadow-lg shadow-slate-900/15 backdrop-blur-md">
+              ].map(([value, label], index) => (
+                <div key={label} style={{ '--card-index': index }} className="interactive-card rounded-2xl border border-white/10 bg-white/10 p-3 shadow-lg shadow-slate-900/15 backdrop-blur-md">
                   <div className="text-xl font-bold text-white">{value}</div>
                   <div className="text-xs text-slate-200">{label}</div>
                 </div>
@@ -166,7 +166,7 @@ export default function Campagnes() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.08 }}
-                    className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
+                    className="interactive-card group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
                   >
                     <div className="p-4">
                       <div className="mb-3 flex items-center justify-between gap-2">

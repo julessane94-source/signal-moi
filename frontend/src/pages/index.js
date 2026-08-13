@@ -157,7 +157,7 @@ export default function Home() {
       </Head>
 
       <main className="min-h-screen overflow-x-hidden pt-16 bg-white">
-        <section className="relative overflow-hidden bg-slate-950 text-white">
+        <section className="page-hero-animated relative overflow-hidden bg-slate-950 text-white">
           {slideshowImages.length > 0 && (
             <Image
               key={`hero-bg-${slideIndex}`}
@@ -173,7 +173,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,6,23,0.88)_0%,rgba(2,6,23,0.58)_48%,rgba(2,6,23,0.22)_100%)]" />
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 lg:py-16">
             <div className="grid min-w-0 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.92fr)] lg:gap-10">
-              <div className="min-w-0 max-w-3xl">
+              <div className="hero-copy-enter min-w-0 max-w-3xl">
                 <div className="inline-flex max-w-full items-center gap-3 border border-white/15 bg-white/15 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-50 sm:px-4 sm:text-xs sm:tracking-[0.24em]">
                   <img src={getImageUrl(config.logoUrl)} alt="Logo Signal-Moi" className="h-7 w-7 rounded object-cover" />
                   <span className="truncate">Signal-Moi Sédhiou</span>
@@ -213,8 +213,8 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="min-w-0 w-full">
-                <div className="overflow-hidden border border-white/10 bg-white/10 shadow-2xl">
+              <div className="hero-visual-float min-w-0 w-full">
+                <div className="overflow-hidden border border-white/10 bg-white/10 shadow-2xl transition duration-500 hover:shadow-emerald-400/20">
                   {slideshowImages.length > 0 ? (
                     <div className="relative">
                       <div className="relative h-[360px] w-full bg-slate-950 sm:h-[440px]">
@@ -285,16 +285,16 @@ export default function Home() {
 
         <section className="border-b border-slate-200 bg-white py-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="grid gap-4 md:grid-cols-3">
-              {actionCards.map((item) => (
+            <div className="card-stagger grid gap-4 md:grid-cols-3">
+              {actionCards.map((item, index) => (
                 item.restricted ? (
-                  <article key={item.title} className="border border-slate-200 bg-slate-50 p-6">
+                  <article key={item.title} style={{ '--card-index': index }} className="interactive-card border border-slate-200 bg-slate-50 p-6">
                     <p className="text-sm font-semibold uppercase tracking-wide text-slate-600">{item.title}</p>
                     <p className="mt-3 text-lg font-bold text-slate-950">{item.text}</p>
                     <span className="mt-5 inline-block text-sm font-semibold text-slate-500">Acces securise</span>
                   </article>
                 ) : (
-                  <Link key={item.title} href={item.href} className="group border border-slate-200 bg-white p-6 transition hover:border-emerald-300 hover:bg-emerald-50">
+                  <Link key={item.title} href={item.href} style={{ '--card-index': index }} className="interactive-card group border border-slate-200 bg-white p-6 transition hover:border-emerald-300 hover:bg-emerald-50">
                     <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">{item.title}</p>
                     <p className="mt-3 text-lg font-bold text-slate-950 group-hover:text-emerald-900">{item.text}</p>
                     <span className="mt-5 inline-block text-sm font-semibold text-slate-700">Ouvrir →</span>
@@ -313,9 +313,9 @@ export default function Home() {
                 <h2 className="mt-3 text-3xl font-black text-slate-950 md:text-4xl">Une plateforme structurée pour agir localement.</h2>
                 <p className="mt-4 text-slate-600">Chaque signalement rassemble les informations utiles: description, localisation, pièces jointes et suivi. Les équipes peuvent alors prioriser sans perdre de temps.</p>
               </div>
-              <div className="grid min-w-0 gap-4 md:grid-cols-3">
-                {features.map((feature) => (
-                  <article key={feature.title} className="border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="card-stagger grid min-w-0 gap-4 md:grid-cols-3">
+                {features.map((feature, index) => (
+                  <article key={feature.title} style={{ '--card-index': index }} className="interactive-card border border-slate-200 bg-white p-5 shadow-sm">
                     <div className="text-sm font-black text-emerald-700">{feature.icon}</div>
                     <h3 className="mt-4 text-lg font-bold text-slate-950">{feature.title}</h3>
                     <p className="mt-2 text-sm leading-6 text-slate-600">{feature.text}</p>

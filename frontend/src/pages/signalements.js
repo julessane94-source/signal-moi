@@ -73,9 +73,9 @@ export default function SignalementsPublic() {
       </Head>
 
       <main className="min-h-screen bg-slate-50 pt-16">
-        <section className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-700 to-purple-700 text-white py-20">
+        <section className="page-hero-animated relative overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-700 to-purple-700 text-white py-20">
           <div className="pointer-events-none absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.22),_transparent_25%),radial-gradient(circle_at_bottom_right,_rgba(59,130,246,0.22),_transparent_25%)]" />
-          <div className="relative max-w-6xl mx-auto px-4 text-center">
+          <div className="hero-copy-enter relative max-w-6xl mx-auto px-4 text-center">
             <span className="inline-flex rounded-full bg-white/10 px-4 py-2 text-xs uppercase tracking-[0.35em] text-slate-200 mb-6">Signalements publics</span>
             <h1 className="text-4xl md:text-5xl font-extrabold mb-4">Transparence locale, action citoyenne</h1>
             <p className="text-lg md:text-xl text-slate-200 max-w-3xl mx-auto leading-relaxed">
@@ -128,9 +128,9 @@ export default function SignalementsPublic() {
                 <p className="text-gray-500">Aucun signalement dans cette categorie</p>
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="card-stagger grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredSignalements.map((s, i) => (
-                  <div key={s.id} className="section-card overflow-hidden hover:shadow-xl transition">
+                  <div key={s.id} style={{ '--card-index': i }} className="interactive-card section-card overflow-hidden hover:shadow-xl transition">
                     <div className="p-5">
                       <div className="flex items-center justify-between mb-3">
                         <span className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-sm">

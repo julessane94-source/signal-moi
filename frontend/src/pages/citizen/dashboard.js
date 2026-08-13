@@ -257,20 +257,20 @@ export default function CitizenDashboard() {
 
   const citizenHighlights = [
     {
-      title: 'Signaler sans se perdre',
-      text: 'Boutons simples, GPS, audio, video et photos selon la situation.',
+      title: 'Signaler simplement',
+      text: 'GPS, audio, vidéo et photo.',
       icon: ShieldCheck,
       tone: 'from-red-50 to-white text-red-700 border-red-100'
     },
     {
       title: 'Suivi visible',
-      text: 'Chaque dossier garde son statut, ses pieces et son historique.',
+      text: 'Statut et historique du dossier.',
       icon: Clock,
       tone: 'from-blue-50 to-white text-blue-700 border-blue-100'
     },
     {
       title: 'Aide locale',
-      text: 'Campagnes, plaidoyers et collaborateurs restent accessibles.',
+      text: 'Campagnes et plaidoyers.',
       icon: UserGroup,
       tone: 'from-emerald-50 to-white text-emerald-700 border-emerald-100'
     }
@@ -295,28 +295,28 @@ export default function CitizenDashboard() {
   const quickActions = [
     {
       title: 'Urgence maintenant',
-      text: 'Ouvre le signalement avec GPS et video.',
+      text: 'GPS et vidéo.',
       href: '/citizen/signalement?alerte=1',
       icon: BellAlert,
       tone: 'bg-red-600 text-white hover:bg-red-700'
     },
     {
       title: 'Accident ou blessure',
-      text: 'Prépare un signalement accident simple.',
+      text: 'Signaler un accident.',
       href: '/citizen/signalement?type=accident',
       icon: ShieldCheck,
       tone: 'bg-orange-500 text-white hover:bg-orange-600'
     },
     {
       title: 'Problème du quartier',
-      text: 'Route, lumière, vol ou autre situation.',
+      text: 'Route, lumière, vol…',
       href: '/citizen/signalement?type=autre',
       icon: Microphone,
       tone: 'bg-slate-950 text-white hover:bg-slate-800'
     },
     {
       title: 'Voir mes suivis',
-      text: 'Contrôler les dossiers déjà envoyés.',
+      text: 'Mes dossiers envoyés.',
       href: '#signalements',
       onClick: () => setActiveTab('signalements'),
       icon: ArrowRight,
@@ -366,10 +366,10 @@ export default function CitizenDashboard() {
               <div>
                 <p className="text-sm font-semibold uppercase tracking-wide text-red-300">Espace citoyen</p>
                 <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
-                  Bonjour {user?.prenom || 'citoyen'}, suivez vos actions a Sedhiou.
+                  Bonjour {user?.prenom || 'citoyen'}
                 </h1>
                 <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-200">
-                  Retrouvez vos signalements, campagnes et plaidoyers dans un tableau de bord clair, rapide a parcourir.
+                  Vos actions en un coup d’œil.
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
@@ -393,8 +393,8 @@ export default function CitizenDashboard() {
           {locationStatus !== 'granted' && (
             <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm">
               {locationStatus === 'denied'
-                ? 'GPS bloque par le navigateur. Ouvrez les parametres du site, autorisez la localisation, puis cliquez sur Partager ma position.'
-                : 'Autorisez le GPS dans votre navigateur pour que la carte et la police recoivent votre vraie position, pas une ville approximative.'}
+                ? 'GPS bloqué. Autorisez la localisation dans le navigateur.'
+                : 'Activez le GPS pour partager votre position précise.'}
             </div>
           )}
 
@@ -425,7 +425,7 @@ export default function CitizenDashboard() {
                 <p className="text-sm font-bold uppercase tracking-wide text-red-600">Action rapide</p>
                 <h2 className="text-2xl font-black text-slate-950">Que voulez-vous faire maintenant ?</h2>
               </div>
-              <p className="max-w-xl text-sm font-semibold text-slate-500">Touchez un gros bouton. Le formulaire se remplit automatiquement pour vous guider.</p>
+              <p className="max-w-xl text-sm font-semibold text-slate-500">Choisissez une action.</p>
             </div>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               {quickActions.map((action) => {

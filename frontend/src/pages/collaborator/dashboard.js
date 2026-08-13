@@ -269,7 +269,7 @@ export default function CollaboratorDashboard() {
                   Bonjour {user?.prenom || 'collaborateur'}
                 </h1>
                 <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-200 md:text-base">
-                  Pilotez les campagnes, suivez les dossiers importants et exportez les statistiques locales depuis un espace plus clair.
+                  Campagnes, dossiers et statistiques.
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
@@ -497,7 +497,7 @@ export default function CollaboratorDashboard() {
             <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="mb-4">
                 <h3 className="font-black text-slate-950">Telechargements</h3>
-                <p className="text-sm text-slate-500">Exportez les dossiers ou les statistiques pour vos rapports.</p>
+                <p className="text-sm text-slate-500">Dossiers et statistiques.</p>
               </div>
               <div className="flex gap-3 flex-wrap">
               <motion.button
@@ -678,7 +678,7 @@ export default function CollaboratorDashboard() {
                   <div className="text-center py-8">
                     <Bookmark className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                     <p className="text-gray-500 mb-4">Vous ne suivez aucun dossier</p>
-                    <p className="text-sm text-gray-400">Les dossiers que vous suivez apparaîtront ici</p>
+                    <p className="text-sm text-gray-400">Vos dossiers suivis apparaîtront ici.</p>
                   </div>
                 ) : (
                   <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -743,7 +743,7 @@ export default function CollaboratorDashboard() {
               <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
                 <DocumentText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                 <p className="text-gray-600 text-lg">Aucun signalement assigné</p>
-                <p className="text-gray-500 mt-2">Les signalements vous seront assignés au fur et à mesure</p>
+                <p className="text-gray-500 mt-2">Les nouveaux dossiers apparaîtront ici.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
