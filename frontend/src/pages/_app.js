@@ -8,6 +8,7 @@ import Navbar from '../components/common/Navbar'
 import EmergencyButtons from '../components/common/EmergencyButtons'
 import Footer from '../components/common/Footer'
 import Chatbot from '../components/Chatbot'
+import PageReveal from '../components/common/PageReveal'
 import Head from 'next/head'
 import '../styles/globals.css'
 import 'react-toastify/dist/ReactToastify.css'
@@ -41,6 +42,7 @@ function MyApp({ Component, pageProps }) {
         <SocketProvider>
           {!hideNavbar && <Navbar />}
           {!hideNavbar && <EmergencyButtons />}
+          {hasPublicLayout && <PageReveal />}
           <div className={hasPublicLayout ? 'site-page-shell' : undefined}>
             <Component {...pageProps} />
           </div>

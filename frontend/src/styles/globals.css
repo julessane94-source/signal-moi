@@ -64,6 +64,26 @@ body {
   transform: translateY(-1px);
 }
 
+.content-reveal {
+  opacity: 0;
+  transform: translateY(24px) scale(0.992);
+  transition: opacity 640ms cubic-bezier(.22, 1, .36, 1), transform 640ms cubic-bezier(.22, 1, .36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.content-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .content-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
 img,
 iframe,
 video,

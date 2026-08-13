@@ -211,6 +211,22 @@ router.get('/users', authMiddleware, async (req, res) => {
     `);
     res.json(result.rows);
   } catch (err) {
+    // La liste des utilisateurs doit rester disponible tant que la migration
+    // d'attribution aux collaborateurs n'a pas encore ete appliquee.
+    if (err.code === '42P01' || String(err.message || '').includes('collaborator_signalement_types')) {
+      try {
+        const fallback = await db.query(`
+          SELECT id, prenom, nom, email, telephone, ville, quartier, role, is_active,
+            '{}'::text[] AS signalement_types
+          FROM signal_moi.users
+          WHERE is_active = true
+          ORDER BY created_at DESC
+        `);
+        return res.json(fallback.rows);
+      } catch (fallbackErr) {
+        console.error('[ADMIN GET /users] Erreur fallback:', fallbackErr);
+      }
+    }
     console.error('[ADMIN GET /users] Erreur:', err);
     res.status(500).json({ error: 'Erreur serveur', details: err.message });
   }

@@ -177,6 +177,10 @@ export default function AdminDashboard() {
       const res = await fetch(`${base}/api/admin/users`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
+      if (!res.ok) {
+        const errorBody = await res.json().catch(() => ({}))
+        throw new Error(errorBody.error || 'Chargement des utilisateurs impossible')
+      }
       const data = await res.json()
       const userRows = Array.isArray(data) ? data : []
       setUsers(userRows)

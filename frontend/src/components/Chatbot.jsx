@@ -116,6 +116,8 @@ const QUICK_ACTIONS = [
   { label: 'Stats', text: 'Comment telecharger les statistiques ?' }
 ]
 
+const EMERGENCY_WORDS = ['urgence', 'urgent', 'danger', 'violence', 'agression', 'accident', 'incendie', 'vol']
+
 const PAGE_HELP = {
   '/citizen/signalement': 'Vous etes sur la page de signalement. Choisissez un gros bouton, ajoutez votre position, puis envoyez.',
   '/citizen/dashboard': 'Vous etes dans votre espace citoyen. Vous pouvez suivre vos signalements, participer aux campagnes et signer les plaidoyers.',
@@ -186,7 +188,9 @@ export default function Chatbot() {
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(false)
+  const [listening, setListening] = useState(false)
   const listRef = useRef(null)
+  const recognitionRef = useRef(null)
   const CHAT_API = process.env.NEXT_PUBLIC_CHAT_API || ''
 
   const pageHelp = useMemo(() => PAGE_HELP[router.pathname] || null, [router.pathname])
@@ -215,6 +219,15 @@ export default function Chatbot() {
 
   const findBestAnswer = (text) => {
     const clean = normalizeText(text)
+    if (EMERGENCY_WORDS.some((word) => clean.includes(word))) {
+      return {
+        text: 'Votre message semble concerner une urgence. Si vous pouvez le faire sans vous mettre en danger, créez immédiatement un signalement avec votre localisation et une preuve. Ne partagez jamais vos codes secrets ici.',
+        links: [
+          { label: 'Signaler maintenant', href: '/citizen/signalement' },
+          { label: 'Contacter l’équipe', href: '/contact' }
+        ]
+      }
+    }
     if (/^(bonjour|salut|bonsoir|hello|salam)/.test(clean)) {
       return {
         text: 'Bonjour. Je suis SUPERMAN. Je peux vous guider pas a pas sur Signal-Moi. Dites simplement ce que vous voulez faire: signaler, participer a une campagne, suivre un dossier, contacter l equipe ou telecharger des statistiques.',
@@ -300,24 +313,55 @@ export default function Chatbot() {
     }
   }
 
+  const toggleVoiceInput = () => {
+    if (typeof window === 'undefined') return
+    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!Recognition) {
+      setMessages((current) => [...current, {
+        from: 'bot',
+        text: 'La saisie vocale n’est pas disponible dans ce navigateur. Vous pouvez écrire votre question.',
+        ts: Date.now()
+      }])
+      return
+    }
+    if (recognitionRef.current && listening) {
+      recognitionRef.current.stop()
+      return
+    }
+    const recognition = new Recognition()
+    recognition.lang = 'fr-FR'
+    recognition.interimResults = false
+    recognition.continuous = false
+    recognition.onstart = () => setListening(true)
+    recognition.onend = () => setListening(false)
+    recognition.onerror = () => setListening(false)
+    recognition.onresult = (event) => setInput(event.results[0][0].transcript)
+    recognitionRef.current = recognition
+    recognition.start()
+  }
+
   return (
-    <div className="fixed bottom-6 right-4 z-50">
+    <div className="fixed bottom-5 right-4 z-50 sm:bottom-6">
       <div className="flex items-end justify-end">
         {open && (
-          <div className="w-[21rem] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl sm:w-96">
-            <div className="bg-slate-950 px-4 py-3 text-white">
+          <div role="dialog" aria-label="SUPERMAN, assistant Signal-Moi" className="w-[calc(100vw-2rem)] overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-white shadow-[0_30px_90px_rgba(15,23,42,.28)] sm:w-[25rem]">
+            <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 px-4 py-4 text-white">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <SupermanAvatar />
                   <div>
-                    <p className="text-sm font-bold">SUPERMAN</p>
-                    <p className="text-xs text-slate-300">{CHAT_API ? 'IA connectee' : 'IA integree prete a brancher'}</p>
+                    <p className="text-sm font-extrabold tracking-wide">SUPERMAN</p>
+                    <p className="text-xs text-emerald-100">{CHAT_API ? 'Assistant IA connecté' : 'Assistant intelligent Signal-Moi'}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={clearHistory} className="text-xs text-slate-300 hover:text-white">Effacer</button>
                   <button onClick={() => setOpen(false)} className="text-sm text-slate-200 hover:text-white">X</button>
                 </div>
+              </div>
+              <div className="mt-3 flex items-center gap-2 text-[11px] text-emerald-100">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                Disponible pour vous guider
               </div>
               {pageHelp && (
                 <button onClick={() => send('aide de cette page')} className="mt-3 w-full rounded-xl bg-white/10 px-3 py-2 text-left text-xs text-slate-100 hover:bg-white/15">
@@ -326,24 +370,24 @@ export default function Chatbot() {
               )}
             </div>
 
-            <div className="flex gap-2 overflow-x-auto border-b border-slate-200 bg-slate-50 p-2">
+            <div className="flex gap-2 overflow-x-auto border-b border-slate-200 bg-slate-50/80 p-3">
               {QUICK_ACTIONS.map((item) => (
                 <button
                   key={item.label}
                   onClick={() => send(item.text)}
-                  className="whitespace-nowrap rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                  className="whitespace-nowrap rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm hover:border-emerald-300 hover:bg-emerald-50"
                 >
                   {item.label}
                 </button>
               ))}
             </div>
 
-            <div ref={listRef} className="max-h-80 space-y-3 overflow-y-auto bg-white p-3">
+            <div ref={listRef} className="max-h-[22rem] space-y-3 overflow-y-auto bg-white p-4">
               {messages.map((message, index) => (
                 <div key={index} className={`flex ${message.from === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`flex max-w-[92%] items-end gap-2 ${message.from === 'user' ? 'flex-row-reverse' : ''}`}>
                     {message.from === 'bot' && <SupermanAvatar className="h-8 w-8" />}
-                    <div className={`max-w-[85%] rounded-2xl p-3 text-sm shadow-sm ${message.from === 'user' ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-900'}`}>
+                    <div className={`max-w-[85%] rounded-2xl p-3 text-sm leading-6 shadow-sm ${message.from === 'user' ? 'bg-slate-950 text-white' : 'border border-slate-100 bg-slate-50 text-slate-900'}`}>
                       <div className="whitespace-pre-line">{message.text}</div>
                       {Array.isArray(message.links) && message.links.length > 0 && (
                         <div className="mt-3 flex flex-wrap gap-2">
@@ -365,7 +409,7 @@ export default function Chatbot() {
                   </div>
                 </div>
               ))}
-              {loading && <div className="text-sm text-slate-500">Je reflechis...</div>}
+              {loading && <div className="flex items-center gap-2 text-sm text-slate-500"><span className="h-2 w-2 animate-bounce rounded-full bg-emerald-500" />SUPERMAN réfléchit...</div>}
             </div>
 
             <div className="border-t border-slate-200 bg-slate-50 p-3">
@@ -376,11 +420,14 @@ export default function Chatbot() {
                 placeholder="Ecrivez votre question..."
                 className="max-h-24 min-h-[48px] w-full resize-none rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
               />
-              <div className="mt-2 flex items-center justify-between">
+              <div className="mt-2 flex items-center justify-between gap-2">
+                <button onClick={toggleVoiceInput} aria-pressed={listening} className={`rounded-xl px-3 py-2 text-xs font-bold transition ${listening ? 'bg-rose-100 text-rose-700' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-100'}`}>
+                  {listening ? 'Écoute…' : 'Parler'}
+                </button>
                 <button
                   onClick={() => send()}
                   disabled={loading}
-                  className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-bold text-white hover:bg-slate-800 disabled:opacity-50"
+                  className="rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-bold text-white shadow-md shadow-emerald-700/20 hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50"
                 >
                   Envoyer
                 </button>
@@ -393,7 +440,7 @@ export default function Chatbot() {
         )}
         <button
           onClick={() => setOpen((value) => !value)}
-          className="ml-3 flex h-14 w-14 items-center justify-center rounded-full bg-slate-950 text-xl font-black text-white shadow-lg ring-4 ring-white transition hover:scale-105"
+          className="ml-3 flex h-14 w-14 items-center justify-center rounded-full bg-slate-950 text-xl font-black text-white shadow-xl shadow-slate-900/30 ring-4 ring-white transition hover:scale-105 focus:scale-105"
           aria-label="Ouvrir SUPERMAN, assistant Signal-Moi"
         >
           <SupermanAvatar className="h-12 w-12" />
