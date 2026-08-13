@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="title">
+  <title id="title">Wave</title>
+  <rect width="120" height="120" rx="28" fill="#1DA1F2"/>
+  <path fill="#fff" d="M25 38h16l11 37 12-30h12l12 30 11-37h16L98 84H85L70 52 56 84H43z"/>
+</svg>

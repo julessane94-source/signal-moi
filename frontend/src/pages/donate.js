@@ -28,7 +28,7 @@ const paymentMethods = [
     description: 'Transfert mobile rapide vers le numero officiel Wave.',
     detail: SUPPORT_PHONE,
     actionLabel: 'Payer avec Wave',
-    icon: DevicePhoneMobile,
+    logo: '/payments/wave.svg',
     color: 'border-sky-200 bg-sky-50 text-sky-800',
     url: WAVE_MERCHANT_URL,
     fallback: `tel:${SUPPORT_PHONE_COMPACT}`,
@@ -40,7 +40,7 @@ const paymentMethods = [
     description: 'Paiement mobile Orange Money avec montant pre-rempli autant que possible.',
     detail: SUPPORT_PHONE,
     actionLabel: 'Payer avec Orange Money',
-    icon: DevicePhoneMobile,
+    logo: '/payments/orange-money.svg',
     color: 'border-orange-200 bg-orange-50 text-orange-800',
     appUrl: (amount) => `om://send?phone=${SUPPORT_PHONE_COMPACT}&amount=${amount}`,
     fallback: 'tel:%23144%23',
@@ -176,8 +176,12 @@ export default function Donate() {
                 <div key={method.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex gap-4">
-                      <div className={`flex h-12 w-12 items-center justify-center rounded-xl border ${method.color}`}>
-                        <Icon className="h-6 w-6" />
+                      <div className={`flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border ${method.color}`}>
+                        {method.logo ? (
+                          <img src={method.logo} alt={`Logo ${method.name}`} className="h-full w-full object-cover" />
+                        ) : (
+                          <Icon className="h-6 w-6" />
+                        )}
                       </div>
                       <div>
                         <h3 className="font-bold text-slate-950">{method.name}</h3>

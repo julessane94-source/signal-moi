@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" role="img" aria-labelledby="title">
+  <title id="title">Orange Money</title>
+  <rect width="160" height="120" rx="18" fill="#fff"/>
+  <rect x="12" y="12" width="60" height="60" fill="#ff7900"/>
+  <text x="18" y="53" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700">orange</text>
+  <text x="12" y="103" fill="#111" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="700">money</text>
+</svg>
