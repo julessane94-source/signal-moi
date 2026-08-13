@@ -186,6 +186,30 @@ const replaceCollaboratorSignalementTypes = async (collaboratorId, types) => {
   }
 };
 
+const policeRoles = ['commissariat', 'police', 'policier', 'gendarmerie', 'force_ordre'];
+const replacePoliceSignalementTypes = async (recipientId, types) => {
+  await db.query('DELETE FROM signal_moi.police_signalement_types WHERE recipient_id = $1', [recipientId]);
+  for (const typeCode of types) {
+    await db.query(
+      'INSERT INTO signal_moi.police_signalement_types (recipient_id, type_code) VALUES ($1, $2) ON CONFLICT (recipient_id, type_code) DO NOTHING',
+      [recipientId, typeCode]
+    );
+  }
+};
+
+const savePoliceStationLocation = async (commissariatId, latitude, longitude) => {
+  if (latitude === '' || latitude === null || latitude === undefined || longitude === '' || longitude === null || longitude === undefined) return;
+  const lat = Number(latitude);
+  const lng = Number(longitude);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) throw new Error('Coordonnees du commissariat invalides');
+  await db.query(
+    `INSERT INTO signal_moi.police_station_locations (commissariat_id, latitude, longitude, updated_at)
+     VALUES ($1, $2, $3, NOW())
+     ON CONFLICT (commissariat_id) DO UPDATE SET latitude = EXCLUDED.latitude, longitude = EXCLUDED.longitude, updated_at = NOW()`,
+    [commissariatId, lat, lng]
+  );
+};
+
 router.get('/test-db', authMiddleware, async (req, res) => {
   try {
     const result = await db.query('SELECT NOW() as now');
@@ -202,18 +226,20 @@ router.get('/users', authMiddleware, async (req, res) => {
   try {
     const result = await db.query(`
       SELECT u.id, u.prenom, u.nom, u.email, u.telephone, u.ville, u.quartier, u.role, u.is_active,
-        COALESCE(ARRAY_AGG(cst.type_code) FILTER (WHERE cst.type_code IS NOT NULL), '{}') AS signalement_types
+        CASE WHEN LOWER(u.role) IN ('commissariat', 'police', 'policier', 'gendarmerie', 'force_ordre')
+          THEN COALESCE((SELECT ARRAY_AGG(pst.type_code ORDER BY pst.type_code) FROM signal_moi.police_signalement_types pst WHERE pst.recipient_id = u.id), '{}')
+          ELSE COALESCE((SELECT ARRAY_AGG(cst.type_code ORDER BY cst.type_code) FROM signal_moi.collaborator_signalement_types cst WHERE cst.collaborator_id = u.id), '{}') END AS signalement_types,
+        psl.latitude AS station_latitude, psl.longitude AS station_longitude
       FROM signal_moi.users u
-      LEFT JOIN signal_moi.collaborator_signalement_types cst ON cst.collaborator_id = u.id
+      LEFT JOIN signal_moi.police_station_locations psl ON psl.commissariat_id = u.id
       WHERE u.is_active = true
-      GROUP BY u.id
-      ORDER BY MAX(u.created_at) DESC
+      ORDER BY u.created_at DESC
     `);
     res.json(result.rows);
   } catch (err) {
     // La liste des utilisateurs doit rester disponible tant que la migration
     // d'attribution aux collaborateurs n'a pas encore ete appliquee.
-    if (err.code === '42P01' || String(err.message || '').includes('collaborator_signalement_types')) {
+    if (err.code === '42P01' || String(err.message || '').includes('signalement_types') || String(err.message || '').includes('police_station_locations')) {
       try {
         const fallback = await db.query(`
           SELECT id, prenom, nom, email, telephone, ville, quartier, role, is_active,
@@ -244,7 +270,7 @@ router.get('/signalement-types', authMiddleware, async (req, res) => {
 
 router.post('/users', authMiddleware, async (req, res) => {
   console.log('[ADMIN POST /users] Body reçu:', req.body);
-  const { prenom, nom, email, telephone, password, ville, quartier, role, signalementTypes } = req.body;
+  const { prenom, nom, email, telephone, password, ville, quartier, role, signalementTypes, stationLatitude, stationLongitude } = req.body;
   const cleanedUser = {
     prenom: String(prenom || '').trim(),
     nom: String(nom || '').trim(),
@@ -266,7 +292,10 @@ router.post('/users', authMiddleware, async (req, res) => {
   }
 
   const selectedTypes = normalizeSignalementTypes(signalementTypes);
-  if (cleanedUser.role.toLowerCase() !== 'collaborateur' && selectedTypes.length > 0) {
+  if (!['collaborateur', 'commissariat'].includes(cleanedUser.role.toLowerCase()) && selectedTypes.length > 0) {
+    return res.status(400).json({ error: 'Les types de signalement sont réservés aux collaborateurs et commissariats' });
+  }
+  if (!['collaborateur', 'commissariat'].includes(cleanedUser.role.toLowerCase()) && selectedTypes.length > 0) {
     return res.status(400).json({ error: 'Les types de signalement sont réservés aux collaborateurs' });
   }
 
@@ -313,6 +342,11 @@ router.post('/users', authMiddleware, async (req, res) => {
       await replaceCollaboratorSignalementTypes(result.rows[0].id, selectedTypes);
       result.rows[0].signalement_types = selectedTypes;
     }
+    if (cleanedUser.role.toLowerCase() === 'commissariat') {
+      await replacePoliceSignalementTypes(result.rows[0].id, selectedTypes);
+      await savePoliceStationLocation(result.rows[0].id, stationLatitude, stationLongitude);
+      result.rows[0].signalement_types = selectedTypes;
+    }
     console.log('[ADMIN POST /users] Utilisateur créé:', result.rows[0]);
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -328,13 +362,18 @@ router.put('/users/:id/signalement-types', authMiddleware, async (req, res) => {
   try {
     const userResult = await db.query('SELECT id, role FROM signal_moi.users WHERE id = $1', [collaboratorId]);
     if (userResult.rows.length === 0) return res.status(404).json({ error: 'Utilisateur introuvable' });
-    if (String(userResult.rows[0].role).toLowerCase() !== 'collaborateur') {
+    const role = String(userResult.rows[0].role).toLowerCase();
+    if (role !== 'collaborateur' && !policeRoles.includes(role)) {
+      return res.status(400).json({ error: 'Cet utilisateur ne peut pas recevoir de signalements' });
+    }
+    if (role !== 'collaborateur' && !policeRoles.includes(role)) {
       return res.status(400).json({ error: 'Cet utilisateur n’est pas un collaborateur' });
     }
     if (!(await validateSignalementTypes(types))) {
       return res.status(400).json({ error: 'Un ou plusieurs types de signalement sont invalides' });
     }
-    await replaceCollaboratorSignalementTypes(collaboratorId, types);
+    if (role === 'collaborateur') await replaceCollaboratorSignalementTypes(collaboratorId, types);
+    else await replacePoliceSignalementTypes(collaboratorId, types);
     res.json({ success: true, collaboratorId, signalementTypes: types });
   } catch (err) {
     console.error('[ADMIN PUT /users/:id/signalement-types] Erreur:', err);
@@ -344,7 +383,7 @@ router.put('/users/:id/signalement-types', authMiddleware, async (req, res) => {
 
 router.put('/users/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
-  const { prenom, nom, email, telephone, ville, quartier, role, is_active } = req.body;
+  const { prenom, nom, email, telephone, ville, quartier, role, is_active, stationLatitude, stationLongitude } = req.body;
   try {
     // Construire dynamiquement la clause SET
     const fields = [];
@@ -365,6 +404,9 @@ router.put('/users/:id', authMiddleware, async (req, res) => {
     const query = `UPDATE signal_moi.users SET ${fields.join(', ')} WHERE id = $${fields.length + 1} RETURNING id, prenom, nom, email, telephone, ville, quartier, role, is_active`;
     values.push(id);
     const result = await db.query(query, values);
+    if (String(result.rows[0]?.role || '').toLowerCase() === 'commissariat') {
+      await savePoliceStationLocation(id, stationLatitude, stationLongitude);
+    }
     res.json(result.rows[0]);
   } catch (err) {
     console.error('[ADMIN PUT /users/:id] Erreur:', err);

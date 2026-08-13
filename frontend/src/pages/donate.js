@@ -8,9 +8,7 @@ import {
   CheckCircleIcon as CheckCircle,
   ClipboardDocumentIcon as ClipboardDocument,
   CreditCardIcon as CreditCard,
-  DevicePhoneMobileIcon as DevicePhoneMobile,
-  HeartIcon as Heart,
-  ShieldCheckIcon as ShieldCheck
+  HeartIcon as Heart
 } from '@heroicons/react/24/outline'
 
 const SUPPORT_PHONE = '+221 77 885 16 91'
@@ -223,14 +221,6 @@ export default function Donate() {
           ))}
         </div>
 
-        <div className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
-          <div className="flex gap-3">
-            <ShieldCheck className="h-5 w-5 flex-none" />
-            <p>
-              Situation reelle : Wave ouvre maintenant le lien marchand officiel. Orange Money reste sur le flux mobile/USSD tant qu'un lien marchand ou une API Orange Money n'est pas connecte au backend.
-            </p>
-          </div>
-        </div>
       </section>
     </main>
   )

@@ -19,6 +19,37 @@ const parseLimit = (value, fallback = 100, max = 500) => {
 const normalizeRole = (role) => String(role || '').trim().toLowerCase();
 const isPoliceLikeRole = (role) => ['commissariat', 'police', 'policier', 'gendarmerie', 'force_ordre'].includes(normalizeRole(role));
 const canViewLiveSessions = (role) => ['admin', 'administrateur'].includes(normalizeRole(role)) || isPoliceLikeRole(role);
+const assignNearestCommissariat = async (signalement) => {
+    const lat = Number(signalement.latitude);
+    const lng = Number(signalement.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+
+    let result;
+    try {
+      result = await db.query(`
+      SELECT u.id,
+        (6371 * acos(LEAST(1, GREATEST(-1,
+          cos(radians($1)) * cos(radians(psl.latitude::double precision)) *
+          cos(radians(psl.longitude::double precision) - radians($2)) +
+          sin(radians($1)) * sin(radians(psl.latitude::double precision))
+        )))) AS distance_km
+      FROM signal_moi.police_station_locations psl
+      JOIN signal_moi.users u ON u.id = psl.commissariat_id
+      WHERE LOWER(u.role) = 'commissariat' AND u.is_active = true
+        AND (NOT EXISTS (SELECT 1 FROM signal_moi.police_signalement_types pst WHERE pst.recipient_id = u.id)
+          OR EXISTS (SELECT 1 FROM signal_moi.police_signalement_types pst WHERE pst.recipient_id = u.id AND pst.type_code = $3))
+      ORDER BY distance_km ASC
+      LIMIT 1`, [lat, lng, String(signalement.type || '').toLowerCase()]);
+    } catch (err) {
+      if (err.code === '42P01') return null;
+      throw err;
+    }
+
+    const commissariat = result.rows[0];
+    if (!commissariat) return null;
+    await db.query('UPDATE signal_moi.signalements SET assigned_to = $1, updated_at = NOW() WHERE id = $2', [commissariat.id, signalement.id]);
+    return commissariat;
+};
 const liveSessionPayload = (session) => ({
     ...session,
     isLiveRecording: true,
@@ -176,6 +207,11 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
         }
 
         const signalementId = signalement.id;
+        const assignedCommissariat = await assignNearestCommissariat(signalement);
+        if (assignedCommissariat) {
+            signalement.assigned_to = assignedCommissariat.id;
+            signalement.assigned_commissariat_distance_km = Number(assignedCommissariat.distance_km).toFixed(2);
+        }
 
         // Gérer les fichiers uploadés (s'il y en a)
         if (req.files && req.files.length > 0) {
@@ -438,16 +474,20 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                 }
                 // Si c'est la police, ne retourner que les types pertinents (violence, vol)
                 if (req.user && ['commissariat', 'police'].includes(req.user.role)) {
-                    const allowed = ['violence', 'vol', 'theft', 'accident'];
                     const showArchive = String(req.query.archive || '').toLowerCase() === 'true';
                     const result = await db.query(`SELECT s.id, s.user_id, s.titre, s.description, s.type, s.statut, s.localisation, s.latitude, s.longitude, s.priorite, s.est_anonyme, s.created_at, s.updated_at,
                                                           u.prenom AS user_prenom, u.nom AS user_nom, u.telephone AS user_telephone, u.email AS user_email, u.created_at AS user_created_at,
                                                           (SELECT COUNT(*)::int FROM signal_moi.signalements sx WHERE sx.user_id = s.user_id AND sx.created_at >= NOW() - INTERVAL '24 hours') AS recent_same_user_count
                                                    FROM signal_moi.signalements s
                                                    LEFT JOIN signal_moi.users u ON u.id = s.user_id
-                                                   WHERE LOWER(s.type) = ANY($1::text[])
+                                                   WHERE s.assigned_to = COALESCE(
+                                                     (SELECT CASE WHEN LOWER(me.role) = 'commissariat' THEN me.id
+                                                       ELSE (SELECT c.id FROM signal_moi.users c WHERE LOWER(c.role) = 'commissariat' AND LOWER(COALESCE(c.quartier, '')) = LOWER(COALESCE(me.quartier, '')) LIMIT 1)
+                                                     END FROM signal_moi.users me WHERE me.id = $1), $1::uuid)
+                                                     AND (NOT EXISTS (SELECT 1 FROM signal_moi.police_signalement_types pst WHERE pst.recipient_id = s.assigned_to)
+                                                       OR EXISTS (SELECT 1 FROM signal_moi.police_signalement_types pst WHERE pst.recipient_id = s.assigned_to AND pst.type_code = s.type))
                                                      AND ${showArchive ? "s.statut IN ('traite', 'closed', 'fausse_alerte')" : "COALESCE(s.statut, 'nouveau') NOT IN ('traite', 'closed', 'fausse_alerte')"}
-                                                   ORDER BY LOWER(s.type) ASC, s.created_at DESC LIMIT $2`, [allowed, limit]);
+                                                   ORDER BY s.created_at DESC LIMIT $2`, [req.user.id, limit]);
                     const signalementIds = result.rows.map(r => r.id);
                     const filesBySignalement = {};
 

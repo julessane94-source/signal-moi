@@ -89,7 +89,7 @@ export default function AdminDashboard() {
   const [showModal, setShowModal] = useState(false)
   const [editingUser, setEditingUser] = useState(null)
   const [formData, setFormData] = useState({
-    prenom: '', nom: '', email: '', telephone: '', password: '', ville: '', quartier: '', role: 'citoyen', signalementTypes: []
+    prenom: '', nom: '', email: '', telephone: '', password: '', ville: '', quartier: '', role: 'citoyen', signalementTypes: [], stationLatitude: '', stationLongitude: ''
   })
   const [signalementTypes, setSignalementTypes] = useState([])
   const [errors, setErrors] = useState({})
@@ -334,7 +334,7 @@ export default function AdminDashboard() {
         throw new Error(errorBody.error || 'Erreur lors de la création')
       }
       await response.json()
-      if (editingUser && formData.role === 'collaborateur') {
+      if (editingUser && ['collaborateur', 'commissariat'].includes(formData.role)) {
         const assignmentResponse = await fetch(`${base}/api/admin/users/${editingUser.id}/signalement-types`, {
           method: 'PUT',
           headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -348,7 +348,7 @@ export default function AdminDashboard() {
       toast.success(editingUser ? '✅ Utilisateur modifié' : '✅ Utilisateur créé')
       setShowModal(false)
       setEditingUser(null)
-      setFormData({ prenom: '', nom: '', email: '', telephone: '', password: '', ville: '', quartier: '', role: 'citoyen', signalementTypes: [] })
+      setFormData({ prenom: '', nom: '', email: '', telephone: '', password: '', ville: '', quartier: '', role: 'citoyen', signalementTypes: [], stationLatitude: '', stationLongitude: '' })
       setErrors({})
       fetchUsers()
     } catch (error) {
@@ -610,11 +610,13 @@ export default function AdminDashboard() {
         ville: userData.ville || 'Sedhiou',
         quartier: userData.quartier || (['commissariat', 'police'].includes(String(userData.role || '').toLowerCase()) ? 'Commissariat central de Sedhiou' : ''),
         role: userData.role || 'citoyen',
-        signalementTypes: Array.isArray(userData.signalement_types) ? userData.signalement_types : []
+        signalementTypes: Array.isArray(userData.signalement_types) ? userData.signalement_types : [],
+        stationLatitude: userData.station_latitude ?? '',
+        stationLongitude: userData.station_longitude ?? ''
       })
     } else {
       setEditingUser(null)
-      setFormData({ prenom: '', nom: '', email: '', telephone: '', password: '', ville: 'Sedhiou', quartier: 'Commissariat central de Sedhiou', role: 'commissariat', signalementTypes: [] })
+      setFormData({ prenom: '', nom: '', email: '', telephone: '', password: '', ville: 'Sedhiou', quartier: 'Commissariat central de Sedhiou', role: 'commissariat', signalementTypes: [], stationLatitude: '', stationLongitude: '' })
     }
     setErrors({})
     setShowModal(true)
@@ -1519,7 +1521,7 @@ export default function AdminDashboard() {
         onClose={() => {
           setShowModal(false)
           setEditingUser(null)
-          setFormData({ prenom: '', nom: '', email: '', telephone: '', password: '', ville: '', quartier: '', role: 'citoyen', signalementTypes: [] })
+          setFormData({ prenom: '', nom: '', email: '', telephone: '', password: '', ville: '', quartier: '', role: 'citoyen', signalementTypes: [], stationLatitude: '', stationLongitude: '' })
           setErrors({})
         }}
         title={editingUser ? 'Modifier l\'utilisateur' : 'Créer un utilisateur'}
@@ -1599,11 +1601,11 @@ export default function AdminDashboard() {
             </FormField>
           </div>
 
-          {formData.role === 'collaborateur' && (
+          {['collaborateur', 'commissariat'].includes(formData.role) && (
             <FormField label="Types de signalements reçus">
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4">
                 <p className="mb-3 text-sm text-emerald-900">
-                  Types visibles pour ce collaborateur. Modifiable à tout moment.
+                  {formData.role === 'commissariat' ? 'Types reçus par ce commissariat. Modifiable à tout moment.' : 'Types visibles pour ce collaborateur. Modifiable à tout moment.'}
                 </p>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {signalementTypes.map((type) => {
@@ -1629,6 +1631,18 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </FormField>
+          )}
+
+          {formData.role === 'commissariat' && (
+            <div className="grid grid-cols-1 gap-4 rounded-2xl border border-blue-100 bg-blue-50 p-4 md:grid-cols-2">
+              <FormField label="Latitude du commissariat">
+                <Input name="stationLatitude" type="number" step="any" placeholder="Ex. 12.7081" value={formData.stationLatitude} onChange={handleInputChange} />
+              </FormField>
+              <FormField label="Longitude du commissariat">
+                <Input name="stationLongitude" type="number" step="any" placeholder="Ex. -15.5569" value={formData.stationLongitude} onChange={handleInputChange} />
+              </FormField>
+              <p className="md:col-span-2 text-sm text-blue-800">Ces coordonnées permettent d’orienter les signalements GPS vers le commissariat le plus proche.</p>
+            </div>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
