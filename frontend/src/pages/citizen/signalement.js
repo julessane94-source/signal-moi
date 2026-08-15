@@ -1006,7 +1006,7 @@ export default function NewSignalement() {
                     Ecouter l aide
                   </button>
                 </div>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="report-type-grid grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {QUICK_TYPES.map((item) => (
                     <button
                       key={item.value}

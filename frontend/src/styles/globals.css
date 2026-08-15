@@ -745,6 +745,82 @@ select {
   .site-page-shell .interactive-card:hover {
     transform: none;
   }
+
+  /* Evite les panneaux trop hauts et les titres surdimensionnes sur Android. */
+  .home-section { padding-block: 2.75rem; }
+
+  #formulaire-signalement { gap: 1rem; }
+
+  #formulaire-signalement > .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 1rem;
+  }
+
+  #formulaire-signalement .interactive-card {
+    min-height: 0;
+    padding: 1rem;
+  }
+
+  #formulaire-signalement .interactive-card span:nth-of-type(2) {
+    margin-top: .65rem;
+    font-size: 1.25rem;
+  }
+
+  #formulaire-signalement .interactive-card span:nth-of-type(3) {
+    margin-top: .35rem;
+    font-size: .8125rem;
+  }
+
+  #formulaire-signalement .interactive-card span:nth-of-type(4) {
+    margin-top: .75rem;
+    padding: .45rem .75rem;
+    font-size: .75rem;
+  }
+
+  #formulaire-signalement section:not(.card-stagger) {
+    padding: 1rem;
+    border-radius: 1.25rem;
+  }
+
+  #formulaire-signalement h2 {
+    font-size: 1.25rem;
+    line-height: 1.35;
+  }
+
+  #formulaire-signalement .report-type-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .75rem;
+  }
+
+  #formulaire-signalement .report-type-option {
+    min-height: 7.25rem;
+    padding: .875rem;
+    border-radius: 1.125rem;
+  }
+
+  #formulaire-signalement .report-type-option > div:first-child > span:first-child {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: .875rem;
+    font-size: 1.45rem;
+  }
+
+  #formulaire-signalement .report-type-option > div:nth-child(2) {
+    margin-top: .65rem;
+    font-size: 1rem;
+    line-height: 1.15;
+  }
+
+  #formulaire-signalement .report-type-option > div:nth-child(3) {
+    margin-top: .3rem;
+    font-size: .75rem;
+    line-height: 1.2;
+  }
+
+  #formulaire-signalement input,
+  #formulaire-signalement textarea {
+    padding: .75rem 1rem;
+    font-size: 1rem;
+  }
 }
 
 @media (pointer: coarse) {
