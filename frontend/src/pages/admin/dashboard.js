@@ -630,23 +630,51 @@ export default function AdminDashboard() {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 pt-20 pb-12">
+      <div className="min-h-screen bg-slate-50 pt-20 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Page Header */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
+            className="mb-8 overflow-hidden rounded-[2rem] border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white shadow-2xl"
           >
-            <h1 className="text-4xl font-bold text-gray-900 flex items-center gap-3">
-              <BarChart className="h-10 w-10 text-indigo-600" />
-              Tableau de bord administrateur
-            </h1>
-            <p className="text-gray-600 mt-2">Utilisateurs, contenus et réglages.</p>
+            <div className="grid gap-6 p-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(290px,0.75fr)] lg:p-8">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-indigo-200">Centre de pilotage</p>
+                <h1 className="mt-3 flex items-center gap-3 text-3xl font-black sm:text-5xl">
+                  <BarChart className="h-9 w-9 text-indigo-300 sm:h-11 sm:w-11" />
+                  Administration
+                </h1>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
+                  Supervisez les utilisateurs, les signalements, les campagnes et les réglages de la plateforme depuis un seul espace.
+                </p>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <button onClick={() => setActiveTab('users')} className="rounded-2xl bg-white px-5 py-3 text-sm font-black text-slate-950 shadow-sm transition hover:bg-indigo-50">
+                    Gérer les utilisateurs
+                  </button>
+                  <button onClick={() => setActiveTab('signalements')} className="rounded-2xl border border-white/15 bg-white/10 px-5 py-3 text-sm font-black text-white transition hover:bg-white/15">
+                    Voir les signalements
+                  </button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3 self-end">
+                {[
+                  { label: 'Utilisateurs actifs', value: stats.activeUsers, icon: Users },
+                  { label: 'Signalements', value: stats.totalSignalements, icon: DocumentText },
+                  { label: 'Commissariats', value: commissariatUsers.length, icon: BuildingOffice2 },
+                  { label: 'Campagnes', value: stats.totalCampagnes, icon: BarChart }
+                ].map((item) => {
+                  const Icon = item.icon
+                  return <div key={item.label} className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-sm">
+                    <Icon className="h-5 w-5 text-indigo-200" />
+                    <p className="mt-2 text-3xl font-black">{item.value || 0}</p>
+                    <p className="mt-1 text-xs font-semibold text-slate-300">{item.label}</p>
+                  </div>
+                })}
+              </div>
+            </div>
           </motion.div>
 
-          {/* Tabs Navigation */}
-          <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
+          <div className="sticky top-20 z-20 mb-8 flex gap-2 overflow-x-auto rounded-2xl border border-slate-200/90 bg-white/95 p-2 shadow-lg shadow-slate-900/5 backdrop-blur">
             {[
               { id: 'dashboard', label: 'Tableau de bord', icon: BarChart },
               { id: 'users', label: 'Utilisateurs', icon: Users },
@@ -661,10 +689,10 @@ export default function AdminDashboard() {
                 key={tab.id}
                 whileHover={{ y: -2 }}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${
+                className={`flex items-center gap-2 rounded-xl px-4 py-3 font-semibold transition-all whitespace-nowrap ${
                   activeTab === tab.id
-                    ? 'bg-indigo-600 text-white shadow-lg'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                    ? 'bg-slate-950 text-white shadow-lg'
+                    : 'text-slate-700 hover:bg-slate-100'
                 }`}
               >
                 <TabIcon className="h-5 w-5" />
@@ -837,11 +865,11 @@ export default function AdminDashboard() {
                   { key: 'role', label: 'Rôle', render: (role) => <Badge variant="info">{getRoleLabel(role)}</Badge> },
                   {
                     key: 'quartier',
-                    label: 'Rattachement',
+                    label: 'Zone / structure',
                     render: (zone, item) => (
                       <div className="text-sm">
                         <p className="font-semibold text-slate-900">
-                          {['commissariat', 'police'].includes(String(item.role || '').toLowerCase()) ? (zone || 'Commissariat central de Sedhiou') : (zone || 'Non renseigné')}
+                          {['commissariat', 'police'].includes(String(item.role || '').toLowerCase()) ? (zone || 'Structure non renseignée') : (zone || 'Non renseigné')}
                         </p>
                         <p className="text-xs text-slate-500">{item.ville || 'Sedhiou'}</p>
                       </div>
