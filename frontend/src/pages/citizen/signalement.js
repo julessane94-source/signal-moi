@@ -497,7 +497,25 @@ export default function NewSignalement() {
     }
   }
 
+  const startEmergencyLive = (type) => {
+    const label = getTypeLabel(type)
+    const title = type === 'violence' ? 'Alerte citoyenne urgente' : `Signalement : ${label}`
+    setFormData(prev => ({
+      ...prev,
+      type,
+      titre: prev.titre || title,
+      description: prev.description || SIMPLE_DESCRIPTIONS[type] || `Je signale: ${label}`
+    }))
+    setShowVideoPrompt(true)
+    getAutomaticLocation({ silent: true })
+    startVideoRecording({ type, title })
+  }
+
   const startSimpleReport = (type) => {
+    if (type === 'violence' || type === 'accident') {
+      startEmergencyLive(type)
+      return
+    }
     const label = getTypeLabel(type)
     handleQuickType(type, label)
     getAutomaticLocation({ silent: true })
