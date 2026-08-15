@@ -4,22 +4,34 @@ import { Ionicons } from '@expo/vector-icons'
 import { COLORS } from '../config/env'
 
 function getReporter(item = {}) {
-  return item.reporter || item.user || item.victime || {
-    telephone: item.telephone || item.user_telephone,
-    email: item.email || item.user_email,
-    prenom: item.prenom || item.user_prenom,
-    nom: item.nom || item.user_nom
-  }
+  return item.reporter || item.user || item.victime || item.author || {}
 }
 
 function getPhone(item) {
   const reporter = getReporter(item)
-  return reporter?.telephone || item?.telephone
+  return reporter?.telephone || reporter?.phone || item?.telephone || item?.phone || item?.user_telephone || item?.userTelephone
 }
 
 function getEmail(item) {
   const reporter = getReporter(item)
-  return reporter?.email || item?.email
+  return reporter?.email || item?.email || item?.user_email || item?.userEmail
+}
+
+function phoneLink(phone) {
+  return String(phone || '').trim().replace(/[^\d+]/g, '')
+}
+
+async function openExternal(url, unavailableMessage) {
+  try {
+    const supported = await Linking.canOpenURL(url)
+    if (!supported) {
+      Alert.alert('Action indisponible', unavailableMessage)
+      return
+    }
+    await Linking.openURL(url)
+  } catch (error) {
+    Alert.alert('Action impossible', unavailableMessage)
+  }
 }
 
 function getCoordinates(item = {}) {
@@ -31,13 +43,13 @@ function getCoordinates(item = {}) {
 export function openVictimMap(item) {
   const { lat, lng } = getCoordinates(item)
   if (lat && lng) {
-    Linking.openURL(`https://www.google.com/maps/?q=${lat},${lng}`)
+    openExternal(`https://www.google.com/maps/?q=${lat},${lng}`, 'Impossible d ouvrir la carte sur ce telephone.')
     return
   }
 
   const place = item.localisation || item.adresse || item.location
   if (place) {
-    Linking.openURL(`https://www.google.com/maps/search/${encodeURIComponent(place)}`)
+    openExternal(`https://www.google.com/maps/search/${encodeURIComponent(place)}`, 'Impossible d ouvrir la carte sur ce telephone.')
     return
   }
 
@@ -47,14 +59,15 @@ export function openVictimMap(item) {
 export default function VictimActions({ item, compact = false }) {
   const phone = getPhone(item)
   const email = getEmail(item)
-  const cleanPhone = String(phone || '').replace(/\D/g, '')
+  const callPhone = phoneLink(phone)
+  const cleanPhone = callPhone.replace(/^\+/, '')
 
   return (
     <View style={[styles.row, compact && styles.compactRow]}>
-      <Action icon="call" label="Appeler" disabled={!phone} missing="Aucun telephone pour cette victime." onPress={() => Linking.openURL(`tel:${phone}`)} />
-      <Action icon="chatbubble" label="SMS" disabled={!phone} missing="Aucun telephone pour envoyer un SMS." onPress={() => Linking.openURL(`sms:${phone}`)} />
-      <Action icon="logo-whatsapp" label="WhatsApp" disabled={!cleanPhone} missing="Aucun numero WhatsApp disponible." onPress={() => Linking.openURL(`https://wa.me/${cleanPhone}`)} />
-      <Action icon="mail" label="Email" disabled={!email} missing="Aucun email pour cette victime." onPress={() => Linking.openURL(`mailto:${email}`)} />
+      <Action icon="call" label="Appeler" disabled={!callPhone} missing="Aucun telephone pour cette victime." onPress={() => openExternal(`tel:${callPhone}`, 'Aucune application telephone ne peut lancer cet appel.')} />
+      <Action icon="chatbubble" label="SMS" disabled={!callPhone} missing="Aucun telephone pour envoyer un SMS." onPress={() => openExternal(`sms:${callPhone}`, 'Aucune application SMS ne peut ouvrir ce message.')} />
+      <Action icon="logo-whatsapp" label="WhatsApp" disabled={!cleanPhone} missing="Aucun numero WhatsApp disponible." onPress={() => openExternal(`https://wa.me/${cleanPhone}`, 'WhatsApp est indisponible sur ce telephone.')} />
+      <Action icon="mail" label="Email" disabled={!email} missing="Aucun email pour cette victime." onPress={() => openExternal(`mailto:${email}`, 'Aucune application email ne peut ouvrir ce message.')} />
       <Action icon="navigate" label="Localiser" onPress={() => openVictimMap(item)} primary />
     </View>
   )

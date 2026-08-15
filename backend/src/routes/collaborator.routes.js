@@ -179,7 +179,7 @@ router.get('/signalements', authMiddleware, async (req, res) => {
       SELECT 
         s.id, s.titre, s.description, s.type, s.statut, 
         s.localisation, s.latitude, s.longitude, 
-        s.created_at, u.prenom, u.nom, u.email
+        s.created_at, u.prenom, u.nom, u.email, u.telephone
       FROM signal_moi.signalements s
       LEFT JOIN signal_moi.users u ON u.id = s.user_id
       WHERE s.statut != 'fermé'
@@ -200,7 +200,7 @@ router.get('/signalements', authMiddleware, async (req, res) => {
       localisation: s.localisation,
       coordinates: { lat: s.latitude, lng: s.longitude },
       createdAt: s.created_at,
-      author: { prenom: s.prenom, nom: s.nom, email: s.email }
+      author: { prenom: s.prenom, nom: s.nom, email: s.email, telephone: s.telephone }
     }));
 
     console.log(`[COLLABORATOR GET /signalements] ${signalements.length} signalements`);

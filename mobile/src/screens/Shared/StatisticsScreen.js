@@ -61,15 +61,18 @@ export default function StatisticsScreen() {
 
   const overview = stats?.overview || {}
   const typeItems = stats?.byType?.data || stats?.byType || []
+  const statusItems = overview.statusDistribution || []
+  const monthlyItems = overview.monthlyTrend || []
+  const statusCount = (names) => statusItems.filter((item) => names.includes(String(item.statut || item.status || '').toLowerCase())).reduce((total, item) => total + Number(item.count || 0), 0)
 
   return (
     <ScrollView style={styles.container} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}>
       <ScreenHeader title="Statistiques" subtitle="Vue complete depuis Render" />
       <View style={styles.grid}>
-        <Stat label="Total" value={overview.total || overview.totalSignalements || 0} />
-        <Stat label="En cours" value={overview.enCours || overview.pending || 0} />
-        <Stat label="Traites" value={overview.traites || overview.resolved || 0} />
-        <Stat label="Lives" value={overview.lives || 0} />
+        <Stat label="Total" value={overview.totalSignalements || overview.total || 0} />
+        <Stat label="En cours" value={statusCount(['en_cours', 'cours', 'en cours'])} />
+        <Stat label="Nouveaux" value={statusCount(['nouveau', 'attente', 'recu'])} />
+        <Stat label="Traités" value={statusCount(['traité', 'traite', 'résolu', 'resolu', 'fermé', 'ferme'])} />
       </View>
       <View style={styles.card}>
         <Text style={styles.section}>Par type</Text>
@@ -79,6 +82,11 @@ export default function StatisticsScreen() {
             <Text style={styles.rowValue}>{item.count || item.total || 0}</Text>
           </View>
         )) : <Text style={styles.empty}>Aucune statistique detaillee chargee.</Text>}
+      </View>
+      <View style={styles.card}>
+        <Text style={styles.section}>Évolution récente</Text>
+        {monthlyItems.slice(-6).map((item) => <View key={item.month} style={styles.row}><Text style={styles.rowLabel}>{item.month}</Text><Text style={styles.rowValue}>{item.count || 0} signalement(s)</Text></View>)}
+        {!monthlyItems.length ? <Text style={styles.empty}>Aucune évolution disponible.</Text> : null}
       </View>
       <View style={styles.actions}>
         <PrimaryButton title="Telecharger PDF" onPress={() => downloadExport('pdf')} loading={exporting === 'pdf'} />

@@ -468,8 +468,16 @@ router.post('/google', async (req, res) => {
     }
 
     const googleProfile = await googleResponse.json();
-    const expectedClientId = process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    if (expectedClientId && googleProfile.aud !== expectedClientId) {
+    const allowedGoogleClientIds = [
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_WEB_CLIENT_ID,
+      process.env.GOOGLE_ANDROID_CLIENT_ID,
+      process.env.GOOGLE_IOS_CLIENT_ID,
+      ...String(process.env.GOOGLE_ALLOWED_CLIENT_IDS || '').split(','),
+      // Client Android public utilise par l'APK Signal-Moi.
+      '912214570168-qdshgsffkan5i3cm107dc45m3lvvc0k8.apps.googleusercontent.com'
+    ].map((clientId) => String(clientId || '').trim()).filter(Boolean);
+    if (allowedGoogleClientIds.length && !allowedGoogleClientIds.includes(googleProfile.aud)) {
       return res.status(401).json({ success: false, message: 'Application Google non autorisee' });
     }
     if (googleProfile.email_verified !== true && googleProfile.email_verified !== 'true') {

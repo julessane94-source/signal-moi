@@ -6,6 +6,7 @@ import { COLORS } from '../config/env'
 import { useAuth } from '../context/AuthContext'
 import LoginScreen from '../screens/Auth/LoginScreen'
 import RegisterScreen from '../screens/Auth/RegisterScreen'
+import PrivacyScreen from '../screens/Auth/PrivacyScreen'
 import ForgotPasswordScreen from '../screens/Auth/ForgotPasswordScreen'
 import PublicHomeScreen from '../screens/Auth/PublicHomeScreen'
 import CitizenHomeScreen from '../screens/Citizen/CitizenHomeScreen'
@@ -142,6 +143,7 @@ export default function AppNavigator() {
           <Stack.Screen name="PublicHome" component={PublicHomeScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Register" component={RegisterScreen} />
+          <Stack.Screen name="Privacy" component={PrivacyScreen} />
           <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         </>
       )}

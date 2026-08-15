@@ -133,6 +133,21 @@ export async function createAdminUser(payload) {
   return data
 }
 
+export async function updateAdminUser(id, payload) {
+  const { data } = await api.put(`/admin/users/${id}`, payload)
+  return data
+}
+
+export async function updateAdminUserSignalementTypes(id, signalementTypes) {
+  const { data } = await api.put(`/admin/users/${id}/signalement-types`, { signalementTypes })
+  return data
+}
+
+export async function getAdminSignalementTypes() {
+  const { data } = await api.get('/admin/signalement-types')
+  return data
+}
+
 export async function deleteAdminUser(id) {
   const { data } = await api.delete(`/admin/users/${id}`)
   return data

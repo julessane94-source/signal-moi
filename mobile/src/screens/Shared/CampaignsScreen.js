@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { Alert, FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native'
-import { COLORS } from '../../config/env'
+import { Alert, FlatList, Image, RefreshControl, StyleSheet, Text, View } from 'react-native'
+import { COLORS, resolveMediaUrl } from '../../config/env'
 import ScreenHeader from '../../components/ScreenHeader'
 import PrimaryButton from '../../components/PrimaryButton'
 import { getCampagnes, joinCampagne } from '../../services/api'
@@ -11,7 +11,7 @@ export default function CampaignsScreen() {
 
   const load = useCallback(async () => {
     const data = await getCampagnes()
-    setItems(data.campagnes || data || [])
+    setItems(data.campagnes || data.data?.campagnes || data.data || data || [])
   }, [])
 
   useEffect(() => {
@@ -47,9 +47,10 @@ export default function CampaignsScreen() {
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
           <View style={styles.card}>
+            {item.image || item.image_url ? <Image source={{ uri: resolveMediaUrl(item.image || item.image_url) }} style={styles.image} /> : null}
             <Text style={styles.title}>{item.titre || item.title || 'Campagne'}</Text>
             <Text numberOfLines={4} style={styles.text}>{item.description || 'Action communautaire Signal Moi.'}</Text>
-            <Text style={styles.meta}>{item.lieu || item.location || 'Sedhiou'}</Text>
+            <Text style={styles.meta}>{item.lieu || item.location || 'Sédhiou'}{item.dateDebut || item.date_debut ? ` · Dès le ${String(item.dateDebut || item.date_debut).slice(0, 10)}` : ''}</Text>
             <PrimaryButton title="Participer" onPress={() => participate(item.id || item._id)} />
           </View>
         )}
@@ -70,6 +71,7 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 10
   },
+  image: { width: '100%', height: 155, borderRadius: 13, backgroundColor: '#edf2f1' },
   title: { color: COLORS.ink, fontSize: 18, fontWeight: '900' },
   text: { color: COLORS.muted, lineHeight: 21 },
   meta: { color: COLORS.primary, fontWeight: '800' },
