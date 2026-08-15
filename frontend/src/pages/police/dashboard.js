@@ -682,7 +682,7 @@ export default function PoliceDashboard() {
 
   return (
     <>
-      <div className="min-h-screen overflow-x-hidden bg-slate-100 pt-20 pb-12">
+      <div className="police-dashboard min-h-screen overflow-x-hidden bg-slate-100 pt-20 pb-12">
         {/* Alert bar pour signalement prioritaire */}
         {topSignal && (
           <motion.div
@@ -732,7 +732,7 @@ export default function PoliceDashboard() {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`mb-8 overflow-hidden rounded-[2rem] border text-white shadow-2xl ${
+            className={`police-command-center mb-8 overflow-hidden rounded-[2rem] border text-white shadow-2xl ${
               isCommissariat
                 ? 'border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950'
                 : 'border-sky-300/20 bg-gradient-to-br from-sky-950 via-blue-900 to-slate-950'
@@ -807,6 +807,14 @@ export default function PoliceDashboard() {
             </div>
           </motion.div>
 
+          <div className="police-section-heading mb-4">
+            <div>
+              <p>Vue opérationnelle</p>
+              <h2>Priorités et activité du poste</h2>
+            </div>
+            <span>{isCommissariat ? 'Coordination en temps réel' : 'Suivi terrain personnel'}</span>
+          </div>
+
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
@@ -837,7 +845,7 @@ export default function PoliceDashboard() {
             ] : agentInterfaceCards).map((item) => {
               const Icon = item.icon
               return (
-                <div key={item.title} className={`rounded-[1.5rem] border p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg ${item.tone}`}>
+                <div key={item.title} className={`police-overview-card rounded-[1.5rem] border p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg ${item.tone}`}>
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-sm font-black uppercase tracking-wide">{item.title}</p>
@@ -975,6 +983,14 @@ export default function PoliceDashboard() {
           )}
 
           {isCommissariatRole(user?.role) && (
+            <section className="police-management-section">
+            <div className="police-section-heading mb-4">
+              <div>
+                <p>Équipe</p>
+                <h2>Gestion du commissariat</h2>
+              </div>
+              <span>Agents rattachés au poste</span>
+            </div>
             <motion.div
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1041,9 +1057,18 @@ export default function PoliceDashboard() {
                 </button>
               </form>
             </motion.div>
+            </section>
           )}
 
           {liveRecordingsList.length > 0 && (
+            <section className="police-live-section">
+            <div className="police-section-heading mb-4">
+              <div>
+                <p>Urgence en direct</p>
+                <h2>Preuves vidéo à surveiller</h2>
+              </div>
+              <span className="police-live-count">{liveRecordingsList.length} actif(s)</span>
+            </div>
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1118,6 +1143,7 @@ export default function PoliceDashboard() {
                 ))}
               </div>
             </motion.div>
+            </section>
           )}
 
           {!liveRecordingsList.length && lastLive?.frame && (
@@ -1136,12 +1162,20 @@ export default function PoliceDashboard() {
             </div>
           )}
 
+          <div className="police-section-heading mb-4">
+            <div>
+              <p>Suivi des dossiers</p>
+              <h2>État de la file de traitement</h2>
+            </div>
+            <span>{stats.total} dossier(s) au total</span>
+          </div>
+
           {/* Stats Grid */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8"
+            className="police-stats-grid grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4 mb-8"
           >
             <StatBox
               title="Total signalements"
@@ -1164,6 +1198,14 @@ export default function PoliceDashboard() {
               color="green"
             />
           </motion.div>
+
+          <div className="police-section-heading mb-4">
+            <div>
+              <p>File de travail</p>
+              <h2>Dossiers à consulter</h2>
+            </div>
+            <span>Filtrez puis ouvrez un dossier</span>
+          </div>
 
           {/* Filtres */}
           <motion.div
@@ -1221,7 +1263,7 @@ export default function PoliceDashboard() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
                     >
-                      <Card className="relative overflow-hidden border border-slate-200 bg-white p-5 transition hover:-translate-y-0.5 hover:shadow-xl sm:p-6">
+                      <Card className="police-case-card relative overflow-hidden border border-slate-200 bg-white p-5 transition hover:-translate-y-0.5 hover:shadow-xl sm:p-6">
                     <div className={`absolute inset-y-0 left-0 w-1.5 ${['urgente', 'haute'].includes((s.priorite || '').toLowerCase()) ? 'bg-red-600' : s.statut === 'en_cours' ? 'bg-amber-500' : 'bg-blue-500'}`} />
                     <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
                       <div className="min-w-0 flex-1">

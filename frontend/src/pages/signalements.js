@@ -72,11 +72,11 @@ export default function SignalementsPublic() {
         <title>Signalements - Signal-Moi</title>
       </Head>
 
-      <main className="min-h-screen bg-slate-50 pt-16">
-        <section className="page-hero-animated relative overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-700 to-purple-700 text-white py-20">
+      <main className="signalements-page min-h-screen bg-slate-50 pt-16">
+        <section className="signalements-hero page-hero-animated relative overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-700 to-purple-700 text-white py-20">
           <div className="pointer-events-none absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.22),_transparent_25%),radial-gradient(circle_at_bottom_right,_rgba(59,130,246,0.22),_transparent_25%)]" />
           <div className="hero-copy-enter relative max-w-6xl mx-auto px-4 text-center">
-            <span className="inline-flex rounded-full bg-white/10 px-4 py-2 text-xs uppercase tracking-[0.35em] text-slate-200 mb-6">Signalements publics</span>
+            <span className="signalements-kicker inline-flex rounded-full bg-white/10 px-4 py-2 text-xs uppercase tracking-[0.35em] text-slate-200 mb-6">Signalements publics</span>
             <h1 className="text-4xl md:text-5xl font-extrabold mb-4">Transparence locale, action citoyenne</h1>
             <p className="text-lg md:text-xl text-slate-200 max-w-3xl mx-auto leading-relaxed">
               Explorez les incidents signalés par votre communauté, suivez les évolutions et encouragez le changement là où il est le plus nécessaire.
@@ -92,7 +92,7 @@ export default function SignalementsPublic() {
           </div>
         </section>
 
-        <section className="bg-slate-900 text-white py-12">
+        <section className="signalements-intro bg-slate-900 text-white py-12">
           <div className="max-w-6xl mx-auto px-4 text-center">
             <p className="text-sm uppercase tracking-[0.32em] text-cyan-300 mb-3">Transparence et sécurité</p>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Voir les signalements, suivre l’évolution</h2>
@@ -102,14 +102,14 @@ export default function SignalementsPublic() {
           </div>
         </section>
 
-        <section className="py-8 bg-white border-b">
+        <section className="signalements-filters py-8 bg-white border-b">
           <div className="max-w-6xl mx-auto px-4">
             <div className="flex flex-wrap gap-3 justify-center">
               {types.map(type => (
                 <button
                   key={type}
                   onClick={() => setFilter(type)}
-                  className={`px-4 py-2 rounded-full transition ${
+                  className={`signalement-filter px-4 py-2 rounded-full transition ${
                     filter === type ? 'bg-indigo-600 text-white shadow-soft' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
@@ -130,10 +130,10 @@ export default function SignalementsPublic() {
             ) : (
               <div className="card-stagger grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredSignalements.map((s, i) => (
-                  <div key={s.id} style={{ '--card-index': i }} className="interactive-card section-card overflow-hidden hover:shadow-xl transition">
+                  <div key={s.id} style={{ '--card-index': i }} className="signalement-card interactive-card section-card overflow-hidden hover:shadow-xl transition">
                     <div className="p-5">
                       <div className="flex items-center justify-between mb-3">
-                        <span className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-sm">
+                        <span className="signalement-type flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-sm">
                           {getTypeIcon(s.type)} {getTypeLabel(s.type)}
                         </span>
                         <span className="text-xs text-gray-400">
@@ -144,7 +144,7 @@ export default function SignalementsPublic() {
                       <p className="text-gray-600 text-sm mb-3">{s.description}</p>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-400">📍 {s.localisation}</span>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
+                        <span className={`signalement-status px-2 py-1 rounded-full text-xs ${
                           s.statut === 'traite' ? 'bg-green-100 text-green-700' :
                           s.statut === 'en_cours' ? 'bg-yellow-100 text-yellow-700' :
                           'bg-blue-100 text-blue-700'
@@ -169,7 +169,7 @@ export default function SignalementsPublic() {
           </div>
         </section>
 
-        <section className="py-16 bg-indigo-600">
+        <section className="signalements-cta py-16 bg-indigo-600">
           <div className="max-w-4xl mx-auto text-center px-4">
             <div className="section-card bg-white p-10 text-slate-900">
               <h2 className="text-3xl font-bold mb-4">Vous avez vu un incident ?</h2>
