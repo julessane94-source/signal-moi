@@ -574,9 +574,10 @@ router.post('/forgot-password', async (req, res) => {
     await db.query(`
       CREATE TABLE IF NOT EXISTS signal_moi.password_reset_tokens (
         id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL,
+        user_id UUID NOT NULL,
         email VARCHAR(255) NOT NULL,
         code VARCHAR(10) NOT NULL,
+        code_hash TEXT,
         expires_at TIMESTAMP NOT NULL,
         used BOOLEAN DEFAULT false,
         created_at TIMESTAMP DEFAULT NOW()
@@ -587,10 +588,13 @@ router.post('/forgot-password', async (req, res) => {
     // Supprimer les anciens codes pour cet email
     await db.query('DELETE FROM signal_moi.password_reset_tokens WHERE email = $1 AND used = false', [email]);
 
-    // Insérer le nouveau code
+    // Only a bcrypt hash of the code is persisted. The legacy code column keeps a
+    // random placeholder for compatibility with existing database deployments.
+    const codeHash = await bcrypt.hash(code, 12);
+    const codePlaceholder = crypto.randomBytes(6).toString('base64url');
     await db.query(
-      'INSERT INTO signal_moi.password_reset_tokens (user_id, email, code, expires_at) VALUES ($1, $2, $3, $4)',
-      [userResult.rows[0].id, email, code, expiresAt]
+      'INSERT INTO signal_moi.password_reset_tokens (user_id, email, code, code_hash, expires_at) VALUES ($1, $2, $3, $4, $5)',
+      [userResult.rows[0].id, email, codePlaceholder, codeHash, expiresAt]
     );
 
     // Envoyer l'email avec le code (simulation - à intégrer avec Nodemailer)
@@ -611,10 +615,7 @@ router.post('/forgot-password', async (req, res) => {
       });
     } catch (mailError) {
       console.warn('[FORGOT PASSWORD] Email non envoye:', mailError.message);
-      await db.query('DELETE FROM signal_moi.password_reset_tokens WHERE email = $1 AND code = $2 AND used = false', [email, code]).catch(() => {});
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[FORGOT PASSWORD] Code pour ${email}: ${code}`);
-      }
+      await db.query('DELETE FROM signal_moi.password_reset_tokens WHERE email = $1 AND code_hash = $2 AND used = false', [email, codeHash]).catch(() => {});
       return res.status(502).json({
         success: false,
         message: 'Le code n a pas pu etre envoye par email. Verifiez la configuration SMTP puis reessayez.'
@@ -622,12 +623,7 @@ router.post('/forgot-password', async (req, res) => {
     }
     
     // Réponse sécurisée
-    res.json({ 
-      success: true, 
-      message: 'Si cet email existe, un code a été envoyé',
-      // DEBUG ONLY - À SUPPRIMER EN PRODUCTION
-      ...(process.env.NODE_ENV === 'development' && { code })
-    });
+    res.json({ success: true, message: 'Si cet email existe, un code a été envoyé' });
 
   } catch (error) {
     console.error('[AUTH FORGOT PASSWORD] Erreur:', error.message);
@@ -645,11 +641,15 @@ router.post('/verify-reset-code', async (req, res) => {
     }
 
     const result = await db.query(
-      'SELECT id FROM signal_moi.password_reset_tokens WHERE email = $1 AND code = $2 AND used = false AND expires_at > NOW()',
-      [email, code]
+      'SELECT id, code, code_hash FROM signal_moi.password_reset_tokens WHERE email = $1 AND used = false AND expires_at > NOW() ORDER BY created_at DESC LIMIT 1',
+      [email]
     );
 
-    if (result.rows.length === 0) {
+    const resetToken = result.rows[0];
+    const validCode = resetToken && (resetToken.code_hash
+      ? await bcrypt.compare(String(code), resetToken.code_hash)
+      : resetToken.code === String(code));
+    if (!validCode) {
       return res.status(401).json({ success: false, message: 'Code invalide ou expiré' });
     }
 
@@ -676,22 +676,30 @@ router.post('/reset-password', async (req, res) => {
 
     // Vérifier le code
     const tokenResult = await db.query(
-      'SELECT user_id FROM signal_moi.password_reset_tokens WHERE email = $1 AND code = $2 AND used = false AND expires_at > NOW()',
-      [email, code]
+      'SELECT id, user_id, code, code_hash FROM signal_moi.password_reset_tokens WHERE email = $1 AND used = false AND expires_at > NOW() ORDER BY created_at DESC LIMIT 1',
+      [email]
     );
 
-    if (tokenResult.rows.length === 0) {
+    const resetToken = tokenResult.rows[0];
+    const validCode = resetToken && (resetToken.code_hash
+      ? await bcrypt.compare(String(code), resetToken.code_hash)
+      : resetToken.code === String(code));
+    if (!validCode) {
       return res.status(401).json({ success: false, message: 'Code invalide ou expiré' });
     }
 
-    const userId = tokenResult.rows[0].user_id;
+    const claimedToken = await db.query(
+      'UPDATE signal_moi.password_reset_tokens SET used = true WHERE id = $1 AND used = false RETURNING user_id',
+      [resetToken.id]
+    );
+    if (claimedToken.rows.length === 0) {
+      return res.status(401).json({ success: false, message: 'Code déjà utilisé ou expiré' });
+    }
+    const userId = claimedToken.rows[0].user_id;
 
     // Hasher et mettre à jour le mot de passe
     const hashedPassword = await bcrypt.hash(password, 10);
     await db.query('UPDATE signal_moi.users SET password = $1 WHERE id = $2', [hashedPassword, userId]);
-
-    // Marquer le code comme utilisé
-    await db.query('UPDATE signal_moi.password_reset_tokens SET used = true WHERE email = $1 AND code = $2', [email, code]);
 
     res.json({ success: true, message: 'Mot de passe réinitialisé avec succès' });
 

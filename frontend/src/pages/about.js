@@ -184,7 +184,7 @@ export default function About() {
               <div className="grid gap-8 md:grid-cols-[1.1fr_0.9fr]">
                 <div className="space-y-5 text-slate-600 text-lg leading-8">
                   {config.about_page?.content && config.about_page.content.includes('<') ? (
-                    <div dangerouslySetInnerHTML={{ __html: config.about_page.content }} />
+                    <div className="whitespace-pre-line">{config.about_page.content}</div>
                   ) : (
                     config.about_page?.content && <p>{config.about_page.content}</p>
                   )}

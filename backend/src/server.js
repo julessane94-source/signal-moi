@@ -2,12 +2,14 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const compression = require('compression');
+const helmet = require('helmet');
 const http = require('http');
 const socketIO = require('socket.io');
 const db = require('./config/database');
 const { setupSocket } = require('./socket/socket.handler');
 const { initializeDatabase } = require('./config/database-init');
 const SiteConfig = require('./models/SiteConfig');
+const { securityHeaders, authLimiter } = require('./middlewares/security');
 
 // ✅ Vérifier les variables d'environnement essentielles
 console.log('🔍 Vérification des variables d\'environnement...');
@@ -62,6 +64,8 @@ const corsOptions = {
 // CORS - permettre les requêtes depuis Vercel
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
+app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: false }));
+app.use(securityHeaders);
 app.use(compression({
     threshold: 1024,
     filter: (req, res) => {
@@ -85,21 +89,18 @@ app.use((req, res, next) => {
     const authStatus = authHeader ? '✅ Présent' : '❌ Manquant';
     console.log(`📨 [${new Date().toISOString()}] ${req.method} ${req.path}`);
     console.log(`   Headers: Authorization=${authStatus}`);
-    if (authHeader) {
-        console.log(`   Token: ${authHeader.substring(0, 20)}...`);
-    }
     next();
 });
 
 // Routes protégées et publiques
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/auth', accountRoutes); // Routes de compte (suppression, etc.)
 app.use('/api/admin', adminRoutes);
 app.use('/api/campagnes', campagneRoutes);
 app.use('/api/signalements', signalementRoutes);
 app.use('/api/plaidoyers', plaidoyerRoutes);
 app.use('/api/citizen', citizenRoutes);
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV === 'development') {
     app.use('/api/init', initRoutes);
 }
 app.use('/api/pages', pagesRoutes); // Routes PUBLIQUES pour les pages du site
@@ -110,7 +111,7 @@ app.use('/api/statistics', statisticsRoutes); // Statistiques pour admin et coll
 app.use('/api/posts', postsRoutes); // Blog posts
 
 // Debug routes (dev only)
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV === 'development') {
     const debugRoutes = require('./routes/debug.routes');
     app.use('/api/debug', debugRoutes);
 }
@@ -169,7 +170,12 @@ app.get('/uploads/logo', async (req, res, next) => {
     }
 });
 
-app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
+app.use('/uploads', (req, res, next) => {
+    if (req.path.startsWith('/signalements/')) {
+        return res.status(403).json({ error: 'Accès aux preuves via une route authentifiée requis' });
+    }
+    next();
+}, express.static(path.join(__dirname, '../uploads'), {
     maxAge: '365d',
     immutable: true,
     etag: true,
@@ -183,6 +189,9 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
 app.get('/uploads/*', async (req, res, next) => {
     try {
         const filePath = req.path.replace(/^\/+/, '');
+        if (filePath.startsWith('uploads/signalements/')) {
+            return res.status(403).json({ error: 'Accès aux preuves via une route authentifiée requis' });
+        }
         const result = await db.query(
             'SELECT mime_type, file_data FROM signal_moi.fichiers WHERE chemin = $1 LIMIT 1',
             [filePath]

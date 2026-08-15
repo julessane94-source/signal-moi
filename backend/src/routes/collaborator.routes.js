@@ -53,19 +53,13 @@ const authMiddleware = async (req, res, next) => {
         if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is not configured');
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
-        // Vérifier le rôle
-        if (decoded.role === 'collaborateur') {
-            req.user = decoded;
-            return next();
-        }
-        
-        // Fallback: vérifier dans la base de données
+        // Vérifier le rôle et l'état actif depuis la base à chaque requête.
         const userResult = await db.query(
-            'SELECT id, role FROM signal_moi.users WHERE id = $1',
+            'SELECT id, role, is_active FROM signal_moi.users WHERE id = $1',
             [decoded.id]
         );
         const user = (userResult.rows || [])[0];
-        if (user && user.role === 'collaborateur') {
+        if (user && user.role === 'collaborateur' && user.is_active !== false) {
             req.user = { id: decoded.id, role: 'collaborateur' };
             return next();
         }

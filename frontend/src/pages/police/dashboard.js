@@ -7,6 +7,7 @@ import { toast } from 'react-toastify'
 import { motion } from 'framer-motion'
 import { API_BASE } from '../../config/api'
 import { notifyRealtimeEvent } from '../../utils/realtimeAlerts'
+import { reverseGeocodePlace } from '../../utils/locationLabel'
 import {
   MapPinIcon as MapPin,
   DocumentTextIcon as DocumentText,
@@ -50,10 +51,30 @@ export default function PoliceDashboard() {
   const [livePlaybackUrls, setLivePlaybackUrls] = useState({})
   const [agentForm, setAgentForm] = useState({ prenom: '', nom: '', email: '', telephone: '', password: '' })
   const [creatingAgent, setCreatingAgent] = useState(false)
+  const [selectedPlaceLabel, setSelectedPlaceLabel] = useState('')
   const liveVideoChunksRef = useRef({})
   const livePlaybackUrlsRef = useRef({})
   const liveAlertedRef = useRef({})
   const stationLocationSentRef = useRef(false)
+
+  useEffect(() => {
+    let cancelled = false
+    const latitude = selectedSignal?.latitude
+    const longitude = selectedSignal?.longitude
+
+    setSelectedPlaceLabel('')
+    if (latitude === null || latitude === undefined || longitude === null || longitude === undefined) return undefined
+
+    reverseGeocodePlace(latitude, longitude)
+      .then((place) => {
+        if (!cancelled) setSelectedPlaceLabel(place)
+      })
+      .catch(() => {
+        if (!cancelled) setSelectedPlaceLabel('')
+      })
+
+    return () => { cancelled = true }
+  }, [selectedSignal?.id, selectedSignal?.latitude, selectedSignal?.longitude])
 
   useEffect(() => {
     if (authLoading || !user || !isCommissariatRole(user.role) || stationLocationSentRef.current) return
@@ -1347,7 +1368,10 @@ export default function PoliceDashboard() {
                 <div className="flex items-center gap-2">
                   <MapPin className="h-5 w-5 text-indigo-600 mt-1" />
                   <div>
-                    <p className="font-semibold text-gray-900">{selectedSignal.localisation}</p>
+                    <p className="font-semibold text-gray-900">{selectedPlaceLabel || selectedSignal.localisation || 'Lieu à préciser'}</p>
+                    {selectedPlaceLabel && selectedSignal.localisation && selectedPlaceLabel !== selectedSignal.localisation && (
+                      <p className="mt-1 text-xs font-medium text-indigo-700">Adresse saisie : {selectedSignal.localisation}</p>
+                    )}
                     {selectedSignal.latitude && (
                       <p className="text-xs text-gray-600 mt-1">
                         GPS: {parseFloat(selectedSignal.latitude).toFixed(4)}, {parseFloat(selectedSignal.longitude).toFixed(4)}

@@ -139,19 +139,14 @@ const authMiddleware = async (req, res, next) => {
         }
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
-        // Vérifier le rôle depuis le token OU depuis la base de données
-        if (decoded.role === 'admin') {
-            req.user = decoded;
-            return next();
-        }
-        
-        // Fallback: vérifier dans la base de données
+        // Toujours relire le rôle et l'état du compte : un JWT reste valide
+        // après la désactivation d'un compte tant qu'il n'est pas vérifié en base.
         const userResult = await db.query(
-            'SELECT id, role FROM signal_moi.users WHERE id = $1',
+            'SELECT id, role, is_active FROM signal_moi.users WHERE id = $1',
             [decoded.id]
         );
         const user = (userResult.rows || [])[0];
-        if (user && user.role === 'admin') {
+        if (user && user.role === 'admin' && user.is_active !== false) {
             req.user = { id: decoded.id, role: 'admin' };
             return next();
         }
@@ -428,11 +423,11 @@ router.delete('/users/:id', authMiddleware, async (req, res) => {
 router.post('/users/:id/reset-password', authMiddleware, async (req, res) => {
   const { id } = req.params;
   try {
-    const defaultPassword = process.env.DEFAULT_RESET_PASSWORD;
-    if (!defaultPassword) {
-      return res.status(503).json({ error: 'DEFAULT_RESET_PASSWORD doit être configurée avant toute réinitialisation.' });
+    const password = String(req.body?.password || '');
+    if (password.length < 12) {
+      return res.status(400).json({ error: 'Le mot de passe temporaire doit contenir au moins 12 caractères.' });
     }
-    const hashed = await bcrypt.hash(defaultPassword, 10);
+    const hashed = await bcrypt.hash(password, 12);
     const result = await db.query('UPDATE signal_moi.users SET password = $1 WHERE id = $2 RETURNING id', [hashed, id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Utilisateur introuvable' });
     res.json({ success: true });

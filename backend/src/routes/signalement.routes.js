@@ -4,6 +4,8 @@ const db = require('../config/database');
 const jwt = require('jsonwebtoken');
 const { uploadMultiple } = require('../middlewares/upload');
 const { v4: uuidv4 } = require('uuid');
+const { signalementLimiter, uploadLimiter } = require('../middlewares/security');
+const { validateUploadedMedia } = require('../middlewares/validateUploadedMedia');
 const FollowedCase = require('../models/FollowedCase');
 const fs = require('fs');
 const path = require('path');
@@ -66,7 +68,7 @@ const pruneLiveSessions = () => {
 };
 
 // Middleware d'authentification
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
     try {
         const token = req.headers.authorization?.replace('Bearer ', '');
         if (!token) {
@@ -74,7 +76,15 @@ const authMiddleware = (req, res, next) => {
         }
         if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is not configured');
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded;
+        const result = await db.query(
+            'SELECT id, role, is_active, quartier FROM signal_moi.users WHERE id = $1',
+            [decoded.id]
+        );
+        const user = result.rows[0];
+        if (!user || user.is_active === false) {
+            return res.status(401).json({ error: 'Compte utilisateur indisponible' });
+        }
+        req.user = user;
         next();
     } catch (err) {
         return res.status(401).json({ error: 'Token invalide', details: err.message });
@@ -164,7 +174,7 @@ const optionalAuthMiddleware = (req, res, next) => {
     next();
 };
 
-router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, res) => {
+router.post('/', authMiddleware, signalementLimiter, uploadLimiter, ...uploadMultiple('fichiers', 5), validateUploadedMedia, async (req, res) => {
     console.log('Body reçu pour signalement :', req.body);
     console.log('Utilisateur connecté :', req.user);
 
@@ -305,13 +315,42 @@ router.post('/', authMiddleware, ...uploadMultiple('fichiers', 5), async (req, r
 });
 
 // GET un fichier de signalement par id
-router.get('/fichiers/:id', async (req, res) => {
+router.get('/fichiers/:id', authMiddleware, async (req, res) => {
     const { id } = req.params;
     try {
-        const result = await db.query('SELECT id, nom_fichier, mime_type, taille, file_data, chemin FROM signal_moi.fichiers WHERE id = $1', [id]);
+        const result = await db.query(
+            `SELECT f.id, f.nom_fichier, f.mime_type, f.taille, f.file_data, f.chemin,
+                    s.user_id, s.assigned_to, s.type
+             FROM signal_moi.fichiers f
+             JOIN signal_moi.signalements s ON s.id = f.signalement_id
+             WHERE f.id = $1`,
+            [id]
+        );
         const file = result.rows[0];
         if (!file) {
             return res.status(404).json({ error: 'Fichier introuvable' });
+        }
+
+        const role = normalizeRole(req.user.role);
+        const isOwner = String(file.user_id) === String(req.user.id);
+        const isPrivileged = ['admin', 'administrateur', 'collaborateur'].includes(role);
+        let isAssignedPolice = false;
+        if (isPoliceLikeRole(role)) {
+            if (String(file.assigned_to || '') === String(req.user.id)) {
+                isAssignedPolice = true;
+            } else {
+                const station = await db.query(
+                    `SELECT id FROM signal_moi.users
+                     WHERE LOWER(role) = 'commissariat'
+                       AND LOWER(COALESCE(quartier, '')) = LOWER(COALESCE($1, ''))
+                     LIMIT 1`,
+                    [req.user.quartier]
+                );
+                isAssignedPolice = String(file.assigned_to || '') === String(station.rows[0]?.id || '');
+            }
+        }
+        if (!isOwner && !isPrivileged && !isAssignedPolice) {
+            return res.status(403).json({ error: 'Accès à cette preuve refusé' });
         }
 
         if (file.file_data) {

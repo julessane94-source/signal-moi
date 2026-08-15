@@ -25,11 +25,11 @@ const authMiddleware = async (req, res, next) => {
         // Vérifier le rôle
         // Fallback: vérifier dans la base de données
         const userResult = await db.query(
-            'SELECT id, role, prenom, nom, email, telephone, ville, quartier FROM signal_moi.users WHERE id = $1',
+            'SELECT id, role, prenom, nom, email, telephone, ville, quartier, is_active FROM signal_moi.users WHERE id = $1',
             [decoded.id]
         );
         const user = (userResult.rows || [])[0];
-        if (user && lawRoles.includes(normalizeRole(user.role))) {
+        if (user && user.is_active !== false && lawRoles.includes(normalizeRole(user.role))) {
             req.user = user;
             return next();
         }

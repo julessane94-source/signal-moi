@@ -374,15 +374,26 @@ export default function AdminDashboard() {
 
   const resetPassword = async (userId) => {
     try {
+      const password = window.prompt('Saisissez un mot de passe temporaire (12 caractères minimum) :')
+      if (!password) return
+      if (password.length < 12) {
+        toast.error('❌ Le mot de passe temporaire doit contenir au moins 12 caractères.')
+        return
+      }
       const token = localStorage.getItem('token')
       const base = API_BASE
-      await fetch(`${base}/api/admin/users/${userId}/reset-password`, {
+      const response = await fetch(`${base}/api/admin/users/${userId}/reset-password`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
       })
-      toast.success('✅ Mot de passe réinitialisé à "Default123!"')
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}))
+        throw new Error(error.error || 'Réinitialisation impossible')
+      }
+      toast.success('✅ Mot de passe temporaire mis à jour')
     } catch (error) {
-      toast.error('❌ Erreur')
+      toast.error(`❌ ${error.message || 'Erreur'}`)
     }
   }
 

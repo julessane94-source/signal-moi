@@ -5,6 +5,7 @@ import { useSocket } from '../../context/SocketContext'
 import { API_BASE } from '../../config/api'
 import { toast } from 'react-toastify'
 import dynamic from 'next/dynamic'
+import { reverseGeocodePlace } from '../../utils/locationLabel'
 
 const LeafletMap = dynamic(() => import('../../components/Map/LeafletMap.jsx'), {
   ssr: false,
@@ -59,7 +60,7 @@ const MAX_RECORDING_MS = 3 * 60 * 1000
 
 const shouldReplaceAutoLocation = (value) => {
   const text = String(value || '')
-  return !text || text.startsWith('Position approximative IP') || text.startsWith('Sedhiou - localisation')
+  return !text || text.startsWith('GPS:') || text.startsWith('Position approximative IP') || text.startsWith('Sedhiou - localisation')
 }
 
 const saveLastGpsLocation = ({ latitude, longitude, accuracy }) => {
@@ -360,12 +361,10 @@ export default function NewSignalement() {
       setLatitude(lat)
       setLongitude(lng)
       saveLastGpsLocation({ latitude: lat, longitude: lng, accuracy: pos.coords.accuracy })
-      // reverse geocode with Nominatim to fill localisation if empty
+      // Keep a short, actionable place name for responders: quartier · ville.
       try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
-        if (res.ok) {
-          const data = await res.json()
-          const addr = data.display_name
+        const addr = await reverseGeocodePlace(lat, lng)
+        if (addr) {
           setFormData(prev => ({
             ...prev,
             localisation: shouldReplaceAutoLocation(prev.localisation) ? addr : prev.localisation,
@@ -413,11 +412,7 @@ export default function NewSignalement() {
         saveLastGpsLocation({ latitude: lat, longitude: lng, accuracy: pos.coords.accuracy })
 
         try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
-          if (res.ok) {
-            const data = await res.json()
-            localisation = data.display_name || coordsLabel
-          }
+          localisation = await reverseGeocodePlace(lat, lng) || coordsLabel
         } catch (e) {
           localisation = coordsLabel
         }

@@ -31,7 +31,7 @@ router.post('/seed-users', async (req, res) => {
     const usersToCreate = [
       {
         email: 'admin@signal-moi.fr',
-        password: 'Admin123!',
+        password: process.env.SEED_ADMIN_PASSWORD,
         prenom: 'Admin',
         nom: 'Signal-Moi',
         role: 'admin',
@@ -41,7 +41,7 @@ router.post('/seed-users', async (req, res) => {
       },
       {
         email: 'julessane94@gmail.com',
-        password: 'Admin123!',
+        password: process.env.SEED_CITIZEN_PASSWORD,
         prenom: 'Jules',
         nom: 'Sane',
         role: 'citoyen',
@@ -50,6 +50,10 @@ router.post('/seed-users', async (req, res) => {
         quartier: 'Centre'
       }
     ];
+
+    if (!usersToCreate.every((user) => user.password && user.password.length >= 12)) {
+      return res.status(503).json({ success: false, message: 'Les mots de passe de seed doivent être définis et comporter au moins 12 caractères.' });
+    }
 
     const createdUsers = [];
 
