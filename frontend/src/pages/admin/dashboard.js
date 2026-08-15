@@ -101,6 +101,7 @@ export default function AdminDashboard() {
   const [logoUrl, setLogoUrl] = useState('/icons/icon-192x192.png')
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const [uploadingSlideshow, setUploadingSlideshow] = useState(false)
+  const [deletingSlideshowImage, setDeletingSlideshowImage] = useState('')
   const [slideshowFiles, setSlideshowFiles] = useState([])
   const [siteConfig, setSiteConfig] = useState({
     siteName: 'Signal-Moi',
@@ -248,6 +249,42 @@ export default function AdminDashboard() {
       }))
     } catch (error) {
       console.error('Erreur fetchStats:', error)
+    }
+  }
+
+  const removeSlideshowImage = async (imageUrl) => {
+    if (!imageUrl || deletingSlideshowImage) return
+    if (!window.confirm('Retirer cette image du diaporama de la page d’accueil ?')) return
+
+    setDeletingSlideshowImage(imageUrl)
+    try {
+      const token = localStorage.getItem('token')
+      const nextImages = (siteConfig.homePage?.images || []).filter((image) => image !== imageUrl)
+      const res = await fetch(`${API_BASE}/api/admin/site-config`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          homePage: {
+            ...(siteConfig.homePage || {}),
+            images: nextImages
+          }
+        })
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Suppression impossible')
+
+      setSiteConfig((prev) => ({
+        ...prev,
+        homePage: { ...(prev.homePage || {}), images: nextImages }
+      }))
+      toast.success('Image retirée du diaporama')
+    } catch (error) {
+      toast.error(error.message || 'Impossible de retirer cette image')
+    } finally {
+      setDeletingSlideshowImage('')
     }
   }
 
@@ -1231,6 +1268,42 @@ export default function AdminDashboard() {
                           </Button>
                           <span className="text-xs text-slate-500">Les images sont stockées directement dans la configuration de la page d’accueil.</span>
                         </div>
+                        {(siteConfig.homePage?.images || []).length > 0 && (
+                          <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                            <div className="mb-3 flex items-center justify-between gap-3">
+                              <div>
+                                <p className="text-sm font-bold text-slate-900">Images publiées</p>
+                                <p className="text-xs text-slate-500">Retirez une image sans modifier les autres diapositives.</p>
+                              </div>
+                              <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-700">{siteConfig.homePage.images.length}</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                              {siteConfig.homePage.images.map((imageUrl, index) => (
+                                <div key={`${imageUrl}-${index}`} className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                                  <img
+                                    src={getImageUrl(imageUrl)}
+                                    onError={(event) => handleImageFallback(event, imageUrl)}
+                                    alt={`Diapositive ${index + 1}`}
+                                    className="h-24 w-full object-cover"
+                                  />
+                                  <div className="flex items-center justify-between gap-2 p-2">
+                                    <span className="text-xs font-semibold text-slate-500">Image {index + 1}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => removeSlideshowImage(imageUrl)}
+                                      disabled={Boolean(deletingSlideshowImage)}
+                                      className="inline-flex items-center gap-1 rounded-lg bg-orange-50 px-2 py-1 text-xs font-bold text-orange-700 transition hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                      aria-label={`Supprimer l'image ${index + 1} du diaporama`}
+                                    >
+                                      <Trash className="h-3.5 w-3.5" />
+                                      {deletingSlideshowImage === imageUrl ? 'Retrait…' : 'Retirer'}
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </FormField>
                     </div>
 

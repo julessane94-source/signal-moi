@@ -211,10 +211,10 @@ export default function Home() {
               </div>
 
               <div className="hero-visual-float min-w-0 w-full">
-                <div className="overflow-hidden rounded-3xl border border-white/15 bg-white/10 p-2 shadow-2xl backdrop-blur transition duration-500 hover:shadow-emerald-400/20">
+                <div className="hero-slideshow overflow-hidden rounded-[2rem] border border-white/15 bg-white/10 p-2 shadow-2xl backdrop-blur transition duration-500 hover:shadow-emerald-400/20">
                   {slideshowImages.length > 0 ? (
                     <div className="relative">
-                      <div className="relative h-[340px] w-full overflow-hidden rounded-2xl bg-slate-950 sm:h-[440px]">
+                      <div className="relative h-[340px] w-full overflow-hidden rounded-[1.45rem] bg-slate-950 sm:h-[440px]">
                         <Image
                           src={getImageUrl(slideshowImages[slideIndex], { preferApi: true })}
                           alt={`Aperçu Signal-Moi ${slideIndex + 1}`}
@@ -223,31 +223,45 @@ export default function Home() {
                           className="object-contain"
                           priority={slideIndex === 0}
                         />
+                        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-slate-950/75 via-slate-950/10 to-transparent" />
+                        <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-slate-950/55 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-white backdrop-blur-md">
+                          <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(52,211,153,.18)]" />
+                          En images
+                        </div>
+                        <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3 text-white">
+                          <div>
+                            <p className="text-xs font-medium text-emerald-200">Signal-Moi sur le terrain</p>
+                            <p className="mt-1 text-sm font-bold sm:text-base">Découvrez les actions de la communauté</p>
+                          </div>
+                          <span className="shrink-0 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-bold backdrop-blur-md">{slideIndex + 1} / {slideshowImages.length}</span>
+                        </div>
                       </div>
                       <button
                         onClick={() => setSlideIndex((s) => (s - 1 + slideshowImages.length) % slideshowImages.length)}
-                        className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center bg-slate-950/70 text-2xl text-white"
+                        className="slideshow-arrow absolute left-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-slate-950/60 text-2xl text-white backdrop-blur-md"
                         aria-label="Précédent"
                       >‹</button>
                       <button
                         onClick={() => setSlideIndex((s) => (s + 1) % slideshowImages.length)}
-                        className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center bg-slate-950/70 text-2xl text-white"
+                        className="slideshow-arrow absolute right-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-slate-950/60 text-2xl text-white backdrop-blur-md"
                         aria-label="Suivant"
                       >›</button>
                     </div>
                   ) : (
-                    <iframe title="Carte de Sédhiou" src="https://www.openstreetmap.org/export/embed.html?bbox=-15.62%2C12.66%2C-15.49%2C12.75&layer=mapnik&marker=12.7081%2C-15.5569" className="h-[420px] w-full rounded-2xl" style={{ border: 0 }} />
+                    <iframe title="Carte de Sédhiou" src="https://www.openstreetmap.org/export/embed.html?bbox=-15.62%2C12.66%2C-15.49%2C12.75&layer=mapnik&marker=12.7081%2C-15.5569" className="h-[420px] w-full rounded-[1.45rem]" style={{ border: 0 }} />
                   )}
                 </div>
                 {slideshowImages.length > 0 && (
-                  <div className="mt-4 flex justify-center gap-2">
+                  <div className="slideshow-thumbnails mt-4 flex justify-center gap-2">
                     {slideshowImages.map((_, i) => (
                       <button
                         key={i}
                         onClick={() => setSlideIndex(i)}
                         aria-label={`Aller au slide ${i + 1}`}
-                        className={`h-2.5 w-8 ${i === slideIndex ? 'bg-emerald-400' : 'bg-white/30'}`}
-                      />
+                        className={`relative h-2.5 overflow-hidden rounded-full transition-all duration-300 ${i === slideIndex ? 'w-10 bg-emerald-300' : 'w-2.5 bg-white/35 hover:bg-white/70'}`}
+                      >
+                        {i === slideIndex && <span className="slideshow-progress absolute inset-y-0 left-0 bg-emerald-500" />}
+                      </button>
                     ))}
                   </div>
                 )}

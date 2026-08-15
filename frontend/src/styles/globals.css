@@ -109,7 +109,8 @@ body {
    Ces variables gardent l'accueil, les campagnes et les signalements cohérents. */
 .home-page,
 .signalements-page,
-.campaigns-page {
+.campaigns-page,
+.advocacy-page {
   --signal-primary: #059669;
   --signal-primary-dark: #047857;
   --signal-primary-soft: #ecfdf5;
@@ -126,18 +127,65 @@ body {
 
 .home-page .home-panel,
 .campaigns-page .interactive-card,
-.signalements-page .signalement-card {
+.signalements-page .signalement-card,
+.advocacy-page .interactive-card {
   border-color: rgba(148, 163, 184, .32);
 }
 
 .home-page .home-panel:hover,
 .campaigns-page .interactive-card:hover,
-.signalements-page .signalement-card:hover {
+.signalements-page .signalement-card:hover,
+.advocacy-page .interactive-card:hover {
   border-color: rgba(16, 185, 129, .42);
+}
+
+/* Diaporama : les contrôles restent lisibles sur des images claires comme foncées. */
+.hero-slideshow {
+  position: relative;
+  background: linear-gradient(145deg, rgba(255,255,255,.16), rgba(16,185,129,.08));
+}
+
+.hero-slideshow::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 1.5rem -1.5rem -1.5rem 1.5rem;
+  border-radius: 2rem;
+  background: rgba(16, 185, 129, .18);
+  filter: blur(30px);
+}
+
+.slideshow-arrow {
+  transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease;
+}
+
+.slideshow-arrow:hover {
+  transform: translateY(-50%) scale(1.08) !important;
+  border-color: rgba(110, 231, 183, .65);
+  background-color: rgba(6, 78, 59, .85);
+}
+
+.slideshow-progress {
+  animation: slideshow-progress 5s linear both;
+}
+
+@keyframes slideshow-progress {
+  from { width: 0; }
+  to { width: 100%; }
 }
 
 .campaigns-page .interactive-card {
   box-shadow: 0 12px 30px rgba(15, 23, 42, .07);
+}
+
+.advocacy-page {
+  background:
+    radial-gradient(circle at 92% 22%, rgba(16, 185, 129, .08), transparent 25rem),
+    #f8fafc;
+}
+
+.advocacy-page .interactive-card:hover {
+  box-shadow: 0 22px 44px rgba(6, 78, 59, .14);
 }
 
 .campaigns-page .interactive-card:hover {
