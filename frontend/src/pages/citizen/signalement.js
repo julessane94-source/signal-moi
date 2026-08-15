@@ -965,7 +965,7 @@ export default function NewSignalement() {
             </div>
           </div>
 
-          <form id="formulaire-signalement" onSubmit={handleSubmit} noValidate className="grid gap-6 lg:grid-cols-[1fr_340px]">
+          <form id="formulaire-signalement" onSubmit={handleSubmit} noValidate className="report-form grid gap-6 lg:grid-cols-[1fr_340px]">
             <div className="space-y-6">
               <section data-reveal className="card-stagger grid gap-4 md:grid-cols-3">
                 {STARTER_ACTIONS.map((action, index) => (
@@ -1012,7 +1012,7 @@ export default function NewSignalement() {
                       key={item.value}
                       type="button"
                       onClick={() => handleQuickType(item.value, item.label)}
-                      className={`min-h-36 rounded-[1.5rem] border-2 p-5 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl ${formData.type === item.value ? 'border-red-500 bg-red-50 shadow-lg ring-4 ring-red-100' : `${item.tone} hover:border-slate-300`}`}
+                      className={`report-type-option min-h-36 rounded-[1.5rem] border-2 p-5 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl ${formData.type === item.value ? 'border-red-500 bg-red-50 shadow-lg ring-4 ring-red-100' : `${item.tone} hover:border-slate-300`}`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-3xl font-black shadow-sm ring-1 ring-black/5">{item.icon}</span>
@@ -1023,7 +1023,7 @@ export default function NewSignalement() {
                     </button>
                   ))}
                 </div>
-                <select name="type" required value={formData.type} onChange={handleChange} className="mt-4 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100">
+                <select name="type" required value={formData.type} onChange={handleChange} className="mt-4 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-950 outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100">
                   {ALL_REPORT_TYPES.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
                 </select>
               </section>

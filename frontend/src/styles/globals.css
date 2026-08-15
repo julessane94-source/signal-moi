@@ -422,6 +422,36 @@ select {
   font: inherit;
 }
 
+/* Formulaire citoyen : contraste explicite, y compris lorsque le navigateur
+   applique ses styles système à un champ ou à une option de liste. */
+.report-form {
+  color: #0f172a;
+}
+
+.report-form input:not([type='checkbox']):not([type='radio']),
+.report-form textarea,
+.report-form select {
+  background-color: #ffffff;
+  color: #0f172a;
+  -webkit-text-fill-color: #0f172a;
+}
+
+.report-form input::placeholder,
+.report-form textarea::placeholder {
+  color: #64748b;
+  opacity: 1;
+  -webkit-text-fill-color: #64748b;
+}
+
+.report-form select option {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+.report-form .report-type-option {
+  color: inherit;
+}
+
 ::selection {
   background: rgba(99,102,241,0.18);
   color: #111827;
