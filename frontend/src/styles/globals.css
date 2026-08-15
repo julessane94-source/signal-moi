@@ -63,6 +63,53 @@ body {
   transform: translateY(-1px);
 }
 
+/* Accueil : grille, rythme vertical et échelle typographique cohérents. */
+.home-page {
+  --home-max-width: 76rem;
+}
+
+.home-container {
+  width: min(100% - 2rem, var(--home-max-width));
+  margin-inline: auto;
+}
+
+.home-section {
+  padding-block: clamp(3.75rem, 7vw, 6.5rem);
+}
+
+.home-panel {
+  border-width: 1px;
+  border-radius: 1.25rem;
+  box-shadow: 0 12px 36px rgba(15, 23, 42, .06);
+}
+
+.home-eyebrow {
+  font-size: .75rem;
+  font-weight: 700;
+  line-height: 1.25rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.home-title {
+  color: #020617;
+  font-size: clamp(1.875rem, 3.2vw, 2.75rem);
+  font-weight: 750;
+  line-height: 1.12;
+  letter-spacing: -.035em;
+}
+
+.home-copy {
+  color: #475569;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+@media (min-width: 640px) {
+  .home-container { width: min(100% - 3rem, var(--home-max-width)); }
+  .home-copy { font-size: 1.0625rem; }
+}
+
 .content-reveal {
   opacity: 0;
   transform: translateY(28px) scale(0.99);

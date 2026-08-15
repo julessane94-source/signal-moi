@@ -156,7 +156,7 @@ export default function Home() {
         )}
       </Head>
 
-      <main className="min-h-screen overflow-x-hidden pt-16 bg-white">
+      <main className="home-page min-h-screen overflow-x-hidden bg-slate-50 pt-16">
         <section className="page-hero-animated relative overflow-hidden bg-slate-950 text-white">
           {slideshowImages.length > 0 && (
             <Image
@@ -171,21 +171,21 @@ export default function Home() {
           )}
           <div className="absolute inset-0 bg-slate-950/35" />
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,6,23,0.88)_0%,rgba(2,6,23,0.58)_48%,rgba(2,6,23,0.22)_100%)]" />
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 lg:py-16">
-            <div className="grid min-w-0 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.92fr)] lg:gap-10">
+          <div className="home-container relative py-14 sm:py-16 lg:py-24">
+            <div className="grid min-w-0 items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.9fr)] lg:gap-16">
               <div className="hero-copy-enter min-w-0 max-w-3xl">
-                <div className="inline-flex max-w-full items-center gap-3 border border-white/15 bg-white/15 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-50 sm:px-4 sm:text-xs sm:tracking-[0.24em]">
+                <div className="inline-flex max-w-full items-center gap-3 rounded-full border border-white/15 bg-white/10 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-50 backdrop-blur sm:px-4 sm:text-xs sm:tracking-[0.2em]">
                   <img src={getImageUrl(config.logoUrl)} alt="Logo Signal-Moi" className="h-7 w-7 rounded object-cover" />
                   <span className="truncate">Signal-Moi Sédhiou</span>
                 </div>
-                <h1 className="mt-6 max-w-full text-4xl font-black leading-tight break-words md:text-5xl lg:text-6xl">
+                <h1 className="mt-6 max-w-full break-words text-4xl font-extrabold leading-[1.05] tracking-[-0.045em] sm:text-5xl lg:text-6xl">
                   {config.home_page?.title || 'Un signalement clair pour une réponse plus rapide'}
                 </h1>
-                <p className="mt-5 text-lg md:text-xl text-slate-200 max-w-2xl">
+                <p className="mt-6 max-w-2xl text-base leading-7 text-slate-200 sm:text-lg sm:leading-8">
                   {config.home_page?.heroText || 'Aidez les quartiers de Sédhiou à remonter les urgences, les preuves et les besoins de terrain aux équipes concernées.'}
                 </p>
 
-                <div className="mt-8 flex max-w-full flex-col gap-3 sm:flex-row">
+                <div className="mt-9 flex max-w-full flex-col gap-3 sm:flex-row sm:flex-wrap">
                   <Link href={user ? "/citizen/signalement" : "/login"} className="min-w-0">
                     <Button className="w-full bg-emerald-500 text-slate-950 px-7 py-3 font-bold hover:bg-emerald-400 transition sm:w-auto" size="md">Faire un signalement</Button>
                   </Link>
@@ -203,21 +203,21 @@ export default function Home() {
                   </button>
                 )}
 
-                <div className="mt-8 grid max-w-2xl grid-cols-1 border border-white/10 bg-white/10 sm:grid-cols-3">
+                <div className="mt-10 grid max-w-2xl grid-cols-1 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.08] backdrop-blur sm:grid-cols-3">
                   {localStats.map((item) => (
-                    <div key={item.label} className="min-w-0 p-4">
-                      <p className="text-xl font-black text-white">{item.value}</p>
-                      <p className="mt-1 text-xs uppercase tracking-wide text-slate-400">{item.label}</p>
+                    <div key={item.label} className="min-w-0 border-white/10 p-4 sm:border-r last:border-0">
+                      <p className="text-lg font-bold text-white sm:text-xl">{item.value}</p>
+                      <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.12em] text-slate-400">{item.label}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
               <div className="hero-visual-float min-w-0 w-full">
-                <div className="overflow-hidden border border-white/10 bg-white/10 shadow-2xl transition duration-500 hover:shadow-emerald-400/20">
+                <div className="overflow-hidden rounded-3xl border border-white/15 bg-white/10 p-2 shadow-2xl backdrop-blur transition duration-500 hover:shadow-emerald-400/20">
                   {slideshowImages.length > 0 ? (
                     <div className="relative">
-                      <div className="relative h-[360px] w-full bg-slate-950 sm:h-[440px]">
+                      <div className="relative h-[340px] w-full overflow-hidden rounded-2xl bg-slate-950 sm:h-[440px]">
                         <Image
                           src={getImageUrl(slideshowImages[slideIndex], { preferApi: true })}
                           alt={`Aperçu Signal-Moi ${slideIndex + 1}`}
@@ -239,7 +239,7 @@ export default function Home() {
                       >›</button>
                     </div>
                   ) : (
-                    <iframe title="Carte de Sédhiou" src="https://www.openstreetmap.org/export/embed.html?bbox=-15.62%2C12.66%2C-15.49%2C12.75&layer=mapnik&marker=12.7081%2C-15.5569" className="h-[420px] w-full" style={{ border: 0 }} />
+                    <iframe title="Carte de Sédhiou" src="https://www.openstreetmap.org/export/embed.html?bbox=-15.62%2C12.66%2C-15.49%2C12.75&layer=mapnik&marker=12.7081%2C-15.5569" className="h-[420px] w-full rounded-2xl" style={{ border: 0 }} />
                   )}
                 </div>
                 {slideshowImages.length > 0 && (
@@ -259,13 +259,13 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="bg-white py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="grid items-center gap-6 border border-emerald-200 bg-emerald-50 p-6 md:grid-cols-[1.2fr_0.8fr] md:p-8">
+        <section className="home-section bg-white">
+          <div className="home-container">
+            <div className="home-panel grid items-center gap-6 border-emerald-200 bg-emerald-50/80 p-6 md:grid-cols-[1.2fr_0.8fr] md:p-8">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-emerald-700 sm:tracking-[0.25em]">Application mobile</p>
-                <h2 className="mt-3 text-3xl font-black text-slate-950">Télécharger Signal-Moi sur téléphone</h2>
-                <p className="mt-3 max-w-2xl text-slate-700">
+                <p className="home-eyebrow text-emerald-700">Application mobile</p>
+                <h2 className="home-title mt-3">Télécharger Signal-Moi sur téléphone</h2>
+                <p className="home-copy mt-3 max-w-2xl text-slate-700">
                   Installez l'application depuis votre navigateur pour signaler plus vite, partager la position GPS et lancer un live en cas d'urgence.
                 </p>
               </div>
@@ -283,18 +283,18 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="border-b border-slate-200 bg-white py-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="card-stagger grid gap-4 md:grid-cols-3">
+        <section className="home-section border-b border-slate-200 bg-white">
+          <div className="home-container">
+            <div className="card-stagger grid gap-5 md:grid-cols-3">
               {actionCards.map((item, index) => (
                 item.restricted ? (
-                  <article key={item.title} style={{ '--card-index': index }} className="interactive-card border border-slate-200 bg-slate-50 p-6">
+                  <article key={item.title} style={{ '--card-index': index }} className="home-panel interactive-card border-slate-200 bg-slate-50 p-6">
                     <p className="text-sm font-semibold uppercase tracking-wide text-slate-600">{item.title}</p>
                     <p className="mt-3 text-lg font-bold text-slate-950">{item.text}</p>
                     <span className="mt-5 inline-block text-sm font-semibold text-slate-500">Acces securise</span>
                   </article>
                 ) : (
-                  <Link key={item.title} href={item.href} style={{ '--card-index': index }} className="interactive-card group border border-slate-200 bg-white p-6 transition hover:border-emerald-300 hover:bg-emerald-50">
+                  <Link key={item.title} href={item.href} style={{ '--card-index': index }} className="home-panel interactive-card group border-slate-200 bg-white p-6 transition hover:border-emerald-300 hover:bg-emerald-50">
                     <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">{item.title}</p>
                     <p className="mt-3 text-lg font-bold text-slate-950 group-hover:text-emerald-900">{item.text}</p>
                     <span className="mt-5 inline-block text-sm font-semibold text-slate-700">Ouvrir →</span>
@@ -305,17 +305,17 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="bg-slate-50 py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <section className="home-section bg-slate-50">
+          <div className="home-container">
             <div className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
               <div className="min-w-0">
-                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-emerald-700 sm:tracking-[0.25em]">Pourquoi Signal-Moi</p>
-                <h2 className="mt-3 text-3xl font-black text-slate-950 md:text-4xl">Une plateforme structurée pour agir localement.</h2>
-                <p className="mt-4 text-slate-600">Chaque signalement rassemble les informations utiles: description, localisation, pièces jointes et suivi. Les équipes peuvent alors prioriser sans perdre de temps.</p>
+                <p className="home-eyebrow text-emerald-700">Pourquoi Signal-Moi</p>
+                <h2 className="home-title mt-3">Une plateforme structurée pour agir localement.</h2>
+                <p className="home-copy mt-4">Chaque signalement rassemble les informations utiles: description, localisation, pièces jointes et suivi. Les équipes peuvent alors prioriser sans perdre de temps.</p>
               </div>
               <div className="card-stagger grid min-w-0 gap-4 md:grid-cols-3">
                 {features.map((feature, index) => (
-                  <article key={feature.title} style={{ '--card-index': index }} className="interactive-card border border-slate-200 bg-white p-5 shadow-sm">
+                  <article key={feature.title} style={{ '--card-index': index }} className="home-panel interactive-card border-slate-200 bg-white p-5 shadow-sm">
                     <div className="text-sm font-black text-emerald-700">{feature.icon}</div>
                     <h3 className="mt-4 text-lg font-bold text-slate-950">{feature.title}</h3>
                     <p className="mt-2 text-sm leading-6 text-slate-600">{feature.text}</p>
@@ -326,12 +326,12 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="bg-white py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <section className="home-section bg-white">
+          <div className="home-container">
             <div className="grid min-w-0 gap-8 lg:grid-cols-2">
-              <div className="min-w-0 border border-slate-200 p-6">
-                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-500 sm:tracking-[0.25em]">Parcours citoyen</p>
-                <h2 className="mt-3 text-2xl font-black text-slate-950">Signaler en moins de quelques minutes</h2>
+              <div className="home-panel min-w-0 border-slate-200 p-6 sm:p-8">
+                <p className="home-eyebrow text-slate-500">Parcours citoyen</p>
+                <h2 className="home-title mt-3 text-2xl">Signaler en moins de quelques minutes</h2>
                 <div className="mt-6 space-y-4">
                   {['Choisir le type d’incident', 'Décrire ce qui se passe', 'Ajouter une photo, vidéo ou un live', 'Confirmer la localisation à Sédhiou', 'Suivre le traitement du dossier'].map((step, index) => (
                     <div key={step} className="flex gap-4 border-t border-slate-100 pt-4">
@@ -341,10 +341,10 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-              <div className="min-w-0 border border-emerald-200 bg-emerald-50 p-6">
-                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-emerald-700 sm:tracking-[0.25em]">Priorités locales</p>
-                <h2 className="mt-3 text-2xl font-black text-slate-950">Des données utiles pour Sédhiou</h2>
-                <p className="mt-4 text-slate-700">Les tableaux de bord aident à repérer les zones récurrentes, les urgences de sécurité et les besoins d’intervention. Les statistiques d’âge ignorent les profils sans date de naissance afin de garder des analyses propres.</p>
+              <div className="home-panel min-w-0 border-emerald-200 bg-emerald-50 p-6 sm:p-8">
+                <p className="home-eyebrow text-emerald-700">Priorités locales</p>
+                <h2 className="home-title mt-3 text-2xl">Des données utiles pour Sédhiou</h2>
+                <p className="home-copy mt-4 text-slate-700">Les tableaux de bord aident à repérer les zones récurrentes, les urgences de sécurité et les besoins d’intervention. Les statistiques d’âge ignorent les profils sans date de naissance afin de garder des analyses propres.</p>
                 <div className="mt-6 grid gap-3 sm:grid-cols-2">
                   {['Sécurité publique', 'Voirie et éclairage', 'Incidents urgents', 'Actions communautaires'].map((item) => (
                     <div key={item} className="border border-emerald-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800">{item}</div>
@@ -356,12 +356,12 @@ export default function Home() {
         </section>
 
         {/* Blog */}
-        <section className="py-12 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <section className="home-section bg-slate-50">
+          <div className="home-container">
             <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0">
-                <h2 className="text-2xl font-bold text-gray-900">Blog Signal-Moi</h2>
-                <p className="text-sm text-gray-600">Actualités, guides pratiques et témoignages de notre communauté</p>
+                <h2 className="home-title text-2xl">Blog Signal-Moi</h2>
+                <p className="home-copy mt-1 text-sm">Actualités, guides pratiques et témoignages de notre communauté</p>
               </div>
               <div className="flex min-w-0 flex-col gap-2 text-sm text-gray-500 sm:flex-row sm:items-center">
                 <span className="hidden sm:inline">Filtrer :</span>
@@ -370,7 +370,7 @@ export default function Home() {
                     <button
                       key={tab}
                       onClick={() => setActiveFilter(tab)}
-                      className={`px-3 py-1 rounded-full text-sm ${activeFilter === tab ? 'bg-indigo-600 text-white' : 'bg-white border text-gray-700 hover:bg-indigo-50'}`}>
+                      className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${activeFilter === tab ? 'bg-indigo-600 text-white shadow-sm' : 'border border-slate-200 bg-white text-slate-700 hover:bg-indigo-50'}`}>
                       {tab}
                     </button>
                   ))}
@@ -403,12 +403,12 @@ export default function Home() {
 
         {/* Collaborator campaigns */}
         {collaboratorCampaigns.length > 0 && (
-          <section className="py-8">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Campagnes des collaborateurs</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <section className="home-section bg-white">
+            <div className="home-container">
+              <h2 className="home-title mb-8 text-center text-2xl">Campagnes des collaborateurs</h2>
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
                 {collaboratorCampaigns.map(c => (
-                  <div key={c.id} className="rounded-xl shadow overflow-hidden bg-white">
+                  <div key={c.id} className="home-panel interactive-card overflow-hidden bg-white">
                     {c.image_url ? (
                       <img src={getImageUrl(c.image_url)} onError={(event) => handleImageFallback(event, c.image_url)} alt={c.titre} loading="lazy" decoding="async" className="w-full h-44 object-cover" />
                     ) : (
@@ -427,10 +427,10 @@ export default function Home() {
         )}
 
         {/* Community CTA */}
-        <section className="py-10 bg-gradient-to-r from-green-500 to-teal-600 text-white">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
-            <h2 className="text-3xl font-bold mb-4">Rejoignez notre communauté</h2>
-            <p className="text-xl text-green-50 mb-8 max-w-2xl mx-auto">Des milliers de citoyens engagés améliorent déjà leur quartier ensemble.</p>
+        <section className="px-4 pb-6 pt-2 sm:px-6 sm:pb-10">
+          <div className="home-container rounded-3xl bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-12 text-center text-white shadow-xl sm:px-10 sm:py-14">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Rejoignez notre communauté</h2>
+            <p className="mx-auto mb-8 mt-4 max-w-2xl text-base leading-7 text-emerald-50 sm:text-lg">Des milliers de citoyens engagés améliorent déjà leur quartier ensemble.</p>
 
             <div className="flex flex-col gap-4 md:flex-row md:justify-center">
               <Link href={user ? "/citizen/dashboard" : "/register"} className="min-w-0">
