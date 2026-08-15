@@ -51,7 +51,7 @@ const signalementValidations = {
   create: [
     body('titre').notEmpty().trim().isLength({ min: 5, max: 100 }).withMessage('Titre invalide'),
     body('description').notEmpty().isLength({ min: 10, max: 5000 }).withMessage('Description invalide'),
-    body('type').isIn(['violence', 'vol', 'probleme_eclairage', 'nid_de_poule', 'incendie', 'accident', 'bruit', 'autre']).withMessage('Type invalide'),
+    body('type').isIn(['violence', 'vol', 'probleme_eclairage', 'nid_de_poule', 'incendie', 'accident', 'dechet', 'eau_sale', 'bruit', 'insecurite', 'sante', 'education', 'electricite', 'eau_potable', 'transport', 'environnement', 'autre']).withMessage('Type invalide'),
     body('localisation').notEmpty().withMessage('Localisation requise'),
     body('latitude').optional().isFloat({ min: -90, max: 90 }),
     body('longitude').optional().isFloat({ min: -180, max: 180 }),

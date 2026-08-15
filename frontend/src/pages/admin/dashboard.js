@@ -287,11 +287,7 @@ export default function AdminDashboard() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-      ...(name === 'role' && ['commissariat', 'police'].includes(value) && !prev.quartier ? { quartier: 'Commissariat central de Sedhiou' } : {})
-    }))
+    setFormData(prev => ({ ...prev, [name]: value }))
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }))
     }
@@ -304,7 +300,7 @@ export default function AdminDashboard() {
     if (!formData.email?.trim()) newErrors.email = 'Email requis'
     if (!formData.telephone?.trim()) newErrors.telephone = 'Téléphone requis'
     if (!formData.ville?.trim()) newErrors.ville = 'Ville requise'
-    if (!formData.quartier?.trim()) newErrors.quartier = 'Quartier ou zone requis'
+    if (formData.role === 'commissariat' && !formData.quartier?.trim()) newErrors.quartier = 'Nom du commissariat requis'
     if (!editingUser && !formData.password) newErrors.password = 'Mot de passe requis'
     return newErrors
   }
@@ -616,7 +612,7 @@ export default function AdminDashboard() {
       })
     } else {
       setEditingUser(null)
-      setFormData({ prenom: '', nom: '', email: '', telephone: '', password: '', ville: 'Sedhiou', quartier: 'Commissariat central de Sedhiou', role: 'commissariat', signalementTypes: [], stationLatitude: '', stationLongitude: '' })
+      setFormData({ prenom: '', nom: '', email: '', telephone: '', password: '', ville: 'Sedhiou', quartier: '', role: 'citoyen', signalementTypes: [], stationLatitude: '', stationLongitude: '' })
     }
     setErrors({})
     setShowModal(true)
@@ -1633,7 +1629,7 @@ export default function AdminDashboard() {
             </FormField>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className={`grid grid-cols-1 gap-4 ${formData.role === 'commissariat' ? 'md:grid-cols-2' : ''}`}>
             <FormField label="Ville" error={errors.ville} required>
               <Input
                 name="ville"
@@ -1643,15 +1639,15 @@ export default function AdminDashboard() {
                 error={!!errors.ville}
               />
             </FormField>
-            <FormField label={formData.role === 'commissariat' ? 'Nom du commissariat ou brigade' : 'Quartier ou zone d’affectation'} error={errors.quartier} required>
+            {formData.role === 'commissariat' && <FormField label="Nom du commissariat ou brigade" error={errors.quartier} required>
               <Input
                 name="quartier"
-                placeholder={formData.role === 'commissariat' ? 'Commissariat central de Sedhiou' : 'Centre-ville, Diannah, Moricounda...'}
+                placeholder="Ex. Commissariat central de Sédhiou"
                 value={formData.quartier}
                 onChange={handleInputChange}
                 error={!!errors.quartier}
               />
-            </FormField>
+            </FormField>}
           </div>
 
           {!editingUser && (

@@ -295,10 +295,6 @@ router.post('/users', authMiddleware, async (req, res) => {
   if (!['collaborateur', 'commissariat'].includes(cleanedUser.role.toLowerCase()) && selectedTypes.length > 0) {
     return res.status(400).json({ error: 'Les types de signalement sont réservés aux collaborateurs et commissariats' });
   }
-  if (!['collaborateur', 'commissariat'].includes(cleanedUser.role.toLowerCase()) && selectedTypes.length > 0) {
-    return res.status(400).json({ error: 'Les types de signalement sont réservés aux collaborateurs' });
-  }
-
   try {
     if (!(await validateSignalementTypes(selectedTypes))) {
       return res.status(400).json({ error: 'Un ou plusieurs types de signalement sont invalides' });

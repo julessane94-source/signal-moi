@@ -20,6 +20,25 @@ const QUICK_TYPES = [
   { value: 'autre', label: 'Autre probleme', simple: 'Autre chose a signaler', icon: '?', hint: 'Je ne sais pas choisir', tone: 'border-emerald-200 bg-emerald-50 text-emerald-900' }
 ]
 
+const ALL_REPORT_TYPES = [
+  { value: 'violence', label: 'Violence' },
+  { value: 'vol', label: 'Vol' },
+  { value: 'accident', label: 'Accident' },
+  { value: 'probleme_eclairage', label: 'Problème d’éclairage' },
+  { value: 'nid_de_poule', label: 'Nid de poule' },
+  { value: 'dechet', label: 'Déchets' },
+  { value: 'eau_sale', label: 'Eau sale' },
+  { value: 'bruit', label: 'Bruit' },
+  { value: 'insecurite', label: 'Insécurité' },
+  { value: 'sante', label: 'Santé' },
+  { value: 'education', label: 'Éducation' },
+  { value: 'electricite', label: 'Électricité' },
+  { value: 'eau_potable', label: 'Eau potable' },
+  { value: 'transport', label: 'Transport' },
+  { value: 'environnement', label: 'Environnement' },
+  { value: 'autre', label: 'Autre' }
+]
+
 const SIMPLE_DESCRIPTIONS = {
   violence: 'Je signale une violence ou une menace. Il faut intervenir rapidement.',
   accident: 'Je signale un accident ou une personne en danger. Il faut intervenir rapidement.',
@@ -1079,12 +1098,7 @@ export default function NewSignalement() {
                   ))}
                 </div>
                 <select name="type" required value={formData.type} onChange={handleChange} className="mt-4 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100">
-                  <option value="violence">Violence</option>
-                  <option value="vol">Vol</option>
-                  <option value="accident">Accident</option>
-                  <option value="probleme_eclairage">Problème éclairage</option>
-                  <option value="nid_de_poule">Nid-de-poule</option>
-                  <option value="autre">Autre</option>
+                  {ALL_REPORT_TYPES.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
                 </select>
               </section>
 
