@@ -83,6 +83,11 @@ export async function joinCampagne(id) {
   return data
 }
 
+export async function getCampaignRegistrationStatus(id) {
+  const { data } = await api.get(`/campagnes/${id}/inscrit`)
+  return data
+}
+
 export async function getCitizenDashboard() {
   const { data } = await api.get('/citizen/dashboard')
   return data
@@ -197,17 +202,17 @@ export async function getAdminOverview() {
 }
 
 export async function getCompleteStatistics() {
-  const [overview, byType, byGender, byAge] = await Promise.all([
+  const [overview, byType, byGender, byAge] = await Promise.allSettled([
     api.get('/statistics/overview'),
     api.get('/statistics/by-type'),
     api.get('/statistics/by-gender'),
     api.get('/statistics/by-age')
   ])
   return {
-    overview: overview.data,
-    byType: byType.data,
-    byGender: byGender.data,
-    byAge: byAge.data
+    overview: overview.status === 'fulfilled' ? overview.value.data : { totalSignalements: 0, statusDistribution: [], topTypes: [], monthlyTrend: [] },
+    byType: byType.status === 'fulfilled' ? byType.value.data : { data: [] },
+    byGender: byGender.status === 'fulfilled' ? byGender.value.data : { data: [] },
+    byAge: byAge.status === 'fulfilled' ? byAge.value.data : { data: [] }
   }
 }
 

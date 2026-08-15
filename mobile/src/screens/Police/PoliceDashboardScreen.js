@@ -16,13 +16,15 @@ export default function PoliceDashboardScreen() {
   const [stats, setStats] = useState(null)
   const [lives, setLives] = useState([])
   const [refreshing, setRefreshing] = useState(false)
-  const [filter, setFilter] = useState('attente')
+  const [filter, setFilter] = useState('tous')
   const urgentCount = cases.filter((item) => ['violence', 'danger', 'accident', 'vol'].includes(String(item.type || '').toLowerCase())).length
 
   const activeCases = useMemo(() => {
     return cases.filter((item) => {
       if (filter === 'tous') return true
-      return String(item.statut || item.status || '').toLowerCase().includes(filter)
+      const status = String(item.statut || item.status || '').toLowerCase()
+      if (filter === 'attente') return ['nouveau', 'attente', 'recu', 'reçu'].some((value) => status.includes(value))
+      return ['en_cours', 'cours', 'en cours'].some((value) => status.includes(value))
     })
   }, [cases, filter])
 

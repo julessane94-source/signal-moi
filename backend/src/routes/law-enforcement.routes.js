@@ -93,8 +93,7 @@ router.get('/dashboard', authMiddleware, async (req, res) => {
         u.prenom, u.nom, u.telephone, u.email
       FROM signal_moi.signalements s
       LEFT JOIN signal_moi.users u ON u.id = s.user_id
-      WHERE (s.type = 'violence' OR s.statut = 'nouveau')
-      AND s.statut != 'fermé'
+      WHERE COALESCE(LOWER(s.statut), 'nouveau') NOT IN ('fermé', 'ferme')
       ORDER BY s.created_at DESC
       LIMIT 20
     `);
@@ -144,7 +143,7 @@ router.get('/alerts', authMiddleware, async (req, res) => {
         u.prenom, u.nom, u.telephone, u.email, u.id as user_id
       FROM signal_moi.signalements s
       LEFT JOIN signal_moi.users u ON u.id = s.user_id
-      WHERE s.statut IN ('nouveau', 'en_cours')
+      WHERE COALESCE(LOWER(s.statut), 'nouveau') NOT IN ('fermé', 'ferme')
       ORDER BY s.created_at DESC
       LIMIT 100
     `);

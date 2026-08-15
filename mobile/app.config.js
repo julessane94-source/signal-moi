@@ -4,7 +4,7 @@ export default {
     name: 'Signal Moi',
     slug: 'signal-moi-mobile',
     scheme: 'signalmoi',
-    version: '0.1.4',
+    version: '0.1.6',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',
@@ -21,7 +21,7 @@ export default {
     },
     android: {
       package: 'sn.signalmoi.mobile',
-      versionCode: 5,
+      versionCode: 7,
       permissions: [
         'ACCESS_FINE_LOCATION',
         'ACCESS_COARSE_LOCATION',

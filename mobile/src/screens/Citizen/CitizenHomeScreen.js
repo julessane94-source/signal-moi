@@ -22,7 +22,7 @@ export default function CitizenHomeScreen({ navigation }) {
       getCampagnes(),
       getCitizenSignalements()
     ])
-    if (dashboardResult.status === 'fulfilled') setDashboard(dashboardResult.value)
+    if (dashboardResult.status === 'fulfilled') setDashboard(dashboardResult.value.dashboard || dashboardResult.value.data?.dashboard || dashboardResult.value)
     if (campagnesResult.status === 'fulfilled') {
       const payload = campagnesResult.value
       setCampagnes(payload.campagnes || payload.data?.campagnes || payload.data || payload || [])
@@ -133,6 +133,7 @@ export default function CitizenHomeScreen({ navigation }) {
       </View>
 
       <Text style={styles.sectionTitle}>Mes derniers signalements</Text>
+      {!signalements.length ? <Text style={styles.empty}>Aucun signalement pour le moment.</Text> : null}
       {signalements.slice(0, 3).map((item) => (
         <View key={item.id || item._id} style={styles.caseCard}>
           <View style={styles.caseTop}>
@@ -144,6 +145,7 @@ export default function CitizenHomeScreen({ navigation }) {
       ))}
 
       <Text style={styles.sectionTitle}>Campagnes disponibles</Text>
+      {!campagnes.length ? <Text style={styles.empty}>Aucune campagne active actuellement.</Text> : null}
       {campagnes.slice(0, 4).map((campagne) => (
         <View key={campagne.id || campagne._id} style={styles.card}>
           <Text style={styles.cardTitle}>{campagne.titre || campagne.title}</Text>
@@ -371,5 +373,6 @@ const styles = StyleSheet.create({
     color: COLORS.muted,
     textAlign: 'center',
     marginBottom: 18
-  }
+  },
+  empty: { color: COLORS.muted, textAlign: 'center', paddingVertical: 10 }
 })

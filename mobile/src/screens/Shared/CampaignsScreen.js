@@ -3,15 +3,25 @@ import { Alert, FlatList, Image, RefreshControl, StyleSheet, Text, View } from '
 import { COLORS, resolveMediaUrl } from '../../config/env'
 import ScreenHeader from '../../components/ScreenHeader'
 import PrimaryButton from '../../components/PrimaryButton'
-import { getCampagnes, joinCampagne } from '../../services/api'
+import { getCampagnes, getCampaignRegistrationStatus, joinCampagne } from '../../services/api'
 
 export default function CampaignsScreen() {
   const [items, setItems] = useState([])
+  const [registrations, setRegistrations] = useState({})
   const [refreshing, setRefreshing] = useState(false)
 
   const load = useCallback(async () => {
     const data = await getCampagnes()
-    setItems(data.campagnes || data.data?.campagnes || data.data || data || [])
+    const rawCampaigns = data.campagnes || data.data?.campagnes || data.data || data || []
+    const campaigns = Array.isArray(rawCampaigns) ? rawCampaigns : []
+    setItems(campaigns)
+    const statuses = await Promise.allSettled(campaigns.map(async (item) => {
+      const id = item.id || item._id
+      if (!id) return null
+      const result = await getCampaignRegistrationStatus(id)
+      return [id, Boolean(result.isInscribed)]
+    }))
+    setRegistrations(Object.fromEntries(statuses.filter((result) => result.status === 'fulfilled' && result.value).map((result) => result.value)))
   }, [])
 
   useEffect(() => {
@@ -28,12 +38,19 @@ export default function CampaignsScreen() {
   }
 
   async function participate(id) {
+    if (registrations[id]) return
     try {
       await joinCampagne(id)
+      setRegistrations((current) => ({ ...current, [id]: true }))
       Alert.alert('Inscription confirmee', 'Votre participation est enregistree.')
-      await load()
     } catch (error) {
-      Alert.alert('Inscription impossible', error.response?.data?.message || 'Reessayez.')
+      const message = error.response?.data?.message || error.response?.data?.error || 'Réessayez.'
+      if (String(message).toLowerCase().includes('déjà inscrit') || String(message).toLowerCase().includes('deja inscrit')) {
+        setRegistrations((current) => ({ ...current, [id]: true }))
+        Alert.alert('Déjà inscrit', 'Votre participation à cette campagne est déjà enregistrée.')
+        return
+      }
+      Alert.alert('Inscription impossible', message)
     }
   }
 
@@ -51,7 +68,7 @@ export default function CampaignsScreen() {
             <Text style={styles.title}>{item.titre || item.title || 'Campagne'}</Text>
             <Text numberOfLines={4} style={styles.text}>{item.description || 'Action communautaire Signal Moi.'}</Text>
             <Text style={styles.meta}>{item.lieu || item.location || 'Sédhiou'}{item.dateDebut || item.date_debut ? ` · Dès le ${String(item.dateDebut || item.date_debut).slice(0, 10)}` : ''}</Text>
-            <PrimaryButton title="Participer" onPress={() => participate(item.id || item._id)} />
+            <PrimaryButton title={registrations[item.id || item._id] ? 'Participation confirmée' : 'Participer'} disabled={registrations[item.id || item._id]} onPress={() => participate(item.id || item._id)} />
           </View>
         )}
         ListEmptyComponent={<Text style={styles.empty}>Aucune campagne chargee.</Text>}

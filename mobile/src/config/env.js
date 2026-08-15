@@ -9,6 +9,7 @@ export const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID
 export const GOOGLE_ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || ''
 export const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || ''
 export const ORANGE_MONEY_URL = process.env.EXPO_PUBLIC_ORANGE_MONEY_URL || ''
+export const WAVE_MERCHANT_URL = process.env.EXPO_PUBLIC_WAVE_MERCHANT_URL || 'https://pay.wave.com/m/M_sn_WALm6CkqL2VK/c/sn/'
 
 export function resolveMediaUrl(url) {
   if (!url) return null
