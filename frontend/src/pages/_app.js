@@ -24,6 +24,9 @@ function MyApp({ Component, pageProps }) {
   const hideNavbar = noLayoutPages.includes(router.pathname)
   const hideFooter = noLayoutPages.includes(router.pathname) || dashboardPages.includes(router.pathname)
   const hasPublicLayout = !noLayoutPages.includes(router.pathname)
+  const publicRoutes = ['/', '/about', '/blog', '/campagnes', '/contact', '/cookies', '/donate', '/download', '/faq', '/plaidoyers', '/privacy', '/signalements', '/terms']
+  const publicDetailRoutes = ['/blog/[slug]', '/campagne/[id]', '/campagnes/[id]', '/plaidoyers/[id]']
+  const isGeneralPublicPage = router.pathname !== '/' && (publicRoutes.includes(router.pathname) || publicDetailRoutes.includes(router.pathname))
   const pagesWithOwnChatbot = ['/', '/contact', '/profile', '/settings']
   const showGlobalChatbot = !noLayoutPages.includes(router.pathname) && !pagesWithOwnChatbot.includes(router.pathname)
 
@@ -43,7 +46,7 @@ function MyApp({ Component, pageProps }) {
           {!hideNavbar && <Navbar />}
           {!hideNavbar && <EmergencyButtons />}
           {hasPublicLayout && <PageReveal />}
-          <div className={hasPublicLayout ? 'site-page-shell' : undefined}>
+          <div className={hasPublicLayout ? `site-page-shell${isGeneralPublicPage ? ' public-page-shell' : ''}` : undefined}>
             <Component {...pageProps} />
           </div>
           {!hideFooter && <Footer />}

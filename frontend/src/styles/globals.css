@@ -105,6 +105,50 @@ body {
   line-height: 1.75;
 }
 
+/* Pages publiques : la même échelle lisible et les mêmes marges, quelle que soit la page. */
+.public-page-shell {
+  --public-content-width: 76rem;
+  --public-gutter: clamp(1rem, 3vw, 2rem);
+}
+
+.public-page-shell > main,
+.public-page-shell > div {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.public-page-shell h1 {
+  font-size: clamp(2.25rem, 5vw, 4rem);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -.045em;
+}
+
+.public-page-shell h2 {
+  font-size: clamp(1.625rem, 3vw, 2.5rem);
+  font-weight: 750;
+  line-height: 1.16;
+  letter-spacing: -.03em;
+}
+
+.public-page-shell h3 {
+  font-size: clamp(1.125rem, 1.8vw, 1.375rem);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.public-page-shell :is(.max-w-4xl, .max-w-5xl, .max-w-6xl, .max-w-7xl) {
+  width: min(calc(100% - (var(--public-gutter) * 2)), var(--public-content-width));
+}
+
+.public-page-shell .interactive-card {
+  border-radius: 1.25rem;
+}
+
+.public-page-shell :is(button, a) {
+  text-underline-offset: .2em;
+}
+
 @media (min-width: 640px) {
   .home-container { width: min(100% - 3rem, var(--home-max-width)); }
   .home-copy { font-size: 1.0625rem; }
