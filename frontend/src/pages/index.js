@@ -192,6 +192,14 @@ export default function Home() {
                   <Link href="/download" className="min-w-0">
                     <Button className="w-full border border-emerald-300 bg-emerald-50 px-7 py-3 font-bold text-slate-950 hover:bg-white transition sm:w-auto" size="md">Télécharger l'application</Button>
                   </Link>
+                  <a
+                    href="/downloads/signal-moi.apk?v=1.0.3"
+                    download
+                    className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-cyan-300 bg-cyan-400 px-7 py-3 font-bold text-slate-950 shadow-sm transition hover:-translate-y-0.5 hover:bg-cyan-300 hover:shadow-md sm:w-auto"
+                    aria-label="Télécharger l'application mobile Android au format APK"
+                  >
+                    Télécharger l&apos;app mobile (APK)
+                  </a>
                   <Link href="/signalements" className="min-w-0">
                     <Button className="w-full border border-white/25 bg-white/10 px-7 py-3 font-semibold text-white hover:bg-white/15 transition sm:w-auto" size="md">Voir les signalements</Button>
                   </Link>
@@ -273,6 +281,13 @@ export default function Home() {
                 <Link href="/download" className="min-w-0">
                   <Button className="w-full bg-slate-950 px-6 py-3 font-bold text-white hover:bg-slate-800 sm:w-auto" size="md">Ouvrir la page de téléchargement</Button>
                 </Link>
+                <a
+                  href="/downloads/signal-moi.apk?v=1.0.3"
+                  download
+                  className="inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-cyan-300 bg-cyan-400 px-6 py-3 font-bold text-slate-950 shadow-sm transition hover:bg-cyan-300 sm:w-auto"
+                >
+                  Télécharger l&apos;APK Android
+                </a>
                 {showInstallButton && (
                   <button onClick={handleInstall} className="min-h-[48px] bg-emerald-600 px-6 py-3 font-bold text-white hover:bg-emerald-700">
                     Installer maintenant
