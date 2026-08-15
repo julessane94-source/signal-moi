@@ -11,12 +11,15 @@ const { initializeDatabase } = require('./config/database-init');
 const SiteConfig = require('./models/SiteConfig');
 const { securityHeaders, authLimiter } = require('./middlewares/security');
 
-// ✅ Vérifier les variables d'environnement essentielles
+// Refuser un démarrage de production incomplet : aucun secret ne doit avoir de repli.
 console.log('🔍 Vérification des variables d\'environnement...');
 const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET'];
 requiredEnvVars.forEach(varName => {
     if (!process.env[varName]) {
-        console.warn(`⚠️  WARNING: ${varName} n'est pas défini. Utilisation de valeur par défaut.`);
+        if (process.env.NODE_ENV === 'production') {
+            throw new Error(`Variable d'environnement requise absente: ${varName}`);
+        }
+        console.warn(`⚠️  WARNING: ${varName} n'est pas défini.`);
     } else {
         console.log(`✅ ${varName}: Défini`);
     }
@@ -64,7 +67,7 @@ const corsOptions = {
 // CORS - permettre les requêtes depuis Vercel
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
-app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: false }));
+app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(securityHeaders);
 app.use(compression({
     threshold: 1024,

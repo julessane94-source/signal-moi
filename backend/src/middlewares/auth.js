@@ -3,21 +3,10 @@ const { User } = require('../models');
 
 const authMiddleware = async (req, res, next) => {
   try {
-    // Récupérer le token depuis l'en-tête Authorization, ou depuis un cookie 'token' en fallback
+    // Les clients web et mobiles envoient le jeton uniquement dans l'en-tête.
+    // Ne jamais accepter un jeton dans l'URL : il fuit vers les logs et le Referer.
     const authHeader = req.header('Authorization');
-    let token = null
-
-    if (authHeader) {
-      token = authHeader.replace('Bearer ', '').trim();
-    } else if (req.headers && req.headers.cookie) {
-      // simple cookie parsing to extract token=... (no dependency)
-      const cookies = req.headers.cookie.split(';').map(c => c.trim())
-      const tokenCookie = cookies.find(c => c.startsWith('token='))
-      if (tokenCookie) token = decodeURIComponent(tokenCookie.split('=')[1])
-    } else if (req.query && req.query.token) {
-      // fallback: token via query param (useful for one-off requests)
-      token = req.query.token
-    }
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
 
     if (!token) {
       return res.status(401).json({ 

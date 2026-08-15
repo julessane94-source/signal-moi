@@ -14,18 +14,6 @@ const setupSocket = (io) => {
     try {
       const token = socket.handshake.auth.token;
       
-      // Allow a local test bypass token when explicitly enabled
-      if (token === 'LOCAL_TEST_TOKEN' && process.env.ALLOW_SOCKET_BYPASS === 'true') {
-        socket.user = {
-          id: 'local-test',
-          email: 'local@local.test',
-          role: 'admin',
-          prenom: 'Local',
-          nom: 'Test'
-        };
-        return next();
-      }
-
       if (!token) {
         return next(new Error('Authentication error'));
       }
@@ -33,7 +21,8 @@ const setupSocket = (io) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const user = await User.findByPk(decoded.id);
 
-      if (!user) {
+      const isActive = user?.isActive !== undefined ? user.isActive : user?.is_active !== false;
+      if (!user || isActive === false) {
         return next(new Error('User not found'));
       }
 

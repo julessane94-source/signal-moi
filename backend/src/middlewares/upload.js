@@ -27,8 +27,8 @@ if (USE_S3 && s3 && multerS3) {
   storage = multerS3({
     s3: s3client,
     bucket: process.env.S3_BUCKET,
-    // ACL configurable via env (defaults to public-read for direct access to images)
-    acl: process.env.S3_ACL || 'public-read',
+    // Les fichiers restent prives par defaut. Une ACL publique doit etre explicite et reservee aux medias publics.
+    acl: process.env.S3_ACL || 'private',
     contentType: multerS3.AUTO_CONTENT_TYPE,
     key: (req, file, cb) => {
       const uniqueName = `${uuidv4()}${path.extname(file.originalname)}`;
@@ -48,7 +48,7 @@ if (USE_S3 && s3 && multerS3) {
         uploadPath = path.join(uploadsRoot, 'profiles');
       }
 
-      // Créer le dossier s'il n'existe pas
+      // CrÃ©er le dossier s'il n'existe pas
       if (!fs.existsSync(uploadPath)) {
         fs.mkdirSync(uploadPath, { recursive: true });
       }
@@ -74,7 +74,7 @@ const fileFilter = (req, file, cb) => {
   if (allowedTypes.includes(file.mimetype) || isMediaMime || acceptedExtensions.includes(ext)) {
     cb(null, true);
   } else {
-    cb(new Error('Type de fichier non supporté'), false);
+    cb(new Error('Type de fichier non supportÃ©'), false);
   }
 };
 
@@ -91,7 +91,7 @@ const upload = multer({
   }
 });
 
-// Middleware pour gérer les erreurs d'upload
+// Middleware pour gÃ©rer les erreurs d'upload
 const handleUploadError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'FILE_TOO_LARGE') {

@@ -34,8 +34,14 @@ const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (allowedMimes.includes(file.mimetype)) {
+    const allowedExtensions = {
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+      'image/gif': ['.gif'],
+      'image/webp': ['.webp']
+    };
+    const extension = path.extname(file.originalname || '').toLowerCase();
+    if (allowedExtensions[file.mimetype]?.includes(extension)) {
       cb(null, true);
     } else {
       cb(new Error('Type de fichier non autorisé'));

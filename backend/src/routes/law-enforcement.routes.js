@@ -49,6 +49,26 @@ const getUrgencyLevel = (type, description) => {
     return isHighRisk ? 'high' : 'medium';
 };
 
+// Un agent ne voit que les dossiers affectés à son commissariat. Les comptes
+// agents héritent du quartier du commissariat lors de leur création.
+const assignedCaseCondition = (signalementAlias = 's') => `(
+  ${signalementAlias}.assigned_to = $1
+  OR ($2 <> '' AND EXISTS (
+    SELECT 1 FROM signal_moi.users station
+    WHERE station.id = ${signalementAlias}.assigned_to
+      AND LOWER(station.role) = 'commissariat'
+      AND LOWER(COALESCE(station.quartier, '')) = LOWER($2)
+  ))
+)`;
+
+const assertAssignedCaseAccess = async (caseId, user) => {
+  const result = await db.query(
+    `SELECT s.id FROM signal_moi.signalements s WHERE s.id = $3 AND ${assignedCaseCondition('s')}`,
+    [user.id, String(user.quartier || '').trim(), caseId]
+  );
+  return result.rows.length > 0;
+};
+
 // Le commissariat transmet sa position depuis son propre appareil. L'admin ne
 // saisit donc jamais de coordonnées sensibles ou imprécises à sa place.
 router.put('/station-location', authMiddleware, async (req, res) => {
@@ -94,9 +114,10 @@ router.get('/dashboard', authMiddleware, async (req, res) => {
       FROM signal_moi.signalements s
       LEFT JOIN signal_moi.users u ON u.id = s.user_id
       WHERE COALESCE(LOWER(s.statut), 'nouveau') NOT IN ('fermé', 'ferme')
+        AND ${assignedCaseCondition('s')}
       ORDER BY s.created_at DESC
       LIMIT 20
-    `);
+    `, [req.user.id, String(req.user.quartier || '').trim()]);
 
     const alerts = alertsResult.rows.map(s => ({
       id: s.id,
@@ -144,9 +165,10 @@ router.get('/alerts', authMiddleware, async (req, res) => {
       FROM signal_moi.signalements s
       LEFT JOIN signal_moi.users u ON u.id = s.user_id
       WHERE COALESCE(LOWER(s.statut), 'nouveau') NOT IN ('fermé', 'ferme')
+        AND ${assignedCaseCondition('s')}
       ORDER BY s.created_at DESC
       LIMIT 100
-    `);
+    `, [req.user.id, String(req.user.quartier || '').trim()]);
 
     const alerts = result.rows.map(s => ({
       id: s.id,
@@ -270,6 +292,9 @@ router.post('/agents', authMiddleware, async (req, res) => {
 router.get('/case/:id', authMiddleware, async (req, res) => {
   try {
     const caseId = req.params.id;
+    if (!await assertAssignedCaseAccess(caseId, req.user)) {
+      return res.status(403).json({ error: 'Accès à ce dossier refusé' });
+    }
     
     const result = await db.query(`
       SELECT 
@@ -324,6 +349,9 @@ router.post('/case/:id/take-action', authMiddleware, async (req, res) => {
   try {
     const caseId = req.params.id;
     const userId = req.user.id;
+    if (!await assertAssignedCaseAccess(caseId, req.user)) {
+      return res.status(403).json({ error: 'Accès à ce dossier refusé' });
+    }
 
     // Mettre à jour le statut à "en_cours"
     const result = await db.query(
@@ -348,6 +376,9 @@ router.put('/case/:id/status', authMiddleware, async (req, res) => {
   try {
     const caseId = req.params.id;
     const { statut, notes } = req.body;
+    if (!await assertAssignedCaseAccess(caseId, req.user)) {
+      return res.status(403).json({ error: 'Accès à ce dossier refusé' });
+    }
 
     const validStatus = ['nouveau', 'en_cours', 'sur_place', 'intervention_terminee', 'fausse_alerte'];
     if (!validStatus.includes(statut)) {
@@ -410,9 +441,10 @@ router.get('/history', authMiddleware, async (req, res) => {
       FROM signal_moi.signalements s
       LEFT JOIN signal_moi.users u ON u.id = s.user_id
       WHERE s.statut IN ('intervention_terminee', 'fausse_alerte')
+        AND ${assignedCaseCondition('s')}
       ORDER BY s.updated_at DESC
       LIMIT 50
-    `);
+    `, [req.user.id, String(req.user.quartier || '').trim()]);
 
     const history = result.rows.map(s => ({
       id: s.id,
@@ -437,6 +469,9 @@ router.post('/case/:id/report', authMiddleware, async (req, res) => {
   try {
     const caseId = req.params.id;
     const { notes, findings } = req.body;
+    if (!await assertAssignedCaseAccess(caseId, req.user)) {
+      return res.status(403).json({ error: 'Accès à ce dossier refusé' });
+    }
 
     if (!notes) {
       return res.status(400).json({ error: 'Notes requises' });
