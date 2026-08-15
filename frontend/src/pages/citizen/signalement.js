@@ -945,7 +945,7 @@ export default function NewSignalement() {
 
   return (
     <>
-      <div data-reveal className="min-h-screen bg-slate-100 pt-16">
+      <div data-no-reveal className="min-h-screen bg-slate-100 pt-16">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="page-hero-animated mb-6 overflow-hidden rounded-[2rem] bg-slate-950 text-white shadow-2xl">
             <div className="hero-copy-enter grid gap-8 p-6 sm:p-8 lg:grid-cols-[1fr_320px] lg:items-end">
