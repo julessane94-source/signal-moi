@@ -22,7 +22,7 @@ plugins {
 
 def twaManifest = [
     applicationId: 'com.signalmoi.app',
-    hostName: 'edging-roundup-aide.ngrok-free.dev', // The domain being opened in the TWA.
+    hostName: 'signal-moi.sn', // The domain being opened in the TWA.
     launchUrl: '/', // The start path for the TWA. Must be relative to the domain.
     name: 'Signal-Moi', // The application name.
     launcherName: 'SignalMoi', // The name shown on the Android Launcher.
@@ -57,8 +57,8 @@ android {
         applicationId "com.signalmoi.app"
         minSdkVersion 21
         targetSdkVersion 35
-        versionCode 2
-        versionName "2"
+        versionCode 3
+        versionName "1.0.3"
 
         // The name for the application
         resValue "string", "appName", twaManifest.name
@@ -76,12 +76,12 @@ android {
             // The URL the Web Manifest for the Progressive Web App that the TWA points to. This
             // is used by Chrome OS and Meta Quest to open the Web version of the PWA instead of
             // the TWA, as it will probably give a better user experience for non-mobile devices.
-            resValue "string", "webManifestUrl", 'https://edging-roundup-aide.ngrok-free.dev/manifest.json'
+            resValue "string", "webManifestUrl", 'https://signal-moi.sn/manifest.json'
         
 
         
             // This is used by Meta Quest.
-            resValue "string", "fullScopeUrl", 'https://edging-roundup-aide.ngrok-free.dev/'
+            resValue "string", "fullScopeUrl", 'https://signal-moi.sn/'
         
 
         

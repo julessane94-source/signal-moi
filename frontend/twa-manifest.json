@@ -1,6 +1,6 @@
 {
   "packageId": "com.signalmoi.app",
-  "host": "edging-roundup-aide.ngrok-free.dev",
+  "host": "signal-moi.sn",
   "name": "Signal-Moi",
   "launcherName": "SignalMoi",
   "display": "standalone",
@@ -13,17 +13,17 @@
   "backgroundColor": "#FFFFFF",
   "enableNotifications": true,
   "startUrl": "/",
-  "iconUrl": "https://edging-roundup-aide.ngrok-free.dev/icons/icon-512x512.png",
+  "iconUrl": "https://signal-moi.sn/icons/icon-512x512.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
     "path": "C:\\Users\\MACHINE 2\\Desktop\\signal-moi\\frontend\\android.keystore",
     "alias": "android"
   },
-  "appVersionName": "1",
-  "appVersionCode": 1,
+  "appVersionName": "1.0.3",
+  "appVersionCode": 3,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "https://edging-roundup-aide.ngrok-free.dev/manifest.json",
+  "webManifestUrl": "https://signal-moi.sn/manifest.json",
   "fallbackType": "customtabs",
   "features": {
     "playBilling": {
@@ -39,7 +39,7 @@
   "enableSiteSettingsShortcut": true,
   "isChromeOSOnly": false,
   "isMetaQuest": false,
-  "fullScopeUrl": "https://edging-roundup-aide.ngrok-free.dev/",
+  "fullScopeUrl": "https://signal-moi.sn/",
   "minSdkVersion": 21,
   "orientation": "portrait",
   "fingerprints": [],
@@ -49,5 +49,5 @@
   "fileHandlers": [],
   "launchHandlerClientMode": "",
   "displayOverride": [],
-  "appVersion": "1"
+  "appVersion": "1.0.3"
 }
