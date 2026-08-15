@@ -189,17 +189,6 @@ export default function Home() {
                   <Link href={user ? "/citizen/signalement" : "/login"} className="min-w-0">
                     <Button className="w-full bg-emerald-500 text-slate-950 px-7 py-3 font-bold hover:bg-emerald-400 transition sm:w-auto" size="md">Faire un signalement</Button>
                   </Link>
-                  <Link href="/download" className="min-w-0">
-                    <Button className="w-full border border-emerald-300 bg-emerald-50 px-7 py-3 font-bold text-slate-950 hover:bg-white transition sm:w-auto" size="md">Télécharger l'application</Button>
-                  </Link>
-                  <a
-                    href="/downloads/signal-moi.apk?v=1.0.3"
-                    download
-                    className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-cyan-300 bg-cyan-400 px-7 py-3 font-bold text-slate-950 shadow-sm transition hover:-translate-y-0.5 hover:bg-cyan-300 hover:shadow-md sm:w-auto"
-                    aria-label="Télécharger l'application mobile Android au format APK"
-                  >
-                    Télécharger l&apos;app mobile (APK)
-                  </a>
                   <Link href="/signalements" className="min-w-0">
                     <Button className="w-full border border-white/25 bg-white/10 px-7 py-3 font-semibold text-white hover:bg-white/15 transition sm:w-auto" size="md">Voir les signalements</Button>
                   </Link>
@@ -278,9 +267,6 @@ export default function Home() {
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row md:justify-end">
-                <Link href="/download" className="min-w-0">
-                  <Button className="w-full bg-slate-950 px-6 py-3 font-bold text-white hover:bg-slate-800 sm:w-auto" size="md">Ouvrir la page de téléchargement</Button>
-                </Link>
                 <a
                   href="/downloads/signal-moi.apk?v=1.0.3"
                   download
@@ -290,7 +276,7 @@ export default function Home() {
                 </a>
                 {showInstallButton && (
                   <button onClick={handleInstall} className="min-h-[48px] bg-emerald-600 px-6 py-3 font-bold text-white hover:bg-emerald-700">
-                    Installer maintenant
+                    Installer la version web
                   </button>
                 )}
               </div>
@@ -450,9 +436,6 @@ export default function Home() {
             <div className="flex flex-col gap-4 md:flex-row md:justify-center">
               <Link href={user ? "/citizen/dashboard" : "/register"} className="min-w-0">
                 <button className="w-full rounded-xl bg-white px-6 py-3 font-semibold text-teal-600 transition hover:bg-gray-100 md:w-auto">{user ? "✓ Aller au dashboard" : "👥 Rejoindre maintenant"}</button>
-              </Link>
-              <Link href="/signalements" className="min-w-0">
-                <button className="w-full rounded-xl border-2 border-white bg-teal-700 px-6 py-3 font-semibold text-white transition hover:bg-teal-800 md:w-auto">📊 Voir les signalements</button>
               </Link>
             </div>
           </div>
