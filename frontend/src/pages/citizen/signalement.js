@@ -52,7 +52,6 @@ export default function NewSignalement() {
   const [loading, setLoading] = useState(false)
   const [files, setFiles] = useState([])
   const [showVideoPrompt, setShowVideoPrompt] = useState(false)
-  const [videoPromptHandled, setVideoPromptHandled] = useState(false)
   const [recordingState, setRecordingState] = useState('idle')
   const [recordingError, setRecordingError] = useState(null)
   const [liveStream, setLiveStream] = useState(null)
@@ -94,7 +93,6 @@ export default function NewSignalement() {
   const [longitude, setLongitude] = useState(null)
 
   const [geoError, setGeoError] = useState(null)
-  const shouldOfferVideoProof = VIDEO_PROMPT_TYPES.includes(formData.type)
   const hasRecordedVideo = Boolean(recordedVideoName)
   const filePreviews = useMemo(() => files.map((file) => ({
     file,
@@ -169,17 +167,6 @@ export default function NewSignalement() {
     }
     recognitionRef.current = recognition
     recognition.start()
-  }
-
-  const ensureAutomaticDescription = (type) => {
-    const label = getTypeLabel(type)
-    setFormData(prev => {
-      if (prev.description.trim()) return prev
-      return {
-        ...prev,
-        description: `Signalement urgent: ${label}. Une video preuve est en cours d'enregistrement et la localisation automatique est transmise aux autorites.`
-      }
-    })
   }
 
   const emitLiveLocation = (locationData) => {
@@ -496,14 +483,6 @@ export default function NewSignalement() {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }))
-    if (name === 'type') {
-      setVideoPromptHandled(false)
-      if (VIDEO_PROMPT_TYPES.includes(value) && !hasRecordedVideo) {
-        ensureAutomaticDescription(value)
-        setShowVideoPrompt(true)
-        startVideoRecording({ type: value, title: `Signalement : ${getTypeLabel(value)}` })
-      }
-    }
   }
 
   const handleQuickType = (type, label) => {
@@ -513,12 +492,8 @@ export default function NewSignalement() {
       titre: prev.titre || `Signalement : ${label}`,
       description: prev.description || SIMPLE_DESCRIPTIONS[type] || `Je signale: ${label}`
     }))
-    speakHelp(`${label}. ${SIMPLE_DESCRIPTIONS[type] || 'Expliquez le probleme ou ajoutez une photo.'}`)
-    setVideoPromptHandled(false)
-    if (VIDEO_PROMPT_TYPES.includes(type) && !hasRecordedVideo) {
-      ensureAutomaticDescription(type)
-      setShowVideoPrompt(true)
-      startVideoRecording({ type, title: formData.titre || `Signalement : ${label}` })
+    if (typeof document !== 'undefined') {
+      window.setTimeout(() => document.getElementById('formulaire-signalement')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80)
     }
   }
 
@@ -532,16 +507,13 @@ export default function NewSignalement() {
     if (!router.isReady || router.query.alerte !== '1' || emergencyAutostartRef.current) return
     emergencyAutostartRef.current = true
     const emergencyType = 'violence'
-    const emergencyLabel = 'Alerte urgente'
     setFormData(prev => ({
       ...prev,
       type: emergencyType,
       titre: prev.titre || 'Alerte citoyenne urgente',
       description: prev.description || SIMPLE_DESCRIPTIONS[emergencyType]
     }))
-    setShowVideoPrompt(true)
     getAutomaticLocation({ silent: true })
-    startVideoRecording({ type: emergencyType, title: emergencyLabel })
   }, [router.isReady, router.query.alerte])
 
   useEffect(() => {
@@ -790,7 +762,6 @@ export default function NewSignalement() {
           skipVideoRef.current = false
           recordingChunksRef.current = []
           setRecordingState('idle')
-          setVideoPromptHandled(true)
           const activeSocket = socketRef.current
           if (activeSocket && liveSessionIdRef.current) {
             activeSocket.emit('live_recording_stopped', { sessionId: liveSessionIdRef.current, type: liveType })
@@ -816,7 +787,6 @@ export default function NewSignalement() {
         setRecordedVideoUrl(URL.createObjectURL(blob))
         setFiles(prev => [...prev.filter(file => file.name !== previousProofName), proofFile])
         setRecordingState('saved')
-        setVideoPromptHandled(true)
         const activeSocket = socketRef.current
         if (activeSocket && liveSessionIdRef.current) {
           activeSocket.emit('live_recording_stopped', {
@@ -943,7 +913,6 @@ export default function NewSignalement() {
 
 
   const continueWithoutVideo = () => {
-    setVideoPromptHandled(true)
     setShowVideoPrompt(false)
     setRecordedVideoName(null)
     if (recordedVideoUrl) {
@@ -971,13 +940,6 @@ export default function NewSignalement() {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (shouldOfferVideoProof && !videoPromptHandled && !hasRecordedVideo) {
-      ensureAutomaticDescription(formData.type)
-      setShowVideoPrompt(true)
-      startVideoRecording({ type: formData.type, title: formData.titre || `Signalement : ${getTypeLabel(formData.type)}` })
-      return
-    }
-
     await submitSignalement()
   }
 
@@ -1003,7 +965,7 @@ export default function NewSignalement() {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} noValidate className="grid gap-6 lg:grid-cols-[1fr_340px]">
+          <form id="formulaire-signalement" onSubmit={handleSubmit} noValidate className="grid gap-6 lg:grid-cols-[1fr_340px]">
             <div className="space-y-6">
               <section data-reveal className="card-stagger grid gap-4 md:grid-cols-3">
                 {STARTER_ACTIONS.map((action, index) => (
@@ -1065,6 +1027,25 @@ export default function NewSignalement() {
                   {ALL_REPORT_TYPES.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
                 </select>
               </section>
+
+              {VIDEO_PROMPT_TYPES.includes(formData.type) && (
+                <section data-reveal className="rounded-[1.75rem] border border-red-200 bg-red-50 p-5 shadow-sm sm:p-7">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-black uppercase tracking-wide text-red-700">Cas urgent</p>
+                      <h2 className="mt-1 text-2xl font-black text-slate-950">{getTypeLabel(formData.type)} : besoin d’aide immédiate ?</h2>
+                      <p className="mt-2 text-sm leading-6 text-slate-700">Le formulaire reste disponible ci-dessous. Vous pouvez aussi ajouter un direct vidéo pour aider les équipes à évaluer la situation.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowVideoPrompt(true)}
+                      className="shrink-0 rounded-2xl bg-red-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-red-600/20 transition hover:bg-red-700"
+                    >
+                      {hasRecordedVideo ? 'Voir la vidéo' : 'Démarrer un direct'}
+                    </button>
+                  </div>
+                </section>
+              )}
 
               <section data-reveal className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
                 <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
