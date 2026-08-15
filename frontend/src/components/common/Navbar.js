@@ -19,7 +19,8 @@ import {
   CogIcon as Cog,
   HeartIcon as Heart,
   BellIcon as Bell,
-  Squares2X2Icon as Squares2X2
+  Squares2X2Icon as Squares2X2,
+  ChevronDownIcon as ChevronDown
 } from '@heroicons/react/24/outline'
 
 const normalizeRole = (role) => {
@@ -37,6 +38,7 @@ export default function Navbar() {
   const { notifications: realtimeNotifications } = useSocket()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
+  const [exploreDropdownOpen, setExploreDropdownOpen] = useState(false)
   const [logoUrl, setLogoUrl] = useState('/icons/icon-192x192.png')
   const [notificationCount, setNotificationCount] = useState(0)
 
@@ -96,6 +98,7 @@ export default function Navbar() {
   useEffect(() => {
     setMobileMenuOpen(false)
     setProfileDropdownOpen(false)
+    setExploreDropdownOpen(false)
   }, [router.pathname])
 
   const getImageUrl = (url) => {
@@ -132,27 +135,32 @@ export default function Navbar() {
     { name: 'Plaidoyers', href: '/plaidoyers', icon: DocumentText },
     { name: 'Contact', href: '/contact', icon: Envelope },
   ]
+  const mainNavigation = navigation.slice(0, 4)
+  const exploreNavigation = navigation.slice(4)
 
   return (
     <nav className="fixed inset-x-0 top-0 z-50 border-b border-slate-200/80 bg-white/85 backdrop-blur-2xl shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
       <div className="mx-auto flex max-w-[90rem] items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         <motion.div whileHover={{ scale: 1.05 }}>
-          <Link href="/" className="flex items-center gap-2 transition hover:opacity-80">
+          <Link href="/" className="flex items-center gap-2.5 transition hover:opacity-80">
             <img src={getImageUrl(logoUrl)} alt="Logo Signal-Moi" className="h-10 w-10 rounded-2xl object-cover shadow-lg shadow-emerald-900/10 ring-1 ring-slate-900/5" />
-            <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-slate-950 via-emerald-700 to-teal-600 bg-clip-text text-transparent">Signal-Moi</span>
+            <span>
+              <span className="block text-xl font-extrabold tracking-tight bg-gradient-to-r from-slate-950 via-emerald-700 to-teal-600 bg-clip-text text-transparent">Signal-Moi</span>
+              <span className="hidden text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400 sm:block">Citoyenneté active</span>
+            </span>
           </Link>
         </motion.div>
 
         {showPublicNavigation && (
-          <div className="hidden md:flex items-center gap-2">
-            {navigation.map((item) => {
+          <div className="hidden lg:flex items-center gap-1 rounded-full border border-slate-200/80 bg-slate-50/80 p-1 shadow-inner shadow-slate-200/40">
+            {mainNavigation.map((item) => {
               const Icon = item.icon
               const isActive = item.href === '/' ? router.pathname === item.href : router.pathname.startsWith(item.href)
               return (
                 <Link key={item.name} href={item.href}>
                   <motion.a
                     whileHover={{ y: -1 }}
-                    className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${isActive ? 'bg-slate-950 text-white shadow-lg shadow-slate-900/15' : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-900'}`}
+                    className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold transition ${isActive ? 'bg-slate-950 text-white shadow-lg shadow-slate-900/15' : 'text-slate-600 hover:bg-white hover:text-emerald-900'}`}
                     aria-current={isActive ? 'page' : undefined}
                   >
                     <Icon className="h-4 w-4" />
@@ -161,6 +169,25 @@ export default function Navbar() {
                 </Link>
               )
             })}
+            <div className="relative">
+              <button
+                onClick={() => setExploreDropdownOpen((open) => !open)}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold transition ${exploreNavigation.some((item) => router.pathname.startsWith(item.href)) ? 'bg-emerald-700 text-white' : 'text-slate-600 hover:bg-white hover:text-emerald-900'}`}
+                aria-expanded={exploreDropdownOpen}
+              >
+                Explorer <ChevronDown className={`h-4 w-4 transition ${exploreDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+              <AnimatePresence>
+                {exploreDropdownOpen && (
+                  <motion.div initial={{ opacity: 0, y: -6, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.98 }} className="absolute right-0 top-[calc(100%+0.65rem)] w-52 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl shadow-slate-900/15">
+                    {exploreNavigation.map((item) => {
+                      const Icon = item.icon
+                      return <Link key={item.name} href={item.href} onClick={() => setExploreDropdownOpen(false)}><motion.a whileHover={{ x: 3 }} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-900"><Icon className="h-4 w-4" />{item.name}</motion.a></Link>
+                    })}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         )}
 
@@ -276,7 +303,7 @@ export default function Navbar() {
 
         <motion.button
           whileHover={{ scale: 1.1 }}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-slate-900 text-white md:hidden"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-lg shadow-slate-900/20 lg:hidden"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
         >
@@ -291,14 +318,14 @@ export default function Navbar() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain border-t border-slate-200 bg-white/95 px-4 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-sm md:hidden"
+            className="max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain border-t border-slate-200 bg-white/95 px-4 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-sm lg:hidden"
           >
             <div className="flex items-center justify-between border-b border-slate-200 pb-4 mb-4">
-              <span className="text-sm font-semibold text-slate-900">Menu</span>
+              <span className="text-sm font-black uppercase tracking-[0.14em] text-slate-900">Navigation</span>
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">{user ? `Bonjour, ${user.prenom}` : 'Visiteur'}</span>
             </div>
             {showPublicNavigation && (
-              <div className="space-y-2 py-4">
+              <div className="grid grid-cols-2 gap-2 py-4">
                 {navigation.map((item) => {
                   const Icon = item.icon
                   const isActive = item.href === '/' ? router.pathname === item.href : router.pathname.startsWith(item.href)
@@ -306,10 +333,9 @@ export default function Navbar() {
                     <Link key={item.name} href={item.href} onClick={() => setMobileMenuOpen(false)}>
                       <motion.a
                         whileHover={{ x: 4 }}
-                        className="flex min-h-12 items-center gap-3 rounded-2xl px-4 py-3 text-slate-700 transition hover:bg-slate-100"
-                        style={isActive ? { backgroundColor: '#f8fafc' } : undefined}
+                        className={`flex min-h-[72px] flex-col justify-center gap-2 rounded-2xl border px-3 py-3 text-sm font-semibold transition ${isActive ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-slate-100 bg-slate-50 text-slate-700 hover:bg-white hover:shadow-sm'}`}
                       >
-                        <Icon className="h-5 w-5" />
+                        <span className={`flex h-8 w-8 items-center justify-center rounded-xl ${isActive ? 'bg-emerald-600 text-white' : 'bg-white text-slate-600 shadow-sm'}`}><Icon className="h-4 w-4" /></span>
                         {item.name}
                       </motion.a>
                     </Link>
