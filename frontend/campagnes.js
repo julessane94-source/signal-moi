@@ -74,7 +74,7 @@ export default function Campagnes() {
       <>
         <Navbar />
         <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
         </div>
       </>
     )
@@ -89,25 +89,25 @@ export default function Campagnes() {
 
       <Navbar />
 
-      <main className="min-h-screen bg-gradient-to-b from-slate-900 via-indigo-900 to-slate-800 pt-16">
+      <main className="campaigns-page min-h-screen bg-slate-50 pt-16">
         {/* Hero */}
-        <section className="page-hero-animated relative overflow-hidden bg-slate-950 text-white py-12 sm:py-16">
-          <div className="pointer-events-none absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.18),_transparent_18%),radial-gradient(circle_at_top_right,_rgba(168,85,247,0.18),_transparent_20%),radial-gradient(circle_at_bottom,_rgba(14,165,233,0.14),_transparent_22%)]" />
+        <section className="page-hero-animated relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 text-white py-14 sm:py-20">
+          <div className="pointer-events-none absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_top_left,_rgba(45,212,191,0.27),_transparent_24%),radial-gradient(circle_at_top_right,_rgba(16,185,129,0.22),_transparent_28%),radial-gradient(circle_at_bottom,_rgba(20,184,166,0.16),_transparent_25%)]" />
           <div className="hero-copy-enter relative max-w-6xl mx-auto px-4 sm:px-6 text-center">
-            <p className="mb-4 text-sm uppercase tracking-[0.35em] text-cyan-200">Mobilisation citoyenne</p>
+            <p className="mb-4 text-sm font-bold uppercase tracking-[0.26em] text-emerald-200">Mobilisation citoyenne</p>
             <h1 className="mx-auto max-w-4xl text-3xl md:text-4xl font-black tracking-tight text-white">Campagnes engagées pour un quartier plus solidaire</h1>
             <p className="mx-auto mt-4 max-w-3xl text-base md:text-lg text-slate-200 leading-7">
               Découvrez les actions locales, participez aux initiatives de terrain et contribuez à un impact visible dans votre communauté.
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
-              <a href="#campagnes" className="rounded-full bg-gradient-to-r from-cyan-400 to-indigo-500 px-6 py-2 text-sm font-semibold text-slate-950 shadow-xl shadow-cyan-500/20 transition hover:-translate-y-0.5 hover:shadow-cyan-400/30">
+              <a href="#campagnes" className="rounded-full bg-emerald-400 px-6 py-2 text-sm font-bold text-slate-950 shadow-xl shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:bg-emerald-300">
                 ✨ Voir les campagnes
               </a>
               <a href="/contact" className="rounded-full border border-white/15 bg-white/10 px-6 py-2 text-sm font-semibold text-white shadow-lg shadow-slate-900/10 transition hover:bg-white/20">
                 📩 Nous contacter
               </a>
             </div>
-            <div className="card-stagger mt-6 grid gap-3 text-left md:grid-cols-3">
+            <div className="card-stagger mt-8 grid gap-3 text-left md:grid-cols-3">
               {[
                 ['+120', 'Actions mobilisées'],
                 ['24/7', 'Suivi des initiatives'],
@@ -125,9 +125,9 @@ export default function Campagnes() {
         {/* Filtres */}
         <section className="py-6 border-b border-slate-200 bg-white/80 backdrop-blur-sm">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-slate-200 bg-slate-50/90 p-3 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-3 shadow-sm">
               <div>
-                <p className="text-xs uppercase tracking-[0.25em] text-indigo-600">Filtrer</p>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">Filtrer</p>
                 <h2 className="text-lg font-semibold text-slate-900">Choisissez la catégorie</h2>
               </div>
               <div className="flex flex-wrap gap-2 justify-center">
@@ -137,8 +137,8 @@ export default function Campagnes() {
                     onClick={() => setFilter(type)}
                     className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                       filter === type
-                        ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-500/20'
-                        : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100'
+                        ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/15'
+                        : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-emerald-50 hover:text-emerald-800'
                     }`}
                   >
                     {type === 'all' ? '🔎 Toutes' : `${getTypeIcon(type)} ${getTypeLabel(type)}`}
@@ -154,7 +154,7 @@ export default function Campagnes() {
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             {filteredCampagnes.length === 0 ? (
               <div className="rounded-3xl border border-dashed border-slate-300 bg-white/90 p-12 text-center shadow-sm">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 text-3xl">📭</div>
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 text-3xl">📭</div>
                 <h3 className="text-xl font-semibold text-slate-900">Aucune campagne pour le moment</h3>
                 <p className="mt-2 text-slate-600">Revenez bientôt pour découvrir de nouvelles initiatives citoyennes.</p>
               </div>
@@ -212,7 +212,7 @@ export default function Campagnes() {
                       </dl>
 
                       <Link href={`/campagnes/${campagne.id}`}>
-                        <button className="mt-6 w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-3 text-sm font-semibold text-white shadow-md shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500/30">
+                        <button className="mt-6 w-full rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-md shadow-emerald-900/15 transition hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-lg">
                           Voir la campagne et s’inscrire
                         </button>
                       </Link>

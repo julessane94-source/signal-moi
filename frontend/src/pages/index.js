@@ -187,10 +187,10 @@ export default function Home() {
 
                 <div className="mt-9 flex max-w-full flex-col gap-3 sm:flex-row sm:flex-wrap">
                   <Link href={user ? "/citizen/signalement" : "/login"} className="min-w-0">
-                    <Button className="w-full bg-emerald-500 text-slate-950 px-7 py-3 font-bold hover:bg-emerald-400 transition sm:w-auto" size="md">Faire un signalement</Button>
+                  <Button className="w-full rounded-2xl bg-emerald-400 px-7 py-3 font-bold text-slate-950 shadow-lg shadow-emerald-400/20 hover:bg-emerald-300 transition sm:w-auto" size="md">Faire un signalement</Button>
                   </Link>
                   <Link href="/signalements" className="min-w-0">
-                    <Button className="w-full border border-white/25 bg-white/10 px-7 py-3 font-semibold text-white hover:bg-white/15 transition sm:w-auto" size="md">Voir les signalements</Button>
+                    <Button className="w-full rounded-2xl border border-white/25 bg-white/10 px-7 py-3 font-semibold text-white hover:bg-white/15 transition sm:w-auto" size="md">Voir les signalements</Button>
                   </Link>
                 </div>
 
@@ -270,7 +270,7 @@ export default function Home() {
                 <a
                   href="/downloads/signal-moi.apk?v=1.0.3"
                   download
-                  className="inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-cyan-300 bg-cyan-400 px-6 py-3 font-bold text-slate-950 shadow-sm transition hover:bg-cyan-300 sm:w-auto"
+                  className="inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-emerald-300 bg-emerald-400 px-6 py-3 font-bold text-slate-950 shadow-sm transition hover:bg-emerald-300 sm:w-auto"
                 >
                   Télécharger l&apos;APK Android
                 </a>
@@ -371,7 +371,7 @@ export default function Home() {
                     <button
                       key={tab}
                       onClick={() => setActiveFilter(tab)}
-                      className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${activeFilter === tab ? 'bg-indigo-600 text-white shadow-sm' : 'border border-slate-200 bg-white text-slate-700 hover:bg-indigo-50'}`}>
+                      className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${activeFilter === tab ? 'bg-emerald-600 text-white shadow-sm' : 'border border-slate-200 bg-white text-slate-700 hover:bg-emerald-50'}`}>
                       {tab}
                     </button>
                   ))}
@@ -395,7 +395,7 @@ export default function Home() {
               <p className="text-sm text-gray-600">Recevez nos Actualités — Abonnez-vous à notre newsletter pour rester informé des dernières actualités et guides</p>
               <div className="mt-4 flex justify-center">
                 <Link href="/newsletter">
-                  <Button size="md" className="bg-indigo-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-indigo-700">S'abonner</Button>
+                  <Button size="md" className="bg-emerald-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-emerald-700">S'abonner</Button>
                 </Link>
               </div>
             </div>
@@ -418,7 +418,7 @@ export default function Home() {
                     <div className="p-4">
                       <h3 className="text-lg font-semibold mb-2">{c.titre}</h3>
                       <p className="text-sm text-gray-600 mb-3">{c.description?.slice(0, 140)}</p>
-                      <Link href="/campagnes" className="text-indigo-600 font-medium">Voir la campagne →</Link>
+                      <Link href="/campagnes" className="text-emerald-700 font-medium">Voir la campagne →</Link>
                     </div>
                   </div>
                 ))}

@@ -60,7 +60,7 @@ export default function SignalementsPublic() {
     return (
       <>
         <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
         </div>
       </>
     )
@@ -73,11 +73,11 @@ export default function SignalementsPublic() {
       </Head>
 
       <main className="signalements-page min-h-screen bg-slate-50 pt-16">
-        <section className="signalements-hero page-hero-animated relative overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-700 to-purple-700 text-white py-20">
-          <div className="pointer-events-none absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.22),_transparent_25%),radial-gradient(circle_at_bottom_right,_rgba(59,130,246,0.22),_transparent_25%)]" />
+        <section className="signalements-hero page-hero-animated relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 text-white py-16 sm:py-20">
+          <div className="pointer-events-none absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_top_left,_rgba(45,212,191,0.28),_transparent_30%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.25),_transparent_30%)]" />
           <div className="hero-copy-enter relative max-w-6xl mx-auto px-4 text-center">
-            <span className="signalements-kicker inline-flex rounded-full bg-white/10 px-4 py-2 text-xs uppercase tracking-[0.35em] text-slate-200 mb-6">Signalements publics</span>
-            <h1 className="text-4xl md:text-5xl font-extrabold mb-4">Transparence locale, action citoyenne</h1>
+            <span className="signalements-kicker inline-flex rounded-full border border-emerald-200/20 bg-emerald-400/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.26em] text-emerald-100 mb-6">Signalements publics</span>
+            <h1 className="mx-auto max-w-4xl text-4xl font-extrabold tracking-tight md:text-5xl">Transparence locale, action citoyenne</h1>
             <p className="text-lg md:text-xl text-slate-200 max-w-3xl mx-auto leading-relaxed">
               Explorez les incidents signalés par votre communauté, suivez les évolutions et encouragez le changement là où il est le plus nécessaire.
             </p>
@@ -85,16 +85,16 @@ export default function SignalementsPublic() {
               <Link href="/contact" className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20">
                   📩 Nous contacter
                 </Link>
-              <Link href="/" className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100">
+              <Link href="/" className="inline-flex items-center justify-center rounded-full bg-emerald-400 px-6 py-3 text-sm font-bold text-slate-950 transition hover:bg-emerald-300">
                   ↩️ Retour à l'accueil
                 </Link>
             </div>
           </div>
         </section>
 
-        <section className="signalements-intro bg-slate-900 text-white py-12">
+        <section className="signalements-intro bg-slate-900 text-white py-10 sm:py-12">
           <div className="max-w-6xl mx-auto px-4 text-center">
-            <p className="text-sm uppercase tracking-[0.32em] text-cyan-300 mb-3">Transparence et sécurité</p>
+            <p className="text-sm uppercase tracking-[0.26em] text-emerald-300 mb-3">Transparence et sécurité</p>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Voir les signalements, suivre l’évolution</h2>
             <p className="mx-auto max-w-3xl text-slate-300 leading-relaxed">
               Explorez les signalements locaux, filtrez par catégorie et visualisez les incidents qui comptent pour votre quartier.
@@ -102,15 +102,15 @@ export default function SignalementsPublic() {
           </div>
         </section>
 
-        <section className="signalements-filters py-8 bg-white border-b">
+        <section className="signalements-filters border-b border-slate-200 bg-white py-7">
           <div className="max-w-6xl mx-auto px-4">
-            <div className="flex flex-wrap gap-3 justify-center">
+            <div className="flex flex-wrap justify-center gap-2 rounded-3xl border border-slate-200 bg-slate-50 p-3 shadow-sm">
               {types.map(type => (
                 <button
                   key={type}
                   onClick={() => setFilter(type)}
                   className={`signalement-filter px-4 py-2 rounded-full transition ${
-                    filter === type ? 'bg-indigo-600 text-white shadow-soft' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    filter === type ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/15' : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-emerald-50 hover:text-emerald-800'
                   }`}
                 >
                   {type === 'all' ? 'Tous' : `${getTypeIcon(type)} ${getTypeLabel(type)}`}
@@ -123,14 +123,14 @@ export default function SignalementsPublic() {
         <section className="py-12">
           <div className="max-w-6xl mx-auto px-4">
             {filteredSignalements.length === 0 ? (
-              <div className="text-center py-12 bg-white rounded-xl">
+              <div className="rounded-3xl border border-dashed border-slate-300 bg-white py-14 text-center shadow-sm">
                 <div className="text-6xl mb-4">📭</div>
                 <p className="text-gray-500">Aucun signalement dans cette categorie</p>
               </div>
             ) : (
               <div className="card-stagger grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredSignalements.map((s, i) => (
-                  <div key={s.id} style={{ '--card-index': i }} className="signalement-card interactive-card section-card overflow-hidden hover:shadow-xl transition">
+                  <div key={s.id} style={{ '--card-index': i }} className="signalement-card interactive-card section-card overflow-hidden border-slate-200 bg-white hover:shadow-xl transition">
                     <div className="p-5">
                       <div className="flex items-center justify-between mb-3">
                         <span className="signalement-type flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-sm">
@@ -154,7 +154,7 @@ export default function SignalementsPublic() {
                         </span>
                       </div>
                       <div className="mt-5 flex items-center justify-between gap-3">
-                        <Link href={`/citizen/signalement/${s.id}`} className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition">
+                        <Link href={`/citizen/signalement/${s.id}`} className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition">
                             Voir le signalement
                           </Link>
                         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
@@ -169,13 +169,13 @@ export default function SignalementsPublic() {
           </div>
         </section>
 
-        <section className="signalements-cta py-16 bg-indigo-600">
+        <section className="signalements-cta bg-gradient-to-r from-emerald-700 to-teal-700 py-16">
           <div className="max-w-4xl mx-auto text-center px-4">
             <div className="section-card bg-white p-10 text-slate-900">
               <h2 className="text-3xl font-bold mb-4">Vous avez vu un incident ?</h2>
               <p className="text-slate-600 mb-6">Signalement rapide, simple et anonyme</p>
               <Link href="/citizen/signalement">
-                <button className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition">
+                <button className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-emerald-700 transition">
                   🚨 Faire un signalement
                 </button>
               </Link>

@@ -105,6 +105,49 @@ body {
   line-height: 1.75;
 }
 
+/* Palette publique Signal-Moi : un vert institutionnel, soutenu par l'ardoise.
+   Ces variables gardent l'accueil, les campagnes et les signalements cohérents. */
+.home-page,
+.signalements-page,
+.campaigns-page {
+  --signal-primary: #059669;
+  --signal-primary-dark: #047857;
+  --signal-primary-soft: #ecfdf5;
+  --signal-ink: #0f172a;
+  --signal-muted: #64748b;
+}
+
+.home-page {
+  background:
+    radial-gradient(circle at 92% 18%, rgba(16, 185, 129, .09), transparent 25rem),
+    radial-gradient(circle at 6% 55%, rgba(20, 184, 166, .07), transparent 20rem),
+    #f8fafc;
+}
+
+.home-page .home-panel,
+.campaigns-page .interactive-card,
+.signalements-page .signalement-card {
+  border-color: rgba(148, 163, 184, .32);
+}
+
+.home-page .home-panel:hover,
+.campaigns-page .interactive-card:hover,
+.signalements-page .signalement-card:hover {
+  border-color: rgba(16, 185, 129, .42);
+}
+
+.campaigns-page .interactive-card {
+  box-shadow: 0 12px 30px rgba(15, 23, 42, .07);
+}
+
+.campaigns-page .interactive-card:hover {
+  box-shadow: 0 22px 44px rgba(6, 78, 59, .14);
+}
+
+.signalements-page .signalements-filters {
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .04);
+}
+
 /* Pages publiques : la même échelle lisible et les mêmes marges, quelle que soit la page. */
 .public-page-shell {
   --public-content-width: 76rem;
