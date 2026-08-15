@@ -680,6 +680,53 @@ select {
   @apply inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-emerald-700;
 }
 
+/* Mobile-first refinements: comfortable touch targets and no accidental horizontal scroll. */
+@media (max-width: 640px) {
+  html { -webkit-text-size-adjust: 100%; }
+
+  body,
+  .site-page-shell {
+    overflow-x: clip;
+  }
+
+  .site-page-shell main {
+    min-width: 0;
+  }
+
+  .site-page-shell input:not([type='checkbox']):not([type='radio']),
+  .site-page-shell select,
+  .site-page-shell textarea {
+    min-height: 2.875rem;
+    font-size: 1rem;
+  }
+
+  .site-page-shell textarea { min-height: 7.5rem; }
+
+  .site-page-shell .table-modern,
+  .site-page-shell table {
+    font-size: .8125rem;
+  }
+
+  .site-page-shell .table-modern th,
+  .site-page-shell .table-modern td {
+    padding: .65rem .75rem;
+  }
+
+  .site-page-shell .interactive-card:hover {
+    transform: none;
+  }
+}
+
+@media (pointer: coarse) {
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
+}
+
 /* Focus states */
 :focus-visible {
   @apply outline-none ring-2 ring-indigo-500 ring-offset-2;

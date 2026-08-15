@@ -6,48 +6,17 @@ import { API_BASE } from '../../config/api'
 import { toast } from 'react-toastify'
 import dynamic from 'next/dynamic'
 import { reverseGeocodePlace } from '../../utils/locationLabel'
+import { REPORT_TYPES } from '../../constants/reportTypes'
 
 const LeafletMap = dynamic(() => import('../../components/Map/LeafletMap.jsx'), {
   ssr: false,
   loading: () => <div className="w-full h-80 rounded bg-gray-100 animate-pulse" />
 })
 
-const QUICK_TYPES = [
-  { value: 'violence', label: 'Violence', simple: 'On attaque quelqu un', icon: '!', hint: 'Agression, menace, bagarre', tone: 'border-red-200 bg-red-50 text-red-900' },
-  { value: 'accident', label: 'Accident', simple: 'Il y a un accident', icon: '+', hint: 'Blessure, choc, danger immediat', tone: 'border-orange-200 bg-orange-50 text-orange-900' },
-  { value: 'vol', label: 'Vol', simple: 'On a vole quelque chose', icon: '$', hint: 'Vol, cambriolage, objet vole', tone: 'border-amber-200 bg-amber-50 text-amber-900' },
-  { value: 'probleme_eclairage', label: 'Eclairage', simple: 'La lumiere ne marche pas', icon: 'L', hint: 'Lampadaire ou rue sombre', tone: 'border-blue-200 bg-blue-50 text-blue-900' },
-  { value: 'nid_de_poule', label: 'Trou sur la route', simple: 'La route est abimee', icon: 'R', hint: 'Trou, route cassee, danger', tone: 'border-slate-200 bg-slate-50 text-slate-900' },
-  { value: 'autre', label: 'Autre probleme', simple: 'Autre chose a signaler', icon: '?', hint: 'Je ne sais pas choisir', tone: 'border-emerald-200 bg-emerald-50 text-emerald-900' }
-]
+const QUICK_TYPES = REPORT_TYPES
+const ALL_REPORT_TYPES = REPORT_TYPES
 
-const ALL_REPORT_TYPES = [
-  { value: 'violence', label: 'Violence' },
-  { value: 'vol', label: 'Vol' },
-  { value: 'accident', label: 'Accident' },
-  { value: 'probleme_eclairage', label: 'Problème d’éclairage' },
-  { value: 'nid_de_poule', label: 'Nid de poule' },
-  { value: 'dechet', label: 'Déchets' },
-  { value: 'eau_sale', label: 'Eau sale' },
-  { value: 'bruit', label: 'Bruit' },
-  { value: 'insecurite', label: 'Insécurité' },
-  { value: 'sante', label: 'Santé' },
-  { value: 'education', label: 'Éducation' },
-  { value: 'electricite', label: 'Électricité' },
-  { value: 'eau_potable', label: 'Eau potable' },
-  { value: 'transport', label: 'Transport' },
-  { value: 'environnement', label: 'Environnement' },
-  { value: 'autre', label: 'Autre' }
-]
-
-const SIMPLE_DESCRIPTIONS = {
-  violence: 'Je signale une violence ou une menace. Il faut intervenir rapidement.',
-  accident: 'Je signale un accident ou une personne en danger. Il faut intervenir rapidement.',
-  vol: 'Je signale un vol. Une personne a perdu un bien ou un cambriolage a eu lieu.',
-  probleme_eclairage: 'Je signale un probleme d eclairage public. La zone est sombre et dangereuse.',
-  nid_de_poule: 'Je signale un trou ou une route abimee. Cela peut provoquer un accident.',
-  autre: 'Je signale un probleme dans mon quartier. Merci de verifier la situation.'
-}
+const SIMPLE_DESCRIPTIONS = Object.fromEntries(REPORT_TYPES.map(({ value, description }) => [value, description]))
 
 const STARTER_ACTIONS = [
   { type: 'violence', title: 'Je suis en danger', text: 'Alerte rapide avec GPS et video', button: 'Lancer SOS', tone: 'bg-red-600 text-white hover:bg-red-700' },
@@ -1087,7 +1056,7 @@ export default function NewSignalement() {
                         <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-3xl font-black shadow-sm ring-1 ring-black/5">{item.icon}</span>
                         {formData.type === item.value && <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white">Choisi</span>}
                       </div>
-                      <div className="mt-4 text-xl font-black">{item.simple}</div>
+                      <div className="mt-4 text-xl font-black">{item.label}</div>
                       <div className="mt-2 text-sm font-semibold opacity-75">{item.hint}</div>
                     </button>
                   ))}

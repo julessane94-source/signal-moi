@@ -5,6 +5,7 @@ import { Button, Card, Badge } from '../../components/ui'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { toast } from 'react-toastify'
+import { REPORT_TYPES } from '../../constants/reportTypes'
 import {
   DocumentTextIcon as DocumentText,
   CheckCircleIcon as CheckCircle,
@@ -13,10 +14,8 @@ import {
   PlusIcon as Plus,
   MapPinIcon as MapPin,
   ShieldCheckIcon as ShieldCheck,
-  BellAlertIcon as BellAlert,
   ClockIcon as Clock,
-  ArrowRightIcon as ArrowRight,
-  MicrophoneIcon as Microphone
+  ArrowRightIcon as ArrowRight
 } from '@heroicons/react/24/outline'
 
 export default function CitizenDashboard() {
@@ -292,29 +291,12 @@ export default function CitizenDashboard() {
     return <Badge variant={statusMap[statut] || 'info'}>{textMap[statut] || statut}</Badge>
   }
 
-  const quickActions = [
-    {
-      title: 'Urgence maintenant',
-      text: 'GPS et vidéo.',
-      href: '/citizen/signalement?alerte=1',
-      icon: BellAlert,
-      tone: 'bg-red-600 text-white hover:bg-red-700'
-    },
-    {
-      title: 'Accident ou blessure',
-      text: 'Signaler un accident.',
-      href: '/citizen/signalement?type=accident',
-      icon: ShieldCheck,
-      tone: 'bg-orange-500 text-white hover:bg-orange-600'
-    },
-    {
-      title: 'Problème du quartier',
-      text: 'Route, lumière, vol…',
-      href: '/citizen/signalement?type=autre',
-      icon: Microphone,
-      tone: 'bg-slate-950 text-white hover:bg-slate-800'
-    },
-  ]
+  const quickActions = REPORT_TYPES.map((type) => ({
+    ...type,
+    title: type.label,
+    text: type.hint,
+    href: `/citizen/signalement?type=${type.value}`
+  }))
 
   // ✅ Afficher le loader pendant le chargement de l'auth OU des données
   if (authLoading || loading) {
@@ -411,33 +393,24 @@ export default function CitizenDashboard() {
           <section className="mb-8">
             <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-sm font-bold uppercase tracking-wide text-red-600">Action rapide</p>
-                <h2 className="text-2xl font-black text-slate-950">Que souhaitez-vous signaler ?</h2>
+                <p className="text-sm font-bold uppercase tracking-wide text-red-600">Actions rapides</p>
+                <h2 className="text-2xl font-black text-slate-950">Choisissez le type de signalement</h2>
               </div>
             </div>
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {quickActions.map((action) => {
-                const Icon = action.icon
                 const content = (
-                  <div className={`group min-h-40 rounded-2xl p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl ${action.tone}`}>
-                    <div className="mb-5 flex items-center justify-between gap-3">
-                      <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-black/10 text-current">
-                        <Icon className="h-6 w-6" />
+                  <div className={`group min-h-36 rounded-2xl border p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-xl ${action.tone}`}>
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                      <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-white/70 text-xl shadow-sm">
+                        {action.icon}
                       </span>
                       <ArrowRight className="h-5 w-5 opacity-70 transition group-hover:translate-x-1" />
                     </div>
-                    <p className="text-xl font-black leading-tight">{action.title}</p>
-                    <p className="mt-2 text-sm font-semibold opacity-80">{action.text}</p>
+                    <p className="text-lg font-black leading-tight">{action.title}</p>
+                    <p className="mt-1 text-xs font-semibold opacity-80">{action.text}</p>
                   </div>
                 )
-
-                if (action.onClick) {
-                  return (
-                    <button key={action.title} type="button" onClick={action.onClick} className="text-left">
-                      {content}
-                    </button>
-                  )
-                }
 
                 return <Link key={action.title} href={action.href}>{content}</Link>
               })}

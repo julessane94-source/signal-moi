@@ -22,15 +22,15 @@ export default function EmergencyButtons() {
   if (!police && !fire) return null
 
   return (
-    <div className="fixed right-4 bottom-6 z-50 flex flex-col items-end gap-3">
+    <div className="fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom))] right-3 z-50 flex flex-col items-end gap-2 sm:bottom-6 sm:right-4 sm:gap-3">
       {police && (
-        <a href={`tel:${police.replace(/\s+/g,'')}`} className="flex items-center gap-3 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg hover:scale-105 transition-transform">
+        <a href={`tel:${police.replace(/\s+/g,'')}`} className="flex min-h-11 items-center gap-3 rounded-full bg-blue-600 px-4 py-2 text-white shadow-lg transition-transform hover:scale-105">
           <Phone className="h-5 w-5" />
           <span className="font-semibold">Police</span>
         </a>
       )}
       {fire && (
-        <a href={`tel:${fire.replace(/\s+/g,'')}`} className="flex items-center gap-3 bg-red-600 text-white px-4 py-2 rounded-full shadow-lg hover:scale-105 transition-transform">
+        <a href={`tel:${fire.replace(/\s+/g,'')}`} className="flex min-h-11 items-center gap-3 rounded-full bg-red-600 px-4 py-2 text-white shadow-lg transition-transform hover:scale-105">
           <Phone className="h-5 w-5" />
           <span className="font-semibold">Sapeurs‑pompiers</span>
         </a>

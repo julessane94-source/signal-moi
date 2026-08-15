@@ -93,6 +93,11 @@ export default function Navbar() {
     return () => window.removeEventListener('signal-moi-notifications-read', resetNotificationCount)
   }, [])
 
+  useEffect(() => {
+    setMobileMenuOpen(false)
+    setProfileDropdownOpen(false)
+  }, [router.pathname])
+
   const getImageUrl = (url) => {
     if (!url) return '/icons/icon-192x192.png'
     if (url.startsWith('data:')) return url
@@ -286,14 +291,14 @@ export default function Navbar() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="md:hidden border-t border-slate-200 bg-white/95 px-4 py-4 shadow-sm"
+            className="max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain border-t border-slate-200 bg-white/95 px-4 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-sm md:hidden"
           >
             <div className="flex items-center justify-between border-b border-slate-200 pb-4 mb-4">
               <span className="text-sm font-semibold text-slate-900">Menu</span>
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">{user ? `Bonjour, ${user.prenom}` : 'Visiteur'}</span>
             </div>
             {showPublicNavigation && (
-              <div className="px-4 py-4 space-y-2">
+              <div className="space-y-2 py-4">
                 {navigation.map((item) => {
                   const Icon = item.icon
                   const isActive = item.href === '/' ? router.pathname === item.href : router.pathname.startsWith(item.href)
@@ -301,7 +306,7 @@ export default function Navbar() {
                     <Link key={item.name} href={item.href} onClick={() => setMobileMenuOpen(false)}>
                       <motion.a
                         whileHover={{ x: 4 }}
-                        className="flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-700 transition hover:bg-slate-100"
+                        className="flex min-h-12 items-center gap-3 rounded-2xl px-4 py-3 text-slate-700 transition hover:bg-slate-100"
                         style={isActive ? { backgroundColor: '#f8fafc' } : undefined}
                       >
                         <Icon className="h-5 w-5" />
@@ -312,7 +317,7 @@ export default function Navbar() {
                 })}
               </div>
             )}
-            <div className="px-4 py-4 space-y-2">
+            <div className="space-y-2 py-4">
               <Link href="/donate" onClick={() => setMobileMenuOpen(false)}>
                 <motion.a className="flex items-center justify-center gap-2 w-full rounded-full bg-emerald-600 px-4 py-3 font-semibold text-white transition hover:bg-emerald-700">
                   <Heart className="h-5 w-5" />

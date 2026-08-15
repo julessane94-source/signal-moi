@@ -28,21 +28,22 @@ export default function Modal({
             onClick={onClose}
             className="fixed inset-0 bg-black bg-opacity-50 z-40"
           />
-          <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 overflow-y-auto overscroll-contain">
+            <div className="flex min-h-full items-end justify-center p-0 sm:items-center sm:p-4">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className={`bg-white rounded-xl shadow-xl ${sizes[size]} w-full`}
+                className={`max-h-[92dvh] w-full overflow-hidden rounded-t-3xl bg-white shadow-xl sm:max-h-[calc(100dvh-2rem)] sm:rounded-3xl ${sizes[size]}`}
               >
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                  <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+                <div className="flex items-center justify-between border-b border-gray-200 p-4 sm:p-6">
+                  <h2 className="pr-3 text-lg font-semibold text-gray-900">{title}</h2>
                   {showCloseButton && (
                     <button
                       onClick={onClose}
-                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                      className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-slate-100 hover:text-gray-600"
+                      aria-label="Fermer"
                     >
                       <XMark className="h-6 w-6" />
                     </button>
@@ -50,7 +51,7 @@ export default function Modal({
                 </div>
 
                 {/* Body */}
-                <div className="p-6">{children}</div>
+                <div className="max-h-[calc(92dvh-5rem)] overflow-y-auto overscroll-contain p-4 sm:max-h-[calc(100dvh-8rem)] sm:p-6">{children}</div>
               </motion.div>
             </div>
           </div>
