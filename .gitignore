@@ -7,4 +7,7 @@ backend/node_modules/
 *.log
 .vercel
 .env*.local
-mobile/
+# Le code Expo/React Native fait partie du produit. Les dependances et secrets
+# sont deja exclus par les regles globales et mobile/.gitignore.
+mobile/android/app/debug.keystore
+mobile/android/**/build/
