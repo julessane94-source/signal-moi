@@ -713,7 +713,7 @@ export default function PoliceDashboard() {
             animate={{ opacity: 1, y: 0 }}
             className={`mb-8 overflow-hidden rounded-[2rem] border text-white shadow-2xl ${
               isCommissariat
-                ? 'border-slate-200 bg-slate-950'
+                ? 'border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950'
                 : 'border-sky-300/20 bg-gradient-to-br from-sky-950 via-blue-900 to-slate-950'
             }`}
           >
@@ -816,7 +816,7 @@ export default function PoliceDashboard() {
             ] : agentInterfaceCards).map((item) => {
               const Icon = item.icon
               return (
-                <div key={item.title} className={`rounded-[1.5rem] border p-5 shadow-sm ${item.tone}`}>
+                <div key={item.title} className={`rounded-[1.5rem] border p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg ${item.tone}`}>
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-sm font-black uppercase tracking-wide">{item.title}</p>

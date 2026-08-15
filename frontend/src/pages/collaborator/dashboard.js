@@ -284,7 +284,7 @@ export default function CollaboratorDashboard() {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8 overflow-hidden rounded-3xl bg-slate-950 text-white shadow-xl"
+            className="mb-8 overflow-hidden rounded-[2rem] border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 text-white shadow-2xl"
           >
             <div className="grid gap-6 p-6 lg:grid-cols-[1fr_auto] lg:items-end lg:p-8">
               <div>
@@ -293,8 +293,13 @@ export default function CollaboratorDashboard() {
                   Bonjour {user?.prenom || 'collaborateur'}
                 </h1>
                 <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-200 md:text-base">
-                  Campagnes, dossiers et statistiques.
+                  Pilotez vos dossiers, mobilisez votre communauté et suivez l’impact terrain.
                 </p>
+                <div className="mt-5 flex flex-wrap gap-2 text-xs font-bold">
+                  <span className="rounded-full bg-white/10 px-3 py-1 text-emerald-100">{followedList.length} dossier(s) suivis</span>
+                  <span className="rounded-full bg-white/10 px-3 py-1 text-slate-100">{recentCampaigns.length} campagne(s) actives</span>
+                  <span className="rounded-full bg-white/10 px-3 py-1 text-slate-100">Alertes actives</span>
+                </div>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link href="/collaborator/campagne/new">
@@ -362,7 +367,7 @@ export default function CollaboratorDashboard() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ staggerChildren: 0.1 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8"
+            className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-3"
           >
             {[
               {

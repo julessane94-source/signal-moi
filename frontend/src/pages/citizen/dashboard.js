@@ -352,16 +352,31 @@ export default function CitizenDashboard() {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6 overflow-hidden rounded-2xl bg-slate-950 text-white shadow-xl"
+            className="mb-6 overflow-hidden rounded-[2rem] border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white shadow-2xl"
           >
-            <div className="grid gap-6 p-6 lg:grid-cols-[1fr_auto] lg:items-end lg:p-8">
+            <div className="grid gap-7 p-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(280px,0.75fr)] lg:p-8">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-wide text-red-300">Espace citoyen</p>
-                <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-red-300">Espace citoyen</p>
+                <h1 className="mt-3 text-3xl font-black sm:text-5xl">
                   Bonjour {user?.prenom || 'citoyen'}
                 </h1>
+                <p className="mt-3 max-w-xl text-sm leading-6 text-slate-300 sm:text-base">
+                  Signalez, suivez vos dossiers et participez aux actions qui améliorent votre quartier.
+                </p>
+                <div className="mt-6 grid max-w-2xl grid-cols-3 gap-3">
+                  {dashboardStats.slice(0, 3).map((stat) => {
+                    const Icon = stat.icon
+                    return (
+                      <div key={stat.label} className="rounded-2xl border border-white/10 bg-white/10 p-3 backdrop-blur-sm">
+                        <Icon className="h-4 w-4 text-red-200" />
+                        <p className="mt-2 text-2xl font-black text-white">{stat.value}</p>
+                        <p className="text-xs font-semibold text-slate-300">{stat.label}</p>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
-              <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
+              <div className="flex flex-col justify-end gap-3 lg:items-stretch">
                 <Link href="/citizen/signalement?alerte=1">
                   <Button size="lg" icon={Plus} className="w-full bg-red-600 text-white shadow-lg hover:bg-red-700 lg:w-auto">
                     Lancer l'alerte
@@ -488,7 +503,7 @@ export default function CitizenDashboard() {
           )}
 
           {/* Tabs Navigation */}
-          <div className="mb-8 flex gap-2 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+          <div className="sticky top-20 z-20 mb-8 flex gap-2 overflow-x-auto rounded-2xl border border-slate-200/90 bg-white/95 p-2 shadow-lg shadow-slate-900/5 backdrop-blur">
             {tabs.map((tab) => (
               <motion.button
                 key={tab.id}
