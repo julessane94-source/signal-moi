@@ -539,8 +539,12 @@ export default function NewSignalement() {
     const requestedType = String(router.query.type)
     const quickType = QUICK_TYPES.find(item => item.value === requestedType)
     if (!quickType) return
-    handleQuickType(quickType.value, quickType.label)
-    getAutomaticLocation({ silent: true })
+    if (quickType.value === 'violence' || quickType.value === 'accident') {
+      startEmergencyLive(quickType.value)
+    } else {
+      handleQuickType(quickType.value, quickType.label)
+      getAutomaticLocation({ silent: true })
+    }
   }, [router.isReady, router.query.type])
 
   const handleFileChange = (e) => {

@@ -302,19 +302,23 @@ export default function CollaboratorDashboard() {
                 </div>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
-                <Link href="/collaborator/campagne/new">
-                  <button className="rounded-2xl bg-emerald-500 px-5 py-3 font-bold text-slate-950 shadow-lg transition hover:bg-emerald-400">
-                    Nouvelle campagne
-                  </button>
-                </Link>
-                <Link href="/profile">
+                <a href="#dossiers-prioritaires" className="rounded-2xl bg-emerald-500 px-5 py-3 text-center font-bold text-slate-950 shadow-lg transition hover:bg-emerald-400">
+                    Voir les dossiers
+                </a>
+                <Link href="/collaborator/statistics">
                   <button className="rounded-2xl border border-white/20 bg-white/10 px-5 py-3 font-bold text-white transition hover:bg-white/15">
-                    Mon profil
+                    Statistiques
                   </button>
                 </Link>
               </div>
             </div>
           </motion.div>
+
+          <nav className="mb-6 grid gap-3 sm:grid-cols-3" aria-label="Accès collaborateur">
+            <a href="#dossiers-prioritaires" className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm font-bold text-slate-800 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50">Dossiers à suivre</a>
+            <a href="#mobilisation" className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm font-bold text-slate-800 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50">Campagnes et plaidoyers</a>
+            <a href="#exports" className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm font-bold text-slate-800 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50">Exports et analyses</a>
+          </nav>
 
           <motion.div
             initial={{ opacity: 0, y: 14 }}
@@ -367,7 +371,7 @@ export default function CollaboratorDashboard() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ staggerChildren: 0.1 }}
-            className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-3"
+            className="hidden"
           >
             {[
               {
@@ -470,6 +474,7 @@ export default function CollaboratorDashboard() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
+            id="mobilisation"
             className="mb-12"
           >
             <h2 className="text-2xl font-black text-slate-950 mb-5 flex items-center gap-2">
@@ -524,7 +529,7 @@ export default function CollaboratorDashboard() {
             </div>
 
             {/* Boutons exports */}
-            <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div id="exports" className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="mb-4">
                 <h3 className="font-black text-slate-950">Telechargements</h3>
                 <p className="text-sm text-slate-500">Dossiers et statistiques.</p>
@@ -755,14 +760,21 @@ export default function CollaboratorDashboard() {
 
           {/* === SIGNALEMENTS ASSIGNÉS === */}
           <motion.div
+            id="dossiers-prioritaires"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
             className="mt-12"
           >
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <DocumentText className="h-7 w-7" /> Signalements assignés
-            </h2>
+            <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">Priorité terrain</p>
+                <h2 className="mt-1 flex items-center gap-2 text-2xl font-black text-slate-950">
+                  <DocumentText className="h-7 w-7" /> Signalements assignés
+                </h2>
+              </div>
+              <span className="text-sm font-semibold text-slate-500">{signalements.length} dossier{signalements.length > 1 ? 's' : ''}</span>
+            </div>
             
             {loadingSignals ? (
               <div className="text-center py-12">
