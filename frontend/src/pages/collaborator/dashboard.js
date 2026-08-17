@@ -423,12 +423,13 @@ export default function CollaboratorDashboard() {
           </motion.div>
 
           {completeStats && (
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-12 grid gap-4 lg:grid-cols-3"
-            >
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <details className="mb-12 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-5 font-black text-slate-950 marker:content-none">
+                <span>Vue analytique détaillée</span>
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">Ouvrir</span>
+              </summary>
+              <div className="grid gap-4 border-t border-slate-100 p-5 lg:grid-cols-3">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5">
                 <h3 className="font-bold text-slate-950">Statistiques completes</h3>
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                   {Object.entries({
@@ -446,7 +447,7 @@ export default function CollaboratorDashboard() {
                   ))}
                 </div>
               </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5">
                 <h3 className="font-bold text-slate-950">Types les plus signales</h3>
                 <div className="mt-4 space-y-2 text-sm">
                   {Object.entries(completeStats.byType || {}).slice(0, 8).map(([label, value]) => (
@@ -456,7 +457,7 @@ export default function CollaboratorDashboard() {
                   ))}
                 </div>
               </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5">
                 <h3 className="font-bold text-slate-950">Zones concernees</h3>
                 <div className="mt-4 space-y-2 text-sm">
                   {Object.entries(completeStats.byZone || {}).slice(0, 8).map(([label, value]) => (
@@ -466,7 +467,8 @@ export default function CollaboratorDashboard() {
                   ))}
                 </div>
               </div>
-            </motion.div>
+              </div>
+            </details>
           )}
 
           {/* === ACTIONS RAPIDES === */}
@@ -478,7 +480,7 @@ export default function CollaboratorDashboard() {
             className="mb-12"
           >
             <h2 className="text-2xl font-black text-slate-950 mb-5 flex items-center gap-2">
-              <Cog className="h-7 w-7" /> Actions rapides
+              <Cog className="h-7 w-7" /> Créer et suivre
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {[

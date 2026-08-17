@@ -61,9 +61,26 @@ export default function CitizenHomeScreen({ navigation }) {
   }
 
   const locationLabel = address?.city || address?.subregion || address?.region || 'Position precise activee'
+  const commonTypes = REPORT_TYPES.filter((type) => [
+    'vol', 'probleme_eclairage', 'nid_de_poule', 'dechet', 'eau_sale', 'bruit'
+  ].includes(type.type))
 
   function goToTab(tabName, params) {
     navigation.navigate(tabName, params)
+  }
+
+  function openLive(type, description) {
+    let rootNavigation = navigation
+    while (rootNavigation?.getParent?.()) rootNavigation = rootNavigation.getParent()
+    if (!rootNavigation?.navigate) {
+      Alert.alert('Live indisponible', 'Reouvrez l application puis reessayez.')
+      return
+    }
+    rootNavigation.navigate('LiveCamera', {
+      sessionId: `citizen-live-${Date.now()}`,
+      type,
+      description
+    })
   }
 
   return (
@@ -85,12 +102,28 @@ export default function CitizenHomeScreen({ navigation }) {
       <View style={styles.alertCard}>
         <View style={styles.alertTop}>
           <Ionicons name="shield-checkmark" size={24} color="#fff" />
-          <Text style={styles.alertBadge}>Sedhiou</Text>
+          <Text style={styles.alertBadge}>Alerte prioritaire</Text>
         </View>
-        <Text style={styles.alertTitle}>Besoin d'aide maintenant ?</Text>
+        <Text style={styles.alertTitle}>Vous avez besoin d aide ?</Text>
         <Text style={styles.alertText}>
-          Ouvrez l'onglet Signaler. Votre position GPS sera ajoutee automatiquement au dossier.
+          Lancez un direct pour une urgence. Votre position sera demandee avant l envoi.
         </Text>
+        <View style={styles.urgentActions}>
+          <Pressable
+            onPress={() => openLive('violence', 'Alerte citoyenne urgente : violence')}
+            style={({ pressed }) => [styles.urgentButton, styles.dangerButton, pressed && styles.quickPressed]}
+          >
+            <Ionicons name="shield" size={18} color="#fff" />
+            <Text style={styles.urgentButtonText}>Je suis en danger</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => openLive('accident', 'Alerte citoyenne urgente : accident ou blessure')}
+            style={({ pressed }) => [styles.urgentButton, styles.accidentButton, pressed && styles.quickPressed]}
+          >
+            <Ionicons name="medical" size={18} color="#fff" />
+            <Text style={styles.urgentButtonText}>Accident / blessure</Text>
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.grid}>
@@ -99,10 +132,7 @@ export default function CitizenHomeScreen({ navigation }) {
       </View>
 
       <View style={styles.quickRow}>
-        <Quick label="Live" icon="videocam" tone={COLORS.danger} onPress={() => {
-          Alert.alert('Live', 'Ouvrez le bouton Lancer un live dans l onglet Signaler.')
-          goToTab('Signaler')
-        }} />
+        <Quick label="Signaler" icon="add-circle" tone={COLORS.primary} onPress={() => goToTab('Signaler')} />
         <Quick label="GPS" icon="navigate" tone={COLORS.primary} onPress={async () => {
           const coords = await requestCurrentLocation()
           Alert.alert('GPS', coords ? 'Position mise a jour.' : 'Autorisez la localisation du telephone.')
@@ -115,9 +145,9 @@ export default function CitizenHomeScreen({ navigation }) {
 
       <View>
         <Text style={styles.sectionTitle}>Signaler rapidement</Text>
-        <Text style={styles.sectionHint}>Choisissez directement le type de problème.</Text>
+        <Text style={styles.sectionHint}>Les situations urgentes se trouvent juste au-dessus.</Text>
         <View style={styles.typeGrid}>
-          {REPORT_TYPES.map((type) => (
+          {commonTypes.map((type) => (
             <Pressable
               key={type.type}
               onPress={() => goToTab('Signaler', { type: type.type })}
@@ -130,6 +160,13 @@ export default function CitizenHomeScreen({ navigation }) {
             </Pressable>
           ))}
         </View>
+        <Pressable
+          onPress={() => goToTab('Signaler')}
+          style={({ pressed }) => [styles.allTypesButton, pressed && styles.quickPressed]}
+        >
+          <Text style={styles.allTypesText}>Voir tous les types de signalement</Text>
+          <Ionicons name="arrow-forward" size={18} color={COLORS.primary} />
+        </Pressable>
       </View>
 
       <Text style={styles.sectionTitle}>Mes derniers signalements</Text>
@@ -239,6 +276,30 @@ const styles = StyleSheet.create({
     marginTop: 8,
     lineHeight: 22
   },
+  urgentActions: {
+    marginTop: 18,
+    gap: 10
+  },
+  urgentButton: {
+    minHeight: 48,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8
+  },
+  dangerButton: {
+    backgroundColor: '#dc2626'
+  },
+  accidentButton: {
+    backgroundColor: '#d97706'
+  },
+  urgentButtonText: {
+    color: '#fff',
+    fontWeight: '900',
+    fontSize: 14
+  },
   grid: {
     flexDirection: 'row',
     gap: 12
@@ -329,6 +390,20 @@ const styles = StyleSheet.create({
     color: COLORS.ink,
     fontSize: 13,
     fontWeight: '800'
+  },
+  allTypesButton: {
+    marginTop: 10,
+    minHeight: 48,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    backgroundColor: '#ecfdf5',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  allTypesText: {
+    color: COLORS.primary,
+    fontWeight: '900'
   },
   card: {
     backgroundColor: '#fff',

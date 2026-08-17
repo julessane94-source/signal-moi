@@ -19,6 +19,8 @@ export default function LiveCameraScreen({ route, navigation }) {
   const [cameraPermission, requestCameraPermission] = useCameraPermissions()
   const [microphonePermission, requestMicrophonePermission] = useMicrophonePermissions()
   const [running, setRunning] = useState(false)
+  const [starting, setStarting] = useState(false)
+  const [cameraReady, setCameraReady] = useState(false)
   const [frameCount, setFrameCount] = useState(0)
   const [facing, setFacing] = useState('back')
 
@@ -77,26 +79,44 @@ export default function LiveCameraScreen({ route, navigation }) {
   }
 
   async function startLive() {
-    const allowed = await ensurePermissions()
-    if (!allowed) {
-      Alert.alert('Permissions requises', 'Autorisez la camera et le micro pour lancer le live.')
+    if (running || starting) return
+    if (!cameraReady) {
+      Alert.alert('Caméra en préparation', 'Patientez une seconde, le direct sera disponible dès que la caméra est prête.')
       return
     }
 
-    const coords = position || await requestCurrentLocation()
-    if (!coords) {
-      Alert.alert('GPS requis', 'Autorisez la localisation pour lancer le live.')
-      return
-    }
+    setStarting(true)
+    try {
+      const allowed = await ensurePermissions()
+      if (!allowed) {
+        Alert.alert('Permissions requises', 'Autorisez la caméra et le micro dans les paramètres du téléphone pour lancer le live.')
+        return
+      }
 
-    const payload = { ...buildBasePayload(coords), action: 'start' }
-    await sendLiveSession(payload)
-    const socket = connectLiveSocket(token, user)
-    socket?.emit('live_recording_started', payload)
-    socket?.emit('live_recording_location', payload)
-    setRunning(true)
-    await sendFrame()
-    timerRef.current = setInterval(sendFrame, FRAME_INTERVAL_MS)
+      const coords = position || await requestCurrentLocation()
+      if (!coords) {
+        Alert.alert('GPS requis', 'Autorisez la localisation pour lancer le live.')
+        return
+      }
+
+      const payload = { ...buildBasePayload(coords), action: 'start' }
+      try {
+        await sendLiveSession(payload)
+      } catch (error) {
+        Alert.alert('Transmission indisponible', 'La caméra est prête, mais le serveur ne répond pas. Vérifiez votre connexion puis réessayez.')
+        return
+      }
+      const socket = connectLiveSocket(token, user)
+      socket?.emit('live_recording_started', payload)
+      socket?.emit('live_recording_location', payload)
+      setRunning(true)
+      await sendFrame()
+      timerRef.current = setInterval(sendFrame, FRAME_INTERVAL_MS)
+    } catch (error) {
+      Alert.alert('Impossible de démarrer le live', 'Fermez les autres applications utilisant la caméra, puis réessayez.')
+    } finally {
+      setStarting(false)
+    }
   }
 
   async function stopLive() {
@@ -111,7 +131,7 @@ export default function LiveCameraScreen({ route, navigation }) {
 
   return (
     <View style={styles.container}>
-      <CameraView ref={cameraRef} style={styles.camera} facing={facing} mode="picture">
+      <CameraView ref={cameraRef} style={styles.camera} facing={facing} mode="picture" onCameraReady={() => setCameraReady(true)} onMountError={() => Alert.alert('Caméra indisponible', 'La caméra ne peut pas être ouverte sur cet appareil.')}>
         <View style={styles.topBar}>
           <Pressable onPress={() => navigation.goBack()} style={styles.iconButton}>
             <Ionicons name="close" color="#fff" size={26} />
@@ -134,7 +154,7 @@ export default function LiveCameraScreen({ route, navigation }) {
           {running ? (
             <PrimaryButton title="Arreter le live" tone="danger" onPress={stopLive} />
           ) : (
-            <PrimaryButton title="Demarrer le live" tone="danger" onPress={startLive} />
+            <PrimaryButton title={starting ? 'Démarrage du live...' : cameraReady ? 'Démarrer le live' : 'Préparation caméra...'} tone="danger" onPress={startLive} disabled={starting} />
           )}
         </View>
       </CameraView>

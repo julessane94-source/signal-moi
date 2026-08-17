@@ -44,20 +44,25 @@ export default function CreateSignalementScreen({ navigation, route }) {
   }
 
   async function startLive() {
-    const coords = position || (await requestCurrentLocation())
-    if (!coords) {
-      Alert.alert('GPS requis', 'Activez la localisation avant le live.')
-      return
-    }
+    try {
+      const coords = position || (await requestCurrentLocation())
+      if (!coords) {
+        Alert.alert('GPS requis', 'Activez la localisation avant le live.')
+        return
+      }
 
-    const params = {
-      sessionId: `mobile-live-${Date.now()}`,
-      type: selectedType,
-      description: description || `Alerte live mobile: ${selectedType}`,
-      latitude: coords.latitude,
-      longitude: coords.longitude
+      const params = {
+        sessionId: `mobile-live-${Date.now()}`,
+        type: selectedType,
+        description: description || `Alerte live mobile: ${selectedType}`,
+        latitude: coords.latitude,
+        longitude: coords.longitude
+      }
+      const opened = openRootScreen('LiveCamera', params)
+      if (!opened) Alert.alert('Live indisponible', 'Impossible d’ouvrir la caméra. Redémarrez l’application puis réessayez.')
+    } catch (error) {
+      Alert.alert('Live indisponible', 'Impossible de préparer le GPS et la caméra. Vérifiez les autorisations du téléphone.')
     }
-    openRootScreen('LiveCamera', params)
   }
 
   function openRootScreen(screenName, params) {
@@ -67,7 +72,9 @@ export default function CreateSignalementScreen({ navigation, route }) {
       if (!parent) break
       current = parent
     }
-    current?.navigate?.(screenName, params)
+    if (!current?.navigate) return false
+    current.navigate(screenName, params)
+    return true
   }
 
   async function submit() {
