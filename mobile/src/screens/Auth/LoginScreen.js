@@ -5,6 +5,7 @@ import * as WebBrowser from 'expo-web-browser'
 import { COLORS, GOOGLE_ANDROID_CLIENT_ID, GOOGLE_IOS_CLIENT_ID, GOOGLE_WEB_CLIENT_ID } from '../../config/env'
 import { useAuth } from '../../context/AuthContext'
 import PrimaryButton from '../../components/PrimaryButton'
+import AppLogo from '../../components/AppLogo'
 import { checkBackendConnection } from '../../services/api'
 
 WebBrowser.maybeCompleteAuthSession()
@@ -98,9 +99,7 @@ export default function LoginScreen({ navigation }) {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.container}>
       <View style={styles.brand}>
-        <View style={styles.logo}>
-          <Text style={styles.logoText}>SM</Text>
-        </View>
+        <View style={styles.logo}><AppLogo size={72} /></View>
         <Text style={styles.title}>Signal Moi</Text>
         <Text style={styles.subtitle}>Alerter, suivre et intervenir depuis le terrain.</Text>
       </View>
@@ -167,15 +166,15 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 24,
-    backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 18
-  },
-  logoText: {
-    color: '#fff',
-    fontSize: 28,
-    fontWeight: '900'
+    marginBottom: 18,
+    backgroundColor: '#fff',
+    shadowColor: '#0f766e',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 5
   },
   title: {
     color: COLORS.ink,
@@ -189,7 +188,12 @@ const styles = StyleSheet.create({
     lineHeight: 23
   },
   form: {
-    gap: 14
+    gap: 14,
+    padding: 18,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.78)',
+    borderWidth: 1,
+    borderColor: 'rgba(217,231,227,0.9)'
   },
   connectionBox: {
     minHeight: 48,

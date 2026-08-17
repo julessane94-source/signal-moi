@@ -5,6 +5,8 @@ import * as ImagePicker from 'expo-image-picker'
 import { COLORS } from '../../config/env'
 import PrimaryButton from '../../components/PrimaryButton'
 import { createSignalement } from '../../services/api'
+import { getOfflineReportCount, isNetworkError, queueSignalement, syncOfflineReports } from '../../services/offlineReports'
+import { getSession } from '../../services/storage'
 import { useLocation } from '../../context/LocationContext'
 import { REPORT_TYPES, getReportTypeLabel } from '../../constants/reportTypes'
 
@@ -15,12 +17,20 @@ export default function CreateSignalementScreen({ navigation, route }) {
   const [description, setDescription] = useState('')
   const [files, setFiles] = useState([])
   const [loading, setLoading] = useState(false)
+  const [pendingCount, setPendingCount] = useState(0)
 
   useEffect(() => {
     if (route?.params?.type && REPORT_TYPES.some((item) => item.type === route.params.type)) {
       setSelectedType(route.params.type)
     }
   }, [route?.params?.type])
+
+  useEffect(() => {
+    getOfflineReportCount().then(setPendingCount).catch(() => {})
+    syncOfflineReports()
+      .then(({ pending }) => setPendingCount(pending))
+      .catch(() => {})
+  }, [])
 
   async function pickMedia(source = 'library') {
     const permission = source === 'camera'
@@ -79,6 +89,7 @@ export default function CreateSignalementScreen({ navigation, route }) {
 
   async function submit() {
     setLoading(true)
+    let reportPayload = null
     try {
       const coords = position || (await requestCurrentLocation())
       if (!coords) {
@@ -92,7 +103,7 @@ export default function CreateSignalementScreen({ navigation, route }) {
         .join(', ') || `GPS ${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`
       const label = getReportTypeLabel(selectedType)
 
-      await createSignalement({
+      reportPayload = {
         titre: title.trim() || `Signalement : ${label}`,
         type: selectedType,
         description: description || `Signalement rapide: ${label}`,
@@ -100,14 +111,42 @@ export default function CreateSignalementScreen({ navigation, route }) {
         latitude: coords.latitude,
         longitude: coords.longitude,
         files
-      })
+      }
+
+      const { token } = await getSession()
+      if (!token) {
+        await queueSignalement(reportPayload)
+        setDescription('')
+        setTitle('')
+        setFiles([])
+        const count = await getOfflineReportCount()
+        setPendingCount(count)
+        Alert.alert('Enregistré sur ce téléphone', 'Connectez-vous lorsque vous aurez du réseau : le signalement sera alors transmis automatiquement.')
+        return
+      }
+
+      await createSignalement(reportPayload)
 
       setDescription('')
       setTitle('')
       setFiles([])
       Alert.alert('Signalement envoye', 'Votre alerte a ete transmise avec votre position GPS.')
     } catch (error) {
-      Alert.alert('Envoi impossible', error.response?.data?.message || 'Reessayez dans un instant.')
+      if (isNetworkError(error)) {
+        if (!reportPayload) {
+          Alert.alert('Signalement non enregistré', 'Activez le GPS pour enregistrer ce signalement hors connexion.')
+          return
+        }
+        await queueSignalement(reportPayload)
+        setDescription('')
+        setTitle('')
+        setFiles([])
+        const count = await getOfflineReportCount()
+        setPendingCount(count)
+        Alert.alert('Enregistré sur ce téléphone', 'Votre signalement sera envoyé automatiquement dès qu’un réseau mobile ou Wi‑Fi sera disponible.')
+      } else {
+        Alert.alert('Envoi impossible', error.response?.data?.message || 'Reessayez dans un instant.')
+      }
     } finally {
       setLoading(false)
     }
@@ -117,6 +156,13 @@ export default function CreateSignalementScreen({ navigation, route }) {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Faire un signalement</Text>
       <Text style={styles.subtitle}>Choisissez un type, ajoutez votre position et une preuve photo ou vidéo si possible.</Text>
+
+      {pendingCount > 0 ? (
+        <View style={styles.offlineBanner}>
+          <Ionicons name="cloud-upload-outline" size={21} color="#a16207" />
+          <Text style={styles.offlineText}>{pendingCount} signalement{pendingCount > 1 ? 's' : ''} en attente d’envoi</Text>
+        </View>
+      ) : null}
 
       <View style={styles.quickGrid}>
         {REPORT_TYPES.map((item) => {
@@ -207,6 +253,18 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22
   },
+  offlineBanner: {
+    minHeight: 54,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    backgroundColor: '#fffbeb',
+    borderWidth: 1,
+    borderColor: '#fde68a',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10
+  },
+  offlineText: { flex: 1, color: '#854d0e', fontWeight: '800', lineHeight: 19 },
   quickGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

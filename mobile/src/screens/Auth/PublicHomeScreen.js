@@ -42,6 +42,10 @@ export default function PublicHomeScreen({ navigation }) {
           <Ionicons name="person-add" size={20} color={COLORS.primary} />
           <Text style={styles.registerText}>Creer un compte citoyen</Text>
         </Pressable>
+        <Pressable style={styles.offlineButton} onPress={() => navigation.navigate('OfflineReport')}>
+          <Ionicons name="cloud-offline-outline" size={19} color={COLORS.muted} />
+          <Text style={styles.offlineText}>Préparer un signalement hors connexion</Text>
+        </Pressable>
       </View>
 
       <View style={styles.quickGrid}>
@@ -146,6 +150,14 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     fontSize: 16
   },
+  offlineButton: {
+    minHeight: 46,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8
+  },
+  offlineText: { color: COLORS.muted, fontSize: 13, fontWeight: '800' },
   quickGrid: {
     padding: 20,
     flexDirection: 'row',

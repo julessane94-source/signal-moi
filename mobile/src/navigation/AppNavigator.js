@@ -28,9 +28,17 @@ const Stack = createNativeStackNavigator()
 const Tab = createBottomTabNavigator()
 
 const tabStyle = {
-  height: 70,
-  paddingBottom: 10,
-  paddingTop: 8
+  height: 76,
+  paddingBottom: 11,
+  paddingTop: 9,
+  backgroundColor: '#ffffff',
+  borderTopColor: '#d9e7e3',
+  borderTopWidth: 1,
+  elevation: 16,
+  shadowColor: '#10201d',
+  shadowOffset: { width: 0, height: -4 },
+  shadowOpacity: 0.06,
+  shadowRadius: 14
 }
 
 const iconByRoute = {
@@ -53,6 +61,8 @@ function screenOptions(activeColor) {
     tabBarActiveTintColor: activeColor,
     tabBarInactiveTintColor: COLORS.muted,
     tabBarStyle: tabStyle,
+    tabBarLabelStyle: { fontSize: 10, fontWeight: '800', marginTop: 2 },
+    tabBarItemStyle: { paddingHorizontal: 2 },
     tabBarIcon: ({ color, size }) => (
       <Ionicons name={iconByRoute[route.name] || 'ellipse'} size={size} color={color} />
     )
@@ -143,6 +153,7 @@ export default function AppNavigator() {
           <Stack.Screen name="PublicHome" component={PublicHomeScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Register" component={RegisterScreen} />
+          <Stack.Screen name="OfflineReport" component={CreateSignalementScreen} />
           <Stack.Screen name="Privacy" component={PrivacyScreen} />
           <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         </>

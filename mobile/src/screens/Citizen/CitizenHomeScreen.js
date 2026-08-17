@@ -7,6 +7,8 @@ import { useAuth } from '../../context/AuthContext'
 import { useLocation } from '../../context/LocationContext'
 import PrimaryButton from '../../components/PrimaryButton'
 import { REPORT_TYPES } from '../../constants/reportTypes'
+import { cacheData, getCachedData } from '../../services/storage'
+import { getOfflineReportCount, syncOfflineReports } from '../../services/offlineReports'
 
 export default function CitizenHomeScreen({ navigation }) {
   const { user, signOut } = useAuth()
@@ -15,6 +17,7 @@ export default function CitizenHomeScreen({ navigation }) {
   const [campagnes, setCampagnes] = useState([])
   const [signalements, setSignalements] = useState([])
   const [refreshing, setRefreshing] = useState(false)
+  const [pendingReports, setPendingReports] = useState(0)
 
   const loadData = useCallback(async () => {
     const [dashboardResult, campagnesResult, signalementsResult] = await Promise.allSettled([
@@ -22,20 +25,51 @@ export default function CitizenHomeScreen({ navigation }) {
       getCampagnes(),
       getCitizenSignalements()
     ])
-    if (dashboardResult.status === 'fulfilled') setDashboard(dashboardResult.value.dashboard || dashboardResult.value.data?.dashboard || dashboardResult.value)
+    if (dashboardResult.status === 'fulfilled') {
+      const value = dashboardResult.value.dashboard || dashboardResult.value.data?.dashboard || dashboardResult.value
+      setDashboard(value)
+      cacheData('citizen_dashboard', value).catch(() => {})
+    } else {
+      getCachedData('citizen_dashboard').then((value) => value && setDashboard(value)).catch(() => {})
+    }
     if (campagnesResult.status === 'fulfilled') {
       const payload = campagnesResult.value
-      setCampagnes(payload.campagnes || payload.data?.campagnes || payload.data || payload || [])
+      const value = payload.campagnes || payload.data?.campagnes || payload.data || payload || []
+      setCampagnes(value)
+      cacheData('campagnes', value).catch(() => {})
+    } else {
+      getCachedData('campagnes').then((value) => value && setCampagnes(value)).catch(() => {})
     }
     if (signalementsResult.status === 'fulfilled') {
-      setSignalements(signalementsResult.value.signalements || signalementsResult.value.data || signalementsResult.value || [])
+      const value = signalementsResult.value.signalements || signalementsResult.value.data || signalementsResult.value || []
+      setSignalements(value)
+      cacheData('citizen_signalements', value).catch(() => {})
+    } else {
+      getCachedData('citizen_signalements').then((value) => value && setSignalements(value)).catch(() => {})
     }
   }, [])
 
   useEffect(() => {
     requestCurrentLocation()
     loadData()
+    getOfflineReportCount().then(setPendingReports).catch(() => {})
+    syncOfflineReports()
+      .then(({ pending }) => setPendingReports(pending))
+      .catch(() => {})
   }, [loadData])
+
+  useEffect(() => {
+    if (!pendingReports) return undefined
+    const retry = setInterval(() => {
+      syncOfflineReports()
+        .then(({ sent, pending }) => {
+          setPendingReports(pending)
+          if (sent) loadData()
+        })
+        .catch(() => {})
+    }, 30000)
+    return () => clearInterval(retry)
+  }, [pendingReports, loadData])
 
   async function refresh() {
     setRefreshing(true)
@@ -130,6 +164,17 @@ export default function CitizenHomeScreen({ navigation }) {
         <Stat label="Signalements" value={dashboard?.totalSignalements || dashboard?.stats?.total || 0} icon="document-text" />
         <Stat label="En cours" value={dashboard?.enCours || dashboard?.stats?.enCours || 0} icon="time" />
       </View>
+
+      {pendingReports > 0 ? (
+        <Pressable onPress={() => goToTab('Signaler')} style={styles.pendingCard}>
+          <Ionicons name="cloud-upload-outline" size={21} color="#a16207" />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.pendingTitle}>{pendingReports} envoi{pendingReports > 1 ? 's' : ''} en attente</Text>
+            <Text style={styles.pendingText}>Ils partiront dès que le réseau reviendra.</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#a16207" />
+        </Pressable>
+      ) : null}
 
       <View style={styles.quickRow}>
         <Quick label="Signaler" icon="add-circle" tone={COLORS.primary} onPress={() => goToTab('Signaler')} />
@@ -350,6 +395,19 @@ const styles = StyleSheet.create({
     color: COLORS.muted,
     marginTop: 4
   },
+  pendingCard: {
+    minHeight: 68,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#fde68a',
+    backgroundColor: '#fffbeb',
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11
+  },
+  pendingTitle: { color: '#854d0e', fontWeight: '900' },
+  pendingText: { color: '#a16207', fontSize: 12, marginTop: 2 },
   sectionTitle: {
     color: COLORS.ink,
     fontSize: 19,

@@ -22,19 +22,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     paddingHorizontal: 20,
-    paddingTop: 56,
-    paddingBottom: 14
+    paddingTop: 54,
+    paddingBottom: 16,
+    backgroundColor: 'rgba(247, 251, 250, 0.96)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(217, 231, 227, 0.75)'
   },
   textWrap: {
     flex: 1
   },
   title: {
     color: COLORS.ink,
-    fontSize: 23,
+    fontSize: 22,
     fontWeight: '900'
   },
   subtitle: {
     color: COLORS.muted,
-    marginTop: 3
+    marginTop: 4,
+    fontSize: 13,
+    lineHeight: 18
   }
 })

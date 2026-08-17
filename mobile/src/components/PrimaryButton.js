@@ -23,15 +23,20 @@ export default function PrimaryButton({ title, onPress, loading, disabled, tone 
 
 const styles = StyleSheet.create({
   button: {
-    minHeight: 52,
-    borderRadius: 14,
+    minHeight: 54,
+    borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 18
+    paddingHorizontal: 20,
+    shadowColor: '#0f766e',
+    shadowOffset: { width: 0, height: 7 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 4
   },
   text: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '800'
   }
 })
