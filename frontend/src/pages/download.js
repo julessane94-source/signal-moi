@@ -69,7 +69,7 @@ export default function DownloadApp() {
               )}
               {apkAvailable ? (
                 <a
-                  href="/downloads/signal-moi.apk"
+                  href="/downloads/signal-moi.apk?v=1.0.7"
                   download
                   className="min-h-[52px] border border-slate-300 bg-white px-7 py-3 font-bold text-slate-900 transition hover:bg-slate-100"
                 >

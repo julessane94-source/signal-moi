@@ -702,6 +702,47 @@ router.post('/site-config', authMiddleware, async (req, res) => {
   }
 });
 
+// Publie une version mobile et informe tous les comptes actifs.
+// L'APK est déployé par le site web ; cette route centralise l'annonce et évite
+// d'envoyer des messages manuels à chaque utilisateur.
+router.post('/mobile-release', authMiddleware, async (req, res) => {
+  try {
+    const version = String(req.body?.version || '').trim();
+    const notes = String(req.body?.notes || 'Une nouvelle version de Signal-Moi est disponible.').trim();
+    const apkUrl = String(req.body?.apkUrl || `https://signal-moi.sn/downloads/signal-moi.apk?v=${version}`).trim();
+    if (!/^\d+\.\d+\.\d+(?:[-+][a-z0-9.-]+)?$/i.test(version)) {
+      return res.status(400).json({ error: 'Indiquez une version au format 0.0.0.' });
+    }
+
+    const previousRelease = await SiteConfig.get('mobile_release');
+    const previousVersion = previousRelease ? JSON.parse(previousRelease)?.version : null;
+    if (previousVersion === version) {
+      return res.status(409).json({ error: 'Cette version a déjà été publiée.' });
+    }
+
+    const release = { version, notes, apkUrl, publishedAt: new Date().toISOString() };
+    await SiteConfig.set('mobile_release', JSON.stringify(release));
+    const notification = {
+      type: 'mobile_update',
+      titre: `Mise à jour Signal-Moi ${version}`,
+      message: `${notes} Téléchargez la nouvelle version pour en profiter.`,
+      lien: apkUrl
+    };
+    const result = await db.query(
+      `INSERT INTO signal_moi.notifications (id, user_id, type, titre, message, lien, est_lu, created_at)
+       SELECT gen_random_uuid(), id, $1, $2, $3, $4, false, NOW()
+       FROM signal_moi.users WHERE is_active IS DISTINCT FROM false`,
+      [notification.type, notification.titre, notification.message, notification.lien]
+    );
+
+    global.io?.emit('mobile_update_available', { ...notification, version, apkUrl });
+    res.json({ success: true, release, notifiedUsers: result.rowCount || 0 });
+  } catch (err) {
+    console.error('[ADMIN POST /mobile-release] Erreur:', err);
+    res.status(500).json({ error: 'Publication de la mise à jour impossible.' });
+  }
+});
+
 // PUT /api/admin/site-config/slideshow-images - Téléversement des images du diaporama de la page d'accueil
 router.put('/site-config/slideshow-images', authMiddleware, uploadSlideshowImages.array('images', 10), async (req, res) => {
   try {

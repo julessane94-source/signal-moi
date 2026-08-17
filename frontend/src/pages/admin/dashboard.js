@@ -102,6 +102,12 @@ export default function AdminDashboard() {
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const [uploadingSlideshow, setUploadingSlideshow] = useState(false)
   const [deletingSlideshowImage, setDeletingSlideshowImage] = useState('')
+  const [publishingMobileRelease, setPublishingMobileRelease] = useState(false)
+  const [mobileRelease, setMobileRelease] = useState({
+    version: '0.1.7',
+    notes: 'Une version plus moderne de l’application et le mode hors connexion sont disponibles.',
+    apkUrl: 'https://signal-moi.sn/downloads/signal-moi.apk?v=1.0.7'
+  })
   const [slideshowFiles, setSlideshowFiles] = useState([])
   const [siteConfig, setSiteConfig] = useState({
     siteName: 'Signal-Moi',
@@ -586,6 +592,29 @@ export default function AdminDashboard() {
       toast.success('✅ Configuration sauvegardée')
     } catch (error) {
       toast.error('❌ ' + (error.message || 'Erreur'))
+    }
+  }
+
+  const publishMobileRelease = async () => {
+    if (!mobileRelease.version.trim()) {
+      toast.error('Indiquez le numéro de version mobile.')
+      return
+    }
+    setPublishingMobileRelease(true)
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${API_BASE}/api/admin/mobile-release`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(mobileRelease)
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Publication impossible')
+      toast.success(`Mise à jour publiée : ${data.notifiedUsers || 0} utilisateur(s) informé(s).`)
+    } catch (error) {
+      toast.error(error.message || 'Publication de la mise à jour impossible')
+    } finally {
+      setPublishingMobileRelease(false)
     }
   }
 
@@ -1498,6 +1527,28 @@ export default function AdminDashboard() {
               animate={{ opacity: 1, x: 0 }}
               className="space-y-6"
             >
+              <Card className="p-8">
+                <div className="space-y-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Publier une mise à jour mobile</h2>
+                    <p className="text-gray-600">Après publication, tous les utilisateurs actifs reçoivent une notification avec le lien de téléchargement.</p>
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <FormField label="Version mobile">
+                      <Input value={mobileRelease.version} onChange={e => setMobileRelease(prev => ({ ...prev, version: e.target.value }))} placeholder="0.1.7" />
+                    </FormField>
+                    <FormField label="Lien de téléchargement APK">
+                      <Input value={mobileRelease.apkUrl} onChange={e => setMobileRelease(prev => ({ ...prev, apkUrl: e.target.value }))} />
+                    </FormField>
+                  </div>
+                  <FormField label="Message envoyé aux utilisateurs">
+                    <textarea value={mobileRelease.notes} onChange={e => setMobileRelease(prev => ({ ...prev, notes: e.target.value }))} className="min-h-24 w-full rounded-xl border border-gray-300 p-3 text-gray-900" />
+                  </FormField>
+                  <Button variant="primary" onClick={publishMobileRelease} disabled={publishingMobileRelease}>
+                    {publishingMobileRelease ? 'Publication...' : 'Publier et notifier tous les utilisateurs'}
+                  </Button>
+                </div>
+              </Card>
               <Card className="p-8">
                 <div className="space-y-6">
                   <div>
