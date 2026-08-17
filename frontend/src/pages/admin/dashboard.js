@@ -106,7 +106,7 @@ export default function AdminDashboard() {
   const [mobileRelease, setMobileRelease] = useState({
     version: '0.1.9',
     notes: 'Le direct continue maintenant via le canal temps réel même si le serveur HTTP répond lentement.',
-    apkUrl: 'https://signal-moi.sn/downloads/signal-moi.apk?v=1.0.8'
+    apkUrl: 'https://signal-moi.sn/downloads/signal-moi.apk?v=1.0.9'
   })
   const [slideshowFiles, setSlideshowFiles] = useState([])
   const [siteConfig, setSiteConfig] = useState({
