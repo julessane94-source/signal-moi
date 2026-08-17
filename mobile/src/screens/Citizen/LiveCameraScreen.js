@@ -22,6 +22,7 @@ export default function LiveCameraScreen({ route, navigation }) {
   const [starting, setStarting] = useState(false)
   const [cameraReady, setCameraReady] = useState(false)
   const [cameraError, setCameraError] = useState('')
+  const [serverWarning, setServerWarning] = useState(false)
   const [frameCount, setFrameCount] = useState(0)
   const [facing, setFacing] = useState('back')
 
@@ -75,8 +76,10 @@ export default function LiveCameraScreen({ route, navigation }) {
         action: 'frame',
         frame
       }
-      await sendLiveSession(payload)
       connectLiveSocket(token, user)?.emit('live_recording_frame', payload)
+      // Le socket est la voie temps réel prioritaire. L'API HTTP ne doit pas
+      // arrêter le direct lorsqu'elle est momentanément indisponible.
+      sendLiveSession(payload).then(() => setServerWarning(false)).catch(() => setServerWarning(true))
       setFrameCount((count) => count + 1)
     } catch (error) {
       // La camera peut etre occupee entre deux captures; on ignore et le prochain intervalle reprend.
@@ -104,15 +107,10 @@ export default function LiveCameraScreen({ route, navigation }) {
       }
 
       const payload = { ...buildBasePayload(coords), action: 'start' }
-      try {
-        await sendLiveSession(payload)
-      } catch (error) {
-        Alert.alert('Transmission indisponible', 'La caméra est prête, mais le serveur ne répond pas. Vérifiez votre connexion puis réessayez.')
-        return
-      }
       const socket = connectLiveSocket(token, user)
       socket?.emit('live_recording_started', payload)
       socket?.emit('live_recording_location', payload)
+      sendLiveSession(payload).then(() => setServerWarning(false)).catch(() => setServerWarning(true))
       setRunning(true)
       await sendFrame()
       timerRef.current = setInterval(sendFrame, FRAME_INTERVAL_MS)
@@ -128,8 +126,8 @@ export default function LiveCameraScreen({ route, navigation }) {
     timerRef.current = null
     setRunning(false)
     const payload = { action: 'stop', sessionId, type }
-    await sendLiveSession(payload).catch(() => {})
     connectLiveSocket(token, user)?.emit('live_recording_stopped', payload)
+    sendLiveSession(payload).catch(() => {})
     navigation.goBack()
   }
 
@@ -191,6 +189,7 @@ export default function LiveCameraScreen({ route, navigation }) {
         <View style={styles.bottomPanel}>
           <Text style={styles.title}>Session {sessionId}</Text>
           <Text style={styles.meta}>{frameCount} image(s) transmise(s) a la police</Text>
+          {serverWarning ? <Text style={styles.warning}>Connexion serveur instable : le direct continue via le canal temps réel.</Text> : null}
           <Text style={styles.meta}>
             {position ? `GPS ${position.latitude.toFixed(5)}, ${position.longitude.toFixed(5)}` : 'GPS en attente'}
           </Text>
@@ -249,5 +248,6 @@ const styles = StyleSheet.create({
     gap: 10
   },
   title: { color: '#fff', fontSize: 17, fontWeight: '900' },
-  meta: { color: '#dbeafe', fontWeight: '700' }
+  meta: { color: '#dbeafe', fontWeight: '700' },
+  warning: { color: '#fde68a', fontSize: 12, lineHeight: 17, fontWeight: '800' }
 })

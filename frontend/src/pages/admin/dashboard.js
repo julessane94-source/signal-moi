@@ -104,8 +104,8 @@ export default function AdminDashboard() {
   const [deletingSlideshowImage, setDeletingSlideshowImage] = useState('')
   const [publishingMobileRelease, setPublishingMobileRelease] = useState(false)
   const [mobileRelease, setMobileRelease] = useState({
-    version: '0.1.8',
-    notes: 'Le direct caméra est corrigé, avec une meilleure gestion des autorisations et du mode hors connexion.',
+    version: '0.1.9',
+    notes: 'Le direct continue maintenant via le canal temps réel même si le serveur HTTP répond lentement.',
     apkUrl: 'https://signal-moi.sn/downloads/signal-moi.apk?v=1.0.8'
   })
   const [slideshowFiles, setSlideshowFiles] = useState([])
