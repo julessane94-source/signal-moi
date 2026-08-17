@@ -11,7 +11,8 @@ import {
   XMarkIcon as XMark,
   ArrowLeftIcon as ArrowLeft,
   ExclamationIcon as Exclamation,
-  DocumentTextIcon as DocumentText
+  DocumentTextIcon as DocumentText,
+  ArrowTopRightOnSquareIcon as ArrowTopRight
 } from '@heroicons/react/24/outline'
 import { API_BASE } from '../config/api'
 
@@ -73,6 +74,17 @@ export default function NotificationsPage() {
       default:
         return 'from-blue-500 to-blue-600'
     }
+  }
+
+  const getNotificationTarget = (notification) => {
+    if (notification.lien) return notification.lien
+    if (notification.type === 'mobile_update') return '/download'
+    if (notification.reference_id) {
+      if (String(notification.type || '').includes('campaign')) return `/campagnes/${notification.reference_id}`
+      if (String(notification.type || '').includes('plaidoyer')) return `/plaidoyers/${notification.reference_id}`
+      return `/citizen/signalement/${notification.reference_id}`
+    }
+    return null
   }
 
   if (!user) return null
@@ -152,15 +164,17 @@ export default function NotificationsPage() {
                 const Icon = getNotificationIcon(notification.type)
                 const colorClass = getNotificationColor(notification.type)
                 const isRead = notification.est_lu
+                const target = getNotificationTarget(notification)
+                const external = target?.startsWith('http')
 
-                return (
+                const notificationCard = (
                   <motion.div
                     key={notification.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.05 }}
                   >
-                    <Card className={`p-4 ${isRead ? 'bg-gray-50 opacity-75' : 'bg-white border-l-4 border-blue-500'}`}>
+                    <Card className={`p-4 transition hover:-translate-y-0.5 hover:shadow-md ${target ? 'cursor-pointer' : ''} ${isRead ? 'bg-gray-50 opacity-75' : 'bg-white border-l-4 border-blue-500'}`}>
                       <div className="flex items-start gap-4">
                         <div className={`p-3 rounded-lg bg-gradient-to-br ${colorClass} text-white flex-shrink-0`}>
                           <Icon className="h-6 w-6" />
@@ -182,6 +196,11 @@ export default function NotificationsPage() {
                               minute: '2-digit'
                             })}
                           </p>
+                          {target ? (
+                            <p className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-emerald-700">
+                              Ouvrir <ArrowTopRight className="h-3.5 w-3.5" />
+                            </p>
+                          ) : null}
                         </div>
 
                         {isRead ? (
@@ -193,6 +212,12 @@ export default function NotificationsPage() {
                     </Card>
                   </motion.div>
                 )
+
+                if (!target) return notificationCard
+                if (external) {
+                  return <a key={notification.id} href={target} target="_blank" rel="noreferrer" className="block">{notificationCard}</a>
+                }
+                return <Link key={notification.id} href={target} className="block">{notificationCard}</Link>
               })}
             </div>
           )}

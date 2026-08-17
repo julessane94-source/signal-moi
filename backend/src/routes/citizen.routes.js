@@ -160,7 +160,7 @@ router.get('/notifications/count', protect, async (req, res) => {
 router.get('/notifications', protect, async (req, res) => {
   try {
     const result = await db.query(
-      `SELECT id, type, titre, message, reference_id, est_lu, created_at
+      `SELECT id, type, titre, message, lien, reference_id, est_lu, created_at
        FROM signal_moi.notifications 
        WHERE user_id = $1
        ORDER BY created_at DESC 

@@ -21,6 +21,7 @@ export default function LiveCameraScreen({ route, navigation }) {
   const [running, setRunning] = useState(false)
   const [starting, setStarting] = useState(false)
   const [cameraReady, setCameraReady] = useState(false)
+  const [cameraError, setCameraError] = useState('')
   const [frameCount, setFrameCount] = useState(0)
   const [facing, setFacing] = useState('back')
 
@@ -34,6 +35,10 @@ export default function LiveCameraScreen({ route, navigation }) {
       sendLiveSession({ action: 'stop', sessionId }).catch(() => {})
     }
   }, [sessionId])
+
+  useEffect(() => {
+    ensurePermissions().catch(() => {})
+  }, [])
 
   async function ensurePermissions() {
     const camera = cameraPermission?.granted ? cameraPermission : await requestCameraPermission()
@@ -80,16 +85,15 @@ export default function LiveCameraScreen({ route, navigation }) {
 
   async function startLive() {
     if (running || starting) return
-    if (!cameraReady) {
-      Alert.alert('Caméra en préparation', 'Patientez une seconde, le direct sera disponible dès que la caméra est prête.')
-      return
-    }
-
     setStarting(true)
     try {
       const allowed = await ensurePermissions()
       if (!allowed) {
         Alert.alert('Permissions requises', 'Autorisez la caméra et le micro dans les paramètres du téléphone pour lancer le live.')
+        return
+      }
+      if (!cameraReady) {
+        Alert.alert('Caméra en préparation', 'Patientez une seconde, le direct sera disponible dès que la caméra est prête.')
         return
       }
 
@@ -129,9 +133,48 @@ export default function LiveCameraScreen({ route, navigation }) {
     navigation.goBack()
   }
 
+  const permissionsLoading = !cameraPermission || !microphonePermission
+  const permissionsGranted = cameraPermission?.granted && microphonePermission?.granted
+
+  if (permissionsLoading || !permissionsGranted || cameraError) {
+    const message = cameraError
+      ? cameraError
+      : permissionsLoading
+        ? 'Vérification des autorisations de la caméra…'
+        : 'Autorisez la caméra et le micro pour lancer un direct.'
+    return (
+      <View style={styles.permissionScreen}>
+        <View style={styles.permissionIcon}><Ionicons name={cameraError ? 'camera-outline' : 'shield-checkmark'} size={34} color="#fff" /></View>
+        <Text style={styles.permissionTitle}>{cameraError ? 'Caméra indisponible' : 'Préparer le direct'}</Text>
+        <Text style={styles.permissionText}>{message}</Text>
+        <PrimaryButton
+          title={permissionsLoading ? 'Vérification…' : cameraError ? 'Réessayer la caméra' : 'Autoriser la caméra'}
+          disabled={permissionsLoading}
+          onPress={async () => {
+            setCameraError('')
+            const allowed = await ensurePermissions()
+            if (!allowed) Alert.alert('Autorisation nécessaire', 'Activez Caméra et Micro dans les paramètres de l’application Signal-Moi.')
+          }}
+          style={styles.permissionButton}
+        />
+        <Pressable onPress={() => navigation.goBack()}><Text style={styles.cancelText}>Annuler</Text></Pressable>
+      </View>
+    )
+  }
+
   return (
     <View style={styles.container}>
-      <CameraView ref={cameraRef} style={styles.camera} facing={facing} mode="picture" onCameraReady={() => setCameraReady(true)} onMountError={() => Alert.alert('Caméra indisponible', 'La caméra ne peut pas être ouverte sur cet appareil.')}>
+      <CameraView
+        ref={cameraRef}
+        style={styles.camera}
+        facing={facing}
+        mode="picture"
+        onCameraReady={() => { setCameraError(''); setCameraReady(true) }}
+        onMountError={(event) => {
+          setCameraReady(false)
+          setCameraError(event?.nativeEvent?.message || 'La caméra ne peut pas être ouverte. Fermez les autres applications utilisant la caméra puis réessayez.')
+        }}
+      >
         <View style={styles.topBar}>
           <Pressable onPress={() => navigation.goBack()} style={styles.iconButton}>
             <Ionicons name="close" color="#fff" size={26} />
@@ -140,7 +183,7 @@ export default function LiveCameraScreen({ route, navigation }) {
             <View style={[styles.dot, running && styles.dotLive]} />
             <Text style={styles.statusText}>{running ? 'LIVE POLICE' : 'Pret'}</Text>
           </View>
-          <Pressable onPress={() => setFacing((value) => value === 'back' ? 'front' : 'back')} style={styles.iconButton}>
+          <Pressable onPress={() => { setCameraReady(false); setFacing((value) => value === 'back' ? 'front' : 'back') }} style={styles.iconButton}>
             <Ionicons name="camera-reverse" color="#fff" size={24} />
           </Pressable>
         </View>
@@ -164,6 +207,12 @@ export default function LiveCameraScreen({ route, navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
+  permissionScreen: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 28, backgroundColor: '#f7fbfa' },
+  permissionIcon: { width: 76, height: 76, borderRadius: 25, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
+  permissionTitle: { color: COLORS.ink, fontSize: 25, fontWeight: '900', textAlign: 'center' },
+  permissionText: { color: COLORS.muted, lineHeight: 22, textAlign: 'center', marginTop: 10, maxWidth: 310 },
+  permissionButton: { alignSelf: 'stretch', marginTop: 26 },
+  cancelText: { color: COLORS.primary, fontWeight: '900', marginTop: 20 },
   camera: { flex: 1, justifyContent: 'space-between' },
   topBar: {
     paddingTop: 52,
