@@ -4,7 +4,7 @@ export default {
     name: 'Signal Moi',
     slug: 'signal-moi-mobile',
     scheme: 'signalmoi',
-    version: '0.1.15',
+    version: '0.1.16',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',
@@ -13,7 +13,7 @@ export default {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'sn.signalmoi.mobile',
-      buildNumber: '14',
+      buildNumber: '15',
       config: {
         usesNonExemptEncryption: false
       },
@@ -27,7 +27,7 @@ export default {
     },
     android: {
       package: 'sn.signalmoi.mobile',
-      versionCode: 16,
+      versionCode: 17,
       permissions: [
         'ACCESS_FINE_LOCATION',
         'ACCESS_COARSE_LOCATION',

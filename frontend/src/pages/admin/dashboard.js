@@ -104,8 +104,8 @@ export default function AdminDashboard() {
   const [deletingSlideshowImage, setDeletingSlideshowImage] = useState('')
   const [publishingMobileRelease, setPublishingMobileRelease] = useState(false)
   const [mobileRelease, setMobileRelease] = useState({
-    version: '0.1.15',
-    notes: 'Les directs urgents sont synchronisés entre le serveur, le web et l’application commissariat. Le commissariat de couverture reste prioritaire.',
+    version: '0.1.16',
+    notes: 'Nouvelle interface mobile modernisée : accueil citoyen simplifié, espace commissariat amélioré et animations plus fluides.',
     apkUrl: 'https://signal-moi.sn/downloads/signal-moi.apk?v=1.0.9'
   })
   const [slideshowFiles, setSlideshowFiles] = useState([])

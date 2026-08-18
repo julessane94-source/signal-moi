@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Alert, FlatList, Image, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native'
+import { Alert, Animated, Easing, FlatList, Image, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { COLORS } from '../../config/env'
 import { getLiveSessions, getPoliceAlerts, getPoliceDashboard, savePoliceStationLocation, takePoliceAction } from '../../services/api'
@@ -15,12 +15,24 @@ export default function PoliceDashboardScreen() {
   const { token, user, signOut } = useAuth()
   const { requestCurrentLocation } = useLocation()
   const stationLocationSentRef = useRef(false)
+  const entrance = useRef(new Animated.Value(0)).current
+  const livePulse = useRef(new Animated.Value(1)).current
   const [cases, setCases] = useState([])
   const [stats, setStats] = useState(null)
   const [lives, setLives] = useState([])
   const [refreshing, setRefreshing] = useState(false)
   const [filter, setFilter] = useState('tous')
   const urgentCount = cases.filter((item) => ['violence', 'danger', 'accident', 'vol'].includes(String(item.type || '').toLowerCase())).length
+
+  useEffect(() => {
+    Animated.timing(entrance, { toValue: 1, duration: 520, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start()
+    const pulse = Animated.loop(Animated.sequence([
+      Animated.timing(livePulse, { toValue: 1.16, duration: 850, useNativeDriver: true }),
+      Animated.timing(livePulse, { toValue: 1, duration: 850, useNativeDriver: true })
+    ]))
+    pulse.start()
+    return () => pulse.stop()
+  }, [entrance, livePulse])
 
   const activeCases = useMemo(() => {
     return cases.filter((item) => {
@@ -148,6 +160,20 @@ export default function PoliceDashboardScreen() {
   function Header() {
     return (
       <>
+        <Animated.View style={[styles.commandBanner, { opacity: entrance, transform: [{ translateY: entrance.interpolate({ inputRange: [0, 1], outputRange: [-18, 0] }) }] }]}>
+          <View style={styles.commandBannerTop}>
+            <View style={styles.commandIcon}><Ionicons name="shield-checkmark" size={23} color="#fff" /></View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.commandEyebrow}>POSTE DE COORDINATION</Text>
+              <Text style={styles.commandTitle}>Surveillance en temps réel</Text>
+            </View>
+            <View style={styles.zonePill}><Ionicons name="locate" size={13} color="#bfdbfe" /><Text style={styles.zonePillText}>Zone GPS</Text></View>
+          </View>
+          <View style={styles.commandFooter}>
+            <Animated.View style={[styles.liveDot, { transform: [{ scale: livePulse }] }]} />
+            <Text style={styles.commandFooterText}>{lives.length ? `${lives.length} direct${lives.length > 1 ? 's' : ''} à surveiller` : 'Veille active — aucun direct en cours'}</Text>
+          </View>
+        </Animated.View>
         <View style={styles.header}>
           <View>
             <Text style={styles.title}>Commissariat</Text>
@@ -206,7 +232,7 @@ export default function PoliceDashboardScreen() {
         ListHeaderComponent={<Header />}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
-          <View style={styles.caseCard}>
+          <View style={[styles.caseCard, ['violence', 'danger', 'accident', 'vol'].includes(String(item.type || '').toLowerCase()) && styles.urgentCaseCard]}>
             <View style={styles.caseTop}>
               <Text style={styles.caseType}>{item.type || 'Signalement'}</Text>
               <Text style={styles.caseStatus}>{item.statut || item.status || 'attente'}</Text>
@@ -243,8 +269,66 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f8ff'
   },
+  commandBanner: {
+    marginTop: 52,
+    marginHorizontal: 20,
+    borderRadius: 26,
+    backgroundColor: '#102a56',
+    padding: 18,
+    shadowColor: '#102a56',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.22,
+    shadowRadius: 18,
+    elevation: 7
+  },
+  commandBannerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11
+  },
+  commandIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#2563eb'
+  },
+  commandEyebrow: {
+    color: '#93c5fd',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1.1
+  },
+  commandTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '900',
+    marginTop: 2
+  },
+  zonePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 9,
+    paddingVertical: 6
+  },
+  zonePillText: { color: '#dbeafe', fontSize: 11, fontWeight: '800' },
+  commandFooter: {
+    marginTop: 16,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.13)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8
+  },
+  liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#fb7185' },
+  commandFooterText: { color: '#dbeafe', fontSize: 12, fontWeight: '700' },
   header: {
-    paddingTop: 56,
+    paddingTop: 20,
     paddingHorizontal: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -386,6 +470,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#dbe6ff',
     gap: 10
+  },
+  urgentCaseCard: {
+    borderColor: '#fecaca',
+    borderLeftWidth: 4,
+    borderLeftColor: '#ef4444'
   },
   caseActions: {
     flexDirection: 'row',

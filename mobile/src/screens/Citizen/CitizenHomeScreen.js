@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react'
-import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { Alert, Animated, Easing, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { COLORS } from '../../config/env'
 import { getCampagnes, getCitizenDashboard, getCitizenSignalements, joinCampagne } from '../../services/api'
@@ -18,6 +18,7 @@ export default function CitizenHomeScreen({ navigation }) {
   const [signalements, setSignalements] = useState([])
   const [refreshing, setRefreshing] = useState(false)
   const [pendingReports, setPendingReports] = useState(0)
+  const intro = useRef(new Animated.Value(0)).current
 
   const loadData = useCallback(async () => {
     const [dashboardResult, campagnesResult, signalementsResult] = await Promise.allSettled([
@@ -50,6 +51,7 @@ export default function CitizenHomeScreen({ navigation }) {
   }, [])
 
   useEffect(() => {
+    Animated.timing(intro, { toValue: 1, duration: 480, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start()
     requestCurrentLocation()
     loadData()
     getOfflineReportCount().then(setPendingReports).catch(() => {})
@@ -133,7 +135,7 @@ export default function CitizenHomeScreen({ navigation }) {
         <PrimaryButton title="Sortir" onPress={signOut} style={styles.logout} />
       </View>
 
-      <View style={styles.alertCard}>
+      <Animated.View style={[styles.alertCard, { opacity: intro, transform: [{ translateY: intro.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) }] }]}>
         <View style={styles.alertTop}>
           <Ionicons name="shield-checkmark" size={24} color="#fff" />
           <Text style={styles.alertBadge}>Alerte prioritaire</Text>
@@ -142,6 +144,10 @@ export default function CitizenHomeScreen({ navigation }) {
         <Text style={styles.alertText}>
           Lancez un direct pour une urgence. Votre position sera demandee avant l envoi.
         </Text>
+        <View style={styles.safetyNote}>
+          <Ionicons name="cloud-done" size={15} color="#b8fff5" />
+          <Text style={styles.safetyNoteText}>Même hors connexion, votre signalement est conservé puis envoyé dès le retour du réseau.</Text>
+        </View>
         <View style={styles.urgentActions}>
           <Pressable
             onPress={() => openLive('violence', 'Alerte citoyenne urgente : violence')}
@@ -165,7 +171,7 @@ export default function CitizenHomeScreen({ navigation }) {
             <Text style={styles.urgentButtonText}>Vol en cours</Text>
           </Pressable>
         </View>
-      </View>
+      </Animated.View>
 
       <View style={styles.grid}>
         <Stat label="Signalements" value={dashboard?.totalSignalements || dashboard?.stats?.total || 0} icon="document-text" />
@@ -327,6 +333,22 @@ const styles = StyleSheet.create({
     fontSize: 15,
     marginTop: 8,
     lineHeight: 22
+  },
+  safetyNote: {
+    marginTop: 14,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 7,
+    borderRadius: 13,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    padding: 10
+  },
+  safetyNoteText: {
+    flex: 1,
+    color: '#d9fffa',
+    fontSize: 12,
+    fontWeight: '700',
+    lineHeight: 17
   },
   urgentActions: {
     marginTop: 18,
