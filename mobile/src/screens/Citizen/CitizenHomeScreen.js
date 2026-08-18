@@ -157,6 +157,13 @@ export default function CitizenHomeScreen({ navigation }) {
             <Ionicons name="medical" size={18} color="#fff" />
             <Text style={styles.urgentButtonText}>Accident / blessure</Text>
           </Pressable>
+          <Pressable
+            onPress={() => openLive('vol', 'Alerte citoyenne urgente : vol')}
+            style={({ pressed }) => [styles.urgentButton, styles.theftButton, pressed && styles.quickPressed]}
+          >
+            <Ionicons name="alert-circle" size={18} color="#fff" />
+            <Text style={styles.urgentButtonText}>Vol en cours</Text>
+          </Pressable>
         </View>
       </View>
 
@@ -339,6 +346,9 @@ const styles = StyleSheet.create({
   },
   accidentButton: {
     backgroundColor: '#d97706'
+  },
+  theftButton: {
+    backgroundColor: '#7c2d12'
   },
   urgentButtonText: {
     color: '#fff',

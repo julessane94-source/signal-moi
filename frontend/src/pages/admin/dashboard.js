@@ -104,8 +104,8 @@ export default function AdminDashboard() {
   const [deletingSlideshowImage, setDeletingSlideshowImage] = useState('')
   const [publishingMobileRelease, setPublishingMobileRelease] = useState(false)
   const [mobileRelease, setMobileRelease] = useState({
-    version: '0.1.13',
-    notes: 'Les directs et signalements sont orientés vers le commissariat situé dans un rayon réel de 30 km. Après un signalement, le citoyen est informé de la démarche de plainte.',
+    version: '0.1.14',
+    notes: 'Les directs urgents (danger, accident, blessure et vol) sont visibles dans tous les espaces commissariat. Le commissariat de couverture reste prioritaire.',
     apkUrl: 'https://signal-moi.sn/downloads/signal-moi.apk?v=1.0.9'
   })
   const [slideshowFiles, setSlideshowFiles] = useState([])

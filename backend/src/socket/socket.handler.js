@@ -43,20 +43,15 @@ const setupSocket = (io) => {
     // Rejoindre les rooms par rôle
       if (isPoliceRole(socket.user.role)) {
         socket.join('police_room');
-        const isCommissariat = normalizeRole(socket.user.role) === 'commissariat';
-        if (isCommissariat) socket.join('commissariat_room');
         activeLiveRecordings.forEach((payload) => {
-          const sameStation = String(payload.assignedCommissariatId || '') === String(socket.user.id);
-          const sameZone = payload.assignedCommissariatQuartier && String(payload.assignedCommissariatQuartier).toLowerCase() === String(socket.user.quartier || '').toLowerCase();
-          if (!isCommissariat && !sameStation && !sameZone) return;
-        socket.emit('live_recording_started', payload);
-        if (payload.latitude || payload.longitude || payload.localisation) {
-          socket.emit('live_recording_location', payload);
-        }
-        if (payload.frame) {
-          socket.emit('live_recording_frame', payload);
-        }
-      });
+          socket.emit('live_recording_started', payload);
+          if (payload.latitude || payload.longitude || payload.localisation) {
+            socket.emit('live_recording_location', payload);
+          }
+          if (payload.frame) {
+            socket.emit('live_recording_frame', payload);
+          }
+        });
     } else if (isCollaborateurRole(socket.user.role)) {
       socket.join('collaborateur_room');
     } else if (isAdminRole(socket.user.role)) {
@@ -94,7 +89,7 @@ const setupSocket = (io) => {
         io.to('admin_room').emit('live_recording_started', payload);
         if (dispatchedPayload) {
           const notification = { ...dispatchedPayload, title: payload.titre || `Enregistrement en direct: ${payload.type || 'urgence'}`, message: 'Un citoyen est en train de filmer une preuve en direct.', isLiveRecording: true };
-          dispatchedPayload.assignedRecipientIds.forEach((recipientId) => io.to(`user_${recipientId}`).emit('new_signalement_notification', notification));
+          (dispatchedPayload.assignedRecipientIds || []).forEach((recipientId) => io.to(`user_${recipientId}`).emit('new_signalement_notification', notification));
         }
       } catch (error) {
         logger.error('Erreur live_recording_started:', error);
@@ -149,7 +144,7 @@ const setupSocket = (io) => {
         const existing = activeLiveRecordings.get(payload.sessionId) || {};
         const recipientIds = existing.assignedRecipientIds || [];
         recipientIds.forEach((recipientId) => io.to(`user_${recipientId}`).emit('live_recording_chunk', { ...existing, ...payload }));
-        io.to('commissariat_room').emit('live_recording_chunk', { ...existing, ...payload });
+        io.to('police_room').emit('live_recording_chunk', { ...existing, ...payload });
         io.to('admin_room').emit('live_recording_chunk', payload);
       } catch (error) {
         logger.error('Erreur live_recording_chunk:', error);

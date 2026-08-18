@@ -441,12 +441,6 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 
                 pruneLiveSessions();
                 const sessions = Array.from(activeLiveSessions.values())
-                    .filter((session) => {
-                          if (['admin', 'administrateur', 'commissariat'].includes(normalizeRole(req.user.role))) return true;
-                        const sameStation = String(session.assignedCommissariatId || '') === String(req.user.id);
-                        const sameZone = session.assignedCommissariatQuartier && String(session.assignedCommissariatQuartier).toLowerCase() === String(req.user.quartier || '').toLowerCase();
-                        return sameStation || sameZone;
-                    })
                     .map(liveSessionPayload)
                     .sort((a, b) => new Date(b.frameAt || b.updatedAt || b.startedAt || 0) - new Date(a.frameAt || a.updatedAt || a.startedAt || 0));
 

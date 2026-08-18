@@ -61,7 +61,7 @@ const dispatchLiveToStation = async (io, payload, event) => {
   if (!station) {
     // Un live reste visible par les commissariats même lorsqu'aucune position
     // de commissariat compatible n'est encore disponible pour l'affecter.
-    io.to('commissariat_room').emit(event, payload);
+    io.to('police_room').emit(event, payload);
     return payload;
   }
 
@@ -76,9 +76,10 @@ const dispatchLiveToStation = async (io, payload, event) => {
     assignedRecipientIds: recipientIds
   };
   recipientIds.forEach((recipientId) => io.to(`user_${recipientId}`).emit(event, dispatchedPayload));
-  // Tous les comptes commissariat peuvent suivre un direct. Le commissariat
-  // couvert reste toutefois le seul à recevoir l'alerte prioritaire et le dossier.
-  io.to('commissariat_room').emit(event, dispatchedPayload);
+  // Tous les comptes de l'espace police/commissariat peuvent suivre un direct.
+  // Le commissariat couvert reste toutefois le seul à recevoir l'alerte
+  // prioritaire et l'affectation du dossier.
+  io.to('police_room').emit(event, dispatchedPayload);
   return dispatchedPayload;
 };
 

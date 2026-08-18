@@ -512,7 +512,7 @@ export default function NewSignalement() {
   }
 
   const startSimpleReport = (type) => {
-    if (type === 'violence' || type === 'accident') {
+    if (VIDEO_PROMPT_TYPES.includes(type)) {
       startEmergencyLive(type)
       return
     }
@@ -539,7 +539,7 @@ export default function NewSignalement() {
     const requestedType = String(router.query.type)
     const quickType = QUICK_TYPES.find(item => item.value === requestedType)
     if (!quickType) return
-    if (quickType.value === 'violence' || quickType.value === 'accident') {
+    if (VIDEO_PROMPT_TYPES.includes(quickType.value)) {
       startEmergencyLive(quickType.value)
     } else {
       handleQuickType(quickType.value, quickType.label)
@@ -1037,7 +1037,7 @@ export default function NewSignalement() {
                     <button
                       key={item.value}
                       type="button"
-                      onClick={() => handleQuickType(item.value, item.label)}
+                      onClick={() => VIDEO_PROMPT_TYPES.includes(item.value) ? startEmergencyLive(item.value) : handleQuickType(item.value, item.label)}
                       className={`report-type-option min-h-36 rounded-[1.5rem] border-2 p-5 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl ${formData.type === item.value ? 'border-red-500 bg-red-50 shadow-lg ring-4 ring-red-100' : `${item.tone} hover:border-slate-300`}`}
                     >
                       <div className="flex items-start justify-between gap-3">
