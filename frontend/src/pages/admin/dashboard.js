@@ -104,8 +104,8 @@ export default function AdminDashboard() {
   const [deletingSlideshowImage, setDeletingSlideshowImage] = useState('')
   const [publishingMobileRelease, setPublishingMobileRelease] = useState(false)
   const [mobileRelease, setMobileRelease] = useState({
-    version: '0.1.9',
-    notes: 'Le direct continue maintenant via le canal temps réel même si le serveur HTTP répond lentement.',
+    version: '0.1.10',
+    notes: 'Les notifications sont proposées dès la première utilisation, avec une confirmation vocale.',
     apkUrl: 'https://signal-moi.sn/downloads/signal-moi.apk?v=1.0.9'
   })
   const [slideshowFiles, setSlideshowFiles] = useState([])

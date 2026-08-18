@@ -4,7 +4,7 @@ export default {
     name: 'Signal Moi',
     slug: 'signal-moi-mobile',
     scheme: 'signalmoi',
-    version: '0.1.9',
+    version: '0.1.10',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',
@@ -13,15 +13,21 @@ export default {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'sn.signalmoi.mobile',
+      buildNumber: '11',
+      config: {
+        usesNonExemptEncryption: false
+      },
       infoPlist: {
         NSCameraUsageDescription: 'Signal Moi utilise la camera pour envoyer une preuve ou lancer un live.',
         NSMicrophoneUsageDescription: 'Signal Moi utilise le micro pendant les lives citoyens.',
-        NSLocationWhenInUseUsageDescription: 'Signal Moi utilise votre position reelle pour orienter les secours.'
+        NSLocationWhenInUseUsageDescription: 'Signal Moi utilise votre position reelle pour orienter les secours.',
+        NSPhotoLibraryUsageDescription: 'Signal Moi utilise vos photos et vidéos comme preuves de signalement.',
+        NSPhotoLibraryAddUsageDescription: 'Signal Moi peut enregistrer une preuve avec votre autorisation.'
       }
     },
     android: {
       package: 'sn.signalmoi.mobile',
-      versionCode: 10,
+      versionCode: 11,
       permissions: [
         'ACCESS_FINE_LOCATION',
         'ACCESS_COARSE_LOCATION',
@@ -46,7 +52,8 @@ export default {
     [
      "expo-notifications",
        {
-      "color": "#ffffff"
+      "color": "#ffffff",
+      "enableBackgroundRemoteNotifications": true
      }
     ],
     "expo-asset",

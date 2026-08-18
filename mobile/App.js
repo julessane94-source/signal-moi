@@ -9,6 +9,7 @@ import { LocationProvider } from './src/context/LocationContext'
 import AppNavigator from './src/navigation/AppNavigator'
 import AppErrorBoundary from './src/components/AppErrorBoundary'
 import { getSiteConfig } from './src/services/api'
+import { requestNotificationsOnFirstUse } from './src/services/mobileNotifications'
 
 function MobileUpdateNotice() {
   useEffect(() => {
@@ -34,6 +35,13 @@ function MobileUpdateNotice() {
   return null
 }
 
+function FirstUseNotifications() {
+  useEffect(() => {
+    requestNotificationsOnFirstUse().catch(() => {})
+  }, [])
+  return null
+}
+
 export default function App() {
   return (
     <AppErrorBoundary>
@@ -42,6 +50,7 @@ export default function App() {
           <LocationProvider>
             <NavigationContainer>
               <StatusBar style="dark" />
+              <FirstUseNotifications />
               <MobileUpdateNotice />
               <AppNavigator />
             </NavigationContainer>

@@ -94,13 +94,16 @@ const playUrgentBurst = () => {
   repeat(5)
 }
 
-const speak = (text) => {
+export const speakNaturally = (text) => {
   if (typeof window === 'undefined' || !window.speechSynthesis || typeof SpeechSynthesisUtterance === 'undefined') return
   try {
     const utterance = new SpeechSynthesisUtterance(text)
     utterance.lang = 'fr-FR'
     utterance.rate = 0.95
     utterance.volume = 1
+    const voices = window.speechSynthesis.getVoices()
+    const frenchVoice = voices.find((voice) => String(voice.lang || '').toLowerCase().startsWith('fr-'))
+    if (frenchVoice) utterance.voice = frenchVoice
     window.speechSynthesis.cancel()
     window.speechSynthesis.speak(utterance)
   } catch (error) {
@@ -115,7 +118,7 @@ const repeatUrgentSpeech = (text) => {
   }
 
   const repeat = (count) => {
-    speak(text)
+    speakNaturally(text)
     if (count <= 1) return
     urgentSpeechTimer = setTimeout(() => repeat(count - 1), 3500)
   }
@@ -216,7 +219,7 @@ export const notifyRealtimeEvent = ({ role, event, payload = {}, toast }) => {
   if (alert.urgent && (isPolice || isAdmin)) {
     repeatUrgentSpeech(alert.speech)
   } else {
-    speak(alert.speech)
+    speakNaturally(alert.speech)
   }
   showBrowserNotification(alert)
 

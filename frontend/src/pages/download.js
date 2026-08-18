@@ -102,9 +102,10 @@ export default function DownloadApp() {
 
             <div className="border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-2xl font-black text-blue-700">i</div>
-              <h2 className="mt-4 text-xl font-black text-slate-950">iPhone</h2>
+              <h2 className="mt-4 text-xl font-black text-slate-950">iPhone — application native</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">La version iPhone est prête pour une distribution TestFlight, puis l’App Store. Un compte Apple Developer est nécessaire pour publier le lien d’installation.</p>
               <div className="mt-5 space-y-4">
-                {['Ouvrir signal-moi.sn avec Safari', 'Appuyer sur Partager', 'Choisir Sur l’écran d’accueil'].map((step, index) => (
+                {['Recevoir l’invitation TestFlight Signal-Moi', 'Installer TestFlight depuis l’App Store', 'Ouvrir le lien reçu puis Installer Signal-Moi'].map((step, index) => (
                   <div key={step} className="flex gap-3">
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center bg-slate-950 text-sm font-bold text-white">{index + 1}</span>
                     <p className="pt-1 text-slate-700">{step}</p>
