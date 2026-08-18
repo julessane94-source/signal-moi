@@ -55,22 +55,37 @@ export default function PoliceDashboardScreen() {
   useEffect(() => {
     requestLocalAlerts()
     loadData()
+    // Le sondage est un filet de sécurité si le Socket arrive après le début
+    // du direct ou subit une coupure réseau temporaire.
+    const livePolling = setInterval(() => {
+      loadData().catch(() => {})
+    }, 5000)
 
     const socket = connectLiveSocket(token, user)
+    const upsertLive = (payload) => {
+      const incoming = payload?.session || payload
+      const sessionId = incoming?.sessionId || incoming?.id
+      if (!sessionId) return
+      setLives((current) => {
+        const index = current.findIndex((live) => String(live?.sessionId || live?.id || '') === String(sessionId))
+        if (index < 0) return [{ ...incoming, sessionId: incoming.sessionId || sessionId }, ...current]
+        const next = [...current]
+        next[index] = { ...next[index], ...incoming, sessionId: incoming.sessionId || sessionId }
+        return next
+      })
+    }
     const onNewCase = async (payload) => {
       setCases((current) => [payload.signalement || payload, ...current])
       await playRoleAlertSound()
       await scheduleLocalAlert('Nouveau signalement', 'Une nouvelle alerte citoyenne vient d arriver.')
     }
     const onLive = async (payload) => {
-      setLives((current) => [payload.session || payload, ...current])
+      upsertLive(payload)
       await playRoleAlertSound()
       await scheduleLocalAlert('Live citoyen en cours', 'Ouvrez l espace commissariat pour suivre la video en temps reel.')
     }
     const onLiveLocation = (payload) => {
-      setLives((current) => current.map((live) => (
-        live.sessionId === payload.sessionId ? { ...live, ...payload } : live
-      )))
+      upsertLive(payload)
     }
 
     socket?.on('new_signalement', onNewCase)
@@ -82,6 +97,7 @@ export default function PoliceDashboardScreen() {
     socket?.on('live_recording_frame', onLiveLocation)
 
     return () => {
+      clearInterval(livePolling)
       socket?.off('new_signalement', onNewCase)
       socket?.off('signalement:new', onNewCase)
       socket?.off('live_session_started', onLive)

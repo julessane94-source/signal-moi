@@ -10,7 +10,7 @@ const FollowedCase = require('../models/FollowedCase');
 const fs = require('fs');
 const path = require('path');
 const { assignNearestCommissariat, dispatchLiveToStation, getStationRecipients } = require('../utils/policeDispatch');
-const activeLiveSessions = new Map();
+const { activeLiveSessions } = require('../utils/liveSessions');
 const mediaCacheHeader = 'public, max-age=31536000, immutable';
 const publicListCacheHeader = 'public, max-age=30, stale-while-revalidate=120';
 const parseLimit = (value, fallback = 100, max = 500) => {

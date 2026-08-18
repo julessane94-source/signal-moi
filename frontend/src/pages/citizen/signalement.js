@@ -700,9 +700,11 @@ export default function NewSignalement() {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: { ideal: 'environment' },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-          frameRate: { ideal: 30, max: 30 },
+          // Une vidéo 720p est suffisamment nette pour une preuve tout en
+          // restant beaucoup plus rapide à envoyer depuis un réseau mobile.
+          width: { ideal: 1280, max: 1280 },
+          height: { ideal: 720, max: 720 },
+          frameRate: { ideal: 24, max: 24 },
           resizeMode: 'none'
         },
         audio: true
@@ -710,8 +712,8 @@ export default function NewSignalement() {
       const mimeType = getRecordingMimeType()
       const recorderOptions = {
         ...(mimeType ? { mimeType } : {}),
-        videoBitsPerSecond: 4500000,
-        audioBitsPerSecond: 192000
+        videoBitsPerSecond: 1500000,
+        audioBitsPerSecond: 96000
       }
       const recorder = new MediaRecorder(stream, recorderOptions)
 
@@ -761,20 +763,6 @@ export default function NewSignalement() {
       recorder.ondataavailable = (event) => {
         if (event.data && event.data.size > 0) {
           recordingChunksRef.current.push(event.data)
-          const activeSocket = socketRef.current
-          if (activeSocket && liveSessionIdRef.current) {
-            const reader = new FileReader()
-            reader.onloadend = () => {
-              activeSocket.emit('live_recording_chunk', {
-                sessionId: liveSessionIdRef.current,
-                type: liveType,
-                mimeType: event.data.type || recorder.mimeType || mimeType || 'video/webm',
-                chunk: reader.result,
-                chunkSize: event.data.size
-              })
-            }
-            reader.readAsDataURL(event.data)
-          }
         }
       }
 
