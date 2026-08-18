@@ -104,8 +104,8 @@ export default function AdminDashboard() {
   const [deletingSlideshowImage, setDeletingSlideshowImage] = useState('')
   const [publishingMobileRelease, setPublishingMobileRelease] = useState(false)
   const [mobileRelease, setMobileRelease] = useState({
-    version: '0.1.10',
-    notes: 'Les notifications sont proposées dès la première utilisation, avec une confirmation vocale.',
+    version: '0.1.13',
+    notes: 'Les directs et signalements sont orientés vers le commissariat situé dans un rayon réel de 30 km. Après un signalement, le citoyen est informé de la démarche de plainte.',
     apkUrl: 'https://signal-moi.sn/downloads/signal-moi.apk?v=1.0.9'
   })
   const [slideshowFiles, setSlideshowFiles] = useState([])

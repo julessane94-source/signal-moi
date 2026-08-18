@@ -60,7 +60,7 @@ export function AuthProvider({ children }) {
         return false
       }
 
-      await saveSession(nextToken, nextUser)
+      await saveSession(nextToken, nextUser, 'password')
       await saveOfflineLogin(email, password)
       setToken(nextToken)
       setUser(nextUser)
@@ -86,7 +86,7 @@ export function AuthProvider({ children }) {
       return false
     }
 
-    await saveSession(nextToken, nextUser)
+    await saveSession(nextToken, nextUser, 'google')
     setToken(nextToken)
     setUser(nextUser)
     return true

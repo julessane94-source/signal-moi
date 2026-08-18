@@ -83,6 +83,7 @@ export default function Login() {
       if (window.google && window.google.accounts && window.google.accounts.id) {
         window.google.accounts.id.initialize({
           client_id: googleClientId,
+          auto_select: localStorage.getItem('signal-moi-auth-provider') === 'google',
           callback: async (response) => {
             try {
               const idToken = response.credential
@@ -99,6 +100,8 @@ export default function Login() {
               const token = body.token
               if (token) {
                 localStorage.setItem('token', token)
+                localStorage.setItem('signal-moi-auth-provider', 'google')
+                if (body.user?.email) localStorage.setItem('signal-moi-google-email', body.user.email)
                 axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
                 await fetchUser()
                 const role = String(body.user?.role || 'citoyen').toLowerCase()
@@ -125,6 +128,9 @@ export default function Login() {
           window.google.accounts.id.renderButton(googleContainer, { theme: 'outline', size: 'large', width: 320 })
           setGoogleReady(true)
           setGoogleMessage('')
+        }
+        if (localStorage.getItem('signal-moi-auth-provider') === 'google') {
+          window.google.accounts.id.prompt()
         }
       } else {
         setGoogleMessage('Google Sign-In est indisponible pour le moment.')

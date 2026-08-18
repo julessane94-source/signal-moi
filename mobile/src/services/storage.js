@@ -3,6 +3,7 @@ import * as Crypto from 'expo-crypto'
 
 const TOKEN_KEY = 'signal_moi_token'
 const USER_KEY = 'signal_moi_user'
+const AUTH_PROVIDER_KEY = 'signal_moi_auth_provider'
 const OFFLINE_REPORTS_KEY = 'signal_moi_offline_reports'
 const CACHE_PREFIX = 'signal_moi_cache_'
 const OFFLINE_LOGIN_KEY = 'signal_moi_offline_login'
@@ -14,23 +15,26 @@ async function credentialsHash(email, password) {
   )
 }
 
-export async function saveSession(token, user) {
-  await AsyncStorage.multiSet([
+export async function saveSession(token, user, provider) {
+  const entries = [
     [TOKEN_KEY, token || ''],
     [USER_KEY, JSON.stringify(user || null)]
-  ])
+  ]
+  if (provider) entries.push([AUTH_PROVIDER_KEY, provider])
+  await AsyncStorage.multiSet(entries)
 }
 
 export async function getSession() {
-  const [[, token], [, userRaw]] = await AsyncStorage.multiGet([TOKEN_KEY, USER_KEY])
+  const [[, token], [, userRaw], [, provider]] = await AsyncStorage.multiGet([TOKEN_KEY, USER_KEY, AUTH_PROVIDER_KEY])
   return {
     token,
-    user: userRaw ? JSON.parse(userRaw) : null
+    user: userRaw ? JSON.parse(userRaw) : null,
+    provider: provider || null
   }
 }
 
 export async function clearSession() {
-  await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY, OFFLINE_LOGIN_KEY])
+  await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY, AUTH_PROVIDER_KEY, OFFLINE_LOGIN_KEY])
 }
 
 // Les identifiants ne sont jamais enregistrés en clair. Cette empreinte sert

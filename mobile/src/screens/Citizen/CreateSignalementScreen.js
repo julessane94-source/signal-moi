@@ -130,7 +130,7 @@ export default function CreateSignalementScreen({ navigation, route }) {
       setDescription('')
       setTitle('')
       setFiles([])
-      Alert.alert('Signalement envoye', 'Votre alerte a ete transmise avec votre position GPS.')
+      showComplaintPrompt()
     } catch (error) {
       if (isNetworkError(error)) {
         if (!reportPayload) {
@@ -150,6 +150,23 @@ export default function CreateSignalementScreen({ navigation, route }) {
     } finally {
       setLoading(false)
     }
+  }
+
+  function showComplaintPrompt() {
+    Alert.alert(
+      'Signalement envoyé',
+      'Votre alerte a été transmise avec votre position GPS. Pour une infraction, une agression, un vol ou un préjudice personnel, le signalement ne remplace pas une plainte officielle.',
+      [
+        { text: 'Plus tard', style: 'cancel' },
+        {
+          text: 'Pourquoi déposer plainte ?',
+          onPress: () => Alert.alert(
+            'Déposer plainte',
+            'La plainte permet aux autorités d’enregistrer officiellement les faits, de vous remettre une référence et d’engager les vérifications nécessaires. Rendez-vous au commissariat ou à la gendarmerie avec votre pièce d’identité, les preuves disponibles et, si possible, la référence de votre signalement Signal-Moi.'
+          )
+        }
+      ]
+    )
   }
 
   return (

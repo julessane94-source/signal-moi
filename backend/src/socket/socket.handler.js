@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const { User, Message, Signalement } = require('../models');
 const logger = require('../utils/logger');
+const { dispatchLiveToStation } = require('../utils/policeDispatch');
 
 const setupSocket = (io) => {
   const activeLiveRecordings = new Map();
@@ -43,6 +44,9 @@ const setupSocket = (io) => {
     if (isPoliceRole(socket.user.role)) {
       socket.join('police_room');
       activeLiveRecordings.forEach((payload) => {
+        const sameStation = String(payload.assignedCommissariatId || '') === String(socket.user.id);
+        const sameZone = payload.assignedCommissariatQuartier && String(payload.assignedCommissariatQuartier).toLowerCase() === String(socket.user.quartier || '').toLowerCase();
+        if (!sameStation && !sameZone) return;
         socket.emit('live_recording_started', payload);
         if (payload.latitude || payload.longitude || payload.localisation) {
           socket.emit('live_recording_location', payload);
@@ -75,7 +79,7 @@ const setupSocket = (io) => {
       }
     });
 
-    socket.on('live_recording_started', (data) => {
+    socket.on('live_recording_started', async (data) => {
       try {
         const payload = {
           ...data,
@@ -83,57 +87,51 @@ const setupSocket = (io) => {
           citizenName: `${socket.user.prenom || ''} ${socket.user.nom || ''}`.trim(),
           startedAt: new Date()
         };
-        if (payload.sessionId) {
-          activeLiveRecordings.set(payload.sessionId, payload);
-        }
-        io.to('police_room').emit('live_recording_started', payload);
+        const dispatchedPayload = await dispatchLiveToStation(io, payload, 'live_recording_started');
+        if (payload.sessionId) activeLiveRecordings.set(payload.sessionId, dispatchedPayload || payload);
         io.to('admin_room').emit('live_recording_started', payload);
-        io.to('police_room').emit('new_signalement_notification', {
-          ...payload,
-          title: payload.titre || `Enregistrement en direct: ${payload.type || 'urgence'}`,
-          message: 'Un citoyen est en train de filmer une preuve en direct.',
-          isLiveRecording: true
-        });
+        if (dispatchedPayload) {
+          const notification = { ...dispatchedPayload, title: payload.titre || `Enregistrement en direct: ${payload.type || 'urgence'}`, message: 'Un citoyen est en train de filmer une preuve en direct.', isLiveRecording: true };
+          dispatchedPayload.assignedRecipientIds.forEach((recipientId) => io.to(`user_${recipientId}`).emit('new_signalement_notification', notification));
+        }
       } catch (error) {
         logger.error('Erreur live_recording_started:', error);
       }
     });
 
-    socket.on('live_recording_location', (data) => {
+    socket.on('live_recording_location', async (data) => {
       try {
         const payload = {
           ...data,
           citizenId: socket.user.id,
           updatedAt: new Date()
         };
+        const existing = activeLiveRecordings.get(payload.sessionId) || {};
+        const nextPayload = { ...existing, ...payload, status: 'recording' };
         if (payload.sessionId) {
-          activeLiveRecordings.set(payload.sessionId, {
-            ...(activeLiveRecordings.get(payload.sessionId) || {}),
-            ...payload,
-            status: 'recording'
-          });
+          activeLiveRecordings.set(payload.sessionId, nextPayload);
         }
-        io.to('police_room').emit('live_recording_location', payload);
+        const dispatchedPayload = await dispatchLiveToStation(io, nextPayload, 'live_recording_location');
+        if (payload.sessionId && dispatchedPayload) activeLiveRecordings.set(payload.sessionId, dispatchedPayload);
       } catch (error) {
         logger.error('Erreur live_recording_location:', error);
       }
     });
 
-    socket.on('live_recording_frame', (data) => {
+    socket.on('live_recording_frame', async (data) => {
       try {
         const payload = {
           ...data,
           citizenId: socket.user.id,
           frameAt: new Date()
         };
+        const existing = activeLiveRecordings.get(payload.sessionId) || {};
+        const nextPayload = { ...existing, ...payload, status: 'recording' };
         if (payload.sessionId) {
-          activeLiveRecordings.set(payload.sessionId, {
-            ...(activeLiveRecordings.get(payload.sessionId) || {}),
-            ...payload,
-            status: 'recording'
-          });
+          activeLiveRecordings.set(payload.sessionId, nextPayload);
         }
-        io.to('police_room').emit('live_recording_frame', payload);
+        const dispatchedPayload = await dispatchLiveToStation(io, nextPayload, 'live_recording_frame');
+        if (payload.sessionId && dispatchedPayload) activeLiveRecordings.set(payload.sessionId, dispatchedPayload);
       } catch (error) {
         logger.error('Erreur live_recording_frame:', error);
       }
@@ -146,24 +144,25 @@ const setupSocket = (io) => {
           citizenId: socket.user.id,
           chunkAt: new Date()
         };
-        io.to('police_room').emit('live_recording_chunk', payload);
+        const existing = activeLiveRecordings.get(payload.sessionId) || {};
+        const recipientIds = existing.assignedRecipientIds || [];
+        recipientIds.forEach((recipientId) => io.to(`user_${recipientId}`).emit('live_recording_chunk', { ...existing, ...payload }));
         io.to('admin_room').emit('live_recording_chunk', payload);
       } catch (error) {
         logger.error('Erreur live_recording_chunk:', error);
       }
     });
 
-    socket.on('live_recording_stopped', (data) => {
+    socket.on('live_recording_stopped', async (data) => {
       try {
         const payload = {
           ...data,
           citizenId: socket.user.id,
           stoppedAt: new Date()
         };
-        if (payload.sessionId) {
-          activeLiveRecordings.delete(payload.sessionId);
-        }
-        io.to('police_room').emit('live_recording_stopped', payload);
+        const existing = activeLiveRecordings.get(payload.sessionId) || {};
+        const dispatchedPayload = await dispatchLiveToStation(io, { ...existing, ...payload }, 'live_recording_stopped');
+        if (payload.sessionId) activeLiveRecordings.delete(payload.sessionId);
       } catch (error) {
         logger.error('Erreur live_recording_stopped:', error);
       }

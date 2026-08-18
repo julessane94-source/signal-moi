@@ -919,8 +919,12 @@ export default function NewSignalement() {
       })
 
       if (response.ok) {
+        const created = await response.json().catch(() => ({}))
         toast.success('Signalement créé avec succès !')
-        router.push('/citizen/dashboard')
+        const wantsComplaintInfo = window.confirm(
+          'Votre signalement a été transmis.\n\nPour un vol, une agression, une violence ou tout préjudice personnel, le signalement ne remplace pas une plainte officielle.\n\nVoulez-vous voir pourquoi et comment déposer plainte ?'
+        )
+        router.push(wantsComplaintInfo ? `/plainte?signalement=${encodeURIComponent(created.id || created.signalement?.id || '')}` : '/citizen/dashboard')
       } else {
         const error = await response.json()
         toast.error(error.error || 'Erreur lors de la création')

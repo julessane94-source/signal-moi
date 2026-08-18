@@ -226,6 +226,11 @@ export async function getLiveSessions() {
   return data
 }
 
+export async function savePoliceStationLocation(latitude, longitude) {
+  const { data } = await api.put('/law-enforcement/station-location', { latitude, longitude })
+  return data
+}
+
 export async function sendLiveSession(payload) {
   const { data } = await api.post('/signalements/live-session', payload)
   return data

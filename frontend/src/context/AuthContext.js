@@ -61,6 +61,7 @@ export const AuthProvider = ({ children }) => {
       const response = await axios.post(`${API_URL}/api/auth/login`, { email, password })
       const { token, user: userData } = response.data
       localStorage.setItem('token', token)
+      localStorage.setItem('signal-moi-auth-provider', 'password')
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       setUser(normalizeUser(userData))
       toast.success(`Bienvenue ${userData.prenom} !`)
@@ -94,6 +95,8 @@ export const AuthProvider = ({ children }) => {
 
   const logout = useCallback(async () => {
     localStorage.removeItem('token')
+    localStorage.removeItem('signal-moi-auth-provider')
+    localStorage.removeItem('signal-moi-google-email')
     delete axios.defaults.headers.common['Authorization']
     setUser(null)
     toast.info('Deconnexion reussie')

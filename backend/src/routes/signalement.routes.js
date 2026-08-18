@@ -9,6 +9,7 @@ const { validateUploadedMedia } = require('../middlewares/validateUploadedMedia'
 const FollowedCase = require('../models/FollowedCase');
 const fs = require('fs');
 const path = require('path');
+const { assignNearestCommissariat, dispatchLiveToStation, getStationRecipients } = require('../utils/policeDispatch');
 const activeLiveSessions = new Map();
 const mediaCacheHeader = 'public, max-age=31536000, immutable';
 const publicListCacheHeader = 'public, max-age=30, stale-while-revalidate=120';
@@ -21,37 +22,6 @@ const parseLimit = (value, fallback = 100, max = 500) => {
 const normalizeRole = (role) => String(role || '').trim().toLowerCase();
 const isPoliceLikeRole = (role) => ['commissariat', 'police', 'policier', 'gendarmerie', 'force_ordre'].includes(normalizeRole(role));
 const canViewLiveSessions = (role) => ['admin', 'administrateur'].includes(normalizeRole(role)) || isPoliceLikeRole(role);
-const assignNearestCommissariat = async (signalement) => {
-    const lat = Number(signalement.latitude);
-    const lng = Number(signalement.longitude);
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
-
-    let result;
-    try {
-      result = await db.query(`
-      SELECT u.id,
-        (6371 * acos(LEAST(1, GREATEST(-1,
-          cos(radians($1)) * cos(radians(psl.latitude::double precision)) *
-          cos(radians(psl.longitude::double precision) - radians($2)) +
-          sin(radians($1)) * sin(radians(psl.latitude::double precision))
-        )))) AS distance_km
-      FROM signal_moi.police_station_locations psl
-      JOIN signal_moi.users u ON u.id = psl.commissariat_id
-      WHERE LOWER(u.role) = 'commissariat' AND u.is_active = true
-        AND (NOT EXISTS (SELECT 1 FROM signal_moi.police_signalement_types pst WHERE pst.recipient_id = u.id)
-          OR EXISTS (SELECT 1 FROM signal_moi.police_signalement_types pst WHERE pst.recipient_id = u.id AND pst.type_code = $3))
-      ORDER BY distance_km ASC
-      LIMIT 1`, [lat, lng, String(signalement.type || '').toLowerCase()]);
-    } catch (err) {
-      if (err.code === '42P01') return null;
-      throw err;
-    }
-
-    const commissariat = result.rows[0];
-    if (!commissariat) return null;
-    await db.query('UPDATE signal_moi.signalements SET assigned_to = $1, updated_at = NOW() WHERE id = $2', [commissariat.id, signalement.id]);
-    return commissariat;
-};
 const liveSessionPayload = (session) => ({
     ...session,
     isLiveRecording: true,
@@ -263,9 +233,8 @@ router.post('/', authMiddleware, signalementLimiter, uploadLimiter, ...uploadMul
                 timestamp: new Date()
             };
             if (assignedCommissariat) {
-                global.io.to(`user_${assignedCommissariat.id}`).emit('signalement_received', policeNotification);
-            } else {
-                global.io.to('police_room').emit('signalement_received', policeNotification);
+                const recipientIds = await getStationRecipients(assignedCommissariat);
+                recipientIds.forEach((recipientId) => global.io.to(`user_${recipientId}`).emit('signalement_received', policeNotification));
             }
             global.io.to('admin_room').emit('new_signalement_notification', policeNotification);
         }
@@ -472,6 +441,12 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 
                 pruneLiveSessions();
                 const sessions = Array.from(activeLiveSessions.values())
+                    .filter((session) => {
+                        if (['admin', 'administrateur'].includes(normalizeRole(req.user.role))) return true;
+                        const sameStation = String(session.assignedCommissariatId || '') === String(req.user.id);
+                        const sameZone = session.assignedCommissariatQuartier && String(session.assignedCommissariatQuartier).toLowerCase() === String(req.user.quartier || '').toLowerCase();
+                        return sameStation || sameZone;
+                    })
                     .map(liveSessionPayload)
                     .sort((a, b) => new Date(b.frameAt || b.updatedAt || b.startedAt || 0) - new Date(a.frameAt || a.updatedAt || a.startedAt || 0));
 
@@ -520,13 +495,9 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 
                 if (global.io) {
                     const eventPayload = liveSessionPayload(payload);
-                    if (action === 'stop') {
-                        global.io.to('police_room').emit('live_recording_stopped', eventPayload);
-                    } else if (frame) {
-                        global.io.to('police_room').emit('live_recording_frame', eventPayload);
-                    } else {
-                        global.io.to('police_room').emit('live_recording_started', eventPayload);
-                    }
+                    const event = action === 'stop' ? 'live_recording_stopped' : frame ? 'live_recording_frame' : 'live_recording_started';
+                    const dispatchedPayload = await dispatchLiveToStation(global.io, eventPayload, event);
+                    if (dispatchedPayload) activeLiveSessions.set(sessionId, dispatchedPayload);
                 }
 
                 res.json({ success: true });

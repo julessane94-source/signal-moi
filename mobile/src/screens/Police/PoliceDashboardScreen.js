@@ -1,17 +1,20 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, FlatList, Image, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { COLORS } from '../../config/env'
-import { getLiveSessions, getPoliceAlerts, getPoliceDashboard, takePoliceAction } from '../../services/api'
+import { getLiveSessions, getPoliceAlerts, getPoliceDashboard, savePoliceStationLocation, takePoliceAction } from '../../services/api'
 import { connectLiveSocket, disconnectLiveSocket } from '../../services/liveSocket'
 import { useAuth } from '../../context/AuthContext'
 import PrimaryButton from '../../components/PrimaryButton'
 import { requestLocalAlerts, scheduleLocalAlert } from '../../services/mobileNotifications'
 import VictimActions, { openVictimMap } from '../../components/VictimActions'
 import { playRoleAlertSound } from '../../services/soundAlerts'
+import { useLocation } from '../../context/LocationContext'
 
 export default function PoliceDashboardScreen() {
   const { token, user, signOut } = useAuth()
+  const { requestCurrentLocation } = useLocation()
+  const stationLocationSentRef = useRef(false)
   const [cases, setCases] = useState([])
   const [stats, setStats] = useState(null)
   const [lives, setLives] = useState([])
@@ -89,6 +92,19 @@ export default function PoliceDashboardScreen() {
       disconnectLiveSocket()
     }
   }, [loadData, token, user])
+
+  useEffect(() => {
+    if (String(user?.role || '').toLowerCase() !== 'commissariat' || stationLocationSentRef.current) return
+    stationLocationSentRef.current = true
+    requestCurrentLocation()
+      .then((coords) => {
+        if (!coords) throw new Error('GPS non disponible')
+        return savePoliceStationLocation(coords.latitude, coords.longitude)
+      })
+      .catch(() => {
+        stationLocationSentRef.current = false
+      })
+  }, [requestCurrentLocation, user?.role])
 
   async function refresh() {
     setRefreshing(true)
