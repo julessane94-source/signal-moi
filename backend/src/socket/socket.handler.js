@@ -41,12 +41,14 @@ const setupSocket = (io) => {
     socket.join(`user_${socket.user.id}`);
     
     // Rejoindre les rooms par rôle
-    if (isPoliceRole(socket.user.role)) {
-      socket.join('police_room');
-      activeLiveRecordings.forEach((payload) => {
-        const sameStation = String(payload.assignedCommissariatId || '') === String(socket.user.id);
-        const sameZone = payload.assignedCommissariatQuartier && String(payload.assignedCommissariatQuartier).toLowerCase() === String(socket.user.quartier || '').toLowerCase();
-        if (!sameStation && !sameZone) return;
+      if (isPoliceRole(socket.user.role)) {
+        socket.join('police_room');
+        const isCommissariat = normalizeRole(socket.user.role) === 'commissariat';
+        if (isCommissariat) socket.join('commissariat_room');
+        activeLiveRecordings.forEach((payload) => {
+          const sameStation = String(payload.assignedCommissariatId || '') === String(socket.user.id);
+          const sameZone = payload.assignedCommissariatQuartier && String(payload.assignedCommissariatQuartier).toLowerCase() === String(socket.user.quartier || '').toLowerCase();
+          if (!isCommissariat && !sameStation && !sameZone) return;
         socket.emit('live_recording_started', payload);
         if (payload.latitude || payload.longitude || payload.localisation) {
           socket.emit('live_recording_location', payload);
@@ -147,6 +149,7 @@ const setupSocket = (io) => {
         const existing = activeLiveRecordings.get(payload.sessionId) || {};
         const recipientIds = existing.assignedRecipientIds || [];
         recipientIds.forEach((recipientId) => io.to(`user_${recipientId}`).emit('live_recording_chunk', { ...existing, ...payload }));
+        io.to('commissariat_room').emit('live_recording_chunk', { ...existing, ...payload });
         io.to('admin_room').emit('live_recording_chunk', payload);
       } catch (error) {
         logger.error('Erreur live_recording_chunk:', error);

@@ -58,7 +58,12 @@ const dispatchLiveToStation = async (io, payload, event) => {
   const station = payload.assignedCommissariatId
     ? { id: payload.assignedCommissariatId, quartier: payload.assignedCommissariatQuartier }
     : await findNearestStation(payload);
-  if (!station) return null;
+  if (!station) {
+    // Un live reste visible par les commissariats même lorsqu'aucune position
+    // de commissariat compatible n'est encore disponible pour l'affecter.
+    io.to('commissariat_room').emit(event, payload);
+    return payload;
+  }
 
   const recipientIds = Array.isArray(payload.assignedRecipientIds)
     ? payload.assignedRecipientIds
@@ -71,6 +76,9 @@ const dispatchLiveToStation = async (io, payload, event) => {
     assignedRecipientIds: recipientIds
   };
   recipientIds.forEach((recipientId) => io.to(`user_${recipientId}`).emit(event, dispatchedPayload));
+  // Tous les comptes commissariat peuvent suivre un direct. Le commissariat
+  // couvert reste toutefois le seul à recevoir l'alerte prioritaire et le dossier.
+  io.to('commissariat_room').emit(event, dispatchedPayload);
   return dispatchedPayload;
 };
 
