@@ -282,7 +282,7 @@ export default function Home() {
               </div>
               <div className="flex flex-col gap-3 sm:flex-row md:justify-end">
                 <a
-                  href="/downloads/signal-moi.apk?v=1.0.9"
+href="/downloads/signal-moi.apk?v=20260818"
                   download
                   className="inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-emerald-300 bg-emerald-400 px-6 py-3 font-bold text-slate-950 shadow-sm transition hover:bg-emerald-300 sm:w-auto"
                 >
