@@ -330,6 +330,9 @@ router.post('/login', async (req, res) => {
     }
 
     const user = users[0];
+    if (user.is_active === false) {
+      return res.status(401).json({ success: false, message: 'Ce compte est desactive' });
+    }
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
       return res.status(401).json({ success: false, message: 'Email ou mot de passe incorrect' });
@@ -488,7 +491,7 @@ router.post('/google', async (req, res) => {
     const displayName = googleProfile.name || `${googleProfile.given_name || ''} ${googleProfile.family_name || ''}`.trim() || 'Utilisateur Google';
     
     const userRes = await db.query(
-      'SELECT id, email, prenom, nom, role FROM signal_moi.users WHERE email = $1',
+      'SELECT id, email, prenom, nom, role, is_active FROM signal_moi.users WHERE email = $1',
       [userEmail]
     );
 
@@ -496,6 +499,9 @@ router.post('/google', async (req, res) => {
     let userRole = 'citoyen';
     if (userRes.rows.length > 0) {
       // Utilisateur existant
+      if (userRes.rows[0].is_active === false) {
+        return res.status(401).json({ success: false, message: 'Ce compte est desactive' });
+      }
       userId = userRes.rows[0].id;
       userRole = userRes.rows[0].role || 'citoyen';
       await db.query('UPDATE signal_moi.users SET email_verified = true WHERE id = $1', [userId]);

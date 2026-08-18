@@ -23,10 +23,10 @@ const protect = async (req, res, next) => {
     const result = await db.query('SELECT * FROM signal_moi.users WHERE id = $1', [decoded.id]);
     const users = result.rows || [];
     
-    if (!users || users.length === 0) {
+    if (!users || users.length === 0 || users[0].is_active === false) {
       return res.status(401).json({
         success: false,
-        message: 'Utilisateur non trouvé'
+        message: 'Compte utilisateur indisponible'
       });
     }
     

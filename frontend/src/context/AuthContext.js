@@ -56,6 +56,20 @@ export const AuthProvider = ({ children }) => {
     }
   }, [])
 
+  // Un administrateur peut désactiver un compte pendant qu'il est connecté.
+  // La session locale est alors retirée au retour dans l'onglet, et au plus
+  // tard une minute après, sans attendre un envoi de formulaire.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !localStorage.getItem('token')) return undefined
+    const revalidateSession = () => fetchUser()
+    const timer = window.setInterval(revalidateSession, 60000)
+    window.addEventListener('focus', revalidateSession)
+    return () => {
+      window.clearInterval(timer)
+      window.removeEventListener('focus', revalidateSession)
+    }
+  }, [fetchUser])
+
   const login = useCallback(async (email, password) => {
     try {
       const response = await axios.post(`${API_URL}/api/auth/login`, { email, password })
