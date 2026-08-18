@@ -1150,7 +1150,7 @@ export default function NewSignalement() {
                   <p className="text-sm font-bold uppercase tracking-wide text-emerald-700">Preuves</p>
                   <h2 className="text-2xl font-black text-slate-950">Ajouter photo, video ou audio</h2>
                 </div>
-                <input type="file" multiple accept="image/*,video/*,audio/*" onChange={handleFileChange} className="w-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-red-600 file:px-5 file:py-3 file:font-bold file:text-white hover:border-red-300 hover:bg-red-50/40" />
+                <input type="file" multiple accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.rtf,.txt,.csv" onChange={handleFileChange} className="w-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-red-600 file:px-5 file:py-3 file:font-bold file:text-white hover:border-red-300 hover:bg-red-50/40" />
                 {files.length > 0 && (
                   <div className="mt-4">
                     <p className="text-sm font-medium text-gray-700 mb-3">{files.length} fichier(s) sélectionné(s)</p>

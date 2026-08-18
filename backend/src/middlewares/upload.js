@@ -64,14 +64,14 @@ if (USE_S3 && s3 && multerS3) {
 
 // Filtre des fichiers
 const fileFilter = (req, file, cb) => {
-  const defaultTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'audio/mpeg', 'audio/wav', 'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
+  const defaultTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/bmp', 'image/tiff', 'image/heic', 'image/heif', 'image/avif', 'audio/mpeg', 'audio/wav', 'audio/mp4', 'audio/aac', 'audio/ogg', 'audio/flac', 'audio/amr', 'audio/x-ms-wma', 'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-matroska', 'video/x-msvideo', 'video/3gpp', 'video/3gpp2', 'video/mpeg', 'video/mp2t', 'video/x-flv', 'video/x-ms-wmv', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.oasis.opendocument.text', 'application/vnd.oasis.opendocument.spreadsheet', 'application/vnd.oasis.opendocument.presentation', 'application/rtf', 'text/rtf', 'text/plain', 'text/csv'];
   const allowedTypes = process.env.ALLOWED_FILE_TYPES ? process.env.ALLOWED_FILE_TYPES.split(',').map(t => t.trim()) : defaultTypes;
 
   const ext = path.extname(file.originalname || '').toLowerCase();
-  const acceptedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.mp3', '.wav', '.m4a', '.aac', '.ogg', '.mp4', '.webm', '.mov', '.m4v', '.3gp', '.3gpp', '.mkv'];
-  const isMediaMime = /^(image|audio|video)\//.test(file.mimetype || '');
+  const acceptedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.tif', '.tiff', '.heic', '.heif', '.avif', '.mp3', '.wav', '.m4a', '.aac', '.ogg', '.oga', '.opus', '.flac', '.amr', '.wma', '.mp4', '.webm', '.mov', '.m4v', '.mkv', '.avi', '.3gp', '.3g2', '.mpeg', '.mpg', '.ts', '.mts', '.m2ts', '.flv', '.wmv', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.odt', '.ods', '.odp', '.rtf', '.txt', '.csv'];
+  const isSupportedMime = /^(image|audio|video)\//.test(file.mimetype || '') || /^(application\/(pdf|msword|vnd\.|rtf)|text\/(plain|csv|rtf))/.test(file.mimetype || '');
 
-  if (allowedTypes.includes(file.mimetype) || isMediaMime || acceptedExtensions.includes(ext)) {
+  if (allowedTypes.includes(file.mimetype) || (isSupportedMime && acceptedExtensions.includes(ext))) {
     cb(null, true);
   } else {
     cb(new Error('Type de fichier non supporté'), false);

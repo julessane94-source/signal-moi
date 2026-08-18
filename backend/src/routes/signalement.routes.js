@@ -323,9 +323,12 @@ router.get('/fichiers/:id', authMiddleware, async (req, res) => {
         }
 
         if (file.file_data) {
-            res.setHeader('Content-Type', file.mime_type || 'application/octet-stream');
+            const mimeType = file.mime_type || 'application/octet-stream';
+            const isPreviewableMedia = /^(image|audio|video)\//.test(mimeType);
+            res.setHeader('Content-Type', mimeType);
             res.setHeader('Content-Length', file.taille || 0);
-            res.setHeader('Content-Disposition', `inline; filename="${file.nom_fichier}"`);
+            // Les documents sont téléchargés au lieu d'être exécutés dans le navigateur.
+            res.setHeader('Content-Disposition', `${isPreviewableMedia ? 'inline' : 'attachment'}; filename="${file.nom_fichier}"`);
             res.setHeader('Cache-Control', mediaCacheHeader);
             return res.send(file.file_data);
         }
