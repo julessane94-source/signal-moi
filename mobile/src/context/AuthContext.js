@@ -98,6 +98,12 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
+  async function updateCurrentUser(profile) {
+    const nextUser = { ...user, ...profile }
+    await saveSession(token, nextUser)
+    setUser(nextUser)
+  }
+
   const value = useMemo(
     () => ({
       loading,
@@ -106,6 +112,7 @@ export function AuthProvider({ children }) {
       isAuthenticated: Boolean(token),
       signIn,
       signInWithGoogle,
+      updateCurrentUser,
       signOut
     }),
     [loading, token, user]

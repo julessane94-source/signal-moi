@@ -54,6 +54,7 @@ export default function PoliceDashboard() {
   const [selectedPlaceLabel, setSelectedPlaceLabel] = useState('')
   const liveVideoChunksRef = useRef({})
   const livePlaybackUrlsRef = useRef({})
+  const livePlaybackBuildTimersRef = useRef({})
   const liveAlertedRef = useRef({})
   const stationLocationSentRef = useRef(false)
 
@@ -173,6 +174,7 @@ export default function PoliceDashboard() {
       Object.values(livePlaybackUrlsRef.current).forEach((url) => {
         if (url) URL.revokeObjectURL(url)
       })
+      Object.values(livePlaybackBuildTimersRef.current).forEach((timer) => clearTimeout(timer))
     }
   }, [])
 
@@ -257,18 +259,31 @@ export default function PoliceDashboard() {
         if (!liveVideoChunksRef.current[data.sessionId]) {
           liveVideoChunksRef.current[data.sessionId] = []
         }
-        liveVideoChunksRef.current[data.sessionId].push(data.chunk)
-        Promise.all(liveVideoChunksRef.current[data.sessionId].map(dataUrlToBlob))
-          .then((blobs) => {
-            const mimeType = data.mimeType || blobs[0]?.type || 'video/webm'
-            const playbackBlob = new Blob(blobs, { type: mimeType })
-            const playbackUrl = URL.createObjectURL(playbackBlob)
-            setLivePlaybackUrls(prev => {
-              if (prev[data.sessionId]) URL.revokeObjectURL(prev[data.sessionId])
-              return { ...prev, [data.sessionId]: playbackUrl }
-            })
-          })
-          .catch((error) => console.warn('Lecture live impossible:', error))
+        const chunks = liveVideoChunksRef.current[data.sessionId]
+        const sequence = Number(data.sequence) || chunks.length + 1
+        if (chunks.some((item) => item.sequence === sequence)) return
+        chunks.push({ sequence, chunk: data.chunk })
+        chunks.sort((a, b) => a.sequence - b.sequence)
+
+        // Reconstruire au plus une fois par seconde evite de saccader le
+        // lecteur tout en conservant un decalage tres court avec le citoyen.
+        if (!livePlaybackBuildTimersRef.current[data.sessionId]) {
+          livePlaybackBuildTimersRef.current[data.sessionId] = setTimeout(() => {
+            livePlaybackBuildTimersRef.current[data.sessionId] = null
+            const orderedChunks = liveVideoChunksRef.current[data.sessionId] || []
+            Promise.all(orderedChunks.map((item) => dataUrlToBlob(item.chunk)))
+              .then((blobs) => {
+                const mimeType = data.mimeType || blobs[0]?.type || 'video/webm'
+                const playbackBlob = new Blob(blobs, { type: mimeType })
+                const playbackUrl = URL.createObjectURL(playbackBlob)
+                setLivePlaybackUrls(prev => {
+                  if (prev[data.sessionId]) URL.revokeObjectURL(prev[data.sessionId])
+                  return { ...prev, [data.sessionId]: playbackUrl }
+                })
+              })
+              .catch((error) => console.warn('Lecture live impossible:', error))
+          }, 650)
+        }
         setLiveRecordings(prev => ({
           ...prev,
           [data.sessionId]: {
@@ -276,7 +291,7 @@ export default function PoliceDashboard() {
             ...data,
             sessionId: data.sessionId,
             chunk: undefined,
-            videoChunkCount: liveVideoChunksRef.current[data.sessionId].length,
+            videoChunkCount: chunks.length,
             videoMimeType: data.mimeType || prev[data.sessionId]?.videoMimeType || 'video/webm',
             status: prev[data.sessionId]?.status || 'recording'
           }
@@ -635,11 +650,11 @@ export default function PoliceDashboard() {
   const downloadLiveVideo = async (live) => {
     const chunks = liveVideoChunksRef.current[live?.sessionId] || []
     if (!chunks.length) {
-      downloadLiveFrame(live)
+      toast.info('La video complete arrive : attendez le premier fragment video.')
       return
     }
     try {
-      const blobs = await Promise.all(chunks.map(dataUrlToBlob))
+      const blobs = await Promise.all(chunks.map((item) => dataUrlToBlob(item.chunk || item)))
       const mimeType = live.videoMimeType || blobs[0]?.type || 'video/webm'
       const blob = new Blob(blobs, { type: mimeType })
       const extension = mimeType.includes('mp4') ? 'mp4' : 'webm'
@@ -1588,6 +1603,13 @@ export default function PoliceDashboard() {
                   autoPlay
                   controls
                   playsInline
+                  onLoadedMetadata={(event) => {
+                    const video = event.currentTarget
+                    if (Number.isFinite(video.duration) && video.duration > 1) {
+                      video.currentTime = Math.max(0, video.duration - 1)
+                    }
+                    video.play().catch(() => {})
+                  }}
                   className="h-[28rem] w-full bg-black object-contain"
                 />
               ) : activeLive.frame ? (
@@ -1617,14 +1639,14 @@ export default function PoliceDashboard() {
                 {activeLive.citizenName && <p className="mt-3 text-sm font-medium text-slate-700">Signalant: {activeLive.citizenName}</p>}
                 {activeLive.frameAt && (
                   <p className="mt-2 text-xs text-slate-500">
-                    Derniere image recue: {new Date(activeLive.frameAt).toLocaleTimeString('fr-FR')}
+                    Derniere image recue (secours): {new Date(activeLive.frameAt).toLocaleTimeString('fr-FR')}
                   </p>
                 )}
                 <p className="mt-2 text-xs font-semibold text-slate-600">
                   Video recue: {activeLive.videoChunkCount || 0} fragment(s)
                 </p>
                 <p className="mt-1 text-xs font-semibold text-slate-600">
-                  Audio live: {livePlaybackUrls[activeLive.sessionId] ? 'disponible dans le lecteur' : 'en attente de fragments video/audio'}
+                  Flux video/audio: {livePlaybackUrls[activeLive.sessionId] ? 'lecture video en direct active' : 'connexion au flux video en cours'}
                 </p>
               </div>
 

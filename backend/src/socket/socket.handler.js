@@ -4,6 +4,15 @@ const logger = require('../utils/logger');
 const { dispatchLiveToStation } = require('../utils/policeDispatch');
 const { activeLiveSessions } = require('../utils/liveSessions');
 
+// Les fragments restent en memoire seulement pendant la duree du direct :
+// ils permettent a un commissariat qui vient de se connecter de recuperer la
+// video deja diffusee et d'enregistrer la sequence complete.
+const MAX_REPLAY_VIDEO_CHUNKS = 180;
+const withoutVideoChunks = (session = {}) => {
+  const { videoChunks, ...payload } = session;
+  return payload;
+};
+
 const setupSocket = (io) => {
   const normalizeRole = (role) => String(role || '').trim().toLowerCase();
   const isPoliceRole = (role) => ['commissariat', 'police', 'policier', 'gendarmerie', 'force_ordre'].includes(normalizeRole(role));
@@ -49,13 +58,17 @@ const setupSocket = (io) => {
           const recipientIds = Array.isArray(payload.assignedRecipientIds) ? payload.assignedRecipientIds.map(String) : [];
           const isAssignedAgent = recipientIds.includes(String(socket.user.id));
           if (!isCommissariatRole(socket.user.role) && !isAssignedAgent) return;
-          socket.emit('live_recording_started', payload);
+          const sessionPayload = withoutVideoChunks(payload);
+          socket.emit('live_recording_started', sessionPayload);
           if (payload.latitude || payload.longitude || payload.localisation) {
-            socket.emit('live_recording_location', payload);
+            socket.emit('live_recording_location', sessionPayload);
           }
           if (payload.frame) {
-            socket.emit('live_recording_frame', payload);
+            socket.emit('live_recording_frame', sessionPayload);
           }
+          (payload.videoChunks || []).forEach((chunk) => {
+            socket.emit('live_recording_chunk', { ...sessionPayload, ...chunk });
+          });
         });
     } else if (isCollaborateurRole(socket.user.role)) {
       socket.join('collaborateur_room');
@@ -151,9 +164,28 @@ const setupSocket = (io) => {
           chunkAt: new Date()
         };
         const existing = activeLiveSessions.get(payload.sessionId) || {};
-        const recipientIds = existing.assignedRecipientIds || [];
-        recipientIds.forEach((recipientId) => io.to(`user_${recipientId}`).emit('live_recording_chunk', { ...existing, ...payload }));
-        io.to('commissariat_room').emit('live_recording_chunk', { ...existing, ...payload });
+        if (!payload.sessionId || !existing.sessionId) return;
+        const videoChunk = {
+          chunk: payload.chunk,
+          sequence: Number(payload.sequence) || 0,
+          mimeType: payload.mimeType || 'video/webm',
+          durationMs: Number(payload.durationMs) || 2000,
+          chunkAt: payload.chunkAt
+        };
+        const videoChunks = [...(existing.videoChunks || []), videoChunk]
+          .slice(-MAX_REPLAY_VIDEO_CHUNKS);
+        const nextSession = {
+          ...existing,
+          videoChunks,
+          videoChunkCount: videoChunks.length,
+          videoMimeType: videoChunk.mimeType,
+          updatedAt: payload.chunkAt
+        };
+        activeLiveSessions.set(payload.sessionId, nextSession);
+        const outboundPayload = { ...withoutVideoChunks(nextSession), ...videoChunk };
+        const recipientIds = nextSession.assignedRecipientIds || [];
+        recipientIds.forEach((recipientId) => io.to(`user_${recipientId}`).emit('live_recording_chunk', outboundPayload));
+        io.to('commissariat_room').emit('live_recording_chunk', outboundPayload);
         io.to('admin_room').emit('live_recording_chunk', payload);
       } catch (error) {
         logger.error('Erreur live_recording_chunk:', error);

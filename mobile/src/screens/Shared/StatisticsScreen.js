@@ -5,7 +5,7 @@ import * as Sharing from 'expo-sharing'
 import { API_URL, COLORS } from '../../config/env'
 import ScreenHeader from '../../components/ScreenHeader'
 import PrimaryButton from '../../components/PrimaryButton'
-import { getCompleteStatistics } from '../../services/api'
+import { getAdminDashboard, getCollaboratorStatistics, getCompleteStatistics, getPoliceStatistics } from '../../services/api'
 import { getSession } from '../../services/storage'
 import { useAuth } from '../../context/AuthContext'
 
@@ -16,9 +16,16 @@ export default function StatisticsScreen() {
   const [exporting, setExporting] = useState(null)
 
   const load = useCallback(async () => {
-    const data = await getCompleteStatistics()
+    const role = String(user?.role || '').toLowerCase()
+    const data = role.includes('police') || role.includes('commissariat') || role.includes('gendarmerie')
+      ? await getPoliceStatistics()
+      : role.includes('collabor')
+        ? await getCollaboratorStatistics()
+        : role.includes('admin') || role.includes('administrateur')
+          ? await getAdminDashboard()
+          : await getCompleteStatistics()
     setStats(data)
-  }, [])
+  }, [user?.role])
 
   useEffect(() => {
     load().catch(() => {})
@@ -38,9 +45,11 @@ export default function StatisticsScreen() {
     try {
       const { token } = await getSession()
       const role = String(user?.role || '').toLowerCase()
-      const endpoint = role.includes('collaborateur') || role.includes('collaborator')
-        ? `/collaborator/statistics/export?format=${format}`
-        : `/admin/statistics/export?format=${format}`
+      const endpoint = role.includes('police') || role.includes('commissariat') || role.includes('gendarmerie')
+        ? `/law-enforcement/statistics/export?format=${format}`
+        : role.includes('collaborateur') || role.includes('collaborator')
+          ? `/collaborator/statistics/export?format=${format}`
+          : `/admin/statistics/export?format=${format}`
       const extension = format === 'excel' ? 'xlsx' : 'pdf'
       const result = await FileSystem.downloadAsync(
         `${API_URL}${endpoint}`,
@@ -59,20 +68,26 @@ export default function StatisticsScreen() {
     }
   }
 
-  const overview = stats?.overview || {}
-  const typeItems = stats?.byType?.data || stats?.byType || []
-  const statusItems = overview.statusDistribution || []
-  const monthlyItems = overview.monthlyTrend || []
+  const overview = stats?.overview || stats?.totals || {}
+  const typeItems = Array.isArray(stats?.byType?.data)
+    ? stats.byType.data
+    : Array.isArray(stats?.byType)
+      ? stats.byType
+      : Object.entries(stats?.byType || {}).map(([type, count]) => ({ type, count }))
+  const statusItems = Array.isArray(overview.statusDistribution)
+    ? overview.statusDistribution
+    : Object.entries(stats?.byStatus || {}).map(([statut, count]) => ({ statut, count }))
+  const monthlyItems = overview.monthlyTrend || stats?.byMonth || []
   const statusCount = (names) => statusItems.filter((item) => names.includes(String(item.statut || item.status || '').toLowerCase())).reduce((total, item) => total + Number(item.count || 0), 0)
 
   return (
     <ScrollView style={styles.container} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}>
-      <ScreenHeader title="Statistiques" subtitle="Vue complete depuis Render" />
+      <ScreenHeader title="Statistiques" subtitle="Rapport adapte a votre espace" />
       <View style={styles.grid}>
-        <Stat label="Total" value={overview.totalSignalements || overview.total || 0} />
-        <Stat label="En cours" value={statusCount(['en_cours', 'cours', 'en cours'])} />
-        <Stat label="Nouveaux" value={statusCount(['nouveau', 'attente', 'recu'])} />
-        <Stat label="Traités" value={statusCount(['traité', 'traite', 'résolu', 'resolu', 'fermé', 'ferme'])} />
+        <Stat label="Total" value={overview.totalSignalements || overview.signalements || overview.total || 0} />
+        <Stat label="En cours" value={overview.enCours || statusCount(['en_cours', 'cours', 'en cours'])} />
+        <Stat label="Nouveaux" value={overview.nouveaux || statusCount(['nouveau', 'attente', 'recu'])} />
+        <Stat label="Traités" value={overview.traites || statusCount(['traité', 'traite', 'résolu', 'resolu', 'fermé', 'ferme', 'intervention_terminee'])} />
       </View>
       <View style={styles.card}>
         <Text style={styles.section}>Par type</Text>

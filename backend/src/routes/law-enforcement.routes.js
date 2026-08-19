@@ -9,6 +9,7 @@ const bcrypt = require('bcrypt');
 const { v4: uuidv4 } = require('uuid');
 const FollowedCase = require('../models/FollowedCase');
 const { validatePassword } = require('../utils/passwordPolicy');
+const { sendStatisticsExport } = require('../utils/statisticsReport');
 
 const normalizeRole = (role) => String(role || '').trim().toLowerCase();
 const lawRoles = ['commissariat', 'police', 'policier', 'gendarmerie', 'force_ordre'];
@@ -68,6 +69,55 @@ const assertAssignedCaseAccess = async (caseId, user) => {
     [user.id, String(user.quartier || '').trim(), caseId]
   );
   return result.rows.length > 0;
+};
+
+const rowsToCounts = (rows, key) => rows.reduce((counts, row) => {
+  counts[row[key] || 'non_renseigne'] = Number(row.count || 0);
+  return counts;
+}, {});
+
+// Les rapports police ne contiennent que les dossiers accessibles a l'agent
+// ou au commissariat connecte : aucune statistique globale n'est exposee.
+const getPoliceStatistics = async (user) => {
+  const params = [user.id, String(user.quartier || '').trim()];
+  const condition = assignedCaseCondition('s');
+  const [totalsResult, statusResult, typeResult, zoneResult, monthResult, recentResult] = await Promise.all([
+    db.query(`SELECT COUNT(*) AS total,
+        COUNT(*) FILTER (WHERE s.statut = 'nouveau') AS nouveaux,
+        COUNT(*) FILTER (WHERE s.statut = 'en_cours') AS en_cours,
+        COUNT(*) FILTER (WHERE s.statut IN ('intervention_terminee', 'traite')) AS traites,
+        COUNT(*) FILTER (WHERE LOWER(COALESCE(s.type, '')) IN ('violence', 'danger', 'accident', 'vol')) AS urgences
+      FROM signal_moi.signalements s WHERE ${condition}`, params),
+    db.query(`SELECT COALESCE(s.statut, 'non_renseigne') AS statut, COUNT(*) AS count
+      FROM signal_moi.signalements s WHERE ${condition} GROUP BY s.statut ORDER BY count DESC`, params),
+    db.query(`SELECT COALESCE(s.type, 'non_renseigne') AS type, COUNT(*) AS count
+      FROM signal_moi.signalements s WHERE ${condition} GROUP BY s.type ORDER BY count DESC`, params),
+    db.query(`SELECT COALESCE(NULLIF(split_part(s.localisation, ',', 1), ''), 'Zone inconnue') AS zone, COUNT(*) AS count
+      FROM signal_moi.signalements s WHERE ${condition} GROUP BY zone ORDER BY count DESC LIMIT 20`, params),
+    db.query(`SELECT TO_CHAR(date_trunc('month', s.created_at), 'YYYY-MM') AS month, COUNT(*) AS count
+      FROM signal_moi.signalements s WHERE ${condition} GROUP BY month ORDER BY month DESC LIMIT 12`, params),
+    db.query(`SELECT s.titre, s.type, s.statut, s.localisation, s.created_at
+      FROM signal_moi.signalements s WHERE ${condition} ORDER BY s.created_at DESC LIMIT 10`, params)
+  ]);
+  const totals = totalsResult.rows[0] || {};
+  return {
+    generatedAt: new Date().toISOString(),
+    scope: 'police',
+    totals: {
+      signalements: Number(totals.total || 0), nouveaux: Number(totals.nouveaux || 0),
+      enCours: Number(totals.en_cours || 0), traites: Number(totals.traites || 0),
+      urgences: Number(totals.urgences || 0)
+    },
+    byStatus: rowsToCounts(statusResult.rows, 'statut'),
+    byType: rowsToCounts(typeResult.rows, 'type'),
+    byZone: rowsToCounts(zoneResult.rows, 'zone'),
+    byMonth: monthResult.rows.reverse().map((row) => ({ month: row.month, count: Number(row.count || 0) })),
+    usersByRole: {},
+    recentSignalements: recentResult.rows.map((row) => ({
+      titre: row.titre, type: row.type, statut: row.statut,
+      localisation: row.localisation, createdAt: row.created_at
+    }))
+  };
 };
 
 // Le commissariat transmet sa position depuis son propre appareil. L'admin ne
@@ -226,6 +276,27 @@ router.get('/agents', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('[LAW-ENFORCEMENT GET /agents] Erreur:', err);
     res.status(500).json({ error: 'Erreur serveur', details: err.message });
+  }
+});
+
+// GET /api/law-enforcement/statistics - statistiques limitees a la zone police
+router.get('/statistics', authMiddleware, async (req, res) => {
+  try {
+    res.json(await getPoliceStatistics(req.user));
+  } catch (err) {
+    console.error('[LAW-ENFORCEMENT GET /statistics] Erreur:', err);
+    res.status(500).json({ error: 'Erreur statistiques police' });
+  }
+});
+
+// GET /api/law-enforcement/statistics/export?format=pdf|excel
+router.get('/statistics/export', authMiddleware, async (req, res) => {
+  try {
+    const format = String(req.query.format || 'excel').toLowerCase();
+    await sendStatisticsExport(res, await getPoliceStatistics(req.user), format === 'pdf' ? 'pdf' : 'excel');
+  } catch (err) {
+    console.error('[LAW-ENFORCEMENT GET /statistics/export] Erreur:', err);
+    if (!res.headersSent) res.status(500).json({ error: 'Export statistiques police impossible' });
   }
 });
 

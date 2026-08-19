@@ -176,11 +176,8 @@ export default function CreateSignalementScreen({ navigation, route }) {
       [
         { text: 'Plus tard', style: 'cancel' },
         {
-          text: 'Pourquoi déposer plainte ?',
-          onPress: () => Alert.alert(
-            'Déposer plainte',
-            'La plainte permet aux autorités d’enregistrer officiellement les faits, de vous remettre une référence et d’engager les vérifications nécessaires. Rendez-vous au commissariat ou à la gendarmerie avec votre pièce d’identité, les preuves disponibles et, si possible, la référence de votre signalement Signal-Moi.'
-          )
+          text: 'Guide de dépôt de plainte',
+          onPress: () => openRootScreen('ComplaintGuide')
         }
       ]
     )

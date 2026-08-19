@@ -12,6 +12,7 @@ import PublicHomeScreen from '../screens/Auth/PublicHomeScreen'
 import CitizenHomeScreen from '../screens/Citizen/CitizenHomeScreen'
 import CreateSignalementScreen from '../screens/Citizen/CreateSignalementScreen'
 import LiveCameraScreen from '../screens/Citizen/LiveCameraScreen'
+import ComplaintGuideScreen from '../screens/Citizen/ComplaintGuideScreen'
 import PoliceDashboardScreen from '../screens/Police/PoliceDashboardScreen'
 import CollaboratorDashboardScreen from '../screens/Collaborator/CollaboratorDashboardScreen'
 import CollaboratorWorkScreen from '../screens/Collaborator/CollaboratorWorkScreen'
@@ -86,6 +87,7 @@ function PoliceTabs() {
     <Tab.Navigator screenOptions={screenOptions(COLORS.police)}>
       <Tab.Screen name="Accueil" component={HomeScreen} />
       <Tab.Screen name="Interventions" component={PoliceDashboardScreen} />
+      <Tab.Screen name="Statistiques" component={StatisticsScreen} />
       <Tab.Screen name="SUPERMAN" component={SupermanScreen} />
       <Tab.Screen name="Compte" component={ProfileScreen} />
     </Tab.Navigator>
@@ -147,6 +149,8 @@ export default function AppNavigator() {
         <>
           <Stack.Screen name="RoleHome" component={RoleHome} />
           <Stack.Screen name="LiveCamera" component={LiveCameraScreen} />
+          <Stack.Screen name="ComplaintGuide" component={ComplaintGuideScreen} />
+          <Stack.Screen name="Privacy" component={PrivacyScreen} />
         </>
       ) : (
         <>

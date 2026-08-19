@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, Animated, Easing, FlatList, Image, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { COLORS } from '../../config/env'
-import { getLiveSessions, getPoliceAlerts, getPoliceDashboard, getPoliceOfficers, savePoliceStationLocation, takePoliceAction, transferSignalement } from '../../services/api'
+import { getLiveSessions, getPoliceAlerts, getPoliceDashboard, getPoliceOfficers, savePoliceStationLocation, takePoliceAction, transferSignalement, updatePoliceCaseStatus } from '../../services/api'
 import { connectLiveSocket, disconnectLiveSocket } from '../../services/liveSocket'
 import { useAuth } from '../../context/AuthContext'
 import PrimaryButton from '../../components/PrimaryButton'
@@ -25,6 +25,7 @@ export default function PoliceDashboardScreen() {
   const [transferForId, setTransferForId] = useState(null)
   const [officers, setOfficers] = useState([])
   const [transferring, setTransferring] = useState(false)
+  const [archivingId, setArchivingId] = useState(null)
   const urgentCount = cases.filter((item) => ['violence', 'danger', 'accident', 'vol'].includes(String(item.type || '').toLowerCase())).length
 
   useEffect(() => {
@@ -184,6 +185,32 @@ export default function PoliceDashboardScreen() {
     }
   }
 
+  function archiveCase(caseId) {
+    Alert.alert(
+      'Archiver ce dossier ?',
+      'Le dossier sortira de la file active et restera consultable dans l historique des interventions.',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Archiver',
+          style: 'destructive',
+          onPress: async () => {
+            setArchivingId(caseId)
+            try {
+              await updatePoliceCaseStatus(caseId, 'intervention_terminee')
+              Alert.alert('Dossier archivé', 'Le citoyen et les personnes qui suivent le dossier sont informés.')
+              await loadData()
+            } catch (error) {
+              Alert.alert('Archivage impossible', error.response?.data?.error || 'Réessayez dans un instant.')
+            } finally {
+              setArchivingId(null)
+            }
+          }
+        }
+      ]
+    )
+  }
+
   function openMap(item) {
     openVictimMap(item)
   }
@@ -278,6 +305,10 @@ export default function PoliceDashboardScreen() {
                 <Ionicons name="map" size={20} color={COLORS.police} />
               </Pressable>
             </View>
+            <Pressable disabled={archivingId === (item.id || item._id)} onPress={() => archiveCase(item.id || item._id)} style={styles.archiveButton}>
+              <Ionicons name="archive-outline" size={18} color="#475569" />
+              <Text style={styles.archiveText}>{archivingId === (item.id || item._id) ? 'Archivage…' : 'Clôturer et archiver le dossier'}</Text>
+            </Pressable>
             {String(user?.role || '').toLowerCase() === 'commissariat' ? (
               <>
                 <Pressable onPress={() => openTransfer(item.id || item._id)} style={styles.transferButton}>
@@ -533,6 +564,8 @@ const styles = StyleSheet.create({
     gap: 10,
     alignItems: 'center'
   },
+  archiveButton: { minHeight: 44, marginTop: 10, borderRadius: 13, backgroundColor: '#f1f5f9', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  archiveText: { color: '#334155', fontWeight: '900', fontSize: 13 },
   caseAction: {
     flex: 1
   },

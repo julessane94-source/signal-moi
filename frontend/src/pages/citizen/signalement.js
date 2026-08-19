@@ -45,6 +45,13 @@ const saveLastGpsLocation = ({ latitude, longitude, accuracy }) => {
   }))
 }
 
+const blobToDataUrl = (blob) => new Promise((resolve, reject) => {
+  const reader = new FileReader()
+  reader.onload = () => resolve(reader.result)
+  reader.onerror = () => reject(reader.error || new Error('Lecture du fragment video impossible'))
+  reader.readAsDataURL(blob)
+})
+
 export default function NewSignalement() {
   const { user } = useAuth()
   const { socket } = useSocket()
@@ -75,6 +82,8 @@ export default function NewSignalement() {
   const liveSessionIdRef = useRef(null)
   const liveVideoRef = useRef(null)
   const liveStreamRef = useRef(null)
+  const liveChunkSequenceRef = useRef(0)
+  const liveChunkSendQueueRef = useRef(Promise.resolve())
   const pendingLiveMetaRef = useRef({})
   const videoPreviewRef = useRef(null)
   const recordedVideoNameRef = useRef(null)
@@ -712,7 +721,9 @@ export default function NewSignalement() {
       const mimeType = getRecordingMimeType()
       const recorderOptions = {
         ...(mimeType ? { mimeType } : {}),
-        videoBitsPerSecond: 1500000,
+        // Des fragments de deux secondes gardent un direct fluide tout en
+        // restant sous la limite Socket.IO sur les reseaux mobiles.
+        videoBitsPerSecond: 800000,
         audioBitsPerSecond: 96000
       }
       const recorder = new MediaRecorder(stream, recorderOptions)
@@ -728,6 +739,8 @@ export default function NewSignalement() {
       }
 
       recordingChunksRef.current = []
+      liveChunkSequenceRef.current = 0
+      liveChunkSendQueueRef.current = Promise.resolve()
       mediaRecorderRef.current = recorder
       liveStreamRef.current = stream
       setLiveStream(stream)
@@ -763,10 +776,33 @@ export default function NewSignalement() {
       recorder.ondataavailable = (event) => {
         if (event.data && event.data.size > 0) {
           recordingChunksRef.current.push(event.data)
+          const sequence = ++liveChunkSequenceRef.current
+          // FileReader est asynchrone : la file preserve l'ordre reel de la
+          // video, indispensable pour que la police puisse la relire et la
+          // telecharger sans trou.
+          liveChunkSendQueueRef.current = liveChunkSendQueueRef.current
+            .then(() => blobToDataUrl(event.data))
+            .then((chunk) => {
+              const currentSocket = socketRef.current
+              if (!currentSocket?.connected || !liveSessionIdRef.current) return
+              currentSocket.emit('live_recording_chunk', {
+                sessionId: liveSessionIdRef.current,
+                type: liveType,
+                chunk,
+                sequence,
+                mimeType: recorder.mimeType || mimeType || 'video/webm',
+                durationMs: 2000
+              })
+            })
+            .catch((error) => console.warn('Fragment video live non transmis:', error))
         }
       }
 
-      recorder.onstop = () => {
+      recorder.onstop = async () => {
+        // MediaRecorder peut livrer le dernier fragment juste avant onstop.
+        // Attendre la file garantit que le commissariat le recoit avant la
+        // fermeture de la session live.
+        await liveChunkSendQueueRef.current
         stopLiveFrameBroadcast()
         if (skipVideoRef.current) {
           skipVideoRef.current = false
@@ -808,7 +844,7 @@ export default function NewSignalement() {
         stopCameraStream()
       }
 
-      recorder.start(1000)
+      recorder.start(2000)
       startLiveFrameBroadcast(stream)
       recordingTimerRef.current = setTimeout(() => {
         stopVideoRecording()

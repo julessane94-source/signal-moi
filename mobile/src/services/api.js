@@ -108,6 +108,11 @@ export async function getPoliceAlerts() {
   return data
 }
 
+export async function getPoliceStatistics() {
+  const { data } = await api.get('/law-enforcement/statistics')
+  return data
+}
+
 export async function getPoliceOfficers() {
   const { data } = await api.get('/signalements/policiers')
   return Array.isArray(data) ? data : (data.policiers || data.data || [])
@@ -224,6 +229,11 @@ export async function getCompleteStatistics() {
     byGender: byGender.status === 'fulfilled' ? byGender.value.data : { data: [] },
     byAge: byAge.status === 'fulfilled' ? byAge.value.data : { data: [] }
   }
+}
+
+export async function updateProfile(payload) {
+  const { data } = await api.put('/auth/profile', payload)
+  return data
 }
 
 export async function getAllSignalements() {

@@ -28,11 +28,16 @@ const canAccessLiveSession = (user, session) => {
     const recipientIds = Array.isArray(session?.assignedRecipientIds) ? session.assignedRecipientIds.map(String) : [];
     return recipientIds.includes(String(user?.id));
 };
-const liveSessionPayload = (session) => ({
-    ...session,
-    isLiveRecording: true,
-    status: session.status || 'recording'
-});
+const liveSessionPayload = (session) => {
+    // Les fragments video sont livres par Socket.IO au commissariat. Ne pas
+    // les inclure dans le polling HTTP evite de ralentir le tableau de bord.
+    const { videoChunks, ...payload } = session || {};
+    return {
+        ...payload,
+        isLiveRecording: true,
+        status: session.status || 'recording'
+    };
+};
 const pruneLiveSessions = () => {
     const now = Date.now();
     for (const [sessionId, session] of activeLiveSessions.entries()) {
