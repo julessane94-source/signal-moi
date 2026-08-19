@@ -41,6 +41,21 @@ export const SocketProvider = ({ children }) => {
   }, [])
 
   useEffect(() => {
+    // Un son ne peut être lancé par un navigateur qu'après un geste réel.
+    // Cette écoute en capture le déverrouille dès la première interaction,
+    // même si l'utilisateur ne clique pas sur le bouton dédié du tableau de bord.
+    const unlockOnFirstGesture = () => { unlockRealtimeAudio() }
+    window.addEventListener('pointerdown', unlockOnFirstGesture, { capture: true })
+    window.addEventListener('keydown', unlockOnFirstGesture, { capture: true })
+    window.addEventListener('touchstart', unlockOnFirstGesture, { capture: true })
+    return () => {
+      window.removeEventListener('pointerdown', unlockOnFirstGesture, { capture: true })
+      window.removeEventListener('keydown', unlockOnFirstGesture, { capture: true })
+      window.removeEventListener('touchstart', unlockOnFirstGesture, { capture: true })
+    }
+  }, [])
+
+  useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
 
     if (socketRef.current) {

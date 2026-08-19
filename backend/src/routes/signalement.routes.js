@@ -238,6 +238,10 @@ router.post('/', authMiddleware, signalementLimiter, uploadLimiter, ...uploadMul
             if (assignedCommissariat) {
                 const recipientIds = await getStationRecipients(assignedCommissariat);
                 recipientIds.forEach((recipientId) => global.io.to(`user_${recipientId}`).emit('signalement_received', policeNotification));
+            } else {
+                // Sans position de commissariat encore enregistrée, l'alerte reste
+                // visible et sonore dans les espaces commissariat au lieu de disparaître.
+                global.io.to('commissariat_room').emit('signalement_received', policeNotification);
             }
             global.io.to('admin_room').emit('new_signalement_notification', policeNotification);
         }

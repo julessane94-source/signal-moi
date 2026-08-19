@@ -117,10 +117,10 @@ export default function PoliceDashboard() {
         unlockNotificationSound?.(),
         requestNotificationPermission?.()
       ])
-      const ready = Boolean(soundReady) || permission === 'granted'
+      const ready = Boolean(soundReady)
       setAlertsReady(ready)
       if (notify && ready) {
-        toast.success(permission === 'granted' ? 'Alertes police actives' : 'Son active. Autorisez les notifications du navigateur.')
+        toast.success(permission === 'granted' ? 'Alertes sonores et notifications police actives' : 'Son actif. Autorisez aussi les notifications du navigateur.')
       }
       return ready
     }
@@ -208,9 +208,9 @@ export default function PoliceDashboard() {
         fetchSignalements()
       }
       
-      const handleSignalementReceived = () => {
-        fetchSignalements()
-      }
+        const handleSignalementReceived = () => {
+          fetchSignalements()
+        }
 
       const handleLiveRecordingStarted = (data) => {
         triggerLiveSoundAlert(data)
@@ -770,10 +770,10 @@ export default function PoliceDashboard() {
                       onClick={async () => {
                         const soundReady = await unlockNotificationSound?.()
                         const permission = await requestNotificationPermission?.()
-                        const ready = Boolean(soundReady) || permission === 'granted'
+                        const ready = Boolean(soundReady)
                         setAlertsReady(ready)
                         localStorage.setItem('signal_moi_police_alerts_enabled', 'true')
-                        toast.success(permission === 'granted' ? 'Alertes police actives' : 'Son active. Autorisez les notifications du navigateur.')
+                        toast.success(ready ? (permission === 'granted' ? 'Alertes sonores et notifications police actives' : 'Son actif. Autorisez aussi les notifications du navigateur.') : 'Touchez à nouveau ce bouton pour autoriser le son dans le navigateur.')
                       }}
                       className={`rounded-full px-3 py-1 transition ${alertsReady ? 'bg-emerald-300 text-emerald-950 hover:bg-emerald-200' : 'bg-white text-slate-950 hover:bg-slate-100'}`}
                     >
