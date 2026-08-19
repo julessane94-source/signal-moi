@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { ImageBackground, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { ImageBackground, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import { COLORS, resolveMediaUrl } from '../../config/env'
 import ScreenHeader from '../../components/ScreenHeader'
 import PrimaryButton from '../../components/PrimaryButton'
@@ -54,15 +55,22 @@ export default function HomeScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}>
       <ScreenHeader title={roleLabel} subtitle={`Bonjour ${user?.prenom || user?.name || ''}`} />
+      <View style={styles.welcomeCard}>
+        <View style={styles.welcomeIcon}><Ionicons name={role.includes('admin') ? 'settings' : role.includes('collabor') ? 'people' : 'shield-checkmark'} size={22} color="#fff" /></View>
+        <View style={{ flex: 1 }}><Text style={styles.welcomeTitle}>Votre espace est prêt</Text><Text style={styles.welcomeText}>{role.includes('admin') ? 'Pilotez les utilisateurs, contenus et statistiques.' : role.includes('collabor') ? 'Suivez les dossiers et mobilisez votre communauté.' : 'Consultez les urgences, dossiers et lives citoyens.'}</Text></View>
+      </View>
       <ImageBackground source={{ uri: image }} style={styles.hero} imageStyle={styles.heroImage}>
         <View style={styles.overlay}><Text style={styles.heroTitle}>{role.includes('admin') ? 'Piloter la plateforme.' : role.includes('collabor') ? 'Suivre les actions locales.' : 'Intervenir sans délai.'}</Text><Text style={styles.heroText}>Les données sont actualisées depuis Signal‑Moi. Faites glisser pour rafraîchir.</Text></View>
       </ImageBackground>
       <View style={styles.grid}>{metrics.map((item) => <View key={item.label} style={styles.metric}><Text style={styles.metricValue}>{item.value}</Text><Text style={styles.metricLabel}>{item.label}</Text></View>)}</View>
+      <Pressable onPress={refresh} style={styles.refreshCard}>
+        <Ionicons name="refresh" size={20} color={COLORS.primary} /><View style={{ flex: 1 }}><Text style={styles.refreshTitle}>Actualiser les informations</Text><Text style={styles.refreshText}>Dossiers, alertes et statistiques à jour.</Text></View><Ionicons name="chevron-forward" size={18} color={COLORS.primary} />
+      </Pressable>
       <View style={styles.info}><Text style={styles.infoTitle}>Accès rapide</Text><Text style={styles.infoText}>{role.includes('admin') ? 'Gérez les utilisateurs dans Gestion et consultez les analyses dans Statistiques.' : role.includes('collabor') ? 'Vos dossiers, campagnes et statistiques sont disponibles dans les onglets ci-dessous.' : 'Ouvrez Interventions pour localiser les victimes, appeler et prendre les dossiers en charge.'}</Text><PrimaryButton title="Actualiser les données" onPress={refresh} loading={refreshing} /></View>
     </ScrollView>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7fbfa' }, content: { paddingBottom: 28 }, hero: { margin: 20, height: 220, borderRadius: 24, overflow: 'hidden' }, heroImage: { borderRadius: 24 }, overlay: { flex: 1, backgroundColor: 'rgba(8,31,27,0.55)', justifyContent: 'flex-end', padding: 20 }, heroTitle: { color: '#fff', fontSize: 28, fontWeight: '900' }, heroText: { color: '#e6fffa', marginTop: 8, lineHeight: 21 }, grid: { flexDirection: 'row', gap: 9, paddingHorizontal: 20 }, metric: { flex: 1, minHeight: 90, borderRadius: 17, backgroundColor: '#fff', borderWidth: 1, borderColor: COLORS.border, padding: 12 }, metricValue: { color: COLORS.primaryDark, fontSize: 25, fontWeight: '900' }, metricLabel: { color: COLORS.muted, marginTop: 5, fontSize: 12, fontWeight: '800' }, info: { margin: 20, backgroundColor: '#fff', borderRadius: 20, borderWidth: 1, borderColor: COLORS.border, padding: 17, gap: 10 }, infoTitle: { color: COLORS.ink, fontSize: 18, fontWeight: '900' }, infoText: { color: COLORS.muted, lineHeight: 21 }
+  container: { flex: 1, backgroundColor: '#f7fbfa' }, content: { paddingBottom: 28 }, welcomeCard: { marginHorizontal: 20, marginTop: 12, borderRadius: 18, backgroundColor: '#0f766e', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 11 }, welcomeIcon: { width: 42, height: 42, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' }, welcomeTitle: { color: '#fff', fontWeight: '900', fontSize: 16 }, welcomeText: { color: '#d9fffa', marginTop: 3, fontSize: 12, lineHeight: 17 }, hero: { margin: 20, height: 220, borderRadius: 24, overflow: 'hidden' }, heroImage: { borderRadius: 24 }, overlay: { flex: 1, backgroundColor: 'rgba(8,31,27,0.55)', justifyContent: 'flex-end', padding: 20 }, heroTitle: { color: '#fff', fontSize: 28, fontWeight: '900' }, heroText: { color: '#e6fffa', marginTop: 8, lineHeight: 21 }, grid: { flexDirection: 'row', gap: 9, paddingHorizontal: 20 }, metric: { flex: 1, minHeight: 90, borderRadius: 17, backgroundColor: '#fff', borderWidth: 1, borderColor: COLORS.border, padding: 12 }, metricValue: { color: COLORS.primaryDark, fontSize: 25, fontWeight: '900' }, metricLabel: { color: COLORS.muted, marginTop: 5, fontSize: 12, fontWeight: '800' }, refreshCard: { marginHorizontal: 20, marginTop: 14, borderRadius: 16, borderWidth: 1, borderColor: COLORS.border, backgroundColor: '#fff', padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10 }, refreshTitle: { color: COLORS.ink, fontWeight: '900' }, refreshText: { color: COLORS.muted, fontSize: 12, marginTop: 2 }, info: { margin: 20, backgroundColor: '#fff', borderRadius: 20, borderWidth: 1, borderColor: COLORS.border, padding: 17, gap: 10 }, infoTitle: { color: COLORS.ink, fontSize: 18, fontWeight: '900' }, infoText: { color: COLORS.muted, lineHeight: 21 }
 })

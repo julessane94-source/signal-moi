@@ -1,8 +1,9 @@
 import React from 'react'
-import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native'
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import { COLORS } from '../config/env'
 
-export default function PrimaryButton({ title, onPress, loading, disabled, tone = 'primary', style }) {
+export default function PrimaryButton({ title, onPress, loading, disabled, tone = 'primary', style, icon }) {
   const backgroundColor = tone === 'danger' ? COLORS.danger : tone === 'police' ? COLORS.police : COLORS.primary
 
   return (
@@ -16,7 +17,7 @@ export default function PrimaryButton({ title, onPress, loading, disabled, tone 
         style
       ]}
     >
-      {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.text}>{title}</Text>}
+        {loading ? <ActivityIndicator color="#fff" /> : <View style={styles.content}>{icon ? <Ionicons name={icon} size={18} color="#fff" /> : null}<Text style={styles.text}>{title}</Text></View>}
     </Pressable>
   )
 }
@@ -24,19 +25,20 @@ export default function PrimaryButton({ title, onPress, loading, disabled, tone 
 const styles = StyleSheet.create({
   button: {
     minHeight: 54,
-    borderRadius: 17,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
     shadowColor: '#0f766e',
-    shadowOffset: { width: 0, height: 7 },
-    shadowOpacity: 0.18,
-    shadowRadius: 12,
-    elevation: 4
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 14,
+    elevation: 5
   },
+  content: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   text: {
     color: '#fff',
     fontSize: 15,
-    fontWeight: '800'
+    fontWeight: '900'
   }
 })

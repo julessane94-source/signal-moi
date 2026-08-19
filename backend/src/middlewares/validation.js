@@ -24,7 +24,10 @@ const validate = (validations) => {
 const userValidations = {
   register: [
     body('email').isEmail().normalizeEmail().withMessage('Email invalide'),
-    body('password').isLength({ min: 6 }).withMessage('Le mot de passe doit contenir au moins 6 caractères'),
+    body('password').isLength({ min: 12 }).withMessage('Le mot de passe doit contenir au moins 12 caractères')
+      .matches(/[a-z]/).withMessage('Le mot de passe doit contenir une minuscule')
+      .matches(/[A-Z]/).withMessage('Le mot de passe doit contenir une majuscule')
+      .matches(/\d/).withMessage('Le mot de passe doit contenir un chiffre'),
     body('prenom').notEmpty().trim().isLength({ min: 2 }).withMessage('Prénom requis'),
     body('nom').notEmpty().trim().isLength({ min: 2 }).withMessage('Nom requis'),
     body('telephone').matches(/^[0-9+\-\s]{8,20}$/).withMessage('Téléphone invalide'),

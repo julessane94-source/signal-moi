@@ -28,17 +28,17 @@ const Stack = createNativeStackNavigator()
 const Tab = createBottomTabNavigator()
 
 const tabStyle = {
-  height: 76,
-  paddingBottom: 11,
-  paddingTop: 9,
+  height: 72,
+  paddingBottom: 9,
+  paddingTop: 8,
   backgroundColor: '#ffffff',
   borderTopColor: '#d9e7e3',
   borderTopWidth: 1,
-  elevation: 16,
+  elevation: 18,
   shadowColor: '#10201d',
   shadowOffset: { width: 0, height: -4 },
-  shadowOpacity: 0.06,
-  shadowRadius: 14
+  shadowOpacity: 0.1,
+  shadowRadius: 16
 }
 
 const iconByRoute = {
@@ -61,10 +61,10 @@ function screenOptions(activeColor) {
     tabBarActiveTintColor: activeColor,
     tabBarInactiveTintColor: COLORS.muted,
     tabBarStyle: tabStyle,
-    tabBarLabelStyle: { fontSize: 10, fontWeight: '800', marginTop: 2 },
-    tabBarItemStyle: { paddingHorizontal: 2 },
-    tabBarIcon: ({ color, size }) => (
-      <Ionicons name={iconByRoute[route.name] || 'ellipse'} size={size} color={color} />
+    tabBarLabelStyle: { fontSize: 10, fontWeight: '900', marginTop: 1 },
+    tabBarItemStyle: { paddingHorizontal: 1 },
+    tabBarIcon: ({ color, focused }) => (
+      <Ionicons name={iconByRoute[route.name] || 'ellipse'} size={focused ? 23 : 21} color={color} />
     )
   })
 }

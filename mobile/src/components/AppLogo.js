@@ -31,7 +31,14 @@ export default function AppLogo({ size = 44 }) {
 
 const styles = StyleSheet.create({
   image: {
-    backgroundColor: '#fff'
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#d8e6e2',
+    shadowColor: '#10201d',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 7,
+    elevation: 3
   },
   fallback: {
     backgroundColor: COLORS.primary,

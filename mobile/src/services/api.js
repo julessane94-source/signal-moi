@@ -108,6 +108,16 @@ export async function getPoliceAlerts() {
   return data
 }
 
+export async function getPoliceOfficers() {
+  const { data } = await api.get('/signalements/policiers')
+  return Array.isArray(data) ? data : (data.policiers || data.data || [])
+}
+
+export async function transferSignalement(caseId, policeId) {
+  const { data } = await api.post(`/signalements/${caseId}/transfert`, { police_id: policeId })
+  return data
+}
+
 export async function getCollaboratorDashboard() {
   const { data } = await api.get('/collaborator/dashboard')
   return data

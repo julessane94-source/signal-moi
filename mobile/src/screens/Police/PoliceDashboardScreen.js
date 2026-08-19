@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, Animated, Easing, FlatList, Image, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { COLORS } from '../../config/env'
-import { getLiveSessions, getPoliceAlerts, getPoliceDashboard, savePoliceStationLocation, takePoliceAction } from '../../services/api'
+import { getLiveSessions, getPoliceAlerts, getPoliceDashboard, getPoliceOfficers, savePoliceStationLocation, takePoliceAction, transferSignalement } from '../../services/api'
 import { connectLiveSocket, disconnectLiveSocket } from '../../services/liveSocket'
 import { useAuth } from '../../context/AuthContext'
 import PrimaryButton from '../../components/PrimaryButton'
@@ -22,6 +22,9 @@ export default function PoliceDashboardScreen() {
   const [lives, setLives] = useState([])
   const [refreshing, setRefreshing] = useState(false)
   const [filter, setFilter] = useState('tous')
+  const [transferForId, setTransferForId] = useState(null)
+  const [officers, setOfficers] = useState([])
+  const [transferring, setTransferring] = useState(false)
   const urgentCount = cases.filter((item) => ['violence', 'danger', 'accident', 'vol'].includes(String(item.type || '').toLowerCase())).length
 
   useEffect(() => {
@@ -153,6 +156,34 @@ export default function PoliceDashboardScreen() {
     }
   }
 
+  async function openTransfer(caseId) {
+    if (transferForId === caseId) {
+      setTransferForId(null)
+      return
+    }
+    try {
+      const list = await getPoliceOfficers()
+      setOfficers(list.filter((officer) => String(officer.id) !== String(user?.id)))
+      setTransferForId(caseId)
+    } catch (error) {
+      Alert.alert('Transfert indisponible', error.response?.data?.error || 'La liste des agents ne peut pas être chargée.')
+    }
+  }
+
+  async function transferCase(caseId, officer) {
+    setTransferring(true)
+    try {
+      await transferSignalement(caseId, officer.id)
+      Alert.alert('Dossier transféré', `Le dossier est confié à ${officer.prenom || ''} ${officer.nom || ''}`.trim())
+      setTransferForId(null)
+      await loadData()
+    } catch (error) {
+      Alert.alert('Transfert impossible', error.response?.data?.error || 'Réessayez dans un instant.')
+    } finally {
+      setTransferring(false)
+    }
+  }
+
   function openMap(item) {
     openVictimMap(item)
   }
@@ -239,6 +270,7 @@ export default function PoliceDashboardScreen() {
             </View>
             <Text numberOfLines={2} style={styles.caseText}>{item.description || 'Aucun detail fourni.'}</Text>
             <Text style={styles.caseMeta}>{item.adresse || item.location || 'Adresse GPS disponible dans le dossier'}</Text>
+            {item.estAnonyme || item.isAnonymous ? <View style={styles.anonymousBadge}><Ionicons name="shield-checkmark" size={14} color="#0f766e" /><Text style={styles.anonymousText}>Citoyen anonyme</Text></View> : null}
             <VictimActions item={item} compact />
             <View style={styles.caseActions}>
               <PrimaryButton title="Intervenir" tone="police" onPress={() => intervene(item.id || item._id)} style={styles.caseAction} />
@@ -246,6 +278,26 @@ export default function PoliceDashboardScreen() {
                 <Ionicons name="map" size={20} color={COLORS.police} />
               </Pressable>
             </View>
+            {String(user?.role || '').toLowerCase() === 'commissariat' ? (
+              <>
+                <Pressable onPress={() => openTransfer(item.id || item._id)} style={styles.transferButton}>
+                  <Ionicons name="swap-horizontal" size={19} color={COLORS.police} />
+                  <Text style={styles.transferText}>{transferForId === (item.id || item._id) ? 'Fermer le transfert' : 'Transférer ce dossier à un agent'}</Text>
+                </Pressable>
+                {transferForId === (item.id || item._id) ? (
+                  <View style={styles.transferPanel}>
+                    <Text style={styles.transferTitle}>Choisir un agent</Text>
+                    {!officers.length ? <Text style={styles.transferEmpty}>Aucun agent disponible dans la liste.</Text> : officers.map((officer) => (
+                      <Pressable key={officer.id} disabled={transferring} onPress={() => transferCase(item.id || item._id, officer)} style={styles.officerRow}>
+                        <View style={styles.officerAvatar}><Ionicons name="person" size={16} color="#fff" /></View>
+                        <View style={{ flex: 1 }}><Text style={styles.officerName}>{officer.prenom} {officer.nom}</Text><Text style={styles.officerMeta}>{officer.telephone || officer.email || 'Agent police'}</Text></View>
+                        <Ionicons name="arrow-forward" size={18} color={COLORS.police} />
+                      </Pressable>
+                    ))}
+                  </View>
+                ) : null}
+              </>
+            ) : null}
           </View>
         )}
         ListEmptyComponent={<Text style={styles.emptyText}>Aucun signalement dans ce filtre.</Text>}
@@ -516,6 +568,17 @@ const styles = StyleSheet.create({
   caseMeta: {
     color: COLORS.muted
   },
+  anonymousBadge: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 999, backgroundColor: '#ecfdf5', paddingHorizontal: 9, paddingVertical: 5 },
+  anonymousText: { color: '#0f766e', fontWeight: '800', fontSize: 12 },
+  transferButton: { minHeight: 44, borderRadius: 13, borderWidth: 1, borderColor: '#bfdbfe', backgroundColor: '#eff6ff', paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  transferText: { color: COLORS.police, fontWeight: '900', fontSize: 13 },
+  transferPanel: { borderRadius: 15, borderWidth: 1, borderColor: '#dbeafe', backgroundColor: '#f8fbff', padding: 11, gap: 7 },
+  transferTitle: { color: '#0f1f44', fontWeight: '900', marginBottom: 2 },
+  transferEmpty: { color: COLORS.muted, fontSize: 13 },
+  officerRow: { minHeight: 50, borderRadius: 11, padding: 8, backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', gap: 9 },
+  officerAvatar: { width: 32, height: 32, borderRadius: 11, backgroundColor: COLORS.police, alignItems: 'center', justifyContent: 'center' },
+  officerName: { color: COLORS.ink, fontWeight: '900', fontSize: 13 },
+  officerMeta: { color: COLORS.muted, fontSize: 11, marginTop: 1 },
   emptyText: {
     color: COLORS.muted,
     textAlign: 'center',

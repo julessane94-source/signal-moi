@@ -20,8 +20,8 @@ export default function RegisterScreen({ navigation }) {
       Alert.alert('Informations incomplètes', 'Indiquez votre prénom, nom et une adresse email valide.')
       return false
     }
-    if (step === 2 && (form.password.length < 8 || form.password !== form.confirmPassword)) {
-      Alert.alert('Mot de passe', 'Utilisez au moins 8 caractères et confirmez le même mot de passe.')
+    if (step === 2 && (form.password.length < 12 || !/[a-z]/.test(form.password) || !/[A-Z]/.test(form.password) || !/\d/.test(form.password) || form.password !== form.confirmPassword)) {
+      Alert.alert('Mot de passe', 'Utilisez 12 caractères minimum, avec une majuscule, une minuscule, un chiffre, puis confirmez-le.')
       return false
     }
     if (step === 3 && (!form.telephone.trim() || !form.ville.trim() || !form.quartier.trim() || !acceptedPrivacy)) {
@@ -47,7 +47,7 @@ export default function RegisterScreen({ navigation }) {
   const fields = step === 1
     ? [{ key: 'prenom', label: 'Prénom' }, { key: 'nom', label: 'Nom' }, { key: 'email', label: 'Adresse email', keyboardType: 'email-address', autoCapitalize: 'none' }]
     : step === 2
-      ? [{ key: 'password', label: 'Mot de passe (8 caractères minimum)', secureTextEntry: true }, { key: 'confirmPassword', label: 'Confirmer le mot de passe', secureTextEntry: true }]
+      ? [{ key: 'password', label: 'Mot de passe (12 caractères, majuscule, minuscule, chiffre)', secureTextEntry: true }, { key: 'confirmPassword', label: 'Confirmer le mot de passe', secureTextEntry: true }]
       : [{ key: 'telephone', label: 'Téléphone', keyboardType: 'phone-pad' }, { key: 'ville', label: 'Ville' }, { key: 'quartier', label: 'Quartier' }, { key: 'dateNaissance', label: 'Date de naissance (AAAA-MM-JJ)', keyboardType: 'numbers-and-punctuation' }, { key: 'lieuNaissance', label: 'Lieu de naissance (facultatif)' }]
 
   return (

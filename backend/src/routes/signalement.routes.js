@@ -22,6 +22,12 @@ const parseLimit = (value, fallback = 100, max = 500) => {
 const normalizeRole = (role) => String(role || '').trim().toLowerCase();
 const isPoliceLikeRole = (role) => ['commissariat', 'police', 'policier', 'gendarmerie', 'force_ordre'].includes(normalizeRole(role));
 const canViewLiveSessions = (role) => ['admin', 'administrateur'].includes(normalizeRole(role)) || isPoliceLikeRole(role);
+const canAccessLiveSession = (user, session) => {
+    const role = normalizeRole(user?.role);
+    if (['admin', 'administrateur', 'commissariat'].includes(role)) return true;
+    const recipientIds = Array.isArray(session?.assignedRecipientIds) ? session.assignedRecipientIds.map(String) : [];
+    return recipientIds.includes(String(user?.id));
+};
 const liveSessionPayload = (session) => ({
     ...session,
     isLiveRecording: true,
@@ -145,9 +151,6 @@ const optionalAuthMiddleware = (req, res, next) => {
 };
 
 router.post('/', authMiddleware, signalementLimiter, uploadLimiter, ...uploadMultiple('fichiers', 5), validateUploadedMedia, async (req, res) => {
-    console.log('Body reçu pour signalement :', req.body);
-    console.log('Utilisateur connecté :', req.user);
-
     const { titre, description, type, localisation, latitude, longitude } = req.body;
     const estAnonyme = req.body.estAnonyme === true || req.body.estAnonyme === 'true' || req.body.est_anonyme === true || req.body.est_anonyme === 'true';
     const user_id = req.user.id;
@@ -328,7 +331,10 @@ router.get('/fichiers/:id', authMiddleware, async (req, res) => {
             res.setHeader('Content-Type', mimeType);
             res.setHeader('Content-Length', file.taille || 0);
             // Les documents sont téléchargés au lieu d'être exécutés dans le navigateur.
-            res.setHeader('Content-Disposition', `${isPreviewableMedia ? 'inline' : 'attachment'}; filename="${file.nom_fichier}"`);
+            const safeFilename = String(file.nom_fichier || 'preuve').replace(/[\r\n"]/g, '_');
+            res.setHeader('Content-Disposition', `${isPreviewableMedia ? 'inline' : 'attachment'}; filename="${safeFilename}"`);
+            res.setHeader('X-Content-Type-Options', 'nosniff');
+            if (!isPreviewableMedia) res.setHeader('Content-Security-Policy', 'sandbox');
             res.setHeader('Cache-Control', mediaCacheHeader);
             return res.send(file.file_data);
         }
@@ -418,15 +424,17 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                     return res.status(403).json({ error: 'Acces refuse' });
                 }
 
+                const restrictToStation = normalizeRole(req.user.role) === 'commissariat';
                 const result = await db.query(
                     `SELECT id, prenom, nom, email, telephone, ville, quartier
                      FROM signal_moi.users
                      WHERE role = 'police'
                        AND is_active = true
                        AND id <> $1
+                       AND ($2::boolean = false OR LOWER(COALESCE(quartier, '')) = LOWER(COALESCE($3, '')))
                      ORDER BY nom ASC, prenom ASC
                      LIMIT 200`,
-                    [req.user.id]
+                    [req.user.id, restrictToStation, req.user.quartier || '']
                 );
 
                 res.json(result.rows);
@@ -444,6 +452,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 
                 pruneLiveSessions();
                 const sessions = Array.from(activeLiveSessions.values())
+                    .filter((session) => canAccessLiveSession(req.user, session))
                     .map(liveSessionPayload)
                     .sort((a, b) => new Date(b.frameAt || b.updatedAt || b.startedAt || 0) - new Date(a.frameAt || a.updatedAt || a.startedAt || 0));
 
@@ -456,6 +465,9 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 
         router.post('/live-session', authMiddleware, async (req, res) => {
             try {
+                if (normalizeRole(req.user.role) !== 'citoyen') {
+                    return res.status(403).json({ error: 'Seuls les citoyens peuvent demarrer un direct.' });
+                }
                 const { action = 'frame', sessionId, frame, type, titre, description, latitude, longitude, localisation } = req.body || {};
                 if (!sessionId) {
                     return res.status(400).json({ error: 'sessionId requis' });
@@ -937,10 +949,12 @@ router.post('/:id/transfert', authMiddleware, async (req, res) => {
         }
 
         // Vérifier que le police_id existe et est un officier police
+        const restrictToStation = normalizeRole(req.user.role) === 'commissariat';
         const policierResult = await db.query(
             `SELECT id, prenom, nom, email FROM signal_moi.users 
-             WHERE id = $1 AND role = 'police'`,
-            [police_id]
+             WHERE id = $1 AND role = 'police' AND is_active = true
+               AND ($2::boolean = false OR LOWER(COALESCE(quartier, '')) = LOWER(COALESCE($3, '')))`,
+            [police_id, restrictToStation, req.user.quartier || '']
         );
 
         if (!policierResult.rows || policierResult.rows.length === 0) {

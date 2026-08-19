@@ -22,12 +22,16 @@ export function resolveMediaUrl(url) {
 export const COLORS = {
   primary: '#0f766e',
   primaryDark: '#134e4a',
+  primaryLight: '#ccfbf1',
   accent: '#f59e0b',
+  accentSoft: '#fef3c7',
   danger: '#dc2626',
+  dangerSoft: '#fef2f2',
   ink: '#10201d',
   muted: '#667085',
   surface: '#ffffff',
-  soft: '#edf7f5',
-  border: '#d9e7e3',
-  police: '#1d4ed8'
+  soft: '#f0fdfa',
+  border: '#d8e6e2',
+  police: '#2563eb',
+  policeSoft: '#eff6ff'
 }

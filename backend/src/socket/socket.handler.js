@@ -7,6 +7,8 @@ const { activeLiveSessions } = require('../utils/liveSessions');
 const setupSocket = (io) => {
   const normalizeRole = (role) => String(role || '').trim().toLowerCase();
   const isPoliceRole = (role) => ['commissariat', 'police', 'policier', 'gendarmerie', 'force_ordre'].includes(normalizeRole(role));
+  const isCommissariatRole = (role) => normalizeRole(role) === 'commissariat';
+  const isCitizenRole = (role) => normalizeRole(role) === 'citoyen';
   const isCollaborateurRole = (role) => ['collaborateur', 'collaborator'].includes(normalizeRole(role));
   const isAdminRole = (role) => ['admin', 'administrateur'].includes(normalizeRole(role));
 
@@ -42,8 +44,11 @@ const setupSocket = (io) => {
     
     // Rejoindre les rooms par rôle
       if (isPoliceRole(socket.user.role)) {
-        socket.join('police_room');
+        if (isCommissariatRole(socket.user.role)) socket.join('commissariat_room');
         activeLiveSessions.forEach((payload) => {
+          const recipientIds = Array.isArray(payload.assignedRecipientIds) ? payload.assignedRecipientIds.map(String) : [];
+          const isAssignedAgent = recipientIds.includes(String(socket.user.id));
+          if (!isCommissariatRole(socket.user.role) && !isAssignedAgent) return;
           socket.emit('live_recording_started', payload);
           if (payload.latitude || payload.longitude || payload.localisation) {
             socket.emit('live_recording_location', payload);
@@ -62,7 +67,7 @@ const setupSocket = (io) => {
     socket.on('new_signalement', async (data) => {
       try {
         // Émettre aux autorités
-        io.to('police_room').emit('signalement_received', {
+        io.to('commissariat_room').emit('signalement_received', {
           id: data.id,
           title: data.titre,
           type: data.type,
@@ -78,6 +83,7 @@ const setupSocket = (io) => {
 
     socket.on('live_recording_started', async (data) => {
       try {
+        if (!isCitizenRole(socket.user.role)) return;
         const payload = {
           ...data,
           citizenId: socket.user.id,
@@ -98,6 +104,7 @@ const setupSocket = (io) => {
 
     socket.on('live_recording_location', async (data) => {
       try {
+        if (!isCitizenRole(socket.user.role)) return;
         const payload = {
           ...data,
           citizenId: socket.user.id,
@@ -117,6 +124,7 @@ const setupSocket = (io) => {
 
     socket.on('live_recording_frame', async (data) => {
       try {
+        if (!isCitizenRole(socket.user.role)) return;
         const payload = {
           ...data,
           citizenId: socket.user.id,
@@ -136,6 +144,7 @@ const setupSocket = (io) => {
 
     socket.on('live_recording_chunk', (data) => {
       try {
+        if (!isCitizenRole(socket.user.role)) return;
         const payload = {
           ...data,
           citizenId: socket.user.id,
@@ -144,7 +153,7 @@ const setupSocket = (io) => {
         const existing = activeLiveSessions.get(payload.sessionId) || {};
         const recipientIds = existing.assignedRecipientIds || [];
         recipientIds.forEach((recipientId) => io.to(`user_${recipientId}`).emit('live_recording_chunk', { ...existing, ...payload }));
-        io.to('police_room').emit('live_recording_chunk', { ...existing, ...payload });
+        io.to('commissariat_room').emit('live_recording_chunk', { ...existing, ...payload });
         io.to('admin_room').emit('live_recording_chunk', payload);
       } catch (error) {
         logger.error('Erreur live_recording_chunk:', error);
@@ -153,6 +162,7 @@ const setupSocket = (io) => {
 
     socket.on('live_recording_stopped', async (data) => {
       try {
+        if (!isCitizenRole(socket.user.role)) return;
         const payload = {
           ...data,
           citizenId: socket.user.id,

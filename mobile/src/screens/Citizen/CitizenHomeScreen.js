@@ -18,6 +18,7 @@ export default function CitizenHomeScreen({ navigation }) {
   const [signalements, setSignalements] = useState([])
   const [refreshing, setRefreshing] = useState(false)
   const [pendingReports, setPendingReports] = useState(0)
+  const [syncingReports, setSyncingReports] = useState(false)
   const intro = useRef(new Animated.Value(0)).current
 
   const loadData = useCallback(async () => {
@@ -93,6 +94,24 @@ export default function CitizenHomeScreen({ navigation }) {
       await loadData()
     } catch (error) {
       Alert.alert('Inscription impossible', error.response?.data?.message || 'Reessayez dans un instant.')
+    }
+  }
+
+  async function sendPendingReports() {
+    setSyncingReports(true)
+    try {
+      const { sent, pending } = await syncOfflineReports()
+      setPendingReports(pending)
+      if (sent) {
+        await loadData()
+        Alert.alert('Envoi terminé', `${sent} signalement${sent > 1 ? 's ont été transmis' : ' a été transmis'}.`)
+      } else if (pending) {
+        Alert.alert('Connexion indisponible', 'Vos signalements restent enregistrés sur ce téléphone jusqu’au retour du réseau.')
+      }
+    } catch {
+      Alert.alert('Envoi impossible', 'Vérifiez votre connexion puis réessayez.')
+    } finally {
+      setSyncingReports(false)
     }
   }
 
@@ -179,14 +198,14 @@ export default function CitizenHomeScreen({ navigation }) {
       </View>
 
       {pendingReports > 0 ? (
-        <Pressable onPress={() => goToTab('Signaler')} style={styles.pendingCard}>
+        <View style={styles.pendingCard}>
           <Ionicons name="cloud-upload-outline" size={21} color="#a16207" />
           <View style={{ flex: 1 }}>
             <Text style={styles.pendingTitle}>{pendingReports} envoi{pendingReports > 1 ? 's' : ''} en attente</Text>
-            <Text style={styles.pendingText}>Ils partiront dès que le réseau reviendra.</Text>
+            <Text style={styles.pendingText}>Dès que vous êtes connecté, envoyez-les en une touche.</Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#a16207" />
-        </Pressable>
+          <Pressable onPress={sendPendingReports} disabled={syncingReports} style={styles.pendingSendButton}><Text style={styles.pendingSendText}>{syncingReports ? 'Envoi…' : 'Envoyer'}</Text></Pressable>
+        </View>
       ) : null}
 
       <View style={styles.quickRow}>
@@ -235,6 +254,7 @@ export default function CitizenHomeScreen({ navigation }) {
             <Text style={styles.caseType}>{item.type || 'Signalement'}</Text>
             <Text style={styles.caseStatus}>{item.statut || item.status || 'recu'}</Text>
           </View>
+          {item.estAnonyme || item.isAnonymous ? <Text style={styles.anonymousLabel}>🛡️ Signalement anonyme</Text> : null}
           <Text numberOfLines={2} style={styles.cardText}>{item.description || 'Signalement transmis.'}</Text>
         </View>
       ))}
@@ -440,6 +460,8 @@ const styles = StyleSheet.create({
   },
   pendingTitle: { color: '#854d0e', fontWeight: '900' },
   pendingText: { color: '#a16207', fontSize: 12, marginTop: 2 },
+  pendingSendButton: { borderRadius: 10, backgroundColor: '#a16207', paddingHorizontal: 11, paddingVertical: 9 },
+  pendingSendText: { color: '#fff', fontSize: 12, fontWeight: '900' },
   sectionTitle: {
     color: COLORS.ink,
     fontSize: 19,
@@ -525,6 +547,7 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontWeight: '900'
   },
+  anonymousLabel: { alignSelf: 'flex-start', color: '#0f766e', backgroundColor: '#ecfdf5', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 5, fontSize: 12, fontWeight: '800' },
   cardTitle: {
     color: COLORS.ink,
     fontSize: 17,

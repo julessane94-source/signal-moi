@@ -37,7 +37,7 @@ export default function PublicHomeScreen({ navigation }) {
       </ImageBackground>
 
       <View style={styles.actions}>
-        <PrimaryButton title="Se connecter" onPress={() => navigation.navigate('Login')} />
+        <PrimaryButton title="Se connecter" icon="log-in-outline" onPress={() => navigation.navigate('Login')} />
         <Pressable style={styles.registerButton} onPress={() => navigation.navigate('Register')}>
           <Ionicons name="person-add" size={20} color={COLORS.primary} />
           <Text style={styles.registerText}>Creer un compte citoyen</Text>
@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
     paddingBottom: 28
   },
   hero: {
-    minHeight: 430,
+    minHeight: 390,
     margin: 16,
     overflow: 'hidden',
     borderRadius: 28,
@@ -89,8 +89,8 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'space-between',
-    padding: 22,
-    backgroundColor: 'rgba(8, 31, 27, 0.08)'
+    padding: 20,
+    backgroundColor: 'rgba(8, 31, 27, 0.12)'
   },
   brandRow: {
     flexDirection: 'row',
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   },
   brandName: {
     color: '#fff',
-    fontSize: 25,
+    fontSize: 24,
     fontWeight: '900'
   },
   brandSub: {
@@ -113,21 +113,21 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase'
   },
   heroCopy: {
-    gap: 12,
-    padding: 14,
-    borderRadius: 18,
+    gap: 10,
+    padding: 16,
+    borderRadius: 20,
     backgroundColor: 'rgba(8, 31, 27, 0.72)'
   },
   title: {
     color: '#fff',
-    fontSize: 38,
-    lineHeight: 43,
+    fontSize: 32,
+    lineHeight: 37,
     fontWeight: '900'
   },
   subtitle: {
     color: '#effffb',
-    fontSize: 16,
-    lineHeight: 23,
+    fontSize: 14,
+    lineHeight: 21,
     fontWeight: '700'
   },
   actions: {
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   },
   registerButton: {
     minHeight: 56,
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: COLORS.border,
     backgroundColor: '#fff',
@@ -166,13 +166,18 @@ const styles = StyleSheet.create({
   },
   roleCard: {
     width: '48%',
-    minHeight: 150,
-    borderRadius: 18,
+    minHeight: 154,
+    borderRadius: 20,
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: COLORS.border,
     padding: 14,
-    gap: 8
+    gap: 9,
+    shadowColor: '#10201d',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.04,
+    shadowRadius: 9,
+    elevation: 2
   },
   roleIcon: {
     width: 42,

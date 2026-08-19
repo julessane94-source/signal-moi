@@ -7,6 +7,7 @@ const { protect } = require('../middleware/auth.middleware');
 const SiteConfig = require('../models/SiteConfig');
 const { persistHomePageImages } = require('../utils/imageStorage');
 const { sendSimpleEmail, isSmtpConfigured } = require('../services/email.service');
+const { validatePassword } = require('../utils/passwordPolicy');
 
 const normalizeLogoUrl = (value) => {
   if (!value || typeof value !== 'string') return '/icons/icon-192x192.png';
@@ -241,6 +242,11 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email invalide' });
     }
 
+    const passwordCheck = validatePassword(password);
+    if (!passwordCheck.valid) {
+      return res.status(400).json({ success: false, message: passwordCheck.message });
+    }
+
     // Vérifier si l'email existe déjà
     const result = await db.query(
       `SELECT id, email, telephone
@@ -259,7 +265,7 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Ce numero de telephone est deja utilise' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
     const insertResult = await db.query(
       'INSERT INTO signal_moi.users (prenom, nom, email, password, telephone, ville, quartier, date_naissance, lieu_naissance, role) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id',
       [prenom, nom, email, hashedPassword, telephone, ville, quartier, dataNaissance, lieuNaissance, 'citoyen']
@@ -431,6 +437,8 @@ router.post('/change-password', protect, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
     if (!currentPassword || !newPassword) return res.status(400).json({ success: false, message: 'Champs requis manquants' });
+    const passwordCheck = validatePassword(newPassword);
+    if (!passwordCheck.valid) return res.status(400).json({ success: false, message: passwordCheck.message });
 
     const result = await db.query('SELECT password FROM signal_moi.users WHERE id = $1', [req.user.id]);
     const userRow = result.rows[0];
@@ -439,7 +447,7 @@ router.post('/change-password', protect, async (req, res) => {
     const valid = await bcrypt.compare(currentPassword, userRow.password);
     if (!valid) return res.status(401).json({ success: false, message: 'Mot de passe actuel incorrect' });
 
-    const hashed = await bcrypt.hash(newPassword, 10);
+    const hashed = await bcrypt.hash(newPassword, 12);
     await db.query('UPDATE signal_moi.users SET password = $1 WHERE id = $2', [hashed, req.user.id]);
     res.json({ success: true, message: 'Mot de passe modifié avec succès' });
   } catch (error) {
@@ -684,9 +692,8 @@ router.post('/reset-password', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email, code et mot de passe requis' });
     }
 
-    if (password.length < 8) {
-      return res.status(400).json({ success: false, message: 'Le mot de passe doit faire au moins 8 caractères' });
-    }
+    const passwordCheck = validatePassword(password);
+    if (!passwordCheck.valid) return res.status(400).json({ success: false, message: passwordCheck.message });
 
     // Vérifier le code
     const tokenResult = await db.query(
@@ -712,7 +719,7 @@ router.post('/reset-password', async (req, res) => {
     const userId = claimedToken.rows[0].user_id;
 
     // Hasher et mettre à jour le mot de passe
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
     await db.query('UPDATE signal_moi.users SET password = $1 WHERE id = $2', [hashedPassword, userId]);
 
     res.json({ success: true, message: 'Mot de passe réinitialisé avec succès' });

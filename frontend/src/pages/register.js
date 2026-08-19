@@ -44,7 +44,7 @@ export default function Register() {
     }
     if (stepNum === 2) {
       if (!formData.password) newErrors.password = 'Mot de passe requis'
-      else if (formData.password.length < 8) newErrors.password = '8 caractères minimum'
+      else if (formData.password.length < 12 || !/[a-z]/.test(formData.password) || !/[A-Z]/.test(formData.password) || !/\d/.test(formData.password)) newErrors.password = '12 caractères minimum, avec majuscule, minuscule et chiffre'
       if (formData.password !== formData.confirmPassword) {
         newErrors.confirmPassword = 'Les mots de passe ne correspondent pas'
       }
@@ -214,7 +214,7 @@ export default function Register() {
                 </div>
 
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-                  <FormField label="Mot de Passe" error={errors.password} required helperText="Minimum 8 caractères">
+                  <FormField label="Mot de Passe" error={errors.password} required helperText="12 caractères, avec majuscule, minuscule et chiffre">
                     <Input
                       type="password"
                       name="password"
@@ -249,7 +249,7 @@ export default function Register() {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <span className={formData.password.length >= 8 ? "text-green-500" : "text-gray-500"}>✓</span>
-                      <span className="text-sm text-gray-400">Au moins 8 caractères</span>
+                      <span className="text-sm text-gray-400">12 caractères avec majuscule, minuscule et chiffre</span>
                     </div>
                   </div>
                 </motion.div>

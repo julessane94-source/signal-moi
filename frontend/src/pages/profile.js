@@ -77,6 +77,7 @@ export default function Profile() {
     e.preventDefault()
     const errors = {}
     if (!passwordData.newPassword) errors.newPassword = 'Nouveau mot de passe requis'
+    else if (passwordData.newPassword.length < 12 || !/[a-z]/.test(passwordData.newPassword) || !/[A-Z]/.test(passwordData.newPassword) || !/\d/.test(passwordData.newPassword)) errors.newPassword = '12 caractères minimum, avec majuscule, minuscule et chiffre'
     if (passwordData.newPassword !== passwordData.confirmNewPassword) {
       errors.confirmNewPassword = 'Les mots de passe ne correspondent pas'
     }
@@ -311,7 +312,7 @@ export default function Profile() {
                     />
                   </FormField>
 
-                  <FormField label="Nouveau mot de passe" error={passwordErrors.newPassword} required helperText="Minimum 8 caractères">
+                  <FormField label="Nouveau mot de passe" error={passwordErrors.newPassword} required helperText="12 caractères, avec majuscule, minuscule et chiffre">
                     <Input
                       type="password"
                       name="newPassword"

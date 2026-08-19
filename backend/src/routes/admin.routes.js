@@ -12,6 +12,7 @@ const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const { getCompleteStatistics, sendStatisticsExport } = require('../utils/statisticsReport');
 const { persistHomePageImages, storeOptimizedImage } = require('../utils/imageStorage');
+const { validatePassword } = require('../utils/passwordPolicy');
 
 const buildLogoUrl = (logoRecord) => {
   if (!logoRecord?.logo_data) return null;
@@ -264,7 +265,6 @@ router.get('/signalement-types', authMiddleware, async (req, res) => {
 });
 
 router.post('/users', authMiddleware, async (req, res) => {
-  console.log('[ADMIN POST /users] Body reçu:', req.body);
   const { prenom, nom, email, telephone, password, ville, quartier, role, signalementTypes, stationLatitude, stationLongitude } = req.body;
   const cleanedUser = {
     prenom: String(prenom || '').trim(),
@@ -281,6 +281,8 @@ router.post('/users', authMiddleware, async (req, res) => {
   if (!cleanedUser.prenom || !cleanedUser.nom || !cleanedUser.email || !cleanedUser.telephone || !cleanedUser.password) {
     return res.status(400).json({ error: 'Tous les champs sont requis' });
   }
+  const passwordCheck = validatePassword(cleanedUser.password);
+  if (!passwordCheck.valid) return res.status(400).json({ error: passwordCheck.message });
 
   if (['police', 'policier', 'gendarmerie', 'force_ordre'].includes(cleanedUser.role.toLowerCase())) {
     return res.status(403).json({ error: 'Creez d abord un compte commissariat. Les agents doivent etre crees par le commissariat.' });
@@ -310,7 +312,7 @@ router.post('/users', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Ce numero de telephone est deja utilise' });
     }
 
-    const hashed = await require('bcrypt').hash(cleanedUser.password, 10);
+    const hashed = await bcrypt.hash(cleanedUser.password, 12);
     const insertQuery = `
       INSERT INTO signal_moi.users (prenom, nom, email, telephone, password, ville, quartier, role, is_active, email_verified)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
@@ -424,9 +426,8 @@ router.post('/users/:id/reset-password', authMiddleware, async (req, res) => {
   const { id } = req.params;
   try {
     const password = String(req.body?.password || '');
-    if (password.length < 12) {
-      return res.status(400).json({ error: 'Le mot de passe temporaire doit contenir au moins 12 caractères.' });
-    }
+    const passwordCheck = validatePassword(password);
+    if (!passwordCheck.valid) return res.status(400).json({ error: passwordCheck.message });
     const hashed = await bcrypt.hash(password, 12);
     const result = await db.query('UPDATE signal_moi.users SET password = $1 WHERE id = $2 RETURNING id', [hashed, id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Utilisateur introuvable' });

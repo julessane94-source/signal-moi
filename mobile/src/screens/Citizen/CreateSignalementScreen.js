@@ -17,7 +17,9 @@ export default function CreateSignalementScreen({ navigation, route }) {
   const [description, setDescription] = useState('')
   const [files, setFiles] = useState([])
   const [loading, setLoading] = useState(false)
+  const [syncing, setSyncing] = useState(false)
   const [pendingCount, setPendingCount] = useState(0)
+  const [isAnonymous, setIsAnonymous] = useState(false)
 
   useEffect(() => {
     if (route?.params?.type && REPORT_TYPES.some((item) => item.type === route.params.type)) {
@@ -110,6 +112,7 @@ export default function CreateSignalementScreen({ navigation, route }) {
         localisation,
         latitude: coords.latitude,
         longitude: coords.longitude,
+        estAnonyme: isAnonymous,
         files
       }
 
@@ -152,6 +155,20 @@ export default function CreateSignalementScreen({ navigation, route }) {
     }
   }
 
+  async function sendPendingReports() {
+    setSyncing(true)
+    try {
+      const result = await syncOfflineReports()
+      setPendingCount(result.pending)
+      if (result.sent) Alert.alert('Envoi terminé', `${result.sent} signalement${result.sent > 1 ? 's ont été transmis' : ' a été transmis'}.`)
+      else if (result.pending) Alert.alert('Connexion indisponible', 'Les signalements restent protégés sur ce téléphone jusqu’au retour du réseau.')
+    } catch {
+      Alert.alert('Envoi impossible', 'Vérifiez votre connexion puis réessayez.')
+    } finally {
+      setSyncing(false)
+    }
+  }
+
   function showComplaintPrompt() {
     Alert.alert(
       'Signalement envoyé',
@@ -177,7 +194,13 @@ export default function CreateSignalementScreen({ navigation, route }) {
       {pendingCount > 0 ? (
         <View style={styles.offlineBanner}>
           <Ionicons name="cloud-upload-outline" size={21} color="#a16207" />
-          <Text style={styles.offlineText}>{pendingCount} signalement{pendingCount > 1 ? 's' : ''} en attente d’envoi</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.offlineText}>{pendingCount} signalement{pendingCount > 1 ? 's' : ''} en attente d’envoi</Text>
+            <Text style={styles.offlineHint}>Une fois connecté, appuyez sur Envoyer maintenant.</Text>
+          </View>
+          <Pressable onPress={sendPendingReports} disabled={syncing} style={styles.syncButton}>
+            <Text style={styles.syncButtonText}>{syncing ? 'Envoi…' : 'Envoyer'}</Text>
+          </Pressable>
         </View>
       ) : null}
 
@@ -206,6 +229,19 @@ export default function CreateSignalementScreen({ navigation, route }) {
         placeholderTextColor="#8a9a96"
         style={styles.titleInput}
       />
+
+      <Pressable
+        onPress={() => setIsAnonymous((current) => !current)}
+        style={[styles.anonymousChoice, isAnonymous && styles.anonymousChoiceActive]}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: isAnonymous }}
+      >
+        <Ionicons name={isAnonymous ? 'checkmark-circle' : 'shield-outline'} size={23} color={isAnonymous ? '#fff' : COLORS.primary} />
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.anonymousTitle, isAnonymous && styles.anonymousTextActive]}>Signaler anonymement</Text>
+          <Text style={[styles.anonymousText, isAnonymous && styles.anonymousTextActive]}>Votre identité ne sera pas visible dans le dossier partagé.</Text>
+        </View>
+      </Pressable>
 
       <TextInput
         value={description}
@@ -282,6 +318,9 @@ const styles = StyleSheet.create({
     gap: 10
   },
   offlineText: { flex: 1, color: '#854d0e', fontWeight: '800', lineHeight: 19 },
+  offlineHint: { color: '#a16207', fontSize: 12, marginTop: 2 },
+  syncButton: { backgroundColor: '#a16207', borderRadius: 10, paddingHorizontal: 11, paddingVertical: 9 },
+  syncButtonText: { color: '#fff', fontSize: 12, fontWeight: '900' },
   quickGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -330,6 +369,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlignVertical: 'top'
   },
+  anonymousChoice: { minHeight: 70, borderRadius: 17, borderWidth: 1, borderColor: '#b9ded5', backgroundColor: '#effcf7', padding: 14, flexDirection: 'row', alignItems: 'center', gap: 11 },
+  anonymousChoiceActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+  anonymousTitle: { color: COLORS.ink, fontWeight: '900' },
+  anonymousText: { color: COLORS.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
+  anonymousTextActive: { color: '#fff' },
   actions: {
     gap: 10
   },

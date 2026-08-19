@@ -188,8 +188,8 @@ export default function ForgotPassword() {
       return
     }
 
-    if (formData.password.length < 8) {
-      setError('Le mot de passe doit contenir au moins 8 caractères')
+    if (formData.password.length < 12 || !/[a-z]/.test(formData.password) || !/[A-Z]/.test(formData.password) || !/\d/.test(formData.password)) {
+      setError('Utilisez 12 caractères minimum, avec une majuscule, une minuscule et un chiffre')
       return
     }
 
@@ -455,7 +455,7 @@ export default function ForgotPassword() {
               </div>
 
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-                <FormField label="Nouveau mot de passe" required helperText="Minimum 8 caractères">
+                <FormField label="Nouveau mot de passe" required helperText="12 caractères, avec majuscule, minuscule et chiffre">
                   <Input
                     type="password"
                     name="password"

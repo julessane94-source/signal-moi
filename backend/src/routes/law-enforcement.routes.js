@@ -8,6 +8,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { v4: uuidv4 } = require('uuid');
 const FollowedCase = require('../models/FollowedCase');
+const { validatePassword } = require('../utils/passwordPolicy');
 
 const normalizeRole = (role) => String(role || '').trim().toLowerCase();
 const lawRoles = ['commissariat', 'police', 'policier', 'gendarmerie', 'force_ordre'];
@@ -252,6 +253,8 @@ router.post('/agents', authMiddleware, async (req, res) => {
     if (!agent.prenom || !agent.nom || !agent.email || !agent.telephone || !agent.password) {
       return res.status(400).json({ error: 'Prenom, nom, email, telephone et mot de passe sont requis' });
     }
+    const passwordCheck = validatePassword(agent.password);
+    if (!passwordCheck.valid) return res.status(400).json({ error: passwordCheck.message });
 
     const duplicateRes = await db.query(
       `SELECT id, email, telephone
@@ -270,7 +273,7 @@ router.post('/agents', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Ce numero de telephone est deja utilise' });
     }
 
-    const hashed = await bcrypt.hash(agent.password, 10);
+    const hashed = await bcrypt.hash(agent.password, 12);
     const result = await db.query(
       `INSERT INTO signal_moi.users (id, prenom, nom, email, telephone, password, ville, quartier, role, is_active, email_verified)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, true)
