@@ -909,6 +909,9 @@ export default function NewSignalement() {
       fd.append('type', formData.type)
       fd.append('localisation', localisationValue)
       fd.append('estAnonyme', String(formData.estAnonyme === true))
+      if (files.some((file) => /^preuve-video-\d+\.(webm|mp4)$/i.test(String(file.name || '')))) {
+        fd.append('is_live_recording', 'true')
+      }
       // append coordinates if available (from geolocation or map)
       if (latitudeValue !== null) fd.append('latitude', latitudeValue)
       if (longitudeValue !== null) fd.append('longitude', longitudeValue)

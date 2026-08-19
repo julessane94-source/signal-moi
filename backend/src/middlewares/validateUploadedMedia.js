@@ -8,7 +8,12 @@ const configuredMaxProofSize = Number(process.env.MAX_PROOF_SIZE || process.env.
 const MAX_PROOF_SIZE = Number.isFinite(configuredMaxProofSize) && configuredMaxProofSize > 0
   ? configuredMaxProofSize
   : 500 * 1024 * 1024;
-const isLiveRecording = (file) => /^preuve-video-\d+\.(webm|mp4)$/i.test(String(file?.originalname || ''));
+const isLiveRecording = (req, file) => {
+  const namedAsLiveVideo = /^preuve-video-\d+\.(webm|mp4)$/i.test(String(file?.originalname || ''));
+  const declaredAsLiveVideo = String(req?.body?.is_live_recording || '').toLowerCase() === 'true'
+    && /^video\//.test(String(file?.mimetype || '').toLowerCase());
+  return namedAsLiveVideo || declaredAsLiveVideo;
+};
 const expectedMimesByExtension = {
   '.jpg': ['image/jpeg'], '.jpeg': ['image/jpeg'], '.png': ['image/png'], '.webp': ['image/webp'], '.gif': ['image/gif'], '.bmp': ['image/bmp'], '.tif': ['image/tiff'], '.tiff': ['image/tiff'], '.heic': ['image/heic', 'image/heif'], '.heif': ['image/heif'], '.avif': ['image/avif'],
   '.mp3': ['audio/mpeg'], '.wav': ['audio/wav', 'audio/x-wav'], '.m4a': ['audio/mp4', 'audio/x-m4a'], '.aac': ['audio/aac'], '.ogg': ['audio/ogg'], '.oga': ['audio/ogg'], '.opus': ['audio/ogg', 'audio/opus'], '.flac': ['audio/flac', 'audio/x-flac'], '.amr': ['audio/amr'], '.wma': ['audio/x-ms-wma'],
@@ -58,14 +63,19 @@ const validateUploadedMedia = (req, res, next) => {
     const expectedMimes = expectedMimesByExtension[extension];
     const declaredMime = String(file.mimetype || '').toLowerCase();
     const genericMime = !declaredMime || declaredMime === 'application/octet-stream' || declaredMime === 'binary/octet-stream';
+    const liveRecording = isLiveRecording(req, file);
     const signatureIsValid = expectedMimes ? hasExpectedSignature(file, extension) : true;
     // Les formats connus exigent une signature valide. Pour les autres
     // documents, le stockage reste sûr : téléchargement forcé + nosniff.
     return !extension
-      || !signatureIsValid
+      || Number(file.size || 0) <= 0
+      // MediaRecorder ne produit pas toujours une signature detectable par
+      // lecture brute sur tous les navigateurs. Une video finale de direct,
+      // explicitement marquee et non vide, reste donc acceptee.
+      || (!liveRecording && !signatureIsValid)
       || (!expectedMimes && !declaredMime)
-      || (!genericMime && expectedMimes && !expectedMimes.includes(declaredMime) && !/^(image|audio|video)\//.test(declaredMime))
-      || (!isLiveRecording(file) && Number(file.size || 0) > MAX_PROOF_SIZE);
+      || (!liveRecording && !genericMime && expectedMimes && !expectedMimes.includes(declaredMime) && !/^(image|audio|video)\//.test(declaredMime))
+      || (!liveRecording && Number(file.size || 0) > MAX_PROOF_SIZE);
   });
 
   if (invalid) {
