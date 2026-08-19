@@ -14,15 +14,8 @@ const LeafletMap = dynamic(() => import('../../components/Map/LeafletMap.jsx'), 
 })
 
 const QUICK_TYPES = REPORT_TYPES
-const ALL_REPORT_TYPES = REPORT_TYPES
 
 const SIMPLE_DESCRIPTIONS = Object.fromEntries(REPORT_TYPES.map(({ value, description }) => [value, description]))
-
-const STARTER_ACTIONS = [
-  { type: 'violence', title: 'Je suis en danger', text: 'Alerte rapide avec GPS et video', button: 'Lancer SOS', tone: 'bg-red-600 text-white hover:bg-red-700' },
-  { type: 'accident', title: 'Accident ou blessure', text: 'Prevenir avec la position exacte', button: 'Signaler accident', tone: 'bg-orange-500 text-white hover:bg-orange-600' },
-  { type: 'autre', title: 'Probleme du quartier', text: 'Route, lumiere, vol ou autre', button: 'Signaler simplement', tone: 'bg-slate-950 text-white hover:bg-slate-800' }
-]
 
 const VIDEO_PROMPT_TYPES = ['violence', 'accident', 'vol']
 
@@ -58,6 +51,7 @@ export default function NewSignalement() {
   const [loading, setLoading] = useState(false)
   const [files, setFiles] = useState([])
   const [showVideoPrompt, setShowVideoPrompt] = useState(false)
+  const [isTypePickerOpen, setIsTypePickerOpen] = useState(true)
   const [recordingState, setRecordingState] = useState('idle')
   const [recordingError, setRecordingError] = useState(null)
   const [liveStream, setLiveStream] = useState(null)
@@ -500,6 +494,7 @@ export default function NewSignalement() {
       titre: prev.titre || `Signalement : ${label}`,
       description: prev.description || SIMPLE_DESCRIPTIONS[type] || `Je signale: ${label}`
     }))
+    setIsTypePickerOpen(false)
     if (typeof document !== 'undefined') {
       window.setTimeout(() => document.getElementById('formulaire-signalement')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80)
     }
@@ -514,19 +509,10 @@ export default function NewSignalement() {
       titre: prev.titre || title,
       description: prev.description || SIMPLE_DESCRIPTIONS[type] || `Je signale: ${label}`
     }))
+    setIsTypePickerOpen(false)
     setShowVideoPrompt(true)
     getAutomaticLocation({ silent: true })
     startVideoRecording({ type, title })
-  }
-
-  const startSimpleReport = (type) => {
-    if (VIDEO_PROMPT_TYPES.includes(type)) {
-      startEmergencyLive(type)
-      return
-    }
-    const label = getTypeLabel(type)
-    handleQuickType(type, label)
-    getAutomaticLocation({ silent: true })
   }
 
   useEffect(() => {
@@ -1005,23 +991,6 @@ export default function NewSignalement() {
 
           <form id="formulaire-signalement" onSubmit={handleSubmit} noValidate className="report-form grid gap-6 lg:grid-cols-[1fr_340px]">
             <div className="space-y-6">
-              <section data-reveal className="card-stagger grid gap-4 md:grid-cols-3">
-                {STARTER_ACTIONS.map((action, index) => (
-                  <button
-                    key={action.type}
-                    type="button"
-                    onClick={() => startSimpleReport(action.type)}
-                    style={{ '--card-index': index }}
-                    className={`interactive-card min-h-40 rounded-[1.75rem] p-5 text-left shadow-lg transition hover:-translate-y-1 ${action.tone}`}
-                  >
-                    <span className="text-xs font-black uppercase tracking-[0.16em] opacity-80">Action rapide</span>
-                    <span className="mt-4 block text-2xl font-black leading-tight">{action.title}</span>
-                    <span className="mt-2 block text-sm font-semibold opacity-85">{action.text}</span>
-                    <span className="mt-5 inline-flex rounded-full bg-white/15 px-4 py-2 text-sm font-black">{action.button}</span>
-                  </button>
-                ))}
-              </section>
-
               <section data-reveal className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
                 <div className="mb-5 flex items-start justify-between gap-4">
                   <div><h2 className="text-2xl font-black text-slate-950">Titre du signalement</h2></div>
@@ -1044,26 +1013,21 @@ export default function NewSignalement() {
                     Ecouter l aide
                   </button>
                 </div>
-                <div className="report-type-grid grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {QUICK_TYPES.map((item) => (
-                    <button
-                      key={item.value}
-                      type="button"
-                      onClick={() => VIDEO_PROMPT_TYPES.includes(item.value) ? startEmergencyLive(item.value) : handleQuickType(item.value, item.label)}
-                      className={`report-type-option min-h-36 rounded-[1.5rem] border-2 p-5 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl ${formData.type === item.value ? 'border-red-500 bg-red-50 shadow-lg ring-4 ring-red-100' : `${item.tone} hover:border-slate-300`}`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-3xl font-black shadow-sm ring-1 ring-black/5">{item.icon}</span>
-                        {formData.type === item.value && <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white">Choisi</span>}
-                      </div>
-                      <div className="mt-4 text-xl font-black">{item.label}</div>
-                      <div className="mt-2 text-sm font-semibold opacity-75">{item.hint}</div>
-                    </button>
-                  ))}
-                </div>
-                <select name="type" required value={formData.type} onChange={handleChange} className="mt-4 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-950 outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100">
-                  {ALL_REPORT_TYPES.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
-                </select>
+                {isTypePickerOpen ? (
+                  <div className="report-type-grid grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {QUICK_TYPES.map((item) => (
+                      <button key={item.value} type="button" onClick={() => VIDEO_PROMPT_TYPES.includes(item.value) ? startEmergencyLive(item.value) : handleQuickType(item.value, item.label)} className={`report-type-option min-h-36 rounded-[1.5rem] border-2 p-5 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl ${formData.type === item.value ? 'border-red-500 bg-red-50 shadow-lg ring-4 ring-red-100' : `${item.tone} hover:border-slate-300`}`}>
+                        <div className="flex items-start justify-between gap-3"><span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-3xl font-black shadow-sm ring-1 ring-black/5">{item.icon}</span>{formData.type === item.value && <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white">Choisi</span>}</div>
+                        <div className="mt-4 text-xl font-black">{item.label}</div><div className="mt-2 text-sm font-semibold opacity-75">{item.hint}</div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between gap-4 rounded-2xl border border-red-100 bg-red-50 p-4">
+                    <div><p className="text-xs font-bold uppercase tracking-wide text-red-700">Type choisi</p><p className="mt-1 text-lg font-black text-slate-950">{getTypeLabel(formData.type)}</p></div>
+                    <button type="button" onClick={() => setIsTypePickerOpen(true)} className="rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-bold text-red-700 transition hover:bg-red-100">Changer</button>
+                  </div>
+                )}
               </section>
 
               {VIDEO_PROMPT_TYPES.includes(formData.type) && (

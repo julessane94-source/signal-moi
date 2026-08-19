@@ -9,7 +9,6 @@ import { REPORT_TYPES } from '../../constants/reportTypes'
 import {
   DocumentTextIcon as DocumentText,
   CheckCircleIcon as CheckCircle,
-  PencilSquareIcon as PencilSquare,
   UserGroupIcon as UserGroup,
   PlusIcon as Plus,
   MapPinIcon as MapPin,
@@ -31,7 +30,6 @@ export default function CitizenDashboard() {
   const [joiningCampaign, setJoiningCampaign] = useState(null)
   const [joinedCampaignIds, setJoinedCampaignIds] = useState([])
   const [locationStatus, setLocationStatus] = useState('idle')
-  const [lastLocationLabel, setLastLocationLabel] = useState('')
 
   // ✅ FIX: Déclencher le fetch APRÈS que auth soit chargé ET user existe
   useEffect(() => {
@@ -84,7 +82,6 @@ export default function CitizenDashboard() {
         capturedAt: new Date().toISOString()
       }
       localStorage.setItem('signal_moi_last_location', JSON.stringify(payload))
-      setLastLocationLabel(`${payload.latitude.toFixed(5)}, ${payload.longitude.toFixed(5)}`)
       setLocationStatus('granted')
       if (!silent) toast.success('Position GPS partagee avec Signal-Moi')
     }, (error) => {
@@ -217,19 +214,17 @@ export default function CitizenDashboard() {
     }
   }
 
+  // Deux vues seulement : le suivi personnel et la participation locale.
+  // Le compte reste accessible depuis le menu, sans dupliquer ses contenus ici.
   const tabs = [
-    { id: 'signalements', name: 'Mes signalements', icon: DocumentText },
-    { id: 'campagnes', name: 'Campagnes', icon: CheckCircle },
-    { id: 'plaidoyers', name: 'Plaidoyers', icon: PencilSquare },
-    { id: 'profil', name: 'Mon profil', icon: UserGroup }
+    { id: 'signalements', name: 'Mes dossiers', icon: DocumentText },
+    { id: 'participer', name: 'Participer', icon: UserGroup }
   ]
   const activeTabLabel = tabs.find((tab) => tab.id === activeTab)?.name || 'Mon espace'
 
   const dashboardStats = [
-    { label: 'Signalements', value: signalements.length, note: 'dossiers envoyes', icon: DocumentText, tone: 'text-red-700 bg-red-50 border-red-100' },
-    { label: 'En cours', value: signalements.filter((item) => item.statut === 'en_cours').length, note: 'suivis actifs', icon: Clock, tone: 'text-amber-700 bg-amber-50 border-amber-100' },
-    { label: 'Traites', value: signalements.filter((item) => item.statut === 'traite').length, note: 'dossiers resolus', icon: CheckCircle, tone: 'text-emerald-700 bg-emerald-50 border-emerald-100' },
-    { label: 'Actions locales', value: campagnes.length + plaidoyers.length, note: 'campagnes et plaidoyers', icon: UserGroup, tone: 'text-blue-700 bg-blue-50 border-blue-100' }
+    { label: 'Mes dossiers', value: signalements.length, note: 'envoyés', icon: DocumentText, tone: 'text-red-700 bg-red-50 border-red-100' },
+    { label: 'En cours', value: signalements.filter((item) => item.statut === 'en_cours').length, note: 'à suivre', icon: Clock, tone: 'text-amber-700 bg-amber-50 border-amber-100' }
   ]
 
   const getStatusText = (statut) => ({
@@ -308,11 +303,9 @@ export default function CitizenDashboard() {
                 <h1 className="mt-3 text-3xl font-black sm:text-5xl">
                   Bonjour {user?.prenom || 'citoyen'}
                 </h1>
-                <p className="mt-3 max-w-xl text-sm leading-6 text-slate-300 sm:text-base">
-                  Signalez, suivez vos dossiers et participez aux actions qui améliorent votre quartier.
-                </p>
-                <div className="mt-6 grid max-w-2xl grid-cols-3 gap-3">
-                  {dashboardStats.slice(0, 3).map((stat) => {
+                <p className="mt-3 max-w-xl text-sm leading-6 text-slate-300 sm:text-base">Signalez un problème et suivez simplement sa prise en charge.</p>
+                <div className="mt-6 grid max-w-sm grid-cols-2 gap-3">
+                  {dashboardStats.map((stat) => {
                     const Icon = stat.icon
                     return (
                       <div key={stat.label} className="rounded-2xl border border-white/10 bg-white/10 p-3 backdrop-blur-sm">
@@ -325,36 +318,18 @@ export default function CitizenDashboard() {
                 </div>
               </div>
               <div className="flex flex-col justify-end gap-3 lg:items-stretch">
-                <Link href="/citizen/signalement">
-                  <Button size="lg" icon={Plus} className="w-full bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 lg:w-auto">
-                    Nouveau signalement
-                  </Button>
-                </Link>
+                <Link href="/citizen/signalement"><Button size="lg" icon={Plus} className="w-full bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 lg:w-auto">Faire un signalement</Button></Link>
                 <button
                   type="button"
                   onClick={() => requestCitizenLocation()}
                   className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/20 lg:w-auto"
                 >
                   <MapPin className="h-5 w-5" />
-                  {locationStatus === 'granted' ? 'Position partagee' : locationStatus === 'requesting' ? 'Localisation...' : 'Partager ma position'}
+                  {locationStatus === 'granted' ? 'GPS actif' : locationStatus === 'requesting' ? 'Localisation…' : 'Activer le GPS'}
                 </button>
               </div>
             </div>
           </motion.div>
-
-          {locationStatus !== 'granted' && (
-            <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm">
-              {locationStatus === 'denied'
-                ? 'GPS bloqué. Autorisez la localisation dans le navigateur.'
-                : 'Activez le GPS pour partager votre position précise.'}
-            </div>
-          )}
-
-          {locationStatus === 'granted' && lastLocationLabel && (
-            <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800 shadow-sm">
-              Position GPS active: {lastLocationLabel}
-            </div>
-          )}
 
           <section className="mb-6 rounded-[1.75rem] border border-orange-200 bg-gradient-to-r from-orange-50 via-white to-red-50 p-5 shadow-sm sm:p-6">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -363,8 +338,8 @@ export default function CitizenDashboard() {
                   <ExclamationTriangle className="h-5 w-5" />
                   <p className="text-xs font-black uppercase tracking-[0.16em]">Besoin d’aide immédiate</p>
                 </div>
-                <h2 className="mt-2 text-2xl font-black text-slate-950">Utilisez une alerte prioritaire</h2>
-                <p className="mt-1 text-sm leading-6 text-slate-600">Ces boutons ouvrent directement l’alerte avec la position GPS et le direct vidéo.</p>
+                <h2 className="mt-2 text-2xl font-black text-slate-950">Alerte urgente</h2>
+                <p className="mt-1 text-sm leading-6 text-slate-600">Ouvre le direct vidéo avec votre position.</p>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Link href="/citizen/signalement?type=violence">
@@ -380,8 +355,8 @@ export default function CitizenDashboard() {
           <section className="mb-8">
             <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-sm font-bold uppercase tracking-wide text-emerald-700">Signalement courant</p>
-                <h2 className="text-2xl font-black text-slate-950">Que souhaitez-vous signaler ?</h2>
+                <p className="text-sm font-bold uppercase tracking-wide text-emerald-700">Signalement simple</p>
+                <h2 className="text-2xl font-black text-slate-950">Choisir un problème</h2>
               </div>
               <Link href="/citizen/signalement" className="inline-flex items-center gap-2 text-sm font-bold text-emerald-700 hover:text-emerald-900">
                 Voir tous les types <ArrowRight className="h-4 w-4" />
@@ -535,7 +510,7 @@ export default function CitizenDashboard() {
           )}
 
           {/* Campagnes Tab */}
-          {activeTab === 'campagnes' && (
+          {activeTab === 'participer' && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -583,7 +558,7 @@ export default function CitizenDashboard() {
           )}
 
           {/* Plaidoyers Tab */}
-          {activeTab === 'plaidoyers' && (
+          {activeTab === 'participer' && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -633,46 +608,6 @@ export default function CitizenDashboard() {
             </motion.div>
           )}
 
-          {/* Profil Tab */}
-          {activeTab === 'profil' && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-            >
-              <Card className="p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Mon profil</h2>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-600">Prénom</p>
-                    <p className="font-semibold text-gray-900">{user?.prenom}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-600">Nom</p>
-                    <p className="font-semibold text-gray-900">{user?.nom}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-600">Email</p>
-                    <p className="font-semibold text-gray-900">{user?.email}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-600">Téléphone</p>
-                    <p className="font-semibold text-gray-900">{user?.telephone}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-600">Ville</p>
-                    <p className="font-semibold text-gray-900">{user?.ville}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-600">Quartier</p>
-                    <p className="font-semibold text-gray-900">{user?.quartier}</p>
-                  </div>
-                </div>
-                <Link href="/profile">
-                  <Button className="mt-8">Modifier mon profil</Button>
-                </Link>
-              </Card>
-            </motion.div>
-          )}
         </div>
       </div>
     </>
