@@ -4,10 +4,6 @@ const logger = require('../utils/logger');
 const { dispatchLiveToStation } = require('../utils/policeDispatch');
 const { activeLiveSessions } = require('../utils/liveSessions');
 
-// Les fragments restent en memoire seulement pendant la duree du direct :
-// ils permettent a un commissariat qui vient de se connecter de recuperer la
-// video deja diffusee et d'enregistrer la sequence complete.
-const MAX_REPLAY_VIDEO_CHUNKS = 180;
 const withoutVideoChunks = (session = {}) => {
   const { videoChunks, ...payload } = session;
   return payload;
@@ -169,11 +165,12 @@ const setupSocket = (io) => {
           chunk: payload.chunk,
           sequence: Number(payload.sequence) || 0,
           mimeType: payload.mimeType || 'video/webm',
-          durationMs: Number(payload.durationMs) || 2000,
+          durationMs: Number(payload.durationMs) || 500,
           chunkAt: payload.chunkAt
         };
-        const videoChunks = [...(existing.videoChunks || []), videoChunk]
-          .slice(-MAX_REPLAY_VIDEO_CHUNKS);
+        // Ne pas tronquer le direct : tous les fragments recus restent
+        // disponibles pendant la session pour l'enregistrement complet.
+        const videoChunks = [...(existing.videoChunks || []), videoChunk];
         const nextSession = {
           ...existing,
           videoChunks,

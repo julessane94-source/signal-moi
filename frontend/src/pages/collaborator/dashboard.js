@@ -8,6 +8,7 @@ import { toast } from 'react-toastify'
 import { io as socketIOClient } from 'socket.io-client'
 import { motion } from 'framer-motion'
 import Head from 'next/head'
+import AuthenticatedProof from '../../components/common/AuthenticatedProof'
 import {
   DocumentTextIcon as DocumentText,
   CheckCircleIcon as CheckCircle,
@@ -828,6 +829,15 @@ export default function CollaboratorDashboard() {
                           <span>👤 Auteur: {s.author.prenom} {s.author.nom || ''}</span>
                         )}
                       </div>
+
+                      {s.fichiers?.length > 0 && (
+                        <div className="mb-4">
+                          <p className="mb-2 text-xs font-black uppercase tracking-wide text-slate-600">Preuves jointes</p>
+                          <div className="grid grid-cols-2 gap-2">
+                            {s.fichiers.map((file, fileIndex) => <AuthenticatedProof key={file.id || fileIndex} file={file} compact />)}
+                          </div>
+                        </div>
+                      )}
 
                       <div className="flex flex-col gap-2 pt-4 border-t border-gray-100">
                         <motion.button

@@ -8,6 +8,7 @@ import { motion } from 'framer-motion'
 import { API_BASE } from '../../config/api'
 import { notifyRealtimeEvent } from '../../utils/realtimeAlerts'
 import { reverseGeocodePlace } from '../../utils/locationLabel'
+import AuthenticatedProof from '../../components/common/AuthenticatedProof'
 import {
   MapPinIcon as MapPin,
   DocumentTextIcon as DocumentText,
@@ -1458,61 +1459,7 @@ export default function PoliceDashboard() {
               <div className="border-t pt-4">
                 <p className="text-sm font-semibold mb-3 text-gray-700">Preuves jointes ({selectedSignal.fichiers.length})</p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {selectedSignal.fichiers.map((f, i) => {
-                    const isImage = f.mime_type?.startsWith('image/') || f.type?.startsWith('image/')
-                    const isVideo = f.mime_type?.startsWith('video/') || f.type?.startsWith('video/')
-                    const isAudio = f.mime_type?.startsWith('audio/') || f.type?.startsWith('audio/')
-                    // Normaliser le chemin: enlever les slashes en debut et fin, et les chemins absolus
-                    const rawPath = f.url || f.chemin || `/api/signalements/fichiers/${f.id}`
-                    let fileUrl = rawPath
-                    if (rawPath.startsWith('/api/')) fileUrl = `${API_BASE}${rawPath}`
-                    else if (rawPath.startsWith('api/')) fileUrl = `${API_BASE}/${rawPath}`
-                    else if (rawPath.startsWith('/uploads/')) fileUrl = `${API_BASE}${rawPath}`
-                    else if (rawPath.startsWith('uploads/')) fileUrl = `${API_BASE}/${rawPath}`
-                    return (
-                      <a
-                        key={i}
-                        href={fileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group relative border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition"
-                        title={f.nom_fichier || f.nomFichier}
-                      >
-                        {isImage ? (
-                          <div className="relative bg-gray-100 h-32">
-                            <img
-                              src={fileUrl}
-                              alt={f.nom_fichier || f.nomFichier}
-                              className="w-full h-full object-cover group-hover:scale-105 transition"
-                              onError={(e) => {
-                                e.target.style.display = 'none'
-                                e.target.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#64748b;background:#f3f4f6;">PREUVE</div>'
-                              }}
-                            />
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center">
-                              <span className="text-white text-xs font-semibold opacity-0 group-hover:opacity-100 transition">Ouvrir</span>
-                            </div>
-                          </div>
-                        ) : isVideo ? (
-                          <div className="relative bg-black h-32">
-                            <video src={fileUrl} controls className="h-full w-full object-cover" />
-                          </div>
-                        ) : isAudio ? (
-                          <div className="bg-cyan-50 h-32 flex flex-col items-center justify-center gap-3 p-3">
-                            <PaperClip className="h-7 w-7 text-cyan-700" />
-                            <audio src={fileUrl} controls className="w-full" />
-                          </div>
-                        ) : (
-                          <div className="bg-gray-100 h-32 flex items-center justify-center group-hover:bg-gray-200 transition">
-                            <PaperClip className="h-8 w-8 text-slate-400" />
-                          </div>
-                        )}
-                        <div className="p-2 bg-gray-50 text-center border-t border-gray-200">
-                          <p className="text-xs font-medium text-gray-700 truncate">{f.nom_fichier || f.nomFichier}</p>
-                        </div>
-                      </a>
-                    )
-                  })}
+                  {selectedSignal.fichiers.map((f, i) => <AuthenticatedProof key={f.id || i} file={f} />)}
                 </div>
               </div>
             )}

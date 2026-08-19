@@ -197,6 +197,25 @@ router.get('/signalements', authMiddleware, async (req, res) => {
       LIMIT 50
     `, [req.user.id]);
 
+    const signalementIds = result.rows.map((row) => row.id);
+    const filesBySignalement = {};
+    if (signalementIds.length) {
+      const files = await db.query(
+        `SELECT id, signalement_id, nom_fichier, chemin, type, taille, mime_type, description, created_at
+         FROM signal_moi.fichiers WHERE signalement_id = ANY($1::uuid[]) ORDER BY created_at DESC`,
+        [signalementIds]
+      );
+      files.rows.forEach((file) => {
+        if (!filesBySignalement[file.signalement_id]) filesBySignalement[file.signalement_id] = [];
+        filesBySignalement[file.signalement_id].push({
+          id: file.id, nom_fichier: file.nom_fichier, chemin: file.chemin,
+          type: file.type, taille: file.taille, mime_type: file.mime_type,
+          description: file.description, created_at: file.created_at,
+          url: `/api/signalements/fichiers/${file.id}`
+        });
+      });
+    }
+
     const signalements = result.rows.map(s => ({
       id: s.id,
       titre: s.titre,
@@ -206,6 +225,7 @@ router.get('/signalements', authMiddleware, async (req, res) => {
       localisation: s.localisation,
       coordinates: { lat: s.latitude, lng: s.longitude },
       createdAt: s.created_at,
+      fichiers: filesBySignalement[s.id] || [],
       author: { prenom: s.prenom, nom: s.nom, email: s.email, telephone: s.telephone }
     }));
 

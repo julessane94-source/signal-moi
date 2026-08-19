@@ -25,7 +25,6 @@ const STARTER_ACTIONS = [
 ]
 
 const VIDEO_PROMPT_TYPES = ['violence', 'accident', 'vol']
-const MAX_RECORDING_MS = 3 * 60 * 1000
 
 const shouldReplaceAutoLocation = (value) => {
   const text = String(value || '')
@@ -708,24 +707,14 @@ export default function NewSignalement() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: { ideal: 'environment' },
-          // Une vidéo 720p est suffisamment nette pour une preuve tout en
-          // restant beaucoup plus rapide à envoyer depuis un réseau mobile.
-          width: { ideal: 1280, max: 1280 },
-          height: { ideal: 720, max: 720 },
-          frameRate: { ideal: 24, max: 24 },
-          resizeMode: 'none'
+          // L'appareil choisit sa meilleure qualite native. Aucune resolution
+          // ni cadence ne sont imposees au citoyen.
+          facingMode: { ideal: 'environment' }
         },
         audio: true
       })
       const mimeType = getRecordingMimeType()
-      const recorderOptions = {
-        ...(mimeType ? { mimeType } : {}),
-        // Des fragments de deux secondes gardent un direct fluide tout en
-        // restant sous la limite Socket.IO sur les reseaux mobiles.
-        videoBitsPerSecond: 800000,
-        audioBitsPerSecond: 96000
-      }
+      const recorderOptions = mimeType ? { mimeType } : undefined
       const recorder = new MediaRecorder(stream, recorderOptions)
 
       const videoTrack = stream.getVideoTracks()[0]
@@ -791,7 +780,7 @@ export default function NewSignalement() {
                 chunk,
                 sequence,
                 mimeType: recorder.mimeType || mimeType || 'video/webm',
-                durationMs: 2000
+                durationMs: 500
               })
             })
             .catch((error) => console.warn('Fragment video live non transmis:', error))
@@ -844,11 +833,10 @@ export default function NewSignalement() {
         stopCameraStream()
       }
 
-      recorder.start(2000)
+      // Le decoupage ne recompresse pas : il sert uniquement a transporter
+      // progressivement la video dans sa qualite native.
+      recorder.start(500)
       startLiveFrameBroadcast(stream)
-      recordingTimerRef.current = setTimeout(() => {
-        stopVideoRecording()
-      }, MAX_RECORDING_MS)
     } catch (error) {
       console.error('[VideoRecording] Error:', error)
       setRecordingState('idle')
