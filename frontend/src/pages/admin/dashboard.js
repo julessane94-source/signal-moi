@@ -106,7 +106,7 @@ export default function AdminDashboard() {
   const [mobileRelease, setMobileRelease] = useState({
     version: '0.1.16',
     notes: 'Nouvelle interface mobile modernisée : accueil citoyen simplifié, espace commissariat amélioré et animations plus fluides.',
-    apkUrl: 'https://signal-moi.sn/downloads/signal-moi.apk?v=20260819'
+    apkUrl: 'https://signal-moi.sn/downloads/signal-moi.apk?v=20260819-1410'
   })
   const [slideshowFiles, setSlideshowFiles] = useState([])
   const [siteConfig, setSiteConfig] = useState({
