@@ -5,6 +5,7 @@ import { Button, Card, FormField, Input, Modal, DataTable, StatBox, Badge, Empty
 import { motion } from 'framer-motion'
 import { toast } from 'react-toastify'
 import { API_BASE } from '../../config/api'
+import AuthenticatedProof from '../../components/common/AuthenticatedProof'
 import {
   UsersIcon as Users,
   DocumentTextIcon as DocumentText,
@@ -16,10 +17,6 @@ import {
   KeyIcon as Key,
   UserIcon as User,
   ArrowUpTrayIcon as ArrowUpTray,
-  PhotoIcon as Photo,
-  VideoCameraIcon as VideoCamera,
-  MusicalNoteIcon as MusicalNote,
-  PaperClipIcon as PaperClip,
   PhoneIcon as Phone,
   EnvelopeIcon as Envelope,
   BuildingOffice2Icon as BuildingOffice2,
@@ -53,26 +50,6 @@ const handleImageFallback = (event, originalUrl) => {
   } else {
     current.src = '/icons/icon-192x192.png'
   }
-}
-
-const getSignalementFileUrl = (file) => {
-  if (!file) return null
-  const raw = file.url || file.chemin || file
-  if (!raw || typeof raw !== 'string') return null
-  if (raw.startsWith('http://') || raw.startsWith('https://')) return raw
-  if (raw.startsWith('/api/')) return `${API_BASE}${raw}`
-  if (raw.startsWith('api/')) return `${API_BASE}/${raw}`
-  if (raw.startsWith('/uploads/')) return `${API_BASE}${raw}`
-  if (raw.startsWith('uploads/')) return `${API_BASE}/${raw}`
-  return raw
-}
-
-const getProofKind = (file) => {
-  const mime = String(file?.mime_type || file?.type || '').toLowerCase()
-  if (mime.startsWith('image')) return 'image'
-  if (mime.startsWith('video')) return 'video'
-  if (mime.startsWith('audio')) return 'audio'
-  return 'document'
 }
 
 const getVerificationTone = (verification) => {
@@ -1051,36 +1028,7 @@ export default function AdminDashboard() {
                                   <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">Visible admin</span>
                                 </div>
                                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                                  {s.fichiers.map((file) => {
-                                    const fileUrl = getSignalementFileUrl(file)
-                                    const kind = getProofKind(file)
-                                    return (
-                                      <a key={file.id || fileUrl} href={fileUrl} target="_blank" rel="noopener noreferrer" className="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-                                        <div className="flex h-36 items-center justify-center bg-slate-100">
-                                          {kind === 'image' && (
-                                            <img src={fileUrl} alt={file.nom_fichier || 'Preuve'} className="h-full w-full object-cover transition group-hover:scale-105" />
-                                          )}
-                                          {kind === 'video' && (
-                                            <video src={fileUrl} controls className="h-full w-full bg-black object-cover" />
-                                          )}
-                                          {kind === 'audio' && (
-                                            <div className="w-full p-4 text-center">
-                                              <MusicalNote className="mx-auto h-9 w-9 text-cyan-700" />
-                                              <audio src={fileUrl} controls className="mt-3 w-full" />
-                                            </div>
-                                          )}
-                                          {kind === 'document' && <PaperClip className="h-10 w-10 text-slate-500" />}
-                                        </div>
-                                        <div className="flex items-center gap-2 border-t border-slate-200 p-3">
-                                          {kind === 'image' && <Photo className="h-4 w-4 text-blue-600" />}
-                                          {kind === 'video' && <VideoCamera className="h-4 w-4 text-red-600" />}
-                                          {kind === 'audio' && <MusicalNote className="h-4 w-4 text-cyan-700" />}
-                                          {kind === 'document' && <PaperClip className="h-4 w-4 text-slate-600" />}
-                                          <span className="truncate text-xs font-bold text-slate-700">{file.nom_fichier || 'Ouvrir la preuve'}</span>
-                                        </div>
-                                      </a>
-                                    )
-                                  })}
+                                  {s.fichiers.map((file) => <AuthenticatedProof key={file.id || file.chemin || file.nom_fichier} file={file} />)}
                                 </div>
                               </div>
                             )}
