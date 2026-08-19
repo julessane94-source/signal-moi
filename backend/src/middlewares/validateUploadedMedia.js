@@ -1,7 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const MAX_PROOF_SIZE = 100 * 1024 * 1024;
+// Les videos de preuve peuvent etre longues et les telephones Android donnent
+// parfois un MIME generique. La taille reste configurable par environnement.
+const MAX_PROOF_SIZE = Number(process.env.MAX_PROOF_SIZE || process.env.MAX_FILE_SIZE) || 500 * 1024 * 1024;
 const expectedMimesByExtension = {
   '.jpg': ['image/jpeg'], '.jpeg': ['image/jpeg'], '.png': ['image/png'], '.webp': ['image/webp'], '.gif': ['image/gif'], '.bmp': ['image/bmp'], '.tif': ['image/tiff'], '.tiff': ['image/tiff'], '.heic': ['image/heic', 'image/heif'], '.heif': ['image/heif'], '.avif': ['image/avif'],
   '.mp3': ['audio/mpeg'], '.wav': ['audio/wav', 'audio/x-wav'], '.m4a': ['audio/mp4', 'audio/x-m4a'], '.aac': ['audio/aac'], '.ogg': ['audio/ogg'], '.oga': ['audio/ogg'], '.opus': ['audio/ogg', 'audio/opus'], '.flac': ['audio/flac', 'audio/x-flac'], '.amr': ['audio/amr'], '.wma': ['audio/x-ms-wma'],
@@ -49,15 +51,22 @@ const validateUploadedMedia = (req, res, next) => {
   const invalid = files.find((file) => {
     const extension = path.extname(file.originalname || '').toLowerCase();
     const expectedMimes = expectedMimesByExtension[extension];
-    return !expectedMimes
-      || !expectedMimes.includes(file.mimetype)
-      || !hasExpectedSignature(file, extension)
+    const declaredMime = String(file.mimetype || '').toLowerCase();
+    const genericMime = !declaredMime || declaredMime === 'application/octet-stream' || declaredMime === 'binary/octet-stream';
+    const signatureIsValid = expectedMimes ? hasExpectedSignature(file, extension) : true;
+    // Les formats connus exigent une signature valide. Pour les autres
+    // documents, le stockage reste sûr : téléchargement forcé + nosniff.
+    return !extension
+      || !signatureIsValid
+      || (!expectedMimes && !declaredMime)
+      || (!genericMime && expectedMimes && !expectedMimes.includes(declaredMime) && !/^(image|audio|video)\//.test(declaredMime))
       || Number(file.size || 0) > MAX_PROOF_SIZE;
   });
 
   if (invalid) {
     cleanup(files);
-    return res.status(400).json({ error: 'Preuve refusée : format non autorisé ou fichier supérieur à 100 Mo.' });
+    const maxMb = Math.round(MAX_PROOF_SIZE / 1024 / 1024);
+    return res.status(400).json({ error: `Preuve refusée : fichier vide, endommagé ou supérieur à ${maxMb} Mo.` });
   }
   next();
 };

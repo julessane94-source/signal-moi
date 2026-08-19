@@ -69,16 +69,19 @@ const fileFilter = (req, file, cb) => {
 
   const ext = path.extname(file.originalname || '').toLowerCase();
   const acceptedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.tif', '.tiff', '.heic', '.heif', '.avif', '.mp3', '.wav', '.m4a', '.aac', '.ogg', '.oga', '.opus', '.flac', '.amr', '.wma', '.mp4', '.webm', '.mov', '.m4v', '.mkv', '.avi', '.3gp', '.3g2', '.mpeg', '.mpg', '.ts', '.mts', '.m2ts', '.flv', '.wmv', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.odt', '.ods', '.odp', '.rtf', '.txt', '.csv'];
-  const isSupportedMime = /^(image|audio|video)\//.test(file.mimetype || '') || /^(application\/(pdf|msword|vnd\.|rtf)|text\/(plain|csv|rtf))/.test(file.mimetype || '');
+  const isSupportedMime = /^(image|audio|video)\//.test(file.mimetype || '') || /^(application\/(pdf|msword|vnd\.|rtf|octet-stream)|text\/(plain|csv|rtf))/.test(file.mimetype || '');
 
-  if (allowedTypes.includes(file.mimetype) || (isSupportedMime && acceptedExtensions.includes(ext))) {
+  // Les preuves peuvent provenir de nombreux telephones et applications.
+  // Tout fichier nomme est accepte puis servi comme telechargement securise
+  // (nosniff), tandis que validateUploadedMedia controle taille et signature.
+  if (allowedTypes.includes(file.mimetype) || (isSupportedMime && acceptedExtensions.includes(ext)) || Boolean(ext)) {
     cb(null, true);
   } else {
     cb(new Error('Type de fichier non supporté'), false);
   }
 };
 
-const DEFAULT_MAX_FILE_SIZE = 104857600; // 100MB, enough for short citizen proof videos
+const DEFAULT_MAX_FILE_SIZE = 500 * 1024 * 1024;
 const maxFileSize = parseInt(process.env.MAX_FILE_SIZE) || DEFAULT_MAX_FILE_SIZE;
 
 // Configuration multer
