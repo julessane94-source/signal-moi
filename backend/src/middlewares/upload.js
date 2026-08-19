@@ -81,24 +81,26 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-const DEFAULT_MAX_FILE_SIZE = 500 * 1024 * 1024;
-const maxFileSize = parseInt(process.env.MAX_FILE_SIZE) || DEFAULT_MAX_FILE_SIZE;
+const uploadLimits = {
+  files: parseInt(process.env.MAX_FILE_COUNT) || 5 // Maximum files
+};
+
+// Ne pas definir limits.fileSize ici : Multer ne peut pas distinguer une
+// preuve ordinaire de la video finale du direct. La validation suivante garde
+// la limite configurable pour les preuves ordinaires, sans bloquer le direct.
 
 // Configuration multer
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
-  limits: {
-    fileSize: maxFileSize,
-    files: parseInt(process.env.MAX_FILE_COUNT) || 5 // Maximum files
-  }
+  limits: uploadLimits
 });
 
 // Middleware pour gérer les erreurs d'upload
 const handleUploadError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'FILE_TOO_LARGE') {
-      return res.status(400).json({ error: `Fichier trop volumineux. Maximum ${Math.round(maxFileSize / 1024 / 1024)}MB.` });
+      return res.status(400).json({ error: 'Fichier trop volumineux.' });
     }
     if (err.code === 'LIMIT_FILE_COUNT') {
       return res.status(400).json({ error: 'Trop de fichiers. Maximum 5 fichiers.' });

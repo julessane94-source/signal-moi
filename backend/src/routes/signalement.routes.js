@@ -9,7 +9,7 @@ const { validateUploadedMedia } = require('../middlewares/validateUploadedMedia'
 const FollowedCase = require('../models/FollowedCase');
 const fs = require('fs');
 const path = require('path');
-const { assignNearestCommissariat, dispatchLiveToStation, getStationRecipients } = require('../utils/policeDispatch');
+const { dispatchLiveToStation } = require('../utils/policeDispatch');
 const { activeLiveSessions } = require('../utils/liveSessions');
 const mediaCacheHeader = 'public, max-age=31536000, immutable';
 const publicListCacheHeader = 'public, max-age=30, stale-while-revalidate=120';
@@ -195,11 +195,9 @@ router.post('/', authMiddleware, signalementLimiter, uploadLimiter, ...uploadMul
         }
 
         const signalementId = signalement.id;
-        const assignedCommissariat = await assignNearestCommissariat(signalement);
-        if (assignedCommissariat) {
-            signalement.assigned_to = assignedCommissariat.id;
-            signalement.assigned_commissariat_distance_km = Number(assignedCommissariat.distance_km).toFixed(2);
-        }
+        // Un nouveau dossier reste volontairement non affecte. Tous les
+        // commissariats peuvent le voir ; le premier qui le prend en charge
+        // devient ensuite responsable de son suivi.
 
         // Notify only collaborators configured by the administrator for this type.
         try {
@@ -240,14 +238,9 @@ router.post('/', authMiddleware, signalementLimiter, uploadLimiter, ...uploadMul
                 priorite: signalement.priorite,
                 timestamp: new Date()
             };
-            if (assignedCommissariat) {
-                const recipientIds = await getStationRecipients(assignedCommissariat);
-                recipientIds.forEach((recipientId) => global.io.to(`user_${recipientId}`).emit('signalement_received', policeNotification));
-            } else {
-                // Sans position de commissariat encore enregistrée, l'alerte reste
-                // visible et sonore dans les espaces commissariat au lieu de disparaître.
-                global.io.to('commissariat_room').emit('signalement_received', policeNotification);
-            }
+            // Aucun commissariat n'est choisi automatiquement : toute la file
+            // commissariat reçoit l'alerte et le premier poste disponible la prend.
+            global.io.to('commissariat_room').emit('signalement_received', policeNotification);
             global.io.to('admin_room').emit('new_signalement_notification', policeNotification);
         }
 
@@ -317,7 +310,9 @@ router.get('/fichiers/:id', authMiddleware, async (req, res) => {
         const isPrivileged = ['admin', 'administrateur', 'collaborateur'].includes(role);
         let isAssignedPolice = false;
         if (isPoliceLikeRole(role)) {
-            if (String(file.assigned_to || '') === String(req.user.id)) {
+            // Les dossiers sans affectation restent visibles dans la file
+            // police ; leurs preuves suivent donc la meme autorisation.
+            if (!file.assigned_to || String(file.assigned_to) === String(req.user.id)) {
                 isAssignedPolice = true;
             } else {
                 const station = await db.query(

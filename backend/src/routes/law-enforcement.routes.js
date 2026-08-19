@@ -51,10 +51,11 @@ const getUrgencyLevel = (type, description) => {
     return isHighRisk ? 'high' : 'medium';
 };
 
-// Un agent ne voit que les dossiers affectés à son commissariat. Les comptes
-// agents héritent du quartier du commissariat lors de leur création.
+// Tous les commissariats voient les nouveaux dossiers. Une fois pris en
+// charge, un dossier devient visible uniquement au commissariat responsable.
 const assignedCaseCondition = (signalementAlias = 's') => `(
-  ${signalementAlias}.assigned_to = $1
+  ${signalementAlias}.assigned_to IS NULL
+  OR ${signalementAlias}.assigned_to = $1
   OR ($2 <> '' AND EXISTS (
     SELECT 1 FROM signal_moi.users station
     WHERE station.id = ${signalementAlias}.assigned_to
@@ -427,14 +428,30 @@ router.post('/case/:id/take-action', authMiddleware, async (req, res) => {
       return res.status(403).json({ error: 'Accès à ce dossier refusé' });
     }
 
-    // Mettre à jour le statut à "en_cours"
+    // Le dossier est revendique atomiquement par le premier commissariat qui
+    // agit. Cela evite que deux postes interviennent sur le meme dossier.
+    const stationResult = await db.query(
+      `SELECT id FROM signal_moi.users
+       WHERE LOWER(role) = 'commissariat'
+         AND LOWER(COALESCE(quartier, '')) = LOWER(COALESCE($1, ''))
+         AND is_active = true
+       LIMIT 1`,
+      [String(req.user.quartier || '').trim()]
+    );
+    const responsibleStationId = normalizeRole(req.user.role) === 'commissariat'
+      ? userId
+      : (stationResult.rows[0]?.id || userId);
+
     const result = await db.query(
-      'UPDATE signal_moi.signalements SET statut = $1 WHERE id = $2 RETURNING id, statut',
-      ['en_cours', caseId]
+      `UPDATE signal_moi.signalements
+       SET assigned_to = $1, statut = 'en_cours', updated_at = NOW()
+       WHERE id = $2 AND assigned_to IS NULL
+       RETURNING id, statut, assigned_to`,
+      [responsibleStationId, caseId]
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Signalement non trouvé' });
+      return res.status(409).json({ error: 'Ce dossier a déjà été pris en charge par un autre commissariat' });
     }
 
     console.log(`[LAW-ENFORCEMENT POST /case/:id/take-action] ${userId} a pris en charge ${caseId}`);

@@ -693,14 +693,23 @@ export default function NewSignalement() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          // L'appareil choisit sa meilleure qualite native. Aucune resolution
-          // ni cadence ne sont imposees au citoyen.
-          facingMode: { ideal: 'environment' }
+          // Qualite suffisante pour identifier la situation, avec un volume
+          // de fichier raisonnable pour les reseaux mobiles et le stockage.
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 640, max: 640 },
+          height: { ideal: 360, max: 360 },
+          frameRate: { ideal: 24, max: 24 }
         },
         audio: true
       })
       const mimeType = getRecordingMimeType()
-      const recorderOptions = mimeType ? { mimeType } : undefined
+      const recorderOptions = {
+        ...(mimeType ? { mimeType } : {}),
+        // Environ 0,45 Mb/s au total en 360p : une video lisible, mais bien
+        // moins lourde qu'un enregistrement natif souvent filme en HD.
+        videoBitsPerSecond: 400000,
+        audioBitsPerSecond: 48000
+      }
       const recorder = new MediaRecorder(stream, recorderOptions)
 
       const videoTrack = stream.getVideoTracks()[0]
@@ -924,8 +933,14 @@ export default function NewSignalement() {
         )
         router.push(wantsComplaintInfo ? `/plainte?signalement=${encodeURIComponent(created.id || created.signalement?.id || '')}` : '/citizen/dashboard')
       } else {
-        const error = await response.json()
-        toast.error(error.error || 'Erreur lors de la création')
+        const rawError = await response.text()
+        let error = {}
+        try {
+          error = rawError ? JSON.parse(rawError) : {}
+        } catch {
+          error = { error: rawError }
+        }
+        toast.error(error.error || `Envoi refusé par le serveur (code ${response.status}).`)
       }
     } catch (error) {
       console.error('[NewSignalement] Error:', error)

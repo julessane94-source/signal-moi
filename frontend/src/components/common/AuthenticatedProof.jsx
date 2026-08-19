@@ -13,7 +13,7 @@ const getProofEndpoint = (file) => {
 // presente ensuite un URL temporaire, non partageable, au navigateur.
 export default function AuthenticatedProof({ file, compact = false }) {
   const [url, setUrl] = useState('')
-  const [error, setError] = useState(false)
+  const [error, setError] = useState('')
   const name = file?.nom_fichier || file?.nomFichier || 'Preuve jointe'
   const mimeType = file?.mime_type || file?.mimeType || file?.type || ''
   const isImage = mimeType.startsWith('image/')
@@ -24,7 +24,8 @@ export default function AuthenticatedProof({ file, compact = false }) {
     let active = true
     let objectUrl = ''
     const token = localStorage.getItem('token')
-    if (!token) { setError(true); return undefined }
+    if (!token) { setError('Votre session a expiré. Reconnectez-vous.'); return undefined }
+    setError('')
     fetch(getProofEndpoint(file), { headers: { Authorization: `Bearer ${token}` } })
       .then(async (response) => {
         if (!response.ok) throw new Error(`Preuve inaccessible (${response.status})`)
@@ -34,11 +35,18 @@ export default function AuthenticatedProof({ file, compact = false }) {
         objectUrl = URL.createObjectURL(blob)
         if (active) setUrl(objectUrl)
       })
-      .catch(() => { if (active) setError(true) })
+      .catch((reason) => {
+        if (!active) return
+        setError(reason.message === '403'
+          ? 'Preuve refusée : ce dossier doit être affecté à votre poste.'
+          : reason.message === '401'
+            ? 'Votre session a expiré. Reconnectez-vous.'
+            : 'Preuve indisponible. Réessayez dans un instant.')
+      })
     return () => { active = false; if (objectUrl) URL.revokeObjectURL(objectUrl) }
   }, [file?.id, file?.url, file?.chemin])
 
-  if (error) return <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs font-semibold text-amber-800">Preuve indisponible ou accès refusé.</div>
+  if (error) return <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs font-semibold text-amber-800">{error}</div>
   if (!url) return <div className="flex h-28 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-500">Chargement sécurisé…</div>
 
   return <div className={`overflow-hidden rounded-lg border border-slate-200 bg-white ${compact ? '' : 'shadow-sm'}`}>

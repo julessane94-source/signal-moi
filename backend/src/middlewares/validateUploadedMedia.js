@@ -1,9 +1,14 @@
 const fs = require('fs');
 const path = require('path');
 
-// Les videos de preuve peuvent etre longues et les telephones Android donnent
-// parfois un MIME generique. La taille reste configurable par environnement.
-const MAX_PROOF_SIZE = Number(process.env.MAX_PROOF_SIZE || process.env.MAX_FILE_SIZE) || 500 * 1024 * 1024;
+// Les videos de direct peuvent etre longues et les telephones Android donnent
+// parfois un MIME generique. Les pieces jointes ordinaires restent limitees
+// par defaut, mais un enregistrement final de direct n'a pas de plafond.
+const configuredMaxProofSize = Number(process.env.MAX_PROOF_SIZE || process.env.MAX_FILE_SIZE);
+const MAX_PROOF_SIZE = Number.isFinite(configuredMaxProofSize) && configuredMaxProofSize > 0
+  ? configuredMaxProofSize
+  : 500 * 1024 * 1024;
+const isLiveRecording = (file) => /^preuve-video-\d+\.(webm|mp4)$/i.test(String(file?.originalname || ''));
 const expectedMimesByExtension = {
   '.jpg': ['image/jpeg'], '.jpeg': ['image/jpeg'], '.png': ['image/png'], '.webp': ['image/webp'], '.gif': ['image/gif'], '.bmp': ['image/bmp'], '.tif': ['image/tiff'], '.tiff': ['image/tiff'], '.heic': ['image/heic', 'image/heif'], '.heif': ['image/heif'], '.avif': ['image/avif'],
   '.mp3': ['audio/mpeg'], '.wav': ['audio/wav', 'audio/x-wav'], '.m4a': ['audio/mp4', 'audio/x-m4a'], '.aac': ['audio/aac'], '.ogg': ['audio/ogg'], '.oga': ['audio/ogg'], '.opus': ['audio/ogg', 'audio/opus'], '.flac': ['audio/flac', 'audio/x-flac'], '.amr': ['audio/amr'], '.wma': ['audio/x-ms-wma'],
@@ -60,13 +65,13 @@ const validateUploadedMedia = (req, res, next) => {
       || !signatureIsValid
       || (!expectedMimes && !declaredMime)
       || (!genericMime && expectedMimes && !expectedMimes.includes(declaredMime) && !/^(image|audio|video)\//.test(declaredMime))
-      || Number(file.size || 0) > MAX_PROOF_SIZE;
+      || (!isLiveRecording(file) && Number(file.size || 0) > MAX_PROOF_SIZE);
   });
 
   if (invalid) {
     cleanup(files);
     const maxMb = Math.round(MAX_PROOF_SIZE / 1024 / 1024);
-    return res.status(400).json({ error: `Preuve refusée : fichier vide, endommagé ou supérieur à ${maxMb} Mo.` });
+    return res.status(400).json({ error: `Preuve refusée : fichier vide, endommagé ou, hors direct, supérieur à ${maxMb} Mo.` });
   }
   next();
 };
