@@ -36,7 +36,7 @@ const cleanEmail = (value) => String(value || '').trim().toLowerCase();
 
 let googleSigningKeysCache = { keys: [], expiresAt: 0 };
 
-let googleSigningKeysCache = { keys: [], expiresAt: 0 };
+
 
 const getGoogleSigningKeys = async (forceRefresh = false) => {
   if (!forceRefresh && googleSigningKeysCache.expiresAt > Date.now()) return googleSigningKeysCache.keys;
@@ -58,7 +58,8 @@ const getGoogleSigningKeys = async (forceRefresh = false) => {
   }
 
   const body = await response.json();
-  const maxAge = Number(response.headers.get('cache-control')?.match(/max-age=(\\d+)/i)?.[1] || 300);
+  const maxAgeValue = response.headers.get('cache-control')?.split('max-age=')[1]?.split(',')[0];
+  const maxAge = Number(maxAgeValue || 300);
   googleSigningKeysCache = {
     keys: Array.isArray(body.keys) ? body.keys : [],
     expiresAt: Date.now() + Math.min(Math.max(maxAge, 60), 3600) * 1000
