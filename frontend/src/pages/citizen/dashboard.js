@@ -20,6 +20,9 @@ import {
 export default function CitizenDashboard() {
   const { user, loading: authLoading } = useAuth()
   const [activeTab, setActiveTab] = useState('signalements')
+  const [participationTab, setParticipationTab] = useState('campagnes')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('tous')
   const [signalements, setSignalements] = useState([])
   const [campagnes, setCampagnes] = useState([])
   const [plaidoyers, setPlaidoyers] = useState([])
@@ -224,8 +227,16 @@ export default function CitizenDashboard() {
 
   const dashboardStats = [
     { label: 'Mes dossiers', value: signalements.length, note: 'envoyés', icon: DocumentText, tone: 'text-red-700 bg-red-50 border-red-100' },
-    { label: 'En cours', value: signalements.filter((item) => item.statut === 'en_cours').length, note: 'à suivre', icon: Clock, tone: 'text-amber-700 bg-amber-50 border-amber-100' }
+    { label: 'En cours', value: signalements.filter((item) => item.statut === 'en_cours').length, note: 'à suivre', icon: Clock, tone: 'text-amber-700 bg-amber-50 border-amber-100' },
+    { label: 'Résolus', value: signalements.filter((item) => item.statut === 'traite').length, note: 'pris en charge', icon: CheckCircle, tone: 'text-emerald-700 bg-emerald-50 border-emerald-100' }
   ]
+
+  const filteredSignalements = signalements.filter((item) => {
+    const term = searchTerm.trim().toLocaleLowerCase('fr')
+    const matchesTerm = !term || [item.titre, item.description, item.type, item.localisation]
+      .filter(Boolean).some((value) => String(value).toLocaleLowerCase('fr').includes(term))
+    return matchesTerm && (statusFilter === 'tous' || item.statut === statusFilter)
+  })
 
   const getStatusText = (statut) => ({
     nouveau: 'Recu',
@@ -290,21 +301,21 @@ export default function CitizenDashboard() {
 
   return (
     <>
-      <div className="min-h-screen bg-slate-50 pt-20 pb-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="citizen-dashboard min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-50/70 via-slate-50 to-slate-100 pt-20 pb-12">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="mb-6 overflow-hidden rounded-[2rem] border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white shadow-2xl"
           >
             <div className="grid gap-7 p-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(280px,0.75fr)] lg:p-8">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-red-300">Espace citoyen</p>
+              <div className="relative z-10">
+                <p className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1.5 text-xs font-black uppercase tracking-[0.16em] text-emerald-200"><span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_0_4px_rgba(110,231,183,.12)]" />Espace citoyen</p>
                 <h1 className="mt-3 text-3xl font-black sm:text-5xl">
                   Bonjour {user?.prenom || 'citoyen'}
                 </h1>
                 <p className="mt-3 max-w-xl text-sm leading-6 text-slate-300 sm:text-base">Signalez un problème et suivez simplement sa prise en charge.</p>
-                <div className="mt-6 grid max-w-sm grid-cols-2 gap-3">
+                <div className="mt-6 grid max-w-2xl grid-cols-2 gap-3 sm:grid-cols-3">
                   {dashboardStats.map((stat) => {
                     const Icon = stat.icon
                     return (
@@ -317,7 +328,7 @@ export default function CitizenDashboard() {
                   })}
                 </div>
               </div>
-              <div className="flex flex-col justify-end gap-3 lg:items-stretch">
+              <div className="relative z-10 flex flex-col justify-end gap-3 lg:items-stretch">
                 <Link href="/citizen/signalement"><Button size="lg" icon={Plus} className="w-full bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 lg:w-auto">Faire un signalement</Button></Link>
                 <button
                   type="button"
@@ -432,16 +443,45 @@ export default function CitizenDashboard() {
 
           {/* Signalements Tab */}
           {activeTab === 'signalements' && (
+            <section className="mb-5 grid gap-3 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-[minmax(0,1fr)_220px] sm:p-5" aria-label="Rechercher dans mes dossiers">
+              <label className="block">
+                <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">Rechercher un dossier</span>
+                <input
+                  type="search"
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  placeholder="Titre, lieu ou description…"
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">État du dossier</span>
+                <select
+                  value={statusFilter}
+                  onChange={(event) => setStatusFilter(event.target.value)}
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10"
+                >
+                  <option value="tous">Tous les états</option>
+                  <option value="nouveau">Nouveau</option>
+                  <option value="en_cours">En cours</option>
+                  <option value="transfere">Transféré</option>
+                  <option value="traite">Résolu</option>
+                </select>
+              </label>
+            </section>
+          )}
+          {activeTab === 'signalements' && (
             <motion.div
               id="signalements"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               className="space-y-4"
             >
-              {signalements.length === 0 ? (
-                <Card className="p-12 text-center">
-                  <div className="text-6xl mb-4">📭</div>
-                  <p className="text-gray-500 mb-4">Aucun signalement pour le moment</p>
+              {filteredSignalements.length === 0 ? (
+                <Card className="p-10 text-center sm:p-12">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-100 text-3xl" aria-hidden="true">{signalements.length === 0 ? '📭' : '🔎'}</div>
+                  <h3 className="text-lg font-extrabold text-slate-900">{signalements.length === 0 ? 'Votre espace est prêt' : 'Aucun dossier trouvé'}</h3>
+                  <p className="mx-auto mb-5 mt-2 max-w-md text-sm leading-6 text-slate-600">{signalements.length === 0 ? 'Vous n’avez pas encore envoyé de signalement. Créez votre premier dossier pour suivre son traitement ici.' : 'Essayez un autre mot-clé ou changez le filtre d’état.'}</p>
                   <Link href="/citizen/signalement">
                     <Button variant="primary" icon={Plus}>
                       Créer mon premier signalement
@@ -450,7 +490,7 @@ export default function CitizenDashboard() {
                 </Card>
               ) : (
                 <div className="grid grid-cols-1 gap-4">
-                  {signalements.map((s, idx) => (
+                  {filteredSignalements.map((s, idx) => (
                     <motion.div
                       key={s.id}
                       initial={{ opacity: 0, y: 10 }}
@@ -509,8 +549,28 @@ export default function CitizenDashboard() {
             </motion.div>
           )}
 
-          {/* Campagnes Tab */}
           {activeTab === 'participer' && (
+            <div className="mb-5 flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm" role="tablist" aria-label="Participation citoyenne">
+              {[
+                { id: 'campagnes', label: 'Campagnes', count: campagnes.length },
+                { id: 'plaidoyers', label: 'Plaidoyers', count: plaidoyers.length }
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={participationTab === item.id}
+                  onClick={() => setParticipationTab(item.id)}
+                  className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition ${participationTab === item.id ? 'bg-slate-950 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'}`}
+                >
+                  {item.label}<span className={`rounded-full px-2 py-0.5 text-xs ${participationTab === item.id ? 'bg-white/15 text-white' : 'bg-slate-100 text-slate-600'}`}>{item.count}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Campagnes Tab */}
+          {activeTab === 'participer' && participationTab === 'campagnes' && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -558,7 +618,7 @@ export default function CitizenDashboard() {
           )}
 
           {/* Plaidoyers Tab */}
-          {activeTab === 'participer' && (
+          {activeTab === 'participer' && participationTab === 'plaidoyers' && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -583,10 +643,14 @@ export default function CitizenDashboard() {
                         <Card className="p-6 hover:shadow-lg transition">
                           <h3 className="font-semibold text-lg text-gray-900">{p.titre}</h3>
                           <p className="text-gray-600 mt-2">{p.description}</p>
-                          <div className="mt-4 flex justify-between items-center">
-                            <span className="text-sm text-gray-600">
-                              📊 {p.signatures || 0}/{p.objectif_signatures || '?'} signatures
-                            </span>
+                          <div className="mt-5 space-y-3">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="font-bold text-slate-800">Soutien citoyen</span>
+                              <span className="font-extrabold text-indigo-700">{p.signatures || 0}<span className="font-medium text-slate-500"> / {p.objectif_signatures || '?'} signatures</span></span>
+                            </div>
+                            <div className="h-2 overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-label="Avancement des signatures" aria-valuemin="0" aria-valuemax={p.objectif_signatures || 100} aria-valuenow={p.signatures || 0}>
+                              <div className="h-full rounded-full bg-gradient-to-r from-indigo-600 to-cyan-500 transition-all duration-700" style={{ width: `${Math.min(100, Math.round(((p.signatures || 0) / (p.objectif_signatures || Math.max(p.signatures || 1, 1))) * 100))}%` }} />
+                            </div>
                             <Button
                               onClick={() => handleSignPetition(p.id)}
                               disabled={signingPetition === p.id || isSigned}
