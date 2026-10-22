@@ -1,14 +1,15 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install --production
+# Contexte de build = racine du dépôt.
+COPY backend/package*.json ./
+RUN npm ci --omit=dev
 
-COPY . .
+COPY backend/ ./
+COPY database/ ./database/
 
 ENV NODE_ENV=production
-# Port configuré dans render.yaml et utilisé par server.js
-EXPOSE 3000
+EXPOSE 10000
 
 CMD ["npm", "start"]
