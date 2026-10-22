@@ -37,6 +37,17 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   const fetchUser = useCallback(async () => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      setUser(null)
+      setLoading(false)
+      return
+    }
+
+    // Reapply the current token before each profile check. This also recovers
+    // if another tab or request changed Axios's shared default header.
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+
     try {
       const response = await axios.get(`${API_URL}/api/auth/profile`)
       // API returns { success: true, user: { ... } }
@@ -47,10 +58,16 @@ export const AuthProvider = ({ children }) => {
         setUser(null)
       }
     } catch (error) {
-      // On auth error, clear token and user
-      localStorage.removeItem('token')
-      delete axios.defaults.headers.common['Authorization']
-      setUser(null)
+      const status = error.response?.status
+      if (status === 401 || status === 403) {
+        // Only a definitive server rejection invalidates the local session.
+        localStorage.removeItem('token')
+        delete axios.defaults.headers.common['Authorization']
+        setUser(null)
+      } else {
+        // A temporary network/server failure must not sign the user out.
+        console.warn('Vérification de session indisponible temporairement:', error.message)
+      }
     } finally {
       setLoading(false)
     }
@@ -61,7 +78,10 @@ export const AuthProvider = ({ children }) => {
   // tard une minute après, sans attendre un envoi de formulaire.
   useEffect(() => {
     if (typeof window === 'undefined' || !localStorage.getItem('token')) return undefined
-    const revalidateSession = () => fetchUser()
+    const revalidateSession = () => {
+      if (!localStorage.getItem('token')) return
+      fetchUser()
+    }
     const timer = window.setInterval(revalidateSession, 60000)
     window.addEventListener('focus', revalidateSession)
     return () => {
