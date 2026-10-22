@@ -46,6 +46,8 @@ export default function Home() {
   const [config, setConfig] = useState({ home_page: {} })
   const [deferredPrompt, setDeferredPrompt] = useState(null)
   const [showInstallButton, setShowInstallButton] = useState(false)
+  const [showIOSInstallHelp, setShowIOSInstallHelp] = useState(false)
+  const [isIOSSafari, setIsIOSSafari] = useState(false)
 
   const [collaboratorCampaigns, setCollaboratorCampaigns] = useState([])
 
@@ -83,14 +85,20 @@ export default function Home() {
   const slideshowVideos = Array.isArray(config.home_page?.videos) ? config.home_page.videos.filter(Boolean) : []
 
   useEffect(() => {
-    // PWA Installation
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault()
-      setDeferredPrompt(e)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
+    const isIOS = /iPhone|iPad|iPod/.test(window.navigator.userAgent) ||
+      (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1)
+    const isSafari = /Safari/.test(window.navigator.userAgent) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(window.navigator.userAgent)
+    setIsIOSSafari(isIOS && isSafari && !isStandalone)
+
+    const handleBeforeInstallPrompt = (event) => {
+      event.preventDefault()
+      setDeferredPrompt(event)
       setShowInstallButton(true)
-    })
-    
+    }
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
     fetchConfig()
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
   }, [])
 
   // Slideshow state for hero right column
@@ -194,7 +202,11 @@ export default function Home() {
                   </Link>
                 </div>
 
-                {showInstallButton && (
+                {isIOSSafari ? (
+                  <button onClick={() => setShowIOSInstallHelp(true)} className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20">
+                    <span aria-hidden="true">＋</span> Ajouter à l’écran d’accueil
+                  </button>
+                ) : showInstallButton && (
                   <button onClick={handleInstall} className="mt-5 text-sm font-semibold text-emerald-200 underline underline-offset-4">
                     Installer l'application
                   </button>
@@ -281,15 +293,19 @@ export default function Home() {
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row md:justify-end">
-                <a
-href="/downloads/signal-moi.apk?v=20260819-1410"
+                {!isIOSSafari && <a
+                  href="/downloads/signal-moi.apk?v=20260819-1410"
                   download
                   className="inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-emerald-300 bg-emerald-400 px-6 py-3 font-bold text-slate-950 shadow-sm transition hover:bg-emerald-300 sm:w-auto"
                 >
                   Télécharger l&apos;APK Android
-                </a>
-                {showInstallButton && (
-                  <button onClick={handleInstall} className="min-h-[48px] bg-emerald-600 px-6 py-3 font-bold text-white hover:bg-emerald-700">
+                </a>}
+                {isIOSSafari ? (
+                  <button onClick={() => setShowIOSInstallHelp(true)} className="min-h-[48px] rounded-2xl bg-emerald-700 px-6 py-3 font-bold text-white transition hover:bg-emerald-800">
+                    Ajouter sur iPhone
+                  </button>
+                ) : showInstallButton && (
+                  <button onClick={handleInstall} className="min-h-[48px] rounded-2xl bg-emerald-700 px-6 py-3 font-bold text-white transition hover:bg-emerald-800">
                     Installer la version web
                   </button>
                 )}
@@ -455,6 +471,22 @@ href="/downloads/signal-moi.apk?v=20260819-1410"
           </div>
         </section>
       </main>
+      {showIOSInstallHelp && (
+        <div className="ios-install-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowIOSInstallHelp(false) }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="ios-install-title" className="ios-install-dialog" onKeyDown={(event) => { if (event.key === 'Escape') setShowIOSInstallHelp(false) }}>
+            <button type="button" onClick={() => setShowIOSInstallHelp(false)} className="ios-install-close" aria-label="Fermer">×</button>
+            <div className="ios-install-icon" aria-hidden="true">＋</div>
+            <p className="home-eyebrow text-emerald-700">Installation sur iPhone</p>
+            <h2 id="ios-install-title" className="mt-3 text-2xl font-extrabold tracking-tight text-slate-950">Ajoutez Signal-Moi à votre écran d’accueil</h2>
+            <p className="mt-3 text-sm leading-6 text-slate-600">Dans Safari, suivez ces deux étapes pour retrouver Signal-Moi comme une application.</p>
+            <ol className="ios-install-steps">
+              <li><span>1</span><div><strong>Ouvrez le menu Partager</strong><p>Appuyez sur le carré avec la flèche vers le haut, dans Safari.</p></div></li>
+              <li><span>2</span><div><strong>Choisissez « Sur l’écran d’accueil »</strong><p>Appuyez sur « Ajouter » en haut à droite pour terminer.</p></div></li>
+            </ol>
+            <button type="button" onClick={() => setShowIOSInstallHelp(false)} className="ios-install-done">Compris</button>
+          </section>
+        </div>
+      )}
       <Chatbot />
     </>
   )
