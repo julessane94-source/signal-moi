@@ -45,6 +45,7 @@ export default function SignalementDetail() {
   const router = useRouter()
   const { id } = router.query
   const [signal, setSignal] = useState(null)
+  const [signalError, setSignalError] = useState('')
   const [loading, setLoading] = useState(true)
   const [alerting, setAlerting] = useState(false)
   const [signingPetition, setSigningPetition] = useState(false)
@@ -77,17 +78,27 @@ export default function SignalementDetail() {
 
   const fetchSignal = async () => {
     setLoading(true)
+    setSignalError('')
     try {
       const token = localStorage.getItem('token')
       const res = await fetch(`${API_BASE}/api/signalements/${id}`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       })
-      if (!res.ok) throw new Error('Not found')
-      const data = await res.json()
+      const data = await res.json().catch(() => null)
+      if (!res.ok) {
+        const error = new Error(data?.error || 'Impossible de charger le signalement')
+        error.status = res.status
+        throw error
+      }
+      if (!data || !data.id) throw new Error('La réponse du serveur ne contient pas le dossier demandé.')
       setSignal(data)
     } catch (e) {
-      console.error(e)
+      console.error('[Suivi signalement] Échec du chargement:', e)
       setSignal(null)
+      if (e.status === 401) setSignalError('Votre session a expiré. Reconnectez-vous pour consulter ce dossier.')
+      else if (e.status === 403) setSignalError('Vous n’avez pas accès à ce dossier. Vérifiez que vous êtes connecté au compte qui l’a créé.')
+      else if (e.status === 404) setSignalError('Ce dossier est introuvable dans la base de données actuellement utilisée.')
+      else setSignalError('Le serveur n’a pas pu charger ce dossier. Réessayez dans quelques instants.')
     } finally {
       setLoading(false)
     }
@@ -221,8 +232,21 @@ export default function SignalementDetail() {
     }
   }
 
-  if (loading) return (<><div className="min-h-screen pt-16 flex items-center justify-center">Chargement...</div></>)
-  if (!signal) return (<><div className="min-h-screen pt-16 flex items-center justify-center">Signalement introuvable</div></>)
+  if (loading) return (<main className="flex min-h-screen items-center justify-center bg-slate-50 pt-16"><div className="rounded-2xl border border-slate-200 bg-white px-6 py-5 font-semibold text-slate-600 shadow-sm">Chargement de votre suivi…</div></main>)
+  if (!signal) return (
+    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 pt-16">
+      <section role="alert" className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-7 text-center shadow-xl shadow-slate-900/5 sm:p-9">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-2xl" aria-hidden="true">!</div>
+        <p className="mt-5 text-xs font-black uppercase tracking-[0.16em] text-emerald-700">Suivi du signalement</p>
+        <h1 className="mt-2 text-2xl font-black text-slate-950">Impossible d’ouvrir ce dossier</h1>
+        <p className="mt-3 text-sm leading-6 text-slate-600">{signalError || 'Le dossier demandé n’est pas disponible.'}</p>
+        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+          <button type="button" onClick={fetchSignal} className="rounded-xl bg-slate-950 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800">Réessayer</button>
+          <Link href="/citizen/dashboard" className="rounded-xl border border-slate-300 px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50">Retour à mon espace</Link>
+        </div>
+      </section>
+    </main>
+  )
 
   const collaborators = Array.isArray(signal.collaborators || signal.followers) ? (signal.collaborators || signal.followers) : []
   const policeStatus = signal.policeStatus || {}

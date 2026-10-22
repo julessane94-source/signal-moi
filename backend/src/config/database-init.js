@@ -12,6 +12,8 @@ const initializeDatabase = async () => {
     path.join(databaseRoot, 'init_postgres.sql'),
     // La table signalement_types est requise par la migration 014.
     path.join(databaseRoot, 'migrations/002_add_image_to_signalements.sql'),
+    // La page de suivi liste les collaborateurs abonnés à chaque dossier.
+    path.join(databaseRoot, 'migrations/004_add_followed_cases.sql'),
     path.join(databaseRoot, 'migrations/013_create_missing_site_config_table.sql'),
     path.join(databaseRoot, 'migrations/014_add_collaborator_signalement_types.sql')
   ];
