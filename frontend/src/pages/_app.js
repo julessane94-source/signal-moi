@@ -12,6 +12,7 @@ import PageReveal from '../components/common/PageReveal'
 import FirstUseNotificationPrompt from '../components/common/FirstUseNotificationPrompt'
 import Head from 'next/head'
 import '../styles/globals.css'
+import '../styles/modern-interface.css'
 import 'react-toastify/dist/ReactToastify.css'
 
 function MyApp({ Component, pageProps }) {
