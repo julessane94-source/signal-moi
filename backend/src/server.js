@@ -41,6 +41,8 @@ const postsRoutes = require('./routes/posts.routes');
 const accountRoutes = require('./routes/account');
 
 const app = express();
+// Render termine TLS et transmet l'IP client via un seul proxy de confiance.
+app.set('trust proxy', 1);
 
 const allowedOrigins = [
     'http://localhost:3000',
