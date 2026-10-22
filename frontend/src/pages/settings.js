@@ -62,6 +62,10 @@ export default function Settings() {
       setPasswordError('Choisissez un mot de passe différent de l’actuel.')
       return
     }
+    if (passwords.newPassword.length < 12 || !/[a-z]/.test(passwords.newPassword) || !/[A-Z]/.test(passwords.newPassword) || !/\\d/.test(passwords.newPassword)) {
+      setPasswordError('Le nouveau mot de passe doit contenir au moins 12 caractères, une minuscule, une majuscule et un chiffre.')
+      return
+    }
 
     setPasswordLoading(true)
     const updated = await changePassword({
@@ -248,6 +252,7 @@ export default function Settings() {
                           required
                           className="min-h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-950 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10"
                         />
+                        {field.name === 'newPassword' && <span className="mt-1.5 block text-xs leading-5 text-slate-500">12 caractères minimum, avec une majuscule, une minuscule et un chiffre.</span>}
                       </label>
                     ))}
                     {passwordError && <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{passwordError}</p>}
