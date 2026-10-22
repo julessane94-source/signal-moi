@@ -59,14 +59,14 @@ const provisionInitialAdmin = async () => {
   await sequelize.query(
     `INSERT INTO signal_moi.users
       (prenom, nom, email, telephone, password, role, is_active, email_verified)
-     VALUES ('Administrateur', 'Signal-moi', :email, '', :password, 'admin', true, true)
+     VALUES ('Administrateur', 'Signal-moi', $1, '', $2, 'admin', true, true)
      ON CONFLICT (email) DO UPDATE SET
        password = EXCLUDED.password,
        role = 'admin',
        is_active = true,
        email_verified = true,
        updated_at = NOW()`,
-    { replacements: { email, password: hashedPassword } }
+    [email, hashedPassword]
   );
   console.log('✅ Compte administrateur initial créé ou actualisé.');
 };
