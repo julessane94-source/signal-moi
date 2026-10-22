@@ -33,6 +33,79 @@ const buildLogoUrl = (logoRecord) => {
 };
 
 const cleanEmail = (value) => String(value || '').trim().toLowerCase();
+
+let googleSigningKeysCache = { keys: [], expiresAt: 0 };
+
+
+
+const getGoogleSigningKeys = async (forceRefresh = false) => {
+  if (!forceRefresh && googleSigningKeysCache.expiresAt > Date.now()) return googleSigningKeysCache.keys;
+
+  let response;
+  try {
+    response = await fetch('https://www.googleapis.com/oauth2/v3/certs', {
+      signal: AbortSignal.timeout(8000)
+    });
+  } catch (error) {
+    const unavailable = new Error('Google signing keys are unavailable');
+    unavailable.code = 'GOOGLE_KEYS_UNAVAILABLE';
+    throw unavailable;
+  }
+  if (!response.ok) {
+    const unavailable = new Error('Google signing keys are unavailable');
+    unavailable.code = 'GOOGLE_KEYS_UNAVAILABLE';
+    throw unavailable;
+  }
+
+  const body = await response.json();
+  const maxAgeValue = response.headers.get('cache-control')?.split('max-age=')[1]?.split(',')[0];
+  const maxAge = Number(maxAgeValue || 300);
+  googleSigningKeysCache = {
+    keys: Array.isArray(body.keys) ? body.keys : [],
+    expiresAt: Date.now() + Math.min(Math.max(maxAge, 60), 3600) * 1000
+  };
+  return googleSigningKeysCache.keys;
+};
+
+const verifyGoogleIdToken = async (idToken, allowedAudiences) => {
+  const segments = String(idToken || '').split('.');
+  if (segments.length !== 3) throw new Error('Malformed Google token');
+
+  const encodedHeader = segments[0];
+  const encodedPayload = segments[1];
+  const encodedSignature = segments[2];
+  const header = JSON.parse(Buffer.from(encodedHeader, 'base64url').toString('utf8'));
+  const claims = JSON.parse(Buffer.from(encodedPayload, 'base64url').toString('utf8'));
+  if (header.alg !== 'RS256' || !header.kid) throw new Error('Unsupported Google signature');
+
+  let key = (await getGoogleSigningKeys()).find((candidate) => candidate.kid === header.kid);
+  if (!key) key = (await getGoogleSigningKeys(true)).find((candidate) => candidate.kid === header.kid);
+  if (!key || key.kty !== 'RSA') throw new Error('Google signing key not found');
+
+  const crypto = require('crypto');
+  const publicKey = crypto.createPublicKey({ key, format: 'jwk' });
+  const validSignature = crypto.verify(
+    'RSA-SHA256',
+    Buffer.from(encodedHeader + '.' + encodedPayload),
+    publicKey,
+    Buffer.from(encodedSignature, 'base64url')
+  );
+  if (!validSignature) throw new Error('Invalid Google signature');
+
+  const now = Math.floor(Date.now() / 1000);
+  const validIssuer = ['accounts.google.com', 'https://accounts.google.com'].includes(claims.iss);
+  const validAudience = typeof claims.aud === 'string'
+    ? allowedAudiences.includes(claims.aud)
+    : Array.isArray(claims.aud) && claims.aud.some((audience) => allowedAudiences.includes(audience));
+  const validAuthorizedParty = !claims.azp || allowedAudiences.includes(claims.azp);
+  if (!validIssuer || !claims.sub || !validAudience || !validAuthorizedParty
+      || !Number.isFinite(Number(claims.exp)) || Number(claims.exp) <= now
+      || !Number.isFinite(Number(claims.iat)) || Number(claims.iat) > now + 60) {
+    throw new Error('Invalid or expired Google claims');
+  }
+  return claims;
+};
+
 const cleanPhone = (value) => String(value || '').trim().replace(/\s+/g, '');
 
 const getUnreadNotificationCount = async (userId) => {
@@ -456,112 +529,87 @@ router.post('/change-password', protect, async (req, res) => {
   }
 });
 
-// POST /api/auth/google - Authentification via Google OAuth (STUB - à intégrer avec Google Cloud)
+// POST /api/auth/google - Authentification via un jeton Google vérifié
 router.post('/google', async (req, res) => {
   try {
-    const { token, idToken } = req.body;
-    const googleToken = idToken || token;
-
-    if (!googleToken) {
-      return res.status(400).json({
-        success: false,
-        message: 'Token Google requis'
-      });
+    const googleToken = String(req.body?.idToken || req.body?.token || '').trim();
+    if (!googleToken || googleToken.length > 10000) {
+      return res.status(400).json({ success: false, message: 'Jeton Google manquant ou invalide' });
     }
-
-    // IMPORTANT: En production, vérifier le token avec Google API
-    // Pour l'instant, c'est un stub qui simule l'authentification
-
-    // Chercher ou créer l'utilisateur avec l'email Google
-    const googleResponse = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(googleToken)}`);
-    if (!googleResponse.ok) {
-      return res.status(401).json({ success: false, message: 'Token Google invalide' });
-    }
-
-    const googleProfile = await googleResponse.json();
     const allowedGoogleClientIds = [
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_WEB_CLIENT_ID,
       process.env.GOOGLE_ANDROID_CLIENT_ID,
       process.env.GOOGLE_IOS_CLIENT_ID,
       ...String(process.env.GOOGLE_ALLOWED_CLIENT_IDS || '').split(','),
-      // Client Android public utilise par l'APK Signal-Moi.
       '912214570168-qdshgsffkan5i3cm107dc45m3lvvc0k8.apps.googleusercontent.com'
     ].map((clientId) => String(clientId || '').trim()).filter(Boolean);
-    if (allowedGoogleClientIds.length && !allowedGoogleClientIds.includes(googleProfile.aud)) {
-      return res.status(401).json({ success: false, message: 'Application Google non autorisee' });
-    }
-    if (googleProfile.email_verified !== true && googleProfile.email_verified !== 'true') {
-      return res.status(401).json({ success: false, message: 'Email Google non verifie' });
+    if (allowedGoogleClientIds.length === 0) {
+      return res.status(503).json({ success: false, message: 'La connexion Google doit être configurée sur le serveur (GOOGLE_CLIENT_ID).' });
     }
 
+    let googleProfile;
+    try {
+      googleProfile = await verifyGoogleIdToken(googleToken, allowedGoogleClientIds);
+    } catch (verificationError) {
+      if (verificationError.code === 'GOOGLE_KEYS_UNAVAILABLE') {
+        return res.status(503).json({ success: false, message: 'Le service Google est temporairement indisponible. Réessayez.' });
+      }
+      return res.status(401).json({ success: false, message: 'Le jeton Google a expiré ou est invalide. Réessayez.' });
+    }
+    if (googleProfile.email_verified !== true && googleProfile.email_verified !== 'true') {
+      return res.status(401).json({ success: false, message: 'L’adresse e-mail Google n’est pas vérifiée.' });
+    }
+
+
     const userEmail = cleanEmail(googleProfile.email);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userEmail)) {
+      return res.status(401).json({ success: false, message: 'Le compte Google ne fournit pas une adresse e-mail valide.' });
+    }
     const displayName = googleProfile.name || `${googleProfile.given_name || ''} ${googleProfile.family_name || ''}`.trim() || 'Utilisateur Google';
-    
     const userRes = await db.query(
-      'SELECT id, email, prenom, nom, role, is_active FROM signal_moi.users WHERE email = $1',
+      'SELECT id, email, prenom, nom, role, is_active FROM signal_moi.users WHERE LOWER(email) = LOWER($1)',
       [userEmail]
     );
 
     let userId;
     let userRole = 'citoyen';
     if (userRes.rows.length > 0) {
-      // Utilisateur existant
-      if (userRes.rows[0].is_active === false) {
-        return res.status(401).json({ success: false, message: 'Ce compte est desactive' });
+      const existingUser = userRes.rows[0];
+      if (existingUser.is_active === false) {
+        return res.status(401).json({ success: false, message: 'Ce compte est désactivé.' });
       }
-      userId = userRes.rows[0].id;
-      userRole = userRes.rows[0].role || 'citoyen';
+      userId = existingUser.id;
+      userRole = existingUser.role || 'citoyen';
       await db.query('UPDATE signal_moi.users SET email_verified = true WHERE id = $1', [userId]);
-      console.log('[AUTH POST /google] ✅ Utilisateur existant connecté via Google:', userEmail);
+      console.log('[AUTH POST /google] Utilisateur existant connecté via Google:', userEmail);
     } else {
-      // Créer un nouvel utilisateur (citoyen par défaut)
-      const nomComplet = displayName;
-      const nomParts = nomComplet.split(' ');
-      const prenom = nomParts[0] || 'Citoyen';
-      const nom = nomParts.slice(1).join(' ') || 'Google';
-
-      // Générer un mot de passe aléatoire (l'utilisateur ne le connaît pas)
-      const randomPassword = require('crypto').randomBytes(16).toString('hex');
-      const hashedPassword = await bcrypt.hash(randomPassword, 10);
-
+      const nameParts = displayName.trim().split(/\s+/);
+      const prenom = nameParts[0] || 'Citoyen';
+      const nom = nameParts.slice(1).join(' ') || 'Google';
+      const randomPassword = require('crypto').randomBytes(32).toString('hex');
+      const hashedPassword = await bcrypt.hash(randomPassword, 12);
       const newUserRes = await db.query(
-        `INSERT INTO signal_moi.users 
+        `INSERT INTO signal_moi.users
         (email, password, prenom, nom, role, is_active, email_verified, created_at, updated_at)
         VALUES ($1, $2, $3, $4, 'citoyen', true, true, NOW(), NOW())
         RETURNING id`,
         [userEmail, hashedPassword, prenom, nom]
       );
-
       userId = newUserRes.rows[0].id;
-      console.log('[AUTH POST /google] ✅ Nouvel utilisateur créé via Google:', userEmail);
+      console.log('[AUTH POST /google] Nouvel utilisateur créé via Google:', userEmail);
     }
 
-    // Générer un JWT
-    const jwtToken = jwt.sign(
-      { id: userId, email: userEmail, role: userRole },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
-
-    res.json({
+    const jwtToken = jwt.sign({ id: userId, email: userEmail, role: userRole }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    return res.json({
       success: true,
       message: 'Authentification Google réussie',
       token: jwtToken,
-      user: {
-        id: userId,
-        email: userEmail,
-        role: userRole
-      }
+      user: { id: userId, email: userEmail, role: userRole }
     });
-
   } catch (err) {
-    console.error('[AUTH POST /google] Erreur:', err);
-    res.status(500).json({
-      success: false,
-      message: 'Erreur lors de l\'authentification Google',
-      details: err.message
-    });
+    console.error('[AUTH POST /google] Erreur:', err.message);
+    return res.status(500).json({ success: false, message: 'Connexion Google temporairement indisponible. Réessayez dans un instant.' });
   }
 });
 

@@ -13,14 +13,15 @@ if (typeof window !== 'undefined') {
   })
 }
 
-function ClickableMarker({ lat, lng, setLat, setLng }) {
+function ClickableMarker({ lat, lng, setLat, setLng, onSelect }) {
   useMapEvents({
     click(e) {
       setLat(e.latlng.lat)
       setLng(e.latlng.lng)
+      onSelect?.(e.latlng.lat, e.latlng.lng)
     }
   })
-  if (!lat || !lng) return null
+  if (lat == null || lng == null) return null
   return (
     <Marker position={[lat, lng]}>
       <Popup>Position sélectionnée</Popup>
@@ -28,8 +29,9 @@ function ClickableMarker({ lat, lng, setLat, setLng }) {
   )
 }
 
-export default function MapContent({ lat, lng, setLat, setLng, zoom = 13 }) {
-  const center = lat && lng ? [lat, lng] : [12.7086, -15.5569]
+export default function MapContent({ lat, lng, setLat, setLng, onSelect, zoom = 13 }) {
+  const hasPoint = lat != null && lng != null
+  const center = hasPoint ? [lat, lng] : [12.7086, -15.5569]
 
   return (
     <div className="w-full h-80 rounded overflow-hidden">
@@ -38,7 +40,7 @@ export default function MapContent({ lat, lng, setLat, setLng, zoom = 13 }) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <ClickableMarker lat={lat} lng={lng} setLat={setLat} setLng={setLng} />
+        <ClickableMarker lat={lat} lng={lng} setLat={setLat} setLng={setLng} onSelect={onSelect} />
       </MapContainer>
     </div>
   )

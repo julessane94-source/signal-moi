@@ -10,8 +10,8 @@ const DynamicMapContent = dynamic(
   }
 )
 
-export default function LeafletMap({ lat, lng, setLat, setLng, zoom = 13 }) {
+export default function LeafletMap({ lat, lng, setLat, setLng, onSelect, zoom = 13 }) {
   return (
-    <DynamicMapContent lat={lat} lng={lng} setLat={setLat} setLng={setLng} zoom={zoom} />
+    <DynamicMapContent lat={lat} lng={lng} setLat={setLat} setLng={setLng} onSelect={onSelect} zoom={zoom} />
   )
 }
