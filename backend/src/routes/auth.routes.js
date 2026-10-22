@@ -476,7 +476,7 @@ router.post('/google', async (req, res) => {
     }
 
     const googleResponse = await fetch(
-      \`https://oauth2.googleapis.com/tokeninfo?id_token=\${encodeURIComponent(googleToken)}\`,
+      `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(googleToken)}`,
       { signal: AbortSignal.timeout(8000) }
     );
     if (!googleResponse.ok) {
@@ -499,7 +499,7 @@ router.post('/google', async (req, res) => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userEmail)) {
       return res.status(401).json({ success: false, message: 'Le compte Google ne fournit pas une adresse e-mail valide.' });
     }
-    const displayName = googleProfile.name || \`\${googleProfile.given_name || ''} \${googleProfile.family_name || ''}\`.trim() || 'Utilisateur Google';
+    const displayName = googleProfile.name || `${googleProfile.given_name || ''} ${googleProfile.family_name || ''}`.trim() || 'Utilisateur Google';
     const userRes = await db.query(
       'SELECT id, email, prenom, nom, role, is_active FROM signal_moi.users WHERE LOWER(email) = LOWER($1)',
       [userEmail]
@@ -523,10 +523,10 @@ router.post('/google', async (req, res) => {
       const randomPassword = require('crypto').randomBytes(32).toString('hex');
       const hashedPassword = await bcrypt.hash(randomPassword, 12);
       const newUserRes = await db.query(
-        \`INSERT INTO signal_moi.users
+        `INSERT INTO signal_moi.users
         (email, password, prenom, nom, role, is_active, email_verified, created_at, updated_at)
         VALUES ($1, $2, $3, $4, 'citoyen', true, true, NOW(), NOW())
-        RETURNING id\`,
+        RETURNING id`,
         [userEmail, hashedPassword, prenom, nom]
       );
       userId = newUserRes.rows[0].id;
