@@ -5,7 +5,7 @@ const getApiBase = () => {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname
     if (host === 'localhost' || host === '127.0.0.1') return 'http://localhost:5000'
-    return 'https://signal-moi-api.onrender.com'
+    return 'https://signal-moi-backend.onrender.com'
   }
   return 'http://localhost:5000'
 }

@@ -8,7 +8,7 @@ const nextConfig = {
   },
   images: {
     domains: (function(){
-      const defaults = ['localhost', 'signal-moi.vercel.app', 'signal-moi-api.onrender.com']
+      const defaults = ['localhost', 'signal-moi.vercel.app', 'signal-moi-backend.onrender.com']
       try {
         const api = process.env.NEXT_PUBLIC_API_URL
         if (!api) return defaults
