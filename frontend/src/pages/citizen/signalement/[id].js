@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 
 import Link from 'next/link'
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL
+import { API_BASE } from '../../../config/api'
 
 const getDashboardPath = (role) => {
   const normalizedRole = String(role || '').trim().toLowerCase()
@@ -65,7 +64,7 @@ export default function SignalementDetail() {
     const token = localStorage.getItem('token')
     if (!token) return
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`, {
+      const res = await fetch(`${API_BASE}/api/auth/me`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       if (!res.ok) return
@@ -80,7 +79,7 @@ export default function SignalementDetail() {
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/signalements/${id}`, {
+      const res = await fetch(`${API_BASE}/api/signalements/${id}`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       })
       if (!res.ok) throw new Error('Not found')
@@ -97,7 +96,7 @@ export default function SignalementDetail() {
   const fetchPetitions = async () => {
     try {
       const token = localStorage.getItem('token')
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/plaidoyers`, {
+      const res = await fetch(`${API_BASE}/api/plaidoyers`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       })
       if (!res.ok) throw new Error('Erreur')
@@ -106,13 +105,13 @@ export default function SignalementDetail() {
 
       // Verifier quels plaidoyers ont ete signes
       if (token) {
-        const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`, {
+        const userRes = await fetch(`${API_BASE}/api/auth/me`, {
           headers: { 'Authorization': `Bearer ${token}` }
         })
         if (userRes.ok) {
           const userData = await userRes.json()
           const userId = userData.user?.id || userData.id
-          const signedRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/plaidoyers/signed/user/${userId}`, {
+          const signedRes = await fetch(`${API_BASE}/api/plaidoyers/signed/user/${userId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           })
           if (signedRes.ok) {
@@ -148,7 +147,7 @@ export default function SignalementDetail() {
     if (!signal) return
     setAlerting(true)
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/signalements/${signal.id}/alert`, { method: 'POST' })
+      const res = await fetch(`${API_BASE}/api/signalements/${signal.id}/alert`, { method: 'POST' })
       if (!res.ok) throw new Error('Erreur alerte')
       const data = await res.json()
       alert('Alerte lancee: ' + data.status)
@@ -172,7 +171,7 @@ export default function SignalementDetail() {
         return
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/signalements/${signal.id}`, {
+      const res = await fetch(`${API_BASE}/api/signalements/${signal.id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       })
@@ -202,7 +201,7 @@ export default function SignalementDetail() {
 
     setSigningPetition(true)
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/plaidoyers/${petitionId}/sign`, {
+      const res = await fetch(`${API_BASE}/api/plaidoyers/${petitionId}/sign`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
