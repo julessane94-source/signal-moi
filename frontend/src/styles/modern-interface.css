@@ -1,0 +1,166 @@
+/* Signal-Moi — modern interface layer
+   Adds a calm, consistent visual system without changing page behavior. */
+:root {
+  --sm-ink: #10201c;
+  --sm-muted: #64756f;
+  --sm-line: rgba(20, 83, 58, .12);
+  --sm-surface: rgba(255, 255, 255, .88);
+  --sm-green: #087b55;
+  --sm-green-dark: #075c42;
+  --sm-glow: 0 24px 70px rgba(15, 59, 43, .09);
+  --sm-ease: cubic-bezier(.2, .8, .2, 1);
+}
+
+html {
+  scroll-padding-top: 6rem;
+  scrollbar-color: #9ccbb7 #eef5f1;
+}
+
+body {
+  color: var(--sm-ink);
+  background:
+    radial-gradient(ellipse at 7% 0%, rgba(16, 185, 129, .11), transparent 34rem),
+    radial-gradient(ellipse at 94% 8%, rgba(56, 189, 248, .09), transparent 32rem),
+    #f6f9f7;
+}
+
+::selection {
+  color: #064e3b;
+  background: rgba(110, 231, 183, .38);
+}
+
+:focus-visible {
+  outline: 3px solid rgba(16, 185, 129, .62);
+  outline-offset: 3px;
+  border-radius: .65rem;
+}
+
+nav.fixed.inset-x-0 {
+  border-color: rgba(20, 83, 58, .1) !important;
+  background: rgba(250, 253, 251, .82) !important;
+  box-shadow: 0 8px 32px rgba(15, 59, 43, .07) !important;
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+}
+
+.site-page-shell {
+  color: var(--sm-ink);
+}
+
+.site-page-shell main {
+  animation: sm-page-arrive .55s var(--sm-ease) both;
+}
+
+.site-page-shell :is(.section-card, .hero-card, .interactive-card, .signalement-card, .home-panel) {
+  border: 1px solid var(--sm-line);
+  box-shadow: var(--sm-glow);
+  transition: transform .28s var(--sm-ease), box-shadow .28s var(--sm-ease), border-color .28s ease;
+}
+
+.site-page-shell :is(.section-card, .hero-card, .interactive-card, .signalement-card, .home-panel):hover {
+  border-color: rgba(8, 123, 85, .25);
+  box-shadow: 0 28px 76px rgba(15, 59, 43, .13);
+}
+
+.site-page-shell :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), textarea, select) {
+  border-color: #d8e4de;
+  border-radius: .9rem;
+  background-color: rgba(255, 255, 255, .92);
+  transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+}
+
+.site-page-shell :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), textarea, select):focus {
+  border-color: #10a875;
+  background-color: #fff;
+  box-shadow: 0 0 0 4px rgba(16, 168, 117, .12);
+  outline: none;
+}
+
+.site-page-shell :is(button, a[class*="bg-"]) {
+  transition: transform .2s var(--sm-ease), box-shadow .2s ease, filter .2s ease;
+}
+
+.site-page-shell button:hover:not(:disabled),
+.site-page-shell a[class*="bg-"]:hover {
+  filter: saturate(1.08);
+}
+
+.site-page-shell button:active:not(:disabled),
+.site-page-shell a[class*="bg-"]:active {
+  transform: scale(.98);
+}
+
+.site-page-shell button:disabled {
+  cursor: not-allowed;
+  opacity: .58;
+}
+
+.site-page-shell :is(table) {
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border-radius: 1rem;
+}
+
+.site-page-shell thead th {
+  color: #52675f;
+  background: #f2f7f4;
+  font-size: .72rem;
+  font-weight: 750;
+  letter-spacing: .075em;
+  text-transform: uppercase;
+}
+
+.site-page-shell tbody tr {
+  transition: background-color .18s ease;
+}
+
+.site-page-shell tbody tr:hover {
+  background-color: rgba(236, 253, 245, .68);
+}
+
+.site-page-shell :is(.badge-success, .badge-warning, .badge-danger, .badge-info) {
+  border: 1px solid currentColor;
+  border-opacity: .12;
+  border-radius: 9999px;
+  font-weight: 700;
+}
+
+.site-page-shell :is(.shadow-lg, .shadow-xl, .shadow-2xl) {
+  --tw-shadow-color: rgba(15, 59, 43, .12);
+}
+
+.site-page-shell a {
+  text-underline-offset: .2em;
+}
+
+.site-page-shell :is(img, video) {
+  max-width: 100%;
+}
+
+.site-page-shell img {
+  height: auto;
+}
+
+.site-page-shell .content-reveal {
+  transition-duration: .72s;
+  transition-timing-function: var(--sm-ease);
+}
+
+.site-page-shell :is(.animate-pulse, .animate-bounce, .animate-spin) {
+  animation-duration: 1.8s;
+}
+
+@keyframes sm-page-arrive {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
