@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '../../context/AuthContext'
-import { Button, Card, FormField, Input, Modal, DataTable, StatBox, Badge, EmptyState, LoadingSkeleton, DataTableModern, StatCardModern } from '../../components/ui'
+import { Button, Card, FormField, Input, Modal, DataTable, Badge, EmptyState, LoadingSkeleton } from '../../components/ui'
 import { motion } from 'framer-motion'
 import { toast } from 'react-toastify'
 import { API_BASE } from '../../config/api'
