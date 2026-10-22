@@ -102,7 +102,13 @@ export const AuthProvider = ({ children }) => {
       setTimeout(() => router.push('/citizen/dashboard'), 100)
       return true
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Erreur inscription')
+      const apiMessage = error.response?.data?.error || error.response?.data?.message
+      toast.error(
+        apiMessage ||
+          (error.response
+            ? 'Inscription impossible. Vérifiez les informations saisies et réessayez.'
+            : 'Impossible de joindre le serveur. Vérifiez votre connexion puis réessayez.')
+      )
       return false
     }
   }, [])
