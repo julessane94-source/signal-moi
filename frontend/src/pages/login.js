@@ -92,11 +92,11 @@ export default function Login() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ idToken })
               })
+              const body = await res.json().catch(() => ({}))
               if (!res.ok) {
-                console.error('Google auth failed')
+                setGoogleMessage(body.message || 'La connexion Google a échoué. Réessayez.')
                 return
               }
-              const body = await res.json()
               const token = body.token
               if (token) {
                 localStorage.setItem('token', token)
@@ -120,6 +120,7 @@ export default function Login() {
               }
             } catch (err) {
               console.error('Erreur Google sign-in:', err)
+              setGoogleMessage('Connexion Google impossible pour le moment. Vérifiez votre connexion puis réessayez.')
             }
           }
         })
