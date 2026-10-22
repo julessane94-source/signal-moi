@@ -1,10 +1,10 @@
 ﻿{
   "name": "Signal-Moi",
   "short_name": "SignalMoi",
-  "description": "Plateforme citoyenne de signalement d'incidents pour un cadre de vie plus sur.",
+  "description": "Plateforme citoyenne de signalement d’incidents pour un cadre de vie plus sûr.",
   "start_url": "/",
   "display": "standalone",
-  "theme_color": "#dc2626",
+  "theme_color": "#047857",
   "background_color": "#ffffff",
   "orientation": "portrait",
   "lang": "fr",
