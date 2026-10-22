@@ -1,56 +1,53 @@
 #!/usr/bin/env node
 /**
- * Script pour exécuter toutes les migrations avec une DATABASE_URL spécifiée
+ * Bootstrap PostgreSQL non destructif.
+ * Ne lance pas les anciennes migrations MySQL ni un sync Sequelize avec alter:true.
+ * Le serveur applique ces mêmes scripts idempotents au démarrage.
  */
-
 const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');
 
-const DATABASE_URL = process.env.DATABASE_URL || 
-  'postgresql://signal_moi_db_bqhw_user:YOwlsgv09ScniveqtI0ostBM7mHZmaKb@dpg-d80gj4vaqgkc73a3tq2g-a.frankfurt-postgres.render.com/signal_moi_db_bqhw';
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  console.error('La variable DATABASE_URL est obligatoire.');
+  process.exit(2);
+}
 
 const pool = new Pool({
-  connectionString: DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  connectionString: databaseUrl,
+  ssl: process.env.NODE_ENV === 'production'
+    ? { rejectUnauthorized: false }
+    : undefined
 });
 
-async function runAllMigrations() {
+async function main() {
+  const root = path.join(__dirname, '..', 'database');
+  const files = [
+    path.join(root, 'init_postgres.sql'),
+    path.join(root, 'migrations', '013_create_missing_site_config_table.sql')
+  ];
+
   const client = await pool.connect();
   try {
-    const migrationsDir = path.join(__dirname, '../database/migrations');
-    const files = fs.readdirSync(migrationsDir)
-      .filter(f => f.endsWith('.sql'))
-      .sort();
-
-    console.log(`🔧 Exécution de ${files.length} migrations...`);
-    console.log(`📡 Base: ${DATABASE_URL.split('@')[1]}`);
-
     for (const file of files) {
-      const filePath = path.join(migrationsDir, file);
-      console.log(`\n▶️  ${file}...`);
-      
-      const sql = fs.readFileSync(filePath, 'utf-8');
-      
-      try {
-        await client.query(sql);
-        console.log(`✅ ${file} exécutée`);
-      } catch (err) {
-        console.error(`❌ Erreur dans ${file}:`, err.message);
-        throw err;
+      if (!fs.existsSync(file)) {
+        throw new Error(`Fichier SQL introuvable: ${path.basename(file)}`);
       }
+      await client.query(fs.readFileSync(file, 'utf8'));
+      console.log(`Schéma appliqué: ${path.basename(file)}`);
     }
-
-    console.log(`\n✅ Toutes les migrations exécutées avec succès!`);
+    await client.query(`ALTER TABLE signal_moi.fichiers ADD COLUMN IF NOT EXISTS campagne_id UUID`);
+    await client.query(`ALTER TABLE signal_moi.fichiers ALTER COLUMN signalement_id DROP NOT NULL`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_fichiers_campagne ON signal_moi.fichiers(campagne_id)`);
+    console.log('Bootstrap PostgreSQL terminé.');
   } finally {
-    await client.release();
+    client.release();
     await pool.end();
   }
 }
 
-runAllMigrations().catch(err => {
-  console.error(`\n❌ Erreur:`, err.message);
+main().catch(error => {
+  console.error('Échec du bootstrap PostgreSQL:', error.message);
   process.exit(1);
 });
