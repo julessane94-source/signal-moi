@@ -34,6 +34,41 @@ const initializeDatabase = async () => {
     `CREATE INDEX IF NOT EXISTS idx_fichiers_campagne
        ON signal_moi.fichiers(campagne_id)`
   );
+  await provisionInitialAdmin();
+};
+
+
+/**
+ * Création initiale facultative d'un compte administrateur.
+ * Activer uniquement avec INITIAL_ADMIN_EMAIL et INITIAL_ADMIN_PASSWORD dans Render,
+ * puis retirer ces deux variables après le premier déploiement réussi.
+ */
+const provisionInitialAdmin = async () => {
+  const email = String(process.env.INITIAL_ADMIN_EMAIL || '').trim().toLowerCase();
+  const password = process.env.INITIAL_ADMIN_PASSWORD || '';
+  if (!email && !password) return;
+  if (!email || !password) {
+    throw new Error('INITIAL_ADMIN_EMAIL et INITIAL_ADMIN_PASSWORD doivent être définis ensemble.');
+  }
+  if (password.length < 12 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password)) {
+    throw new Error('Le mot de passe initial admin ne respecte pas la politique de sécurité.');
+  }
+
+  const bcrypt = require('bcrypt');
+  const hashedPassword = await bcrypt.hash(password, 12);
+  await sequelize.query(
+    `INSERT INTO signal_moi.users
+      (prenom, nom, email, telephone, password, role, is_active, email_verified)
+     VALUES ('Administrateur', 'Signal-moi', :email, '', :password, 'admin', true, true)
+     ON CONFLICT (email) DO UPDATE SET
+       password = EXCLUDED.password,
+       role = 'admin',
+       is_active = true,
+       email_verified = true,
+       updated_at = NOW()`,
+    { replacements: { email, password: hashedPassword } }
+  );
+  console.log('✅ Compte administrateur initial créé ou actualisé.');
 };
 
 module.exports = { initializeDatabase };
