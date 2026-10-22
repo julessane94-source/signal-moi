@@ -34,6 +34,7 @@ const initializeDatabase = async () => {
     `CREATE INDEX IF NOT EXISTS idx_fichiers_campagne
        ON signal_moi.fichiers(campagne_id)`
   );
+  await provisionInitialAdmin();
 };
 
 
@@ -70,4 +71,4 @@ const provisionInitialAdmin = async () => {
   console.log('✅ Compte administrateur initial créé ou actualisé.');
 };
 
-const moduleExports = { initializeDatabase, provisionInitialAdmin };
+module.exports = { initializeDatabase };
