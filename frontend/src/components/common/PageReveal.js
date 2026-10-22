@@ -12,9 +12,12 @@ export default function PageReveal() {
 
     const targets = [...root.querySelectorAll('main > section, main > div > section, main > div > div > section, [data-reveal], .card-stagger > *')]
       .filter((element) => !element.closest('[data-no-reveal]'))
+    const firstContent = root.querySelector('main > section, main > div > section, main > div > div > section')
 
     targets.forEach((element, index) => {
       element.classList.add('content-reveal')
+      // Keep the first screen visible immediately; reveal only content below it.
+      if (element === firstContent) element.classList.add('is-visible')
       const siblings = element.parentElement?.classList.contains('card-stagger')
         ? [...element.parentElement.children]
         : null
