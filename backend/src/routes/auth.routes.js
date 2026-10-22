@@ -36,15 +36,29 @@ const cleanEmail = (value) => String(value || '').trim().toLowerCase();
 
 let googleSigningKeysCache = { keys: [], expiresAt: 0 };
 
+let googleSigningKeysCache = { keys: [], expiresAt: 0 };
+
 const getGoogleSigningKeys = async (forceRefresh = false) => {
   if (!forceRefresh && googleSigningKeysCache.expiresAt > Date.now()) return googleSigningKeysCache.keys;
 
-  const response = await fetch('https://www.googleapis.com/oauth2/v3/certs', {
-    signal: AbortSignal.timeout(8000)
-  });
-  if (!response.ok) throw new Error('Impossible de récupérer les clés Google');
+  let response;
+  try {
+    response = await fetch('https://www.googleapis.com/oauth2/v3/certs', {
+      signal: AbortSignal.timeout(8000)
+    });
+  } catch (error) {
+    const unavailable = new Error('Google signing keys are unavailable');
+    unavailable.code = 'GOOGLE_KEYS_UNAVAILABLE';
+    throw unavailable;
+  }
+  if (!response.ok) {
+    const unavailable = new Error('Google signing keys are unavailable');
+    unavailable.code = 'GOOGLE_KEYS_UNAVAILABLE';
+    throw unavailable;
+  }
+
   const body = await response.json();
-  const maxAge = Number(response.headers.get('cache-control')?.match(/max-age=(\d+)/i)?.[1] || 300);
+  const maxAge = Number(response.headers.get('cache-control')?.match(/max-age=(\\d+)/i)?.[1] || 300);
   googleSigningKeysCache = {
     keys: Array.isArray(body.keys) ? body.keys : [],
     expiresAt: Date.now() + Math.min(Math.max(maxAge, 60), 3600) * 1000
@@ -54,26 +68,28 @@ const getGoogleSigningKeys = async (forceRefresh = false) => {
 
 const verifyGoogleIdToken = async (idToken, allowedAudiences) => {
   const segments = String(idToken || '').split('.');
-  if (segments.length !== 3) throw new Error('Jeton Google mal formé');
+  if (segments.length !== 3) throw new Error('Malformed Google token');
 
-  const [encodedHeader, encodedPayload, encodedSignature] = segments;
+  const encodedHeader = segments[0];
+  const encodedPayload = segments[1];
+  const encodedSignature = segments[2];
   const header = JSON.parse(Buffer.from(encodedHeader, 'base64url').toString('utf8'));
   const claims = JSON.parse(Buffer.from(encodedPayload, 'base64url').toString('utf8'));
-  if (header.alg !== 'RS256' || !header.kid) throw new Error('Signature Google non prise en charge');
+  if (header.alg !== 'RS256' || !header.kid) throw new Error('Unsupported Google signature');
 
   let key = (await getGoogleSigningKeys()).find((candidate) => candidate.kid === header.kid);
   if (!key) key = (await getGoogleSigningKeys(true)).find((candidate) => candidate.kid === header.kid);
-  if (!key || key.kty !== 'RSA') throw new Error('Clé de signature Google introuvable');
+  if (!key || key.kty !== 'RSA') throw new Error('Google signing key not found');
 
   const crypto = require('crypto');
   const publicKey = crypto.createPublicKey({ key, format: 'jwk' });
   const validSignature = crypto.verify(
     'RSA-SHA256',
-    Buffer.from(\`\${encodedHeader}.\${encodedPayload}\`),
+    Buffer.from(encodedHeader + '.' + encodedPayload),
     publicKey,
     Buffer.from(encodedSignature, 'base64url')
   );
-  if (!validSignature) throw new Error('Signature Google invalide');
+  if (!validSignature) throw new Error('Invalid Google signature');
 
   const now = Math.floor(Date.now() / 1000);
   const validIssuer = ['accounts.google.com', 'https://accounts.google.com'].includes(claims.iss);
@@ -84,7 +100,7 @@ const verifyGoogleIdToken = async (idToken, allowedAudiences) => {
   if (!validIssuer || !claims.sub || !validAudience || !validAuthorizedParty
       || !Number.isFinite(Number(claims.exp)) || Number(claims.exp) <= now
       || !Number.isFinite(Number(claims.iat)) || Number(claims.iat) > now + 60) {
-    throw new Error('Claims du jeton Google invalides ou expirées');
+    throw new Error('Invalid or expired Google claims');
   }
   return claims;
 };
@@ -531,7 +547,15 @@ router.post('/google', async (req, res) => {
       return res.status(503).json({ success: false, message: 'La connexion Google doit être configurée sur le serveur (GOOGLE_CLIENT_ID).' });
     }
 
-    const googleProfile = await verifyGoogleIdToken(googleToken, allowedGoogleClientIds);
+    let googleProfile;
+    try {
+      googleProfile = await verifyGoogleIdToken(googleToken, allowedGoogleClientIds);
+    } catch (verificationError) {
+      if (verificationError.code === 'GOOGLE_KEYS_UNAVAILABLE') {
+        return res.status(503).json({ success: false, message: 'Le service Google est temporairement indisponible. Réessayez.' });
+      }
+      return res.status(401).json({ success: false, message: 'Le jeton Google a expiré ou est invalide. Réessayez.' });
+    }
     if (googleProfile.email_verified !== true && googleProfile.email_verified !== 'true') {
       return res.status(401).json({ success: false, message: 'L’adresse e-mail Google n’est pas vérifiée.' });
     }
