@@ -29,7 +29,7 @@ services:
 
 databases:
   - name: signal-moi-db
-    databaseName: signal_moi_db
+    databaseName: signal_moi_db_2fq0
     plan: free
     region: frankfurt
     postgresMajorVersion: "16"
