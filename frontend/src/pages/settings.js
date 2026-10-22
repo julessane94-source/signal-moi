@@ -62,7 +62,7 @@ export default function Settings() {
       setPasswordError('Choisissez un mot de passe différent de l’actuel.')
       return
     }
-    if (passwords.newPassword.length < 12 || !/[a-z]/.test(passwords.newPassword) || !/[A-Z]/.test(passwords.newPassword) || !/\\d/.test(passwords.newPassword)) {
+    if (passwords.newPassword.length < 12 || !/[a-z]/.test(passwords.newPassword) || !/[A-Z]/.test(passwords.newPassword) || !/\d/.test(passwords.newPassword)) {
       setPasswordError('Le nouveau mot de passe doit contenir au moins 12 caractères, une minuscule, une majuscule et un chiffre.')
       return
     }
