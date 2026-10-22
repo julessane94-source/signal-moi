@@ -33,6 +33,62 @@ const buildLogoUrl = (logoRecord) => {
 };
 
 const cleanEmail = (value) => String(value || '').trim().toLowerCase();
+
+let googleSigningKeysCache = { keys: [], expiresAt: 0 };
+
+const getGoogleSigningKeys = async (forceRefresh = false) => {
+  if (!forceRefresh && googleSigningKeysCache.expiresAt > Date.now()) return googleSigningKeysCache.keys;
+
+  const response = await fetch('https://www.googleapis.com/oauth2/v3/certs', {
+    signal: AbortSignal.timeout(8000)
+  });
+  if (!response.ok) throw new Error('Impossible de récupérer les clés Google');
+  const body = await response.json();
+  const maxAge = Number(response.headers.get('cache-control')?.match(/max-age=(\d+)/i)?.[1] || 300);
+  googleSigningKeysCache = {
+    keys: Array.isArray(body.keys) ? body.keys : [],
+    expiresAt: Date.now() + Math.min(Math.max(maxAge, 60), 3600) * 1000
+  };
+  return googleSigningKeysCache.keys;
+};
+
+const verifyGoogleIdToken = async (idToken, allowedAudiences) => {
+  const segments = String(idToken || '').split('.');
+  if (segments.length !== 3) throw new Error('Jeton Google mal formé');
+
+  const [encodedHeader, encodedPayload, encodedSignature] = segments;
+  const header = JSON.parse(Buffer.from(encodedHeader, 'base64url').toString('utf8'));
+  const claims = JSON.parse(Buffer.from(encodedPayload, 'base64url').toString('utf8'));
+  if (header.alg !== 'RS256' || !header.kid) throw new Error('Signature Google non prise en charge');
+
+  let key = (await getGoogleSigningKeys()).find((candidate) => candidate.kid === header.kid);
+  if (!key) key = (await getGoogleSigningKeys(true)).find((candidate) => candidate.kid === header.kid);
+  if (!key || key.kty !== 'RSA') throw new Error('Clé de signature Google introuvable');
+
+  const crypto = require('crypto');
+  const publicKey = crypto.createPublicKey({ key, format: 'jwk' });
+  const validSignature = crypto.verify(
+    'RSA-SHA256',
+    Buffer.from(\`\${encodedHeader}.\${encodedPayload}\`),
+    publicKey,
+    Buffer.from(encodedSignature, 'base64url')
+  );
+  if (!validSignature) throw new Error('Signature Google invalide');
+
+  const now = Math.floor(Date.now() / 1000);
+  const validIssuer = ['accounts.google.com', 'https://accounts.google.com'].includes(claims.iss);
+  const validAudience = typeof claims.aud === 'string'
+    ? allowedAudiences.includes(claims.aud)
+    : Array.isArray(claims.aud) && claims.aud.some((audience) => allowedAudiences.includes(audience));
+  const validAuthorizedParty = !claims.azp || allowedAudiences.includes(claims.azp);
+  if (!validIssuer || !claims.sub || !validAudience || !validAuthorizedParty
+      || !Number.isFinite(Number(claims.exp)) || Number(claims.exp) <= now
+      || !Number.isFinite(Number(claims.iat)) || Number(claims.iat) > now + 60) {
+    throw new Error('Claims du jeton Google invalides ou expirées');
+  }
+  return claims;
+};
+
 const cleanPhone = (value) => String(value || '').trim().replace(/\s+/g, '');
 
 const getUnreadNotificationCount = async (userId) => {
@@ -475,25 +531,11 @@ router.post('/google', async (req, res) => {
       return res.status(503).json({ success: false, message: 'La connexion Google doit être configurée sur le serveur (GOOGLE_CLIENT_ID).' });
     }
 
-    const googleResponse = await fetch(
-      `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(googleToken)}`,
-      { signal: AbortSignal.timeout(8000) }
-    );
-    if (!googleResponse.ok) {
-      return res.status(401).json({ success: false, message: 'Le jeton Google a expiré ou est invalide. Réessayez.' });
-    }
-    const googleProfile = await googleResponse.json();
-    const tokenExpiry = Number(googleProfile.exp);
-    const validIssuer = ['accounts.google.com', 'https://accounts.google.com'].includes(googleProfile.iss);
-    if (!validIssuer || !googleProfile.sub || !Number.isFinite(tokenExpiry) || tokenExpiry <= Math.floor(Date.now() / 1000)) {
-      return res.status(401).json({ success: false, message: 'Le jeton Google a expiré ou est invalide. Réessayez.' });
-    }
-    if (!allowedGoogleClientIds.includes(String(googleProfile.aud || ''))) {
-      return res.status(401).json({ success: false, message: 'Le client Google du site ne correspond pas à la configuration du serveur.' });
-    }
+    const googleProfile = await verifyGoogleIdToken(googleToken, allowedGoogleClientIds);
     if (googleProfile.email_verified !== true && googleProfile.email_verified !== 'true') {
       return res.status(401).json({ success: false, message: 'L’adresse e-mail Google n’est pas vérifiée.' });
     }
+
 
     const userEmail = cleanEmail(googleProfile.email);
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userEmail)) {
