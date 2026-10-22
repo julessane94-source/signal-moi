@@ -10,7 +10,8 @@ const initializeDatabase = async () => {
   const databaseRoot = path.resolve(__dirname, '../../database');
   const schemaFiles = [
     path.join(databaseRoot, 'init_postgres.sql'),
-    path.join(databaseRoot, 'migrations/013_create_missing_site_config_table.sql')
+    path.join(databaseRoot, 'migrations/013_create_missing_site_config_table.sql'),
+    path.join(databaseRoot, 'migrations/014_add_collaborator_signalement_types.sql')
   ];
 
   for (const file of schemaFiles) {
