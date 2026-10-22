@@ -689,13 +689,13 @@ export default function AdminDashboard() {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8 overflow-hidden rounded-[2rem] border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white shadow-2xl"
+            className="mb-8 overflow-hidden rounded-[2rem] border border-emerald-950/20 bg-gradient-to-br from-slate-950 via-emerald-950 to-teal-950 text-white shadow-[0_28px_80px_rgba(6,78,59,.2)]"
           >
             <div className="grid gap-6 p-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(290px,0.75fr)] lg:p-8">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-indigo-200">Centre de pilotage</p>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-200">Centre de pilotage</p>
                 <h1 className="mt-3 flex items-center gap-3 text-3xl font-black sm:text-5xl">
-                  <BarChart className="h-9 w-9 text-indigo-300 sm:h-11 sm:w-11" />
+                  <BarChart className="h-9 w-9 text-emerald-300 sm:h-11 sm:w-11" />
                   Administration
                 </h1>
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
@@ -745,7 +745,7 @@ export default function AdminDashboard() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 rounded-xl px-4 py-3 font-semibold transition-all whitespace-nowrap ${
                   activeTab === tab.id
-                    ? 'bg-slate-950 text-white shadow-lg'
+                    ? 'bg-emerald-700 text-white shadow-md shadow-emerald-900/15'
                     : 'text-slate-700 hover:bg-slate-100'
                 }`}
               >
@@ -756,119 +756,174 @@ export default function AdminDashboard() {
             })}
           </div>
 
-          {/* Dashboard Tab - Stats */}
+          {/* Dashboard Tab - Overview */}
           {activeTab === 'dashboard' && (
             <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="space-y-6"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.28, ease: 'easeOut' }}
+              className="space-y-7"
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCardModern
-                  title="Total utilisateurs"
-                  value={stats.totalUsers}
-                  icon={Users}
-                  gradient={true}
-                  trend="up"
-                  change={12}
-                />
-                <StatCardModern
-                  title="Signalements"
-                  value={stats.totalSignalements}
-                  icon={DocumentText}
-                  gradient={true}
-                  trend="up"
-                  change={8}
-                />
-                <StatCardModern
-                  title="Campagnes actives"
-                  value={stats.totalCampagnes}
-                  icon={BarChart}
-                  gradient={true}
-                  trend="down"
-                  change={-3}
-                />
-                <StatCardModern
-                  title="Utilisateurs actifs"
-                  value={stats.activeUsers}
-                  icon={Users}
-                  gradient={true}
-                  trend="up"
-                  change={15}
-                />
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-emerald-700">Vue générale</p>
+                  <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+                    Bonjour{user.prenom ? `, ${user.prenom}` : ''}
+                  </h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                    Retrouvez ici les indicateurs et les accès rapides de la plateforme.
+                  </p>
+                </div>
+                <Link href="/admin/statistics" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-800">
+                  <BarChart className="h-4 w-4" /> Ouvrir les statistiques
+                </Link>
               </div>
 
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                {[
+                  { title: 'Utilisateurs', value: stats.totalUsers, note: 'Comptes enregistrés', icon: Users, tone: 'emerald' },
+                  { title: 'Signalements', value: stats.totalSignalements, note: 'Dossiers reçus', icon: DocumentText, tone: 'sky' },
+                  { title: 'Campagnes actives', value: stats.totalCampagnes, note: 'Actions publiées', icon: BarChart, tone: 'violet' },
+                  { title: 'Comptes actifs', value: stats.activeUsers, note: 'Accès actuellement ouverts', icon: ShieldCheck, tone: 'amber' }
+                ].map((item) => {
+                  const Icon = item.icon
+                  const tones = {
+                    emerald: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
+                    sky: 'bg-sky-50 text-sky-700 ring-sky-100',
+                    violet: 'bg-violet-50 text-violet-700 ring-violet-100',
+                    amber: 'bg-amber-50 text-amber-700 ring-amber-100'
+                  }
+                  return (
+                    <motion.article
+                      key={item.title}
+                      whileHover={{ y: -3 }}
+                      className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_12px_32px_rgba(15,23,42,.055)]"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-600">{item.title}</p>
+                          <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">{Number(item.value || 0).toLocaleString('fr-FR')}</p>
+                        </div>
+                        <span className={`grid h-11 w-11 place-items-center rounded-2xl ring-1 ${tones[item.tone]}`}>
+                          <Icon className="h-5 w-5" />
+                        </span>
+                      </div>
+                      <p className="mt-3 text-xs font-medium text-slate-500">{item.note}</p>
+                      <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-emerald-400/70 via-sky-400/50 to-transparent" />
+                    </motion.article>
+                  )
+                })}
+              </div>
+
+              <section aria-labelledby="admin-quick-actions" className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_16px_44px_rgba(15,23,42,.055)] sm:p-6">
+                <div className="mb-5">
+                  <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-emerald-700">Raccourcis</p>
+                  <h3 id="admin-quick-actions" className="mt-1 text-lg font-extrabold text-slate-950">Que souhaitez-vous gérer ?</h3>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  {[
+                    { id: 'users', title: 'Utilisateurs', detail: 'Comptes et rôles', icon: Users },
+                    { id: 'signalements', title: 'Signalements', detail: 'Consulter les dossiers', icon: DocumentText },
+                    { id: 'campagnes', title: 'Campagnes', detail: 'Suivre les actions publiées', icon: BarChart },
+                    { id: 'config', title: 'Configuration', detail: 'Contenu et identité du site', icon: Cog }
+                  ].map((item) => {
+                    const Icon = item.icon
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setActiveTab(item.id)}
+                        className="group flex min-h-[5.5rem] items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-left transition hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50/70 hover:shadow-md"
+                      >
+                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-emerald-700 shadow-sm ring-1 ring-slate-200 transition group-hover:ring-emerald-200">
+                          <Icon className="h-5 w-5" />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block font-bold text-slate-900">{item.title}</span>
+                          <span className="mt-0.5 block text-xs text-slate-500">{item.detail}</span>
+                        </span>
+                        <span className="ml-auto text-lg text-slate-400 transition group-hover:translate-x-1 group-hover:text-emerald-700" aria-hidden="true">›</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </section>
+
               {completeStats && (
-                <div className="grid gap-4 lg:grid-cols-3">
-                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <h3 className="font-bold text-slate-950">Signalements au complet</h3>
-                    <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                      {Object.entries({
-                        Nouveaux: completeStats.totals?.nouveaux,
-                        'En cours': completeStats.totals?.enCours,
-                        Traites: completeStats.totals?.traites,
-                        Transferes: completeStats.totals?.transferes,
-                        '24h': completeStats.totals?.last24h,
-                        '7 jours': completeStats.totals?.last7d,
-                        GPS: completeStats.totals?.avecGps,
-                        Anonymes: completeStats.totals?.anonymes
-                      }).map(([label, value]) => (
-                        <div key={label} className="rounded-xl bg-slate-50 p-3">
-                          <p className="text-slate-500">{label}</p>
-                          <p className="text-xl font-bold text-slate-950">{value || 0}</p>
-                        </div>
-                      ))}
+                <div className="grid gap-4 xl:grid-cols-[1.1fr_.95fr_.95fr]">
+                  <section className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
+                    <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-emerald-700">Suivi opérationnel</p>
+                    <h3 className="mt-1 text-lg font-extrabold text-slate-950">État des signalements</h3>
+                    <div className="mt-5 space-y-4">
+                      {[
+                        { label: 'Nouveaux', value: completeStats.totals?.nouveaux, color: 'bg-sky-500' },
+                        { label: 'En cours', value: completeStats.totals?.enCours, color: 'bg-amber-500' },
+                        { label: 'Traités', value: completeStats.totals?.traites, color: 'bg-emerald-500' },
+                        { label: 'Transférés', value: completeStats.totals?.transferes, color: 'bg-violet-500' }
+                      ].map((item) => {
+                        const value = Number(item.value || 0)
+                        const total = Math.max(1, Number(completeStats.totals?.signalements || stats.totalSignalements || 0))
+                        return (
+                          <div key={item.label}>
+                            <div className="mb-1.5 flex items-center justify-between text-sm">
+                              <span className="font-semibold text-slate-700">{item.label}</span>
+                              <span className="font-extrabold tabular-nums text-slate-950">{value.toLocaleString('fr-FR')}</span>
+                            </div>
+                            <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                              <div className={`h-full rounded-full ${item.color}`} style={{ width: `${Math.min(100, (value / total) * 100)}%` }} />
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
-                  </div>
-                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <h3 className="font-bold text-slate-950">Par type</h3>
-                    <div className="mt-4 space-y-2 text-sm">
-                      {Object.entries(completeStats.byType || {}).slice(0, 8).map(([label, value]) => (
-                        <div key={label} className="flex justify-between rounded-lg bg-slate-50 px-3 py-2">
-                          <span>{label}</span><strong>{value}</strong>
-                        </div>
-                      ))}
+                    <div className="mt-5 grid grid-cols-2 gap-3 border-t border-slate-100 pt-4">
+                      <div className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-medium text-slate-500">Dernières 24 h</p><p className="mt-1 text-xl font-black text-slate-950">{completeStats.totals?.last24h || 0}</p></div>
+                      <div className="rounded-xl bg-slate-50 p-3"><p className="text-xs font-medium text-slate-500">7 derniers jours</p><p className="mt-1 text-xl font-black text-slate-950">{completeStats.totals?.last7d || 0}</p></div>
                     </div>
-                  </div>
-                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <h3 className="font-bold text-slate-950">Par zone</h3>
-                    <div className="mt-4 space-y-2 text-sm">
-                      {Object.entries(completeStats.byZone || {}).slice(0, 8).map(([label, value]) => (
-                        <div key={label} className="flex justify-between rounded-lg bg-slate-50 px-3 py-2">
-                          <span className="truncate pr-3">{label}</span><strong>{value}</strong>
+                  </section>
+
+                  {[
+                    { title: 'Répartition par type', values: completeStats.byType, icon: DocumentText },
+                    { title: 'Répartition par zone', values: completeStats.byZone, icon: BuildingOffice2 }
+                  ].map((group) => {
+                    const Icon = group.icon
+                    const entries = Object.entries(group.values || {}).slice(0, 7)
+                    return (
+                      <section key={group.title} className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
+                        <div className="flex items-center gap-3">
+                          <span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-50 text-emerald-700"><Icon className="h-5 w-5" /></span>
+                          <div><p className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-500">Analyse</p><h3 className="font-extrabold text-slate-950">{group.title}</h3></div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
+                        <div className="mt-4 space-y-2">
+                          {entries.length ? entries.map(([label, value]) => (
+                            <div key={label} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2.5 text-sm">
+                              <span className="truncate font-medium text-slate-700">{label}</span>
+                              <strong className="shrink-0 tabular-nums text-slate-950">{Number(value || 0).toLocaleString('fr-FR')}</strong>
+                            </div>
+                          )) : <p className="rounded-xl bg-slate-50 px-3 py-4 text-sm text-slate-500">Aucune donnée disponible pour le moment.</p>}
+                        </div>
+                      </section>
+                    )
+                  })}
                 </div>
               )}
 
-              {/* Statistiques PDF */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg p-6 shadow-lg"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-2xl font-bold mb-2">📊 Rapport de Statistiques</h3>
-                    <p className="text-indigo-100">Accédez aux statistiques complètes des signalements avec graphiques et export PDF</p>
+              <section className="overflow-hidden rounded-3xl border border-emerald-900/10 bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-800 p-5 text-white shadow-lg sm:p-6">
+                <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex items-start gap-4">
+                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/10 text-emerald-100 ring-1 ring-white/15"><DocumentText className="h-6 w-6" /></span>
+                    <div>
+                      <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-emerald-200">Rapport d’activité</p>
+                      <h3 className="mt-1 text-xl font-black">Exporter les statistiques</h3>
+                      <p className="mt-1 max-w-2xl text-sm leading-6 text-emerald-50/80">Téléchargez le bilan détaillé des signalements pour vos réunions et votre suivi.</p>
+                    </div>
                   </div>
-                  <div className="flex flex-wrap justify-end gap-3">
-                    <button onClick={() => exportStatistics('pdf')} className="bg-white text-indigo-600 font-bold px-5 py-3 rounded-lg hover:shadow-lg transition">
-                      Telecharger PDF
-                    </button>
-                    <button onClick={() => exportStatistics('excel')} className="bg-emerald-500 text-white font-bold px-5 py-3 rounded-lg hover:shadow-lg transition">
-                      Telecharger Excel
-                    </button>
-                    <Link href="/admin/statistics">
-                      <button className="bg-indigo-950/40 text-white font-bold px-5 py-3 rounded-lg hover:bg-indigo-950/60 transition">
-                        Voir plus
-                      </button>
-                    </Link>
+                  <div className="flex flex-wrap gap-2">
+                    <button onClick={() => exportStatistics('pdf')} className="min-h-11 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-emerald-900 transition hover:bg-emerald-50">Exporter en PDF</button>
+                    <button onClick={() => exportStatistics('excel')} className="min-h-11 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-white/15">Exporter en Excel</button>
                   </div>
                 </div>
-              </motion.div>
+              </section>
             </motion.div>
           )}
 
