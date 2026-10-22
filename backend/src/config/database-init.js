@@ -50,7 +50,7 @@ const provisionInitialAdmin = async () => {
   if (!email || !password) {
     throw new Error('INITIAL_ADMIN_EMAIL et INITIAL_ADMIN_PASSWORD doivent être définis ensemble.');
   }
-  if (password.length < 12 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\\d/.test(password)) {
+  if (password.length < 12 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password)) {
     throw new Error('Le mot de passe initial admin ne respecte pas la politique de sécurité.');
   }
 
