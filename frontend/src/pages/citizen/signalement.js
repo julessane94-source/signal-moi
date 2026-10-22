@@ -19,9 +19,11 @@ const SIMPLE_DESCRIPTIONS = Object.fromEntries(REPORT_TYPES.map(({ value, descri
 
 const VIDEO_PROMPT_TYPES = ['violence', 'accident', 'vol']
 
+const isApproximateLocation = (value) => String(value || '').trim().startsWith('Position approximative IP')
+
 const shouldReplaceAutoLocation = (value) => {
   const text = String(value || '')
-  return !text || text.startsWith('GPS:') || text.startsWith('Position approximative IP') || text.startsWith('Sedhiou - localisation')
+  return !text || text.startsWith('GPS:') || isApproximateLocation(text) || text.startsWith('Sedhiou - localisation')
 }
 
 const saveLastGpsLocation = ({ latitude, longitude, accuracy }) => {
@@ -274,33 +276,34 @@ export default function NewSignalement() {
   }
 
   const getLocationFromIpFallback = async ({ silent = false } = {}) => {
+    const message = 'La position par adresse IP n’est pas assez précise. Choisissez le point exact sur la carte ou autorisez le GPS.'
+    setGeoError(message)
+    if (!silent) toast.info(message)
+    return { latitude: null, longitude: null, localisation: '', approximate: true }
+  }
+
+  const handleMapLocation = async (lat, lng) => {
+    const selectedLat = Number(lat)
+    const selectedLng = Number(lng)
+    const coordsLabel = `GPS: ${selectedLat.toFixed(6)}, ${selectedLng.toFixed(6)}`
+    setLatitude(selectedLat)
+    setLongitude(selectedLng)
+    saveLastGpsLocation({ latitude: selectedLat, longitude: selectedLng, accuracy: null })
+    setGeoError(null)
+    setFormData(prev => ({ ...prev, localisation: coordsLabel, latitude: selectedLat, longitude: selectedLng }))
+
     try {
-      const response = await fetch('https://ipapi.co/json/')
-      if (!response.ok) throw new Error('IP lookup failed')
-      const data = await response.json()
-      if (!data.latitude || !data.longitude) throw new Error('IP coordinates missing')
-
-      const lat = Number(data.latitude)
-      const lng = Number(data.longitude)
-      const city = [data.city, data.region, data.country_name].filter(Boolean).join(', ')
-      const localisation = city
-        ? `Position approximative IP: ${city}`
-        : `Position approximative IP: ${lat.toFixed(6)}, ${lng.toFixed(6)}`
-
-      setFormData(prev => ({
-        ...prev,
-        localisation: shouldReplaceAutoLocation(prev.localisation) ? localisation : prev.localisation
-      }))
-      setGeoError('GPS refuse ou indisponible. La ville IP est affichee seulement comme repere approximatif. Autorisez le GPS pour envoyer la vraie position a la police.')
-      if (!silent) toast.info('Position approximative IP recuperee')
-
-      return { latitude: null, longitude: null, localisation, approximate: true }
+      const place = await reverseGeocodePlace(selectedLat, selectedLng)
+      if (place) {
+        setFormData(prev => ({
+          ...prev,
+          localisation: prev.localisation === coordsLabel ? place : prev.localisation,
+          latitude: selectedLat,
+          longitude: selectedLng
+        }))
+      }
     } catch (error) {
-      const localisation = formData.localisation || 'Sedhiou - localisation a preciser'
-      setGeoError('GPS et localisation IP indisponibles. Precisez le quartier ou un repere manuellement.')
-      if (!silent) toast.info('Precisez votre lieu a Sedhiou')
-      setFormData(prev => ({ ...prev, localisation: shouldReplaceAutoLocation(prev.localisation) ? localisation : prev.localisation }))
-      return { latitude: null, longitude: null, localisation }
+      console.warn('Adresse du point sélectionné indisponible:', error.message)
     }
   }
 
@@ -888,17 +891,25 @@ export default function NewSignalement() {
       let latitudeValue = latitude
       let longitudeValue = longitude
 
+      // Une estimation par IP ne doit jamais être enregistrée comme lieu réel.
+      if (isApproximateLocation(localisationValue)) localisationValue = ''
+
       if (!localisationValue || latitudeValue === null || longitudeValue === null) {
         const detectedLocation = await getAutomaticLocation()
         if (detectedLocation) {
-          localisationValue = localisationValue || detectedLocation.localisation
-          latitudeValue = detectedLocation.latitude
-          longitudeValue = detectedLocation.longitude
+          const hasPreciseGps = Number.isFinite(detectedLocation.latitude) && Number.isFinite(detectedLocation.longitude)
+          if (!localisationValue || isApproximateLocation(localisationValue)) {
+            localisationValue = detectedLocation.localisation || localisationValue
+          }
+          if (hasPreciseGps) {
+            latitudeValue = detectedLocation.latitude
+            longitudeValue = detectedLocation.longitude
+          }
         }
       }
 
       if (!localisationValue) {
-        toast.error('Impossible de localiser automatiquement. Autorisez la localisation puis reessayez.')
+        toast.error('Choisissez le point exact sur la carte ou saisissez un quartier et une ville avant l’envoi.')
         setLoading(false)
         return
       }
@@ -1146,8 +1157,9 @@ export default function NewSignalement() {
                   {latitude != null && longitude != null ? `GPS actif: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}` : 'GPS pas encore active'}
                 </div>
                 {geoError && <p className="text-sm text-red-600 mt-2">{geoError}</p>}
+                <p className="mt-3 text-sm text-slate-600">La position par IP n’est jamais utilisée comme adresse. Cliquez sur la carte pour choisir le lieu exact; vous pouvez ensuite préciser le quartier.</p>
                 <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200">
-                  <LeafletMap lat={latitude} lng={longitude} setLat={setLatitude} setLng={setLongitude} />
+                  <LeafletMap lat={latitude} lng={longitude} setLat={setLatitude} setLng={setLongitude} onSelect={handleMapLocation} />
                 </div>
               </section>
 
