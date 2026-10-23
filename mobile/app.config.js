@@ -61,8 +61,8 @@ export default {
     "expo-web-browser"
   ],
     extra: {
-      apiUrl: process.env.EXPO_PUBLIC_API_URL || 'https://signal-moi-api.onrender.com/api',
-      socketUrl: process.env.EXPO_PUBLIC_SOCKET_URL || 'https://signal-moi-api.onrender.com',
+      apiUrl: process.env.EXPO_PUBLIC_API_URL || 'https://signal-moi-backend.onrender.com/api',
+      socketUrl: process.env.EXPO_PUBLIC_SOCKET_URL || 'https://signal-moi-backend.onrender.com',
       eas: { projectId: "cbf843a4-2b7e-4586-a992-13953f64c1c2" }
     }
   }
