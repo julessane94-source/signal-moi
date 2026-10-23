@@ -76,7 +76,7 @@ export default function LoginScreen({ navigation }) {
       setConnectionState('online')
     } catch (error) {
       setConnectionState('offline')
-      Alert.alert('Backend indisponible', 'Impossible de joindre https://signal-moi-api.onrender.com pour le moment.')
+      Alert.alert('Backend indisponible', 'Impossible de joindre https://signal-moi-backend.onrender.com pour le moment.')
     }
   }
 
