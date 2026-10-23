@@ -1,7 +1,7 @@
 import { writeFile, mkdir } from 'node:fs/promises'
 import path from 'node:path'
 
-const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://signal-moi-api.onrender.com/api'
+const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://signal-moi-backend.onrender.com/api'
 const endpoint = `${apiUrl.replace(/\/api\/?$/, '')}/api/pages/logo`
 const output = path.resolve('assets', 'icon.png')
 

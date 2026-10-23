@@ -8,8 +8,8 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://signal-moi-api.onrender.com/api",
-        "EXPO_PUBLIC_SOCKET_URL": "https://signal-moi-api.onrender.com",
+        "EXPO_PUBLIC_API_URL": "https://signal-moi-backend.onrender.com/api",
+        "EXPO_PUBLIC_SOCKET_URL": "https://signal-moi-backend.onrender.com",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "912214570168-31s5lpn11tak5kfp3arplc0sbrq0vh1v.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "912214570168-qdshgsffkan5i3cm107dc45m3lvvc0k8.apps.googleusercontent.com"
       }
@@ -20,8 +20,8 @@
       },
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://signal-moi-api.onrender.com/api",
-        "EXPO_PUBLIC_SOCKET_URL": "https://signal-moi-api.onrender.com",
+        "EXPO_PUBLIC_API_URL": "https://signal-moi-backend.onrender.com/api",
+        "EXPO_PUBLIC_SOCKET_URL": "https://signal-moi-backend.onrender.com",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "912214570168-31s5lpn11tak5kfp3arplc0sbrq0vh1v.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "912214570168-qdshgsffkan5i3cm107dc45m3lvvc0k8.apps.googleusercontent.com"
       }
@@ -29,8 +29,8 @@
     "ios-preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://signal-moi-api.onrender.com/api",
-        "EXPO_PUBLIC_SOCKET_URL": "https://signal-moi-api.onrender.com",
+        "EXPO_PUBLIC_API_URL": "https://signal-moi-backend.onrender.com/api",
+        "EXPO_PUBLIC_SOCKET_URL": "https://signal-moi-backend.onrender.com",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "912214570168-31s5lpn11tak5kfp3arplc0sbrq0vh1v.apps.googleusercontent.com"
       }
     },
@@ -40,8 +40,8 @@
       },
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://signal-moi-api.onrender.com/api",
-        "EXPO_PUBLIC_SOCKET_URL": "https://signal-moi-api.onrender.com",
+        "EXPO_PUBLIC_API_URL": "https://signal-moi-backend.onrender.com/api",
+        "EXPO_PUBLIC_SOCKET_URL": "https://signal-moi-backend.onrender.com",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "912214570168-31s5lpn11tak5kfp3arplc0sbrq0vh1v.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "912214570168-qdshgsffkan5i3cm107dc45m3lvvc0k8.apps.googleusercontent.com"
       }
@@ -49,8 +49,8 @@
     "production": {
       "distribution": "store",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://signal-moi-api.onrender.com/api",
-        "EXPO_PUBLIC_SOCKET_URL": "https://signal-moi-api.onrender.com",
+        "EXPO_PUBLIC_API_URL": "https://signal-moi-backend.onrender.com/api",
+        "EXPO_PUBLIC_SOCKET_URL": "https://signal-moi-backend.onrender.com",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "912214570168-31s5lpn11tak5kfp3arplc0sbrq0vh1v.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "912214570168-qdshgsffkan5i3cm107dc45m3lvvc0k8.apps.googleusercontent.com"
       }
@@ -58,8 +58,8 @@
     "ios-production": {
       "distribution": "store",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://signal-moi-api.onrender.com/api",
-        "EXPO_PUBLIC_SOCKET_URL": "https://signal-moi-api.onrender.com",
+        "EXPO_PUBLIC_API_URL": "https://signal-moi-backend.onrender.com/api",
+        "EXPO_PUBLIC_SOCKET_URL": "https://signal-moi-backend.onrender.com",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "912214570168-31s5lpn11tak5kfp3arplc0sbrq0vh1v.apps.googleusercontent.com"
       }
     }
