@@ -228,7 +228,6 @@ router.get('/users', authMiddleware, async (req, res) => {
         psl.latitude AS station_latitude, psl.longitude AS station_longitude
       FROM signal_moi.users u
       LEFT JOIN signal_moi.police_station_locations psl ON psl.commissariat_id = u.id
-      WHERE u.is_active = true
       ORDER BY u.created_at DESC
     `);
     res.json(result.rows);
@@ -241,7 +240,6 @@ router.get('/users', authMiddleware, async (req, res) => {
           SELECT id, prenom, nom, email, telephone, ville, quartier, role, is_active,
             '{}'::text[] AS signalement_types
           FROM signal_moi.users
-          WHERE is_active = true
           ORDER BY created_at DESC
         `);
         return res.json(fallback.rows);

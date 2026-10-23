@@ -17,6 +17,7 @@ import {
   KeyIcon as Key,
   UserIcon as User,
   ArrowUpTrayIcon as ArrowUpTray,
+  ArrowUturnLeftIcon as Reactivate,
   PhoneIcon as Phone,
   EnvelopeIcon as Envelope,
   BuildingOffice2Icon as BuildingOffice2,
@@ -63,6 +64,7 @@ export default function AdminDashboard() {
   const { user, loading } = useAuth()
   const [users, setUsers] = useState([])
   const [activeTab, setActiveTab] = useState('dashboard')
+  const [userStatusFilter, setUserStatusFilter] = useState('all')
   const [showModal, setShowModal] = useState(false)
   const [editingUser, setEditingUser] = useState(null)
   const [formData, setFormData] = useState({
@@ -128,8 +130,11 @@ export default function AdminDashboard() {
     activeUsers: 0
   })
 
-  const commissariatUsers = users.filter((item) => String(item.role || '').toLowerCase() === 'commissariat')
-  const policeUsers = users.filter((item) => ['police', 'policier', 'gendarmerie', 'force_ordre'].includes(String(item.role || '').toLowerCase()))
+  const activeUsers = users.filter((item) => item.is_active !== false)
+  const inactiveUsers = users.filter((item) => item.is_active === false)
+  const filteredUsers = users.filter((item) => userStatusFilter === 'all' || (userStatusFilter === 'inactive' ? item.is_active === false : item.is_active !== false))
+  const commissariatUsers = activeUsers.filter((item) => String(item.role || '').toLowerCase() === 'commissariat')
+  const policeUsers = activeUsers.filter((item) => ['police', 'policier', 'gendarmerie', 'force_ordre'].includes(String(item.role || '').toLowerCase()))
 
   const getRoleLabel = (role) => {
     const normalized = String(role || '').toLowerCase()
@@ -373,7 +378,7 @@ export default function AdminDashboard() {
   }
 
   const deleteUser = async (userId) => {
-    if (!confirm('Désactiver cet utilisateur ? Cette action est irréversible.')) return
+    if (!confirm('Désactiver ce compte ? Il pourra être réactivé depuis le filtre « Inactifs ».')) return
     try {
       const token = localStorage.getItem('token')
       const base = API_BASE
@@ -389,6 +394,24 @@ export default function AdminDashboard() {
       fetchUsers()
     } catch (error) {
       toast.error('❌ ' + (error.message || 'Erreur'))
+    }
+  }
+
+  const reactivateUser = async (user) => {
+    if (!window.confirm(`Réactiver le compte de ${user.prenom || user.email} ?`)) return
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE}/api/admin/users/${user.id}`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: true })
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.error || 'Réactivation impossible')
+      toast.success('Compte réactivé. La personne peut se reconnecter avec son mot de passe existant.')
+      fetchUsers()
+    } catch (error) {
+      toast.error(error.message || 'Erreur lors de la réactivation')
     }
   }
 
@@ -906,10 +929,31 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="flex justify-end">
-                <Button icon={Plus} onClick={() => openModal()}>
-                  Ajouter un commissariat ou utilisateur
-                </Button>
+              <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-extrabold text-slate-950">Comptes utilisateurs</p>
+                  <p className="mt-0.5 text-sm text-slate-500">{activeUsers.length} actif{activeUsers.length > 1 ? 's' : ''} · {inactiveUsers.length} désactivé{inactiveUsers.length > 1 ? 's' : ''}</p>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <div role="group" aria-label="Filtrer les comptes" className="flex rounded-xl bg-slate-100 p-1">
+                    {[
+                      { id: 'all', label: `Tous (${users.length})` },
+                      { id: 'active', label: `Actifs (${activeUsers.length})` },
+                      { id: 'inactive', label: `Inactifs (${inactiveUsers.length})` }
+                    ].map((filter) => (
+                      <button
+                        key={filter.id}
+                        type="button"
+                        onClick={() => setUserStatusFilter(filter.id)}
+                        aria-pressed={userStatusFilter === filter.id}
+                        className={`min-h-10 rounded-lg px-3 text-xs font-bold transition sm:text-sm ${userStatusFilter === filter.id ? 'bg-white text-emerald-800 shadow-sm' : 'text-slate-600 hover:text-slate-950'}`}
+                      >{filter.label}</button>
+                    ))}
+                  </div>
+                  <Button icon={Plus} onClick={() => openModal()}>
+                    Ajouter un commissariat ou utilisateur
+                  </Button>
+                </div>
               </div>
 
               <DataTable
@@ -917,6 +961,13 @@ export default function AdminDashboard() {
                   { key: 'prenom', label: 'Prénom' },
                   { key: 'email', label: 'Email' },
                   { key: 'role', label: 'Rôle', render: (role) => <Badge variant="info">{getRoleLabel(role)}</Badge> },
+                  {
+                    key: 'is_active',
+                    label: 'État',
+                    render: (isActive) => isActive === false
+                      ? <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-800">Désactivé</span>
+                      : <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-800">Actif</span>
+                  },
                   {
                     key: 'quartier',
                     label: 'Zone / structure',
@@ -950,20 +1001,31 @@ export default function AdminDashboard() {
                         >
                           <Key className="h-4 w-4 text-yellow-600" />
                         </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          onClick={() => deleteUser(user.id)}
-                          className="p-2 hover:bg-red-50 rounded-lg transition"
-                          title="Désactiver"
-                        >
-                          <Trash className="h-4 w-4 text-red-600" />
-                        </motion.button>
+                        {user.is_active === false ? (
+                          <motion.button
+                            whileHover={{ scale: 1.08 }}
+                            onClick={() => reactivateUser(user)}
+                            className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 text-xs font-bold text-emerald-800 transition hover:bg-emerald-100"
+                            title="Réactiver ce compte"
+                          >
+                            <Reactivate className="h-4 w-4" /> Réactiver
+                          </motion.button>
+                        ) : (
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            onClick={() => deleteUser(user.id)}
+                            className="p-2 hover:bg-red-50 rounded-lg transition"
+                            title="Désactiver"
+                          >
+                            <Trash className="h-4 w-4 text-red-600" />
+                          </motion.button>
+                        )}
                       </div>
                     )
                   }
                 ]}
-                data={users}
-                emptyMessage="Aucun utilisateur trouvé"
+                data={filteredUsers}
+                emptyMessage={userStatusFilter === 'inactive' ? 'Aucun compte inactif trouvé' : 'Aucun utilisateur trouvé'}
               />
             </motion.div>
           )}
