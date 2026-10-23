@@ -51,8 +51,8 @@ Un APK deja installe ne connait pas les modules natifs ajoutes apres coup. Il fa
 Pour tester directement avec le backend Render actuel de Signal Moi:
 
 ```env
-EXPO_PUBLIC_API_URL=https://signal-moi-api.onrender.com/api
-EXPO_PUBLIC_SOCKET_URL=https://signal-moi-api.onrender.com
+EXPO_PUBLIC_API_URL=https://signal-moi-backend.onrender.com/api
+EXPO_PUBLIC_SOCKET_URL=https://signal-moi-backend.onrender.com
 EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=912214570168-31s5lpn11tak5kfp3arplc0sbrq0vh1v.apps.googleusercontent.com
 EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=
 EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=
@@ -119,7 +119,7 @@ L'application mobile ne doit pas se connecter directement a PostgreSQL. Elle app
 - Google: connexion mobile preparee avec `expo-auth-session`.
 - Paiements: Wave fonctionnel via lien marchand, Orange Money configurable par `EXPO_PUBLIC_ORANGE_MONEY_URL` ou route backend.
 - Exports: telechargement PDF/Excel depuis Render avec partage mobile.
-- Backend: appels directs vers `https://signal-moi-api.onrender.com/api`.
+- Backend: appels directs vers `https://signal-moi-backend.onrender.com/api`.
 
 Le tableau police ecoute les evenements Socket.IO suivants, afin de rester compatible avec les noms deja utilises cote web/backend:
 
